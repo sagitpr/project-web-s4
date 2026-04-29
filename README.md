@@ -253,4 +253,4 @@ Sistem Informasi
 ---
 
 ## License
-Project ini dibuat untuk pembelajaran dan pengembangan.
+Project ini dibuat untuk pembelajaran dan pengembangan akademik.
