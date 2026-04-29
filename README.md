@@ -7,6 +7,10 @@ Tidak hanya marketplace biasa, Warungio fokus pada jaringan warung lokal, stok r
 
 ---
 
+<img width="3498" height="2629" alt="sistem alur flow warungio (1)" src="https://github.com/user-attachments/assets/81fe20c9-c4a4-4d5b-b1b3-ac6ff1ab8d78" />
+
+
+
 # Role Pengguna
 
 ## Buyer (Pembeli)
