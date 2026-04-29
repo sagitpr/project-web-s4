@@ -170,7 +170,6 @@ Fitur inti yang jadi identitas Warungio:
 ```bash
 warungio/
 │
-├── frontend/
 │   ├── public/
 │   │
 │   ├── src/
@@ -194,8 +193,7 @@ warungio/
 │   ├── main.jsx
 │   └── index.css
 │
-├── backend/
-|   |  node.modules/
+|   ├──  node.modules/
 │   ├── src/
 │   │   ├── config/
 │   │   ├── controllers/
