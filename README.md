@@ -25,7 +25,6 @@ Fitur utama:
 - Chat Penjual
 - Pickup di Warung
 - Pembayaran dan komplain
-
 ---
 
 ## Seller / Mitra Warung
