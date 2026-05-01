@@ -152,7 +152,7 @@ Fitur inti yang jadi identitas Warungio:
 ## Data Processing / Intelligence
 - Python  
 - Pandas (Analitik Data)  
-- Scikit-learn (Rekomendasi Produk - Opsional)
+- Scikit-learn 
 
 ## API & Services
 - REST API  
