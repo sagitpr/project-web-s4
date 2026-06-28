@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - Warungio Seller</title>
+    <meta name="description" content="Atur profil toko dan preferensi akun Warungio Seller.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/pengaturan/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Seller Dashboard</small>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}" class="active"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+                <p><b>Atur tokomu jadi lebih profesional</b></p>
+                <p class="desc">Lengkapi informasi toko untuk menarik lebih banyak pembeli.</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+                <button class="btn-learn">Pelajari</button>
+            </div>
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div class="shop-name-row">
+                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="notif">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge">3</span>
+                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <div class="status-online"></div>
+                            </div>
+                            <div class="profile-info">
+                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-role">Seller</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Title -->
+            <section class="page-title-section">
+                <div class="page-title-left">
+                    <h1>Pengaturan</h1>
+                    <p class="page-subtitle">Atur profil toko dan preferensi akunmu</p>
+                </div>
+            </section>
+
+            <!-- Settings Grid -->
+            <div class="settings-grid">
+                <!-- Store Profile Card -->
+                <div class="card settings-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-store"></i> Profil Toko</h2>
+                    </div>
+                    <form id="storeProfileForm" class="settings-form">
+                        <div class="form-row">
+                            <label>
+                                <span>Nama Toko</span>
+                                <input type="text" id="storeNameInput" placeholder="Nama toko" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <span>Kategori Toko</span>
+                                <select id="storeCategoryInput">
+                                    <option value="">Pilih Kategori</option>
+                                    <option value="Sayuran & Buah">Sayuran & Buah</option>
+                                    <option value="Sembako">Sembako</option>
+                                    <option value="Daging & Ikan">Daging & Ikan</option>
+                                    <option value="Minuman">Minuman</option>
+                                    <option value="Bumbu Dapur">Bumbu Dapur</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <span>Deskripsi Toko</span>
+                                <textarea id="storeDescInput" rows="3" placeholder="Ceritakan tentang tokomu..."></textarea>
+                            </label>
+                        </div>
+                        <div class="form-row half">
+                            <label>
+                                <span>Kota</span>
+                                <input type="text" id="storeCityInput" placeholder="Kota">
+                            </label>
+                            <label>
+                                <span>Provinsi</span>
+                                <input type="text" id="storeProvinceInput" placeholder="Provinsi">
+                            </label>
+                        </div>
+                        <div class="form-row half">
+                            <label>
+                                <span>Jam Buka</span>
+                                <input type="time" id="storeOpenTimeInput">
+                            </label>
+                            <label>
+                                <span>Jam Tutup</span>
+                                <input type="time" id="storeCloseTimeInput">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="storeIsOpenInput">
+                                <span>Toko Buka</span>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <span class="save-message" id="storeSaveMessage"></span>
+                            <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Account Settings Card -->
+                <div class="card settings-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-user"></i> Pengaturan Akun</h2>
+                    </div>
+                    <form id="accountForm" class="settings-form">
+                        <div class="form-row">
+                            <label>
+                                <span>Nama Lengkap</span>
+                                <input type="text" id="fullNameInput" placeholder="Nama lengkap" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <span>Email</span>
+                                <input type="email" id="emailInput" placeholder="email@example.com" readonly class="readonly-input">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <span>Nomor HP</span>
+                                <input type="tel" id="phoneInput" placeholder="+628xxxxxxxxxx">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                <span>Alamat</span>
+                                <textarea id="addressInput" rows="2" placeholder="Alamat lengkap"></textarea>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <span class="save-message" id="accountSaveMessage"></span>
+                            <button type="submit" class="btn-primary">Simpan Profil</button>
+                        </div>
+                    </form>
+
+                    <div class="section-divider"></div>
+
+                    <h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">Ganti Password</h3>
+                    <form id="passwordForm" class="settings-form">
+                        <div class="form-row">
+                            <label>
+                                <span>Password Lama</span>
+                                <input type="password" id="oldPasswordInput" placeholder="Password saat ini" required>
+                            </label>
+                        </div>
+                        <div class="form-row half">
+                            <label>
+                                <span>Password Baru</span>
+                                <input type="password" id="newPasswordInput" placeholder="Min. 8 karakter" required>
+                            </label>
+                            <label>
+                                <span>Konfirmasi Password</span>
+                                <input type="password" id="confirmPasswordInput" placeholder="Ulangi password baru" required>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <span class="save-message" id="passwordSaveMessage"></span>
+                            <button type="submit" class="btn-primary">Perbarui Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="seller-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                        <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.<br>Belanja mudah, harga bersahabat!</p>
+                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Layanan</h4>
+                        <a href="#">Cara Belanja</a><a href="#">Metode Pembayaran</a><a href="#">Pengiriman</a><a href="#">Promo & Diskon</a><a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Tentang Warungio</h4>
+                        <a href="#">Tentang Kami</a><a href="#">Karir</a><a href="#">Blog</a><a href="#">Mitra Warung</a><a href="#">Kontak Kami</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Untuk Seller</h4>
+                        <a href="#">Panduan Seller</a><a href="#">Tips Sukses</a><a href="#">Komunitas Seller</a><a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="footer-download">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="store-badges">
+                            <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                            <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                        </div>
+                        <div class="social-links">
+                            <span>Ikuti kami di</span>
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast-notification" class="toast"></div>
+
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/pages/seller/pengaturan/script.js' %}"></script>
+</body>
+</html>

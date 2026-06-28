@@ -1,0 +1,359 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Warungio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
+    <style>
+      /* ── Dashboard Control Center overrides ── */
+      html, body { overflow-x: hidden; max-width: 100%; }
+      * { box-sizing: border-box; }
+      .dashboard-shell { max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; }
+      .greeting-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+      .greeting-left { display: flex; align-items: center; gap: 16px; }
+      .greeting-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+      .greeting-text h1 { font-size: 22px; font-weight: 800; color: var(--text); margin: 0; }
+      .greeting-text p { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+      .greeting-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--light-bg); color: var(--primary-dark); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 4px; }
+      .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+      .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 14px; transition: box-shadow 0.2s; }
+      .stat-card:hover { box-shadow: 0 4px 16px rgba(22, 163, 74, 0.08); }
+      .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .stat-icon img { width: 22px; height: 22px; }
+      .stat-icon.green { background: #dcfce7; }
+      .stat-icon.blue { background: #dbeafe; }
+      .stat-icon.yellow { background: #fef9c3; }
+      .stat-icon.red { background: #fee2e2; }
+      .stat-info strong { display: block; font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.2; }
+      .stat-info span { font-size: 12px; color: var(--muted); }
+      .shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 28px; }
+      .shortcut-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: var(--text); font-size: 12px; font-weight: 600; text-align: center; }
+      .shortcut-item:hover { border-color: var(--primary); background: var(--light-bg); }
+      .shortcut-item img { width: 28px; height: 28px; }
+      .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      .section-row h2 { font-size: 17px; font-weight: 800; color: var(--text); margin: 0; }
+      .section-row a { font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; }
+      .section-row a:hover { text-decoration: underline; }
+      .wallet-banner { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; border-radius: 18px; padding: 24px 28px; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+      .wallet-left span { font-size: 12px; opacity: 0.8; }
+      .wallet-left strong { display: block; font-size: 28px; font-weight: 800; margin-top: 4px; }
+      .wallet-actions-row { display: flex; gap: 10px; }
+      .wallet-actions-row button { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+      .btn-topup-dash { background: white; color: var(--primary-dark); }
+      .btn-topup-dash:hover { background: var(--light-bg); }
+      .btn-riwayat { background: rgba(255,255,255,0.15); color: white; }
+      .btn-riwayat:hover { background: rgba(255,255,255,0.25); }
+      .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 28px; }
+      .order-card-dash { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; transition: box-shadow 0.2s; }
+      .order-card-dash:hover { box-shadow: 0 4px 16px rgba(22, 163, 74, 0.08); }
+      .order-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+      .order-card-number { font-size: 13px; font-weight: 700; color: var(--text); }
+      .order-card-store { font-size: 11px; color: var(--muted); margin-top: 2px; }
+      .order-card-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+      .order-card-badge.pending { background: #fef9c3; color: #92400e; }
+      .order-card-badge.paid { background: #dbeafe; color: #1e40af; }
+      .order-card-badge.processed { background: #e0e7ff; color: #3730a3; }
+      .order-card-badge.shipped { background: #dcfce7; color: #166534; }
+      .order-card-badge.completed { background: #d1fae5; color: #065f46; }
+      .order-card-badge.cancelled { background: #fee2e2; color: #991b1b; }
+      .order-card-body { font-size: 12px; color: var(--muted); margin-bottom: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+      .order-card-footer { display: flex; justify-content: space-between; align-items: center; }
+      .order-card-total { font-size: 14px; font-weight: 800; color: var(--text); }
+      .order-card-link { font-size: 12px; font-weight: 600; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+      .order-card-link:hover { text-decoration: underline; }
+      .promo-grid-dash { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 28px; }
+      .promo-card-dash { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 14px; }
+      .promo-card-dash img { width: 48px; height: 48px; border-radius: 10px; }
+      .promo-card-dash h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+      .promo-card-dash p { font-size: 11px; color: var(--muted); margin: 0; }
+      .empty-state-dash { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+      .empty-state-dash img { width: 60px; margin: 0 auto 12px; opacity: 0.5; }
+      @media (max-width: 768px) {
+        .dashboard-shell { margin-top: 72px; padding: 0 12px; }
+        .greeting-bar { flex-direction: column; align-items: flex-start; }
+        .stat-cards { grid-template-columns: repeat(2, 1fr); }
+        .shortcut-grid { grid-template-columns: repeat(4, 1fr); }
+        .wallet-banner { flex-direction: column; align-items: flex-start; padding: 20px; }
+        .orders-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 480px) {
+        .stat-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .shortcut-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-card { padding: 14px; gap: 10px; }
+        .stat-info strong { font-size: 18px; }
+      }
+    </style>
+</head>
+  <body>
+    <header class="header">
+      <div class="header-container">
+        <a href="/" class="logo">
+          <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
+          <p class="brand-label">
+            <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
+          </p>
+        </a>
+        <nav class="nav">
+          <a href="/home/">Marketplace</a>
+          <a href="/buyer/orders/">Pesanan</a>
+          <a href="/bantuan/">Bantuan</a>
+        </nav>
+        <div class="auth-buttons" id="authButtons" style="display: flex; align-items: center; gap: 12px;">
+          <!-- Dropdown menu wrapper -->
+          <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display: none;">
+            <div class="profile-box" id="profileBox" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              <div class="profile-info" style="text-align: right;">
+                <p id="userName" style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text);">Hai, User</p>
+                <span class="member-badge" id="userRoleBadge" style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--primary-soft); color: var(--primary-dark);">Member</span>
+              </div>
+              <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
+              <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="dropdown-menu-custom" id="dropdownMenu">
+              <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+              <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+              <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+              <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </div>
+          </div>
+          <div id="guestNavButtons" style="display: flex; gap: 8px; align-items: center;">
+            <a href="/auth/login/" class="btn-masuk" id="loginBtnNav">Masuk</a>
+            <a href="/auth/register/" class="btn-daftar" id="registerBtnNav">Daftar</a>
+          </div>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="dashboard-shell">
+      <!-- Greeting Bar -->
+      <div class="greeting-bar">
+        <div class="greeting-left">
+          <img src="{% static 'images/av-siti.png' %}" alt="Avatar" class="greeting-avatar" id="dashAvatar" />
+          <div class="greeting-text">
+            <h1 id="dashGreeting">Selamat datang!</h1>
+            <p>Kelola aktivitas belanja kamu dari sini.</p>
+            <span class="greeting-badge" id="dashMemberBadge">Member</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Status Summary Cards -->
+      <div class="stat-cards" id="statCards">
+        <div class="stat-card">
+          <div class="stat-icon yellow"><img src="{% static 'images/order-delivery.png' %}" alt="Menunggu" /></div>
+          <div class="stat-info"><strong id="statPending">0</strong><span>Menunggu Bayar</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><img src="{% static 'images/keranjang.png' %}" alt="Diproses" /></div>
+          <div class="stat-info"><strong id="statProcessed">0</strong><span>Diproses</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><img src="{% static 'images/pengiriman.png' %}" alt="Dikirim" /></div>
+          <div class="stat-info"><strong id="statShipped">0</strong><span>Dikirim</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><img src="{% static 'images/star.png' %}" alt="Selesai" /></div>
+          <div class="stat-info"><strong id="statCompleted">0</strong><span>Selesai</span></div>
+        </div>
+      </div>
+
+      <!-- Wallet Banner -->
+      <div class="wallet-banner">
+        <div class="wallet-left">
+          <span>Saldo Dompet Warungio</span>
+          <strong id="dashWalletBalance">Rp 0</strong>
+        </div>
+        <div class="wallet-actions-row">
+          <button class="btn-topup-dash" id="btnTopUpDash">Top Up</button>
+          <button class="btn-riwayat" onclick="window.location.href='/buyer/orders/'">Riwayat Pesanan</button>
+        </div>
+      </div>
+
+      <!-- Shortcut Menu -->
+      <div class="section-row"><h2>Menu Cepat</h2></div>
+      <div class="shortcut-grid">
+        <a href="/home/" class="shortcut-item"><img src="{% static 'images/store.png' %}" alt="Belanja" /><span>Belanja</span></a>
+        <a href="/buyer/orders/" class="shortcut-item"><img src="{% static 'images/order-delivery.png' %}" alt="Pesanan" /><span>Pesanan</span></a>
+        <a href="/buyer/cart/" class="shortcut-item"><img src="{% static 'images/keranjang.png' %}" alt="Keranjang" /><span>Keranjang</span></a>
+        <a href="/buyer/profile/" class="shortcut-item"><img src="{% static 'images/shield.png' %}" alt="Profil" /><span>Profil</span></a>
+        <a href="/bantuan/" class="shortcut-item"><img src="{% static 'images/online-support.png' %}" alt="Bantuan" /><span>Bantuan</span></a>
+        <a href="/home/#warung-section" class="shortcut-item"><img src="{% static 'images/location.png' %}" alt="Warung" /><span>Warung</span></a>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="section-row"><h2>Pesanan Terbaru</h2><a href="/buyer/orders/">Lihat Semua →</a></div>
+      <div class="orders-grid" id="recentOrdersGrid">
+        <div class="empty-state-dash">
+          <img src="{% static 'images/list.png' %}" alt="No orders" />
+          <p>Belum ada pesanan. <a href="/home/" style="color:var(--primary);font-weight:600;">Mulai belanja →</a></p>
+        </div>
+      </div>
+
+      <!-- Active Promos -->
+      <div class="section-row"><h2>Promo Aktif</h2><a href="/home/">Lihat Semua →</a></div>
+      <div class="promo-grid-dash">
+        <div class="promo-card-dash">
+          <img src="{% static 'images/discount.png' %}" alt="Diskon" />
+          <div><h4>Diskon 30% Sayur Segar</h4><p>Belanja min. Rp 20.000 di warung terdekat</p></div>
+        </div>
+        <div class="promo-card-dash">
+          <img src="{% static 'images/pengiriman.png' %}" alt="Ongkir" />
+          <div><h4>Gratis Ongkir</h4><p>Belanja min. Rp 20.000 — bebas ongkos kirim!</p></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer" style="background: var(--surface); border-top: 1px solid var(--border); padding: 24px 20px; text-align: center; font-size: 12px; color: var(--muted);">
+      <p>© 2026 Warungio. Hak Cipta Dilindungi.</p>
+    </footer>
+
+    <script src="{% static 'js/utils/asset-loader.js' %}"></script>
+    <script src="{% static 'js/utils/routes.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    (function() {
+      'use strict';
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        // Auth guard — redirect unauthenticated users to login
+        if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+          window.location.href = '/auth/login/';
+          return;
+        }
+
+        // Toggle Nav Bar display to show dropdown wrapper and hide guest login/register
+        var profileDropdownWrap = document.getElementById('profileDropdownWrap');
+        var guestNavButtons = document.getElementById('guestNavButtons');
+        if (profileDropdownWrap) profileDropdownWrap.style.display = 'block';
+        if (guestNavButtons) guestNavButtons.style.display = 'none';
+
+        // Bind dropdown toggle
+        var profileBox = document.getElementById('profileBox');
+        var dropdownMenu = document.getElementById('dropdownMenu');
+        var btnLogout = document.getElementById('btnLogout');
+
+        if (profileBox && dropdownMenu) {
+          profileBox.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+          });
+
+          document.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+          });
+        }
+
+        if (btnLogout) {
+          btnLogout.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (window.WarungioAuth) {
+              window.WarungioAuth.logout();
+              window.location.href = '/home/';
+            }
+          });
+        }
+
+        // Load user profile data
+        try {
+          var u = await WarungioAPI.checkAuth();
+          if (u && u.user) {
+            var greetEl = document.getElementById('dashGreeting');
+            var avatarEl = document.getElementById('dashAvatar');
+            var balanceEl = document.getElementById('dashWalletBalance');
+            var badgeEl = document.getElementById('dashMemberBadge');
+            
+            // Topbar elements
+            var userNameEl = document.getElementById('userName');
+            var userAvatarEl = document.getElementById('userAvatar');
+            var userRoleBadge = document.getElementById('userRoleBadge');
+
+            var displayName = u.user.full_name || u.user.email;
+            if (userNameEl) userNameEl.textContent = 'Hai, ' + (u.user.full_name ? u.user.full_name.split(' ')[0] : 'User');
+            if (userAvatarEl && u.user.profile_photo) userAvatarEl.src = u.user.profile_photo;
+            if (userRoleBadge) {
+              userRoleBadge.textContent = u.user.role === 'seller' ? 'Penjual' : 'Member';
+            }
+
+            if (greetEl) greetEl.textContent = 'Halo, ' + displayName + '!';
+            if (balanceEl) balanceEl.textContent = 'Rp ' + Number(u.user.wallet_balance ?? 0).toLocaleString('id-ID');
+            if (u.user.profile_photo && avatarEl) avatarEl.src = u.user.profile_photo;
+            if (badgeEl) {
+              var role = u.user.role || 'buyer';
+              badgeEl.textContent = role === 'seller' ? 'Penjual' : 'Member';
+            }
+          }
+        } catch (err) { console.warn('Profile load error:', err); }
+
+        // Load order status counts
+        try {
+          var allOrders = await WarungioAPI.getOrders({ page: 1, pageSize: 100 });
+          var orders = allOrders.results || [];
+          var counts = { pending: 0, processed: 0, shipped: 0, completed: 0 };
+          orders.forEach(function(o) {
+            var s = (o.order_status || '').toLowerCase();
+            if (s === 'pending') counts.pending++;
+            else if (s === 'paid' || s === 'processed') counts.processed++;
+            else if (s === 'shipped' || s === 'on_delivery') counts.shipped++;
+            else if (s === 'completed' || s === 'delivered') counts.completed++;
+          });
+          document.getElementById('statPending').textContent = counts.pending;
+          document.getElementById('statProcessed').textContent = counts.processed;
+          document.getElementById('statShipped').textContent = counts.shipped;
+          document.getElementById('statCompleted').textContent = counts.completed;
+
+          // Render recent orders (last 6)
+          var recentGrid = document.getElementById('recentOrdersGrid');
+          if (recentGrid && orders.length > 0) {
+            var STATUS_LABELS = { pending: 'Menunggu', paid: 'Dibayar', processed: 'Diproses', shipped: 'Dikirim', on_delivery: 'Dikirim', completed: 'Selesai', delivered: 'Selesai', cancelled: 'Dibatalkan', refunded: 'Dikembalikan' };
+            recentGrid.innerHTML = '';
+            orders.slice(0, 6).forEach(function(o) {
+              var statusKey = (o.order_status || 'pending').toLowerCase();
+              var statusLabel = STATUS_LABELS[statusKey] || statusKey;
+              var badgeClass = statusKey === 'on_delivery' ? 'shipped' : statusKey;
+              var itemNames = o.items ? o.items.map(function(i) { return i.product_name || 'Produk'; }).join(', ') : '-';
+              if (itemNames.length > 55) itemNames = itemNames.substring(0, 52) + '...';
+
+              var card = document.createElement('div');
+              card.className = 'order-card-dash';
+              card.innerHTML =
+                '<div class="order-card-top">' +
+                  '<div>' +
+                    '<div class="order-card-number">' + (o.order_number || '#' + o.id) + '</div>' +
+                    (o.store_name ? '<div class="order-card-store">' + o.store_name + '</div>' : '') +
+                  '</div>' +
+                  '<span class="order-card-badge ' + badgeClass + '">' + statusLabel + '</span>' +
+                '</div>' +
+                '<div class="order-card-body">' + itemNames + '</div>' +
+                '<div class="order-card-footer">' +
+                  '<span class="order-card-total">Rp ' + Number(o.total_price || 0).toLocaleString('id-ID') + '</span>' +
+                  '<a href="/buyer/order-detail/?id=' + o.id + '" class="order-card-link">Lihat Detail →</a>' +
+                '</div>';
+              recentGrid.appendChild(card);
+            });
+          }
+        } catch (err) { console.warn('Orders load error:', err); }
+      });
+    })();
+    </script>
+  </body>
+</html>

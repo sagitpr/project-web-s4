@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ article.title }} | Warungio Bantuan{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ article.excerpt|default:article.title }}">
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .article-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
+    .article-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1f2937; }
+    .article-content p { margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+    .article-content ul, .article-content ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+    .article-content li { margin-bottom: 0.5rem; line-height: 1.75; color: #374151; }
+    .article-content a { color: #16a34a; text-decoration: underline; }
+    .article-content a:hover { color: #15803d; }
+    .article-content blockquote { border-left: 4px solid #22c55e; padding-left: 1rem; margin: 1rem 0; color: #6b7280; font-style: italic; }
+    .article-content img { border-radius: 12px; margin: 1.5rem 0; max-width: 100%; }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <a href="/bantuan/" class="flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Kembali ke Bantuan
+        </a>
+        <a href="/" class="flex items-center gap-2">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="h-6 w-auto">
+            <span class="text-sm font-bold text-gray-900"><span class="text-primary-600">Warung</span>io</span>
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-10">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+            <a href="/bantuan/" class="hover:text-primary-600 transition-colors">Bantuan</a>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-gray-600">{{ article.category.name }}</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
+
+        {% if article.excerpt %}
+        <p class="text-lg text-gray-500 mb-6">{{ article.excerpt }}</p>
+        {% endif %}
+
+        <div class="flex items-center gap-4 text-sm text-gray-400 mb-8 pb-6 border-b border-gray-100">
+            <span>{{ article.published_at|date:"d F Y" }}</span>
+            <span>&bull;</span>
+            <span>{{ article.views_count }} dilihat</span>
+            {% if article.tags %}
+            <span>&bull;</span>
+            <div class="flex gap-1.5">
+                <span class="text-gray-400">{{ article.tags }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="article-content">
+            {{ article.content|safe }}
+        </div>
+
+        <!-- Helpful? -->
+        <div class="mt-10 pt-6 border-t border-gray-100 text-center">
+            <p class="text-sm text-gray-500 mb-4">Apakah artikel ini membantu?</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="markHelpful(true)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-50 text-primary-700 rounded-xl hover:bg-primary-100 transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                    Ya, membantu
+                </button>
+                <button onclick="markHelpful(false)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/></svg>
+                    Tidak
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Articles -->
+    {% if related_articles %}
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Artikel Terkait</h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+            {% for art in related_articles %}
+            <a href="/bantuan/artikel/{{ art.slug }}/" class="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md hover:border-primary-100 transition-all">
+                <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ art.title }}</h3>
+                {% if art.excerpt %}<p class="text-xs text-gray-500 line-clamp-2">{{ art.excerpt }}</p>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function markHelpful(isHelpful) {
+    var slug = '{{ article.slug }}';
+    var endpoint = isHelpful ? 'mark_helpful' : 'mark_not_helpful';
+    try {
+        var resp = await fetch('/api/support/articles/' + slug + '/' + endpoint + '/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        if (resp.ok) {
+            var el = document.querySelector('.mt-10');
+            if (el) el.innerHTML = '<p class="text-sm text-green-600 font-medium">Terima kasih atas masukannya! \uD83D\uDC4F</p>';
+        }
+    } catch(e) { console.warn(e); }
+}
+</script>
+{% endblock %}

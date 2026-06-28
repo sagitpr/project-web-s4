@@ -1,0 +1,24 @@
+Django>=4.2,<6.1
+djangorestframework>=3.14
+djangorestframework-simplejwt>=5.3
+google-auth>=2.0      # Google OAuth2 social login
+channels>=4.0
+channels-redis>=4.1
+django-cors-headers>=4.0
+django-filter>=23.0
+django-phonenumber-field[phonenumbers]
+phonenumbers>=8.13.0
+django-celery-beat>=2.5
+redis>=5.2
+celery>=5.3
+Pillow>=10.0
+python-dotenv>=1.0
+gunicorn>=21.0
+daphne>=4.0
+drf-spectacular>=0.27
+drf-spectacular-sidecar>=0.27
+django-redis>=5.4
+psycopg2-binary>=2.9  # Only if using PostgreSQL
+mysqlclient>=2.2       # Only if using MySQL/MariaDB
+# uvicorn>=0.24        # Alternative ASGI server
+requests>=2.32.0

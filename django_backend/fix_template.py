@@ -1,0 +1,241 @@
+import os
+
+content = r"""{% load static %}
+<!doctype html>
+<html lang="id" data-theme="Light">
+  <head>
+    <title>Login - Warungio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/pages/auth/login/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
+</head>
+  <body>
+    <!-- Google Sign-In client library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Facebook SDK -->
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId: '{{ facebook_app_id|default:"your-facebook-app-id" }}',
+          cookie: true,
+          xfbml: true,
+          version: 'v18.0'
+        });
+      };
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/id_ID/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
+    <!-- Apple Sign-In -->
+    <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" async defer></script>
+    <div class="page-shell">
+      <div class="login-card">
+        <aside class="hero-panel">
+          <div class="brand-bar">
+            <div class="logo-box">
+              <img src="{% static 'images/Warungio L.png' %}" alt="Warungio logo" />
+            </div>
+            <div>
+              <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+            </div>
+          </div>
+          <div class="hero-copy">
+            <h1>Selamat datang kembali di <span>Warungio!</span></h1>
+            <p class="hero-text">Kelola tokomu dengan mudah dan tingkatkan penjualan setiap hari.</p>
+          </div>
+          <div class="download-apps">
+            <div class="store-visual">
+              <img src="{% static 'images/store-bike.png' %}" alt="Store visual" />
+            </div>
+          </div>
+          <div class="hero-features">
+            <article>
+              <img src="{% static 'images/security.png' %}" alt="Aman & Terpercaya" />
+              <strong>Aman & Terpercaya</strong>
+            </article>
+            <article>
+              <img src="{% static 'images/clock.png' %}" alt="Cepat & Praktis" />
+              <strong>Cepat & Praktis</strong>
+            </article>
+            <article>
+              <img src="{% static 'images/call.png' %}" alt="Dukungan 24/7" />
+              <strong>Dukungan 24/7</strong>
+            </article>
+          </div>
+        </aside>
+        <main class="form-panel">
+          <div class="form-header">
+            <a href="{% url 'page-register' %}" class="top-link">Belum punya akun? <strong>Daftar</strong></a>
+            <div>
+              <p class="form-title">Masuk ke Akun Anda</p>
+              <p class="form-subtitle">Masuk untuk mengakses dashboard dan kelola tokomu</p>
+            </div>
+          </div>
+          <form id="loginForm" class="login-form" novalidate>
+            {% csrf_token %}
+            <div class="input-group">
+              <label for="email">Email atau Nomor Hp</label>
+              <div class="input-shell">
+                <svg class="field-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+                <input type="text" id="email" name="identifier" placeholder="Masukkan email atau nomor HP" autocomplete="username" required />
+              </div>
+            </div>
+            <div class="input-group password-group">
+              <div class="label-row">
+                <label for="password">Kata Sandi</label>
+                <a href="{% url 'page-reset-password' %}" class="link-underline">Lupa kata sandi?</a>
+              </div>
+              <div class="input-shell">
+                <svg class="field-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input type="password" id="password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required />
+                <button class="eye-btn" id="eyeBtn" type="button" aria-label="Tampilkan kata sandi">
+                  <svg id="eyeOpen" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                  <svg id="eyeClosed" class="eye-closed" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="row-options">
+              <label class="remember">
+                <input type="checkbox" id="remember" autocomplete="off" checked />
+                <span class="check-box">
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                    <path d="M1 4.5L4 7.5L10 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                Ingat saya
+              </label>
+            </div>
+            <div id="formMessage" class="form-message" style="display:none;"></div>
+            <button type="submit" id="loginBtn" class="login-button">Masuk Sekarang</button>
+          </form>
+          <div class="social-divider">
+            <span></span>
+            <span>atau masuk dengan</span>
+            <span></span>
+          </div>
+          <div class="social-login">
+            <button class="btn-social google">
+              <img src="{% static 'images/google-logo.png' %}" alt="Google" />
+              <span>Google</span>
+            </button>
+            <button class="btn-social facebook">
+              <img src="{% static 'images/facebook-1.png' %}" alt="Facebook" />
+              <span>Facebook</span>
+            </button>
+            <button class="btn-social apple">
+              <img src="{% static 'images/apple.png' %}" alt="Apple" />
+              <span>Apple</span>
+            </button>
+          </div>
+          <p class="secure-note">
+            <img src="{% static 'images/shield.png' %}" alt="" />
+            Data kamu aman bersama Warungio
+          </p>
+        </main>
+      </div>
+      <footer class="site-footer">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <img src="{% static 'images/Warungio L.png' %}" alt="Warungio logo" />
+              <p><span>Warung</span>io</p>
+            </div>
+            <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat. Belanja mudah, harga bersahabat!</p>
+            <span>&copy; 2026 Warungio. Hak Cipta Dilindungi.</span>
+          </div>
+          <div class="footer-column">
+            <h3>Layanan</h3>
+            <a href="#">Cara Belanja</a>
+            <a href="#">Metode Pembayaran</a>
+            <a href="#">Pengiriman</a>
+            <a href="#">Promo & Diskon</a>
+            <a href="#">Pusat Bantuan</a>
+          </div>
+          <div class="footer-column">
+            <h3>Tentang Warungio</h3>
+            <a href="#">Tentang Kami</a>
+            <a href="#">Karir</a>
+            <a href="#">Blog</a>
+            <a href="#">Mitra Warung</a>
+            <a href="#">Kontak Kami</a>
+          </div>
+          <div class="footer-column">
+            <h3>Untuk Seller</h3>
+            <a href="#">Panduan Seller</a>
+            <a href="#">Tips Sukses</a>
+            <a href="#">Komunitas Seller</a>
+            <a href="#">Kebijakan & Ketentuan</a>
+          </div>
+          <div class="footer-column download-column">
+            <h3>Download Aplikasi Warungio</h3>
+            <p>Belanja lebih mudah lewat aplikasi Warungio.</p>
+            <div class="footer-badges">
+              <img src="{% static 'images/google-playstore.png' %}" alt="Google Play Store" />
+              <img src="{% static 'images/appstore.png' %}" alt="App Store" />
+            </div>
+            <div class="social-row">
+              <span>Ikuti kami di</span>
+              <a href="#"><img src="{% static 'images/instagram.png' %}" alt="Instagram" /></a>
+              <a href="#"><img src="{% static 'images/facebook.png' %}" alt="Facebook" /></a>
+              <a href="#"><img src="{% static 'images/youtube.png' %}" alt="YouTube" /></a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/pages/auth/login/script.js' %}"></script>
+  </body>
+</html>
+"""
+
+filepath = 'C:/Users/ThinkPad/OneDrive/Documents/GitHub/project-web-s4/django_backend/templates/auth/login/index.html'
+with open(filepath, 'w', encoding='utf-8') as f:
+    f.write(content)
+print(f'Written {len(content)} bytes to {filepath}')
+
+# Verify
+with open(filepath, 'r', encoding='utf-8') as f:
+    verify = f.read()
+print(f'Verified: {len(verify)} bytes, starts with: {repr(verify[:60])}')
+
+# Check for broken patterns
+issues = []
+if "css/login.css" in verify:
+    issues.append("css/login.css still present")
+if "js/login.js" in verify:
+    issues.append("js/login.js still present")
+if "meta refresh" in verify:
+    issues.append("meta refresh remnant still present")
+if "{% static 'images/'" in verify and "png" in verify.split("{% static 'images/'")[1]:
+    issues.append("Broken image syntax still present")
+
+if issues:
+    print("ISSUES:", issues)
+else:
+    print("ALL CLEAN - no corruption patterns found")

@@ -1,0 +1,100 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}Admin - Warungio{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <style>
+    .admin-sidebar { width:var(--sidebar-width); background:var(--color-gray-900); color:white; position:fixed; top:0; left:0; bottom:0; z-index:90; display:flex; flex-direction:column; overflow-y:auto; }
+    .admin-sidebar a { color:rgba(255,255,255,0.7); text-decoration:none; display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:500; transition:all 0.15s; }
+    .admin-sidebar a:hover { background:rgba(255,255,255,0.08); color:white; }
+    .admin-sidebar a.active { background:var(--color-brand); color:white; font-weight:600; }
+    .admin-sidebar .section-label { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(255,255,255,0.35); padding:16px 16px 6px; font-weight:600; }
+    .admin-main { flex:1; margin-left:var(--sidebar-width); min-height:100vh; background:var(--color-surface-secondary); }
+    .admin-topbar { display:flex; align-items:center; justify-content:space-between; background:var(--color-surface); border-bottom:1px solid var(--color-border); padding:12px 24px; position:sticky; top:0; z-index:50; }
+    .admin-content { padding:24px; }
+    .admin-mobile-toggle { display:none; width:40px; height:40px; border-radius:var(--radius-lg); border:none; background:var(--color-gray-100); cursor:pointer; align-items:center; justify-content:center; }
+    @media (max-width:768px) {
+        .admin-sidebar { transform:translateX(-100%); transition:transform 0.3s var(--ease-out); }
+        .admin-sidebar.open { transform:translateX(0); }
+        .admin-main { margin-left:0 !important; }
+        .admin-mobile-toggle { display:flex !important; }
+    }
+    </style>
+    {% block extra_styles %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div style="padding:20px 16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:28px; width:auto; filter:brightness(0) invert(1);">
+                <div>
+                    <div style="font-size:16px; font-weight:800; color:white;"><span style="color:var(--color-brand);">Warung</span>io</div>
+                    <small style="font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.06em; text-transform:uppercase;">Admin Panel</small>
+                </div>
+            </div>
+        </div>
+        <nav style="flex:1; padding:12px; display:flex; flex-direction:column; gap:1px;">
+            {% block sidebar_links %}
+            <div class="section-label">Overview</div>
+            <a href="{% url 'admin-dashboard' %}" class="{% if active_page == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high" style="width:18px;"></i> Dashboard</a>
+            <a href="{% url 'admin-analytics' %}" class="{% if active_page == 'analytics' %}active{% endif %}"><i class="fa-solid fa-chart-line" style="width:18px;"></i> Analytics</a>
+            <a href="{% url 'admin-reports' %}" class="{% if active_page == 'reports' %}active{% endif %}"><i class="fa-solid fa-file-lines" style="width:18px;"></i> Reports</a>
+
+            <div class="section-label">Management</div>
+            <a href="{% url 'admin-users' %}" class="{% if active_page == 'users' %}active{% endif %}"><i class="fa-solid fa-users" style="width:18px;"></i> Users</a>
+            <a href="{% url 'admin-marketplace' %}" class="{% if active_page == 'marketplace' %}active{% endif %}"><i class="fa-solid fa-store" style="width:18px;"></i> Marketplace</a>
+            <a href="{% url 'admin-orders' %}" class="{% if active_page == 'orders' %}active{% endif %}"><i class="fa-solid fa-receipt" style="width:18px;"></i> Orders</a>
+            <a href="{% url 'admin-payments' %}" class="{% if active_page == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card" style="width:18px;"></i> Payments</a>
+            <a href="{% url 'admin-notifications' %}" class="{% if active_page == 'notifications' %}active{% endif %}"><i class="fa-solid fa-bell" style="width:18px;"></i> Notifications</a>
+
+            <div class="section-label">System</div>
+            <a href="{% url 'admin-ai' %}" class="{% if active_page == 'ai' %}active{% endif %}"><i class="fa-solid fa-brain" style="width:18px;"></i> AI Management</a>
+            <a href="{% url 'admin-security' %}" class="{% if active_page == 'security' %}active{% endif %}"><i class="fa-solid fa-shield-halved" style="width:18px;"></i> Security</a>
+            <a href="{% url 'admin-audit' %}" class="{% if active_page == 'audit' %}active{% endif %}"><i class="fa-solid fa-clipboard-list" style="width:18px;"></i> Audit Logs</a>
+            <a href="{% url 'admin-settings' %}" class="{% if active_page == 'settings' %}active{% endif %}"><i class="fa-solid fa-gear" style="width:18px;"></i> Settings</a>
+
+            <div style="flex:1;"></div>
+            <div class="section-label">Quick Links</div>
+            <a href="/admin/" target="_blank"><i class="fa-solid fa-database" style="width:18px;"></i> Django Admin</a>
+            <a href="/"><i class="fa-solid fa-arrow-left" style="width:18px;"></i> Back to Site</a>
+            {% endblock %}
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="admin-mobile-toggle" id="adminMenuToggle" onclick="document.getElementById('adminSidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open');">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h1 style="font-size:18px; font-weight:700; color:var(--color-text-primary); margin:0;">{% block page_title %}Admin Dashboard{% endblock %}</h1>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></div>
+                    <span style="font-size:13px; color:var(--color-text-secondary);">Live</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <img src="{% static 'images/av-siti.png' %}" alt="Admin" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                    <span style="font-size:13px; font-weight:600; color:var(--color-text-primary);">Admin</span>
+                </div>
+            </div>
+        </div>
+        <div class="admin-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:89;" onclick="document.getElementById('adminSidebar').classList.remove('open'); this.classList.remove('open');"></div>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Settings - Warungio Admin{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 2fr; gap:24px;">
+    <!-- Settings Navigation -->
+    <div>
+        <div class="card">
+            <div class="card-body" style="padding:8px;">
+                <nav style="display:flex; flex-direction:column; gap:2px;">
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;font-weight:600;background:var(--color-brand-soft);color:var(--color-brand);"><i class="fa-solid fa-globe" style="width:18px;"></i> General</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-envelope" style="width:18px;"></i> Email</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-tag" style="width:18px;"></i> Payment</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-bell" style="width:18px;"></i> Notifications</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-palette" style="width:18px;"></i> Appearance</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-language" style="width:18px;"></i> Localization</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-cloud" style="width:18px;"></i> Cloud & Storage</a>
+                    <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-lg);text-decoration:none;font-size:13px;color:var(--color-text-secondary);transition:all 0.15s;"><i class="fa-solid fa-robot" style="width:18px;"></i> AI / Vertex AI</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Content -->
+    <div>
+        <div class="card">
+            <div class="card-header"><h3>General Settings</h3></div>
+            <div class="card-body">
+                <form style="display:flex; flex-direction:column; gap:16px;">
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Platform Name</label>
+                        <input type="text" class="form-input" value="Warungio" style="width:100%;padding:10px 14px;">
+                        <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;">The public name of your marketplace platform</p>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Tagline</label>
+                        <input type="text" class="form-input" value="Warung Digital untuk Semua" style="width:100%;padding:10px 14px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Support Email</label>
+                        <input type="email" class="form-input" value="support@warungio.com" style="width:100%;padding:10px 14px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Default Currency</label>
+                        <select class="form-select" style="width:100%;padding:10px 14px;">
+                            <option selected>IDR - Indonesian Rupiah (Rp)</option>
+                            <option>USD - US Dollar ($)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Timezone</label>
+                        <select class="form-select" style="width:100%;padding:10px 14px;">
+                            <option selected>Asia/Jakarta (WIB)</option>
+                            <option>Asia/Makassar (WITA)</option>
+                            <option>Asia/Jayapura (WIT)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--color-border-light);">
+                        <div><p style="font-size:13px;font-weight:600;margin:0;">Maintenance Mode</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Disable platform access for non-admin users</p></div>
+                        <label style="position:relative;display:inline-block;width:44px;height:24px;"><input type="checkbox" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:var(--color-gray-300);border-radius:99px;transition:0.3s;"><span style="position:absolute;content:'';height:18px;width:18px;border-radius:50%;background:white;top:3px;left:3px;transition:0.3s;"></span></span></label>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--color-border-light);">
+                        <div><p style="font-size:13px;font-weight:600;margin:0;">Registration Open</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Allow new user registration</p></div>
+                        <label style="position:relative;display:inline-block;width:44px;height:24px;"><input type="checkbox" checked style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:var(--color-brand);border-radius:99px;transition:0.3s;"><span style="position:absolute;content:'';height:18px;width:18px;border-radius:50%;background:white;top:3px;left:23px;transition:0.3s;"></span></span></label>
+                    </div>
+                    <div style="padding-top:8px;">
+                        <button class="btn btn-primary" style="padding:10px 24px;">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+            <div class="card-header"><h3>Danger Zone</h3></div>
+            <div class="card-body">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border:1px solid #fecaca; border-radius:var(--radius-lg); background:#fef2f2;">
+                        <div><p style="font-size:13px;font-weight:600;margin:0;color:#b91c1c;">Clear All Cache</p><p style="font-size:11px;color:#dc2626;margin:2px 0 0;">Remove all cached data and force refresh</p></div>
+                        <button class="btn btn-danger btn-sm">Clear Cache</button>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border:1px solid #fecaca; border-radius:var(--radius-lg); background:#fef2f2;">
+                        <div><p style="font-size:13px;font-weight:600;margin:0;color:#b91c1c;">Export All Data</p><p style="font-size:11px;color:#dc2626;margin:2px 0 0;">Download full platform data as JSON</p></div>
+                        <button class="btn btn-danger btn-sm">Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

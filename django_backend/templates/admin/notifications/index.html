@@ -1,0 +1,115 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Notifications - Warungio Admin{% endblock %}
+{% block page_title %}Notification Management{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+    <div class="card">
+        <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+            <h3>Send Notification</h3>
+        </div>
+        <div class="card-body">
+            <form style="display:flex; flex-direction:column; gap:16px;">
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Target Audience</label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <label class="radio-pill" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--color-border);border-radius:var(--radius-full);cursor:pointer;font-size:13px;transition:all 0.15s;"><input type="radio" name="target" checked style="accent-color:var(--color-brand);"> All Users</label>
+                        <label class="radio-pill" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--color-border);border-radius:var(--radius-full);cursor:pointer;font-size:13px;transition:all 0.15s;"><input type="radio" name="target" style="accent-color:var(--color-brand);"> Buyers</label>
+                        <label class="radio-pill" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--color-border);border-radius:var(--radius-full);cursor:pointer;font-size:13px;transition:all 0.15s;"><input type="radio" name="target" style="accent-color:var(--color-brand);"> Sellers</label>
+                        <label class="radio-pill" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--color-border);border-radius:var(--radius-full);cursor:pointer;font-size:13px;transition:all 0.15s;"><input type="radio" name="target" style="accent-color:var(--color-brand);"> Specific Store</label>
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Notification Type</label>
+                    <select class="form-select" style="width:100%;padding:10px 14px;">
+                        <option>Promotion / Marketing</option>
+                        <option>System Update</option>
+                        <option>Payment Reminder</option>
+                        <option>Order Alert</option>
+                        <option>Security Notice</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Title</label>
+                    <input type="text" class="form-input" placeholder="e.g. Promo Akhir Bulan" style="width:100%;padding:10px 14px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Message</label>
+                    <textarea class="form-input" rows="4" placeholder="Write your notification message..." style="width:100%;padding:10px 14px;resize:vertical;"></textarea>
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Action URL (optional)</label>
+                    <input type="url" class="form-input" placeholder="https://warungio.com/promo/" style="width:100%;padding:10px 14px;">
+                </div>
+                <div style="display:flex; gap:12px; padding-top:8px;">
+                    <button class="btn btn-primary" style="padding:10px 24px;"><i class="fa-solid fa-paper-plane"></i> Send Notification</button>
+                    <button class="btn btn-secondary" style="padding:10px 24px;">Save as Draft</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div>
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><h3>Recent Sent</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div style="display:flex; flex-direction:column;">
+                    <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);">
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;flex-shrink:0;"><i class="fa-solid fa-gift" style="font-size:14px;"></i></div>
+                            <div style="flex:1;min-width:0;">
+                                <p style="font-size:13px;font-weight:600;margin:0;">Promo Akhir Pekan</p>
+                                <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Sent to 12,847 users</p>
+                                <p style="font-size:10px;color:var(--color-text-tertiary);margin:2px 0 0;">2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);">
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;flex-shrink:0;"><i class="fa-solid fa-rotate" style="font-size:14px;"></i></div>
+                            <div style="flex:1;min-width:0;">
+                                <p style="font-size:13px;font-weight:600;margin:0;">System Update v2.4</p>
+                                <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Sent to all sellers</p>
+                                <p style="font-size:10px;color:var(--color-text-tertiary);margin:2px 0 0;">Yesterday</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:14px 20px;">
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;"><i class="fa-solid fa-shield" style="font-size:14px;"></i></div>
+                            <div style="flex:1;min-width:0;">
+                                <p style="font-size:13px;font-weight:600;margin:0;">Security Alert</p>
+                                <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Sent to 5 flagged accounts</p>
+                                <p style="font-size:10px;color:var(--color-text-tertiary);margin:2px 0 0;">3 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>Analytics</h3></div>
+            <div class="card-body" style="padding:16px 20px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div style="text-align:center;padding:12px;background:var(--color-brand-soft);border-radius:var(--radius-lg);">
+                        <div style="font-size:24px;font-weight:800;color:var(--color-brand);">94%</div>
+                        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">Delivery Rate</div>
+                    </div>
+                    <div style="text-align:center;padding:12px;background:var(--color-gray-50);border-radius:var(--radius-lg);">
+                        <div style="font-size:24px;font-weight:800;color:var(--color-text-primary);">28%</div>
+                        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">Open Rate</div>
+                    </div>
+                    <div style="text-align:center;padding:12px;background:var(--color-gray-50);border-radius:var(--radius-lg);">
+                        <div style="font-size:24px;font-weight:800;color:var(--color-text-primary);">12%</div>
+                        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">Click Rate</div>
+                    </div>
+                    <div style="text-align:center;padding:12px;background:var(--color-gray-50);border-radius:var(--radius-lg);">
+                        <div style="font-size:24px;font-weight:800;color:var(--color-text-primary);">8</div>
+                        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">Queued</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

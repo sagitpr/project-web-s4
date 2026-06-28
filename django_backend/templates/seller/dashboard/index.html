@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dashboard - Warungio Seller</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body style="background: var(--color-surface-secondary);">
+
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-btn" id="mobileMenuToggle" style="position:fixed;top:16px;left:16px;z-index:100;background:var(--color-surface);box-shadow:var(--shadow-md);">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<div style="display:flex; min-height:100vh;">
+    <!-- Sidebar -->
+    <aside id="sellerSidebar" style="width:var(--sidebar-width); background:var(--color-surface); border-right:1px solid var(--color-border); position:fixed; top:0; left:0; bottom:0; z-index:90; display:flex; flex-direction:column; transition:transform 0.3s var(--ease-out); overflow-y:auto;">
+        <div style="padding:24px 20px; border-bottom:1px solid var(--color-border-light);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:32px; width:auto;">
+                <div>
+                    <div style="font-size:18px; font-weight:800; color:var(--color-text-primary);">
+                        <span style="color:var(--color-brand);">Warung</span>io
+                    </div>
+                    <small style="font-size:11px; color:var(--color-text-tertiary);">Mitra</small>
+                </div>
+            </div>
+        </div>
+        <nav style="flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:2px;">
+            <a href="{% url 'page-seller-dashboard' %}" class="active" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:white; background:var(--color-brand);">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </a>
+            <a href="{% url 'page-seller-products' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-box"></i> Produk
+            </a>
+            <a href="{% url 'page-seller-orders' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-receipt"></i> Pesanan
+            </a>
+            <a href="{% url 'page-seller-keuangan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-wallet"></i> Keuangan
+            </a>
+            <a href="{% url 'page-seller-pelanggan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-users"></i> Pelanggan
+            </a>
+            <a href="{% url 'page-seller-promo-diskon' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-bullhorn"></i> Promo & Diskon
+            </a>
+            <a href="{% url 'page-seller-ulasan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-star"></i> Ulasan
+            </a>
+            <a href="{% url 'page-seller-laporan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-chart-line"></i> Laporan
+            </a>
+            <div style="flex:1;"></div>
+            <a href="{% url 'page-seller-pengaturan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-gear"></i> Pengaturan
+            </a>
+            <a href="{% url 'page-seller-partner-guide' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
+                <i class="fa-solid fa-circle-question"></i> Bantuan
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.4); z-index:89;"></div>
+
+    <!-- Main Content -->
+    <main style="flex:1; margin-left:var(--sidebar-width); padding:24px; min-width:0;">
+        <!-- Top Bar -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:16px 24px; margin-bottom:24px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:16px; font-weight:700; color:var(--color-text-primary);" id="shopName">Warung Bu Sari</span>
+                        <span class="badge badge-green">Aktif</span>
+                    </div>
+                    <span style="font-size:12px; color:var(--color-text-tertiary);">ID: WRG12345</span>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <button class="btn btn-ghost btn-icon" style="position:relative;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span style="position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:var(--color-danger);color:white;font-size:9px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;">3</span>
+                </button>
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <div style="position:relative;">
+                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                        <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;background:#22c55e;border-radius:50%;border:2px solid white;"></span>
+                    </div>
+                    <div>
+                        <div style="font-size:13px; font-weight:700; color:var(--color-text-primary);">Bu Sari</div>
+                        <div style="font-size:11px; color:var(--color-text-tertiary);">Seller</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px;">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Penjualan</div>
+                    <div class="stat-value" id="total-sales" style="font-size:18px;">Rp 8.560.000</div>
+                    <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 12.5% dari kemarin</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dbeafe; color:#2563eb;"><i class="fa-solid fa-box-open"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Pesanan Baru</div>
+                    <div class="stat-value" id="new-orders">12</div>
+                    <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 3 dari kemarin</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Produk Aktif</div>
+                    <div class="stat-value" id="active-products">128</div>
+                    <div class="stat-trend">Semua tersedia</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f3e8ff; color:#7c3aed;"><i class="fa-solid fa-star"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Penilaian Toko</div>
+                    <div class="stat-value" id="store-rating">4.9</div>
+                    <div class="stat-trend">(236 ulasan)</div>
+                </div>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                <div class="stat-content">
+                    <div class="stat-label" style="color:#166534;">Saldo Warungio</div>
+                    <div class="stat-value" id="store-balance" style="color:#15803d;">Rp 2.350.000</div>
+                    <a href="#" class="btn btn-sm btn-primary" style="margin-top:8px;">Tarik Saldo</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Chart + Quality Section -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Tren Penjualan (30 Hari)</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="120"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Kualitas & Stok</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex; align-items:center; gap:24px;">
+                        <div style="position:relative; width:140px; height:140px;">
+                            <canvas id="eligibilityChart"></canvas>
+                            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:800; color:var(--color-text-primary);">92%</div>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:12px; color:var(--color-text-secondary);">Sangat Segar</span><span style="font-size:12px; font-weight:700;">78</span></div>
+                            <div class="progress" style="margin-bottom:10px;"><div class="progress-bar" style="width:56%; background:#22c55e;"></div></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:12px; color:var(--color-text-secondary);">Segar</span><span style="font-size:12px; font-weight:700;">42</span></div>
+                            <div class="progress" style="margin-bottom:10px;"><div class="progress-bar" style="width:30%; background:#a3e635;"></div></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:12px; color:var(--color-text-secondary);">Kurang Segar</span><span style="font-size:12px; font-weight:700;">8</span></div>
+                            <div class="progress" style="margin-bottom:10px;"><div class="progress-bar" style="width:14%; background:#facc15;"></div></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:12px; color:var(--color-text-secondary);">Tidak Layak</span><span style="font-size:12px; font-weight:700;">10</span></div>
+                            <div class="progress"><div class="progress-bar" style="width:8%; background:#ef4444;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Table + Smart Scan -->
+        <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px;">
+            <!-- Products Needing Action -->
+            <div class="card">
+                <div class="card-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <h3>Produk Perlu Tindakan</h3>
+                        <span class="badge badge-red">10</span>
+                    </div>
+                    <a href="#" class="btn btn-ghost btn-sm">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="w-table">
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Status</th>
+                                    <th>Masalah</th>
+                                    <th style="text-align:right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Scan AI -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-robot" style="color:var(--color-brand);margin-right:8px;"></i>Smart Scan AI</h3>
+                </div>
+                <div class="card-body">
+                    <select id="scan-product-select" class="form-select" style="margin-bottom:12px;">
+                        <option value="">-- Pilih Produk --</option>
+                    </select>
+                    <select id="scan-mode-select" class="form-select" style="margin-bottom:12px;">
+                        <option value="computer_vision">Freshness CV (Produk Segar)</option>
+                        <option value="barcode">Barcode Scanner</option>
+                        <option value="ocr">OCR Scanner</option>
+                    </select>
+                    <div style="position:relative; width:100%; height:160px; background:#0f172a; border-radius:var(--radius-lg); overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:12px;">
+                        <video id="video-feed" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                        <div id="camera-placeholder" style="color:#64748b; text-align:center;">
+                            <i class="fa-solid fa-camera" style="font-size:28px; margin-bottom:8px; display:block;"></i>
+                            <span style="font-size:12px;">Kamera belum aktif</span>
+                        </div>
+                        <div id="scanner-laser" style="display:none; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#22c55e,transparent); animation:scan-anim 2s infinite linear;"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <button id="btn-start-camera" class="btn btn-primary" style="flex:1;"><i class="fa-solid fa-video"></i> Kamera</button>
+                        <button id="btn-capture" class="btn btn-secondary" style="flex:1; display:none;"><i class="fa-solid fa-camera"></i> Ambil Foto</button>
+                    </div>
+                    <div>
+                        <h4 style="font-size:12px; font-weight:600; color:var(--color-text-secondary); margin-bottom:8px;">Riwayat Scan</h4>
+                        <div id="scan-history-list" style="max-height:120px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="card" style="margin-top:24px;">
+            <div class="card-header">
+                <h3>Aktivitas Terbaru</h3>
+                <a href="#" class="btn btn-ghost btn-sm">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="card-body">
+                <div id="activity-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+@keyframes scan-anim { 0% { top:0; } 100% { top:100%; } }
+@media (max-width:768px) {
+    #sellerSidebar { transform:translateX(-100%); }
+    #sellerSidebar.open { transform:translateX(0); }
+    #sidebarOverlay { display:none; }
+    #sidebarOverlay.open { display:block !important; }
+    main { margin-left:0 !important; padding:16px !important; }
+    .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
+}
+</style>
+
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script src="{% static 'js/utils/toast.js' %}"></script>
+<script src="{% static 'js/utils/format.js' %}"></script>
+<script src="{% static 'js/utils/asset-loader.js' %}"></script>
+<script src="{% static 'js/pages/seller/dashboard/script.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toggle = document.getElementById('mobileMenuToggle');
+    var sidebar = document.getElementById('sellerSidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warungio - Belanja dari Warung Terdekat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="sidebar" data-aos="fade-right" data-aos-duration="800">
+            <div class="sidebar-header">
+                <div class="brand-name">
+                    <img src="/static/images/Warungio L.png" alt="Warungio" style="width: 32px;">
+                    <span>Warungio</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active"><img src="/static/images/location.png" alt="Beranda"><span>Beranda</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/order-delivery.png" alt="Pesanan Saya"><span>Pesanan Saya</span><span class="nav-badge">2</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/list.png" alt="Produk"><span>Produk</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/store.png" alt="Warung"><span>Warung Terdekat</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/star.png" alt="Favorit"><span>Favorit</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/notifikasi.png" alt="Langganan"><span>Langganan</span><span class="nav-badge new-badge">Baru</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/discount.png" alt="Promo"><span>Promo</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/wallet.png" alt="Dompet"><span>Dompet Saya</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/star.png" alt="Penilaian"><span>Penilaian</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/online-support.png" alt="Bantuan"><span>Bantuan</span></a>
+                <a href="#" class="nav-link"><img src="/static/images/menu.gif" alt="Pengaturan"><span>Pengaturan</span></a>
+            </nav>
+
+            <div class="sidebar-card">
+                <h4>Gratis Ongkir</h4>
+                <p>Min. belanja Rp 20.000</p>
+                <img src="/static/images/gratis-ongkir.png" alt="Gratis Ongkir" style="width:100px; margin:0 auto;">
+                <button class="card-button">Belanja Sekarang</button>
+            </div>
+        </aside>
+
+        <main class="page-main">
+            <header class="topbar" data-aos="fade-down" data-aos-duration="600">
+                <div class="menu-toggle" id="menuToggle">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </div>
+                <div class="search-panel">
+                    <div class="search-input">
+                        <svg viewBox="0 0 24 24" width="20" height="20" color="var(--muted)"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <input type="text" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-btn"><img src="/static/images/notifikasi.png" alt="Notifikasi"><span class="icon-badge">1</span></button>
+                    <button class="icon-btn"><img src="/static/images/chat.png" alt="Chat"></button>
+                    <button class="icon-btn"><img src="/static/images/keranjang.png" alt="Cart"><span class="icon-badge">2</span></button>
+                    <div class="profile-box">
+                        <div class="profile-info">
+                            <p id="userName">Hai, User</p>
+                            <span class="member-badge">Member</span>
+                        </div>
+                        <img src="/static/images/av-siti.png" alt="Profile" class="profile-avatar" id="userAvatar">
+                        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content">
+                <section class="hero-section" data-aos="fade-up" data-aos-duration="800">
+                    <div class="hero-panel">
+                        <div class="hero-copy">
+                            <h1>Belanja Kebutuhan Dapur<br>Lebih Mudah di <span class="highlight">Warungio</span></h1>
+                            <p>Dari warung terdekat, produk segar hingga diantar cepat ke rumahmu.</p>
+                            <button class="btn-primary">Belanja Sekarang</button>
+                        </div>
+                        <div class="hero-badges">
+                            <div class="info-badge">
+                                <img src="/static/images/vegetable.png" alt="Segar">
+                                <div><strong>Produk Segar</strong><span>Setiap hari</span></div>
+                            </div>
+                            <div class="info-badge">
+                                <img src="/static/images/store.png" alt="Dekat">
+                                <div><strong>Warung Terdekat</strong><span>Lebih cepat sampai</span></div>
+                            </div>
+                            <div class="info-badge">
+                                <img src="/static/images/discount.png" alt="Murah">
+                                <div><strong>Harga Terjangkau</strong><span>Hemat setiap hari</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="/static/images/kebutuhan dapur.png" alt="Hero Image">
+                    </div>
+                </section>
+
+                <section data-aos="fade-up" data-aos-offset="100">
+                    <div class="section-heading">
+                        <h2>Belanja Berdasarkan Kategori</h2>
+                        <a href="#">Lihat Semua</a>
+                    </div>
+                    <div class="kategori-grid">
+                        <div class="kategori-item"><img src="/static/images/vegetable.png" alt="Sayuran"><span>Sayuran</span></div>
+                        <div class="kategori-item"><img src="/static/images/fruit.png" alt="Buah"><span>Buah</span></div>
+                        <div class="kategori-item"><img src="/static/images/sembako.png" alt="Sembako"><span>Sembako</span></div>
+                        <div class="kategori-item"><img src="/static/images/meat.png" alt="Daging"><span>Daging & Ikan</span></div>
+                        <div class="kategori-item"><img src="/static/images/beverage.png" alt="Bumbu"><span>Bumbu Dapur</span></div>
+                        <div class="kategori-item"><img src="/static/images/beverage.png" alt="Minuman"><span>Minuman</span></div>
+                        <div class="kategori-item"><img src="/static/images/food.png" alt="Rumah"><span>Kebutuhan Rumah</span></div>
+                        <div class="kategori-item"><img src="/static/images/menu.gif" alt="Lainnya"><span>Lainnya</span></div>
+                    </div>
+                </section>
+
+                <section class="promo-grid" data-aos="fade-up" data-aos-offset="100">
+                    <div class="promo-card promo-diskon">
+                        <div>
+                            <span class="promo-label">Hemat sampai</span>
+                            <h3>30%</h3>
+                            <p>Diskon Sayur Segar</p>
+                            <button>Belanja Sekarang</button>
+                        </div>
+                        <img src="/static/images/vega-fresh.png" alt="Promo 1">
+                    </div>
+                    <div class="promo-card promo-ongkir">
+                        <div>
+                            <span class="promo-label">Min. belanja Rp20.000</span>
+                            <h3 style="font-size:28px;">Gratis Ongkir</h3>
+                            <button>Belanja Sekarang</button>
+                        </div>
+                        <img src="/static/images/belanja-women.png" alt="Promo 2">
+                    </div>
+                    <div class="promo-card promo-cashback">
+                        <div>
+                            <span class="promo-label">Hingga</span>
+                            <h3>Rp10.000</h3>
+                            <p>Cashback Spesial</p>
+                            <button>Belanja Sekarang</button>
+                        </div>
+                        <img src="/static/images/cashback.png" alt="Promo 3">
+                    </div>
+                </section>
+
+
+                <section data-aos="fade-up" data-aos-offset="100">
+                    <div class="section-heading">
+                        <h2>Warung Pilihan di Sekitarmu</h2>
+                        <a href="#">Lihat Semua</a>
+                    </div>
+                    <div class="warung-grid" id="warungGrid">
+                    </div>
+                </section>
+
+                <section data-aos="fade-up" data-aos-offset="100">
+                    <div class="section-heading" style="margin-bottom: 0;">
+                        <h2 style="margin-bottom: 15px;">Produk Segar Pilihan</h2>
+                        <a href="#">Lihat Semua</a>
+                    </div>
+                    <div class="filter-row">
+                        <button class="filter-btn active">Semua</button>
+                        <button class="filter-btn">Sayuran</button>
+                        <button class="filter-btn">Buah</button>
+                        <button class="filter-btn">Daging</button>
+                        <button class="filter-btn">Sembako</button>
+                        <button class="filter-btn">Lainnya</button>
+                    </div>
+                    <div class="produk-grid" id="produkGrid">
+                    </div>
+                </section>
+
+                <section class="value-props" data-aos="fade-up" data-aos-offset="100">
+                    <div class="vp-item">
+                        <div class="vp-icon"><img src="/static/images/star.png" alt="Kualitas"></div>
+                        <div><strong>Kualitas Terjamin</strong><p>Produk segar setiap hari</p></div>
+                    </div>
+                    <div class="vp-item">
+                        <div class="vp-icon"><img src="/static/images/wallet.png" alt="Aman"></div>
+                        <div><strong>Pembayaran Aman</strong><p>Transaksi 100% aman</p></div>
+                    </div>
+                    <div class="vp-item">
+                        <div class="vp-icon"><img src="/static/images/order-delivery.png" alt="Cepat"></div>
+                        <div><strong>Pengiriman Cepat</strong><p>Sampai ke rumahmu</p></div>
+                    </div>
+                    <div class="vp-item">
+                        <div class="vp-icon"><img src="/static/images/location.png" alt="COD"></div>
+                        <div><strong>COD Tersedia</strong><p>Bayar di tempat</p></div>
+                    </div>
+                    <div class="vp-item">
+                        <div class="vp-icon"><img src="/static/images/online-support.png" alt="Support"></div>
+                        <div><strong>Support 24/7</strong><p>Kami siap membantu</p></div>
+                    </div>
+                </section>
+
+                <section class="subscription-section" data-aos="fade-up" data-aos-offset="100">
+                    <div class="sub-left">
+                        <h2>Langganan Hemat</h2>
+                        <p>Belanja rutin lebih hemat dan praktis.</p>
+                        <button class="btn-primary">Langganan Sekarang</button>
+                    </div>
+                    <div class="sub-packages">
+                        <div class="sub-card">
+                            <img src="/static/images/paket-sayur.png" alt="Paket">
+                            <div class="sub-info">
+                                <h4>Paket Hemat Sayur</h4>
+                                <span>12 Item</span>
+                                <div class="price">Rp 45.000</div>
+                                <div class="hemat-badge">Hemat 15%</div>
+                            </div>
+                            <button class="add-btn">+</button>
+                        </div>
+                        <div class="sub-card">
+                            <img src="/static/images/sembako-hemat.png" alt="Paket">
+                            <div class="sub-info">
+                                <h4>Paket Sembako</h4>
+                                <span>8 Item</span>
+                                <div class="price">Rp 120.000</div>
+                                <div class="hemat-badge">Hemat 20%</div>
+                            </div>
+                            <button class="add-btn">+</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section data-aos="fade-up" data-aos-offset="100">
+                    <div class="section-heading">
+                        <h2>Konten & Tips</h2>
+                        <a href="#">Lihat Semua</a>
+                    </div>
+                    <div class="tips-grid">
+                        <div class="tip-card">
+                            <span class="tip-badge">Tips</span>
+                            <h4>5 Cara Menyimpan Sayuran Agar Tetap Segar Lebih Lama</h4>
+                            <a href="#" class="read-more">Baca Selengkapnya →</a>
+
+                        </div>
+                        <div class="tip-card">
+                            <span class="tip-badge">Resep</span>
+                            <h4>Resep Masakan Sehat untuk Keluarga Tercinta</h4>
+                            <a href="#" class="read-more">Baca Selengkapnya →</a>
+                        </div>
+                        <div class="tip-card">
+                            <span class="tip-badge">Info</span>
+                            <h4>Kenali Manfaat Sayur untuk Kesehatan Tubuh</h4>
+                            <a href="#" class="read-more">Baca Selengkapnya →</a>
+                        </div>
+                    </div>
+                </section>
+
+                
+
+        <aside class="right-sidebar" data-aos="fade-left" data-aos-duration="800">
+            <div class="right-card" id="pesananAktifCard">
+                <div class="card-header">
+                    <h3>Pesanan Aktif</h3>
+                    <a href="#">Lihat Semua</a>
+                </div>
+                <div class="pesanan-box" id="pesananAktifContent">
+                    <div style="padding:20px; text-align:center; color:var(--muted); font-size:13px;">Memuat pesanan...</div>
+                </div>
+            </div>
+
+            <div class="right-card wallet-card">
+                <div class="card-header">
+                    <h3>Dompet Saya</h3>
+                    <a href="#">Lihat Detail</a>
+                </div>
+                <div class="wallet-info">
+                    <span style="font-size:13px; color:var(--muted);">Saldo</span>
+                    <div class="wallet-balance" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <strong id="userBalance" style="font-size:24px; font-weight:800; color:var(--text);">Rp 0</strong>
+                        <button class="btn-topup"><img src="/static/images/wallet.png" style="width:16px; display:inline; vertical-align:middle; margin-right:6px; filter:brightness(0) invert(1);">Top Up</button>
+                    </div>
+                </div>
+                <div class="wallet-actions" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:20px;">
+                    <div class="w-action"><div class="w-icon"><img src="/static/images/list.png"></div><span>Riwayat</span></div>
+                    <div class="w-action"><div class="w-icon"><img src="/static/images/discount.png"></div><span>Voucher</span></div>
+                    <div class="w-action"><div class="w-icon"><img src="/static/images/wallet.png"></div><span>Metode Bayar</span></div>
+                </div>
+            </div>
+
+            <div class="right-card">
+                <div class="card-header">
+                    <h3>Rekomendasi Untukmu</h3>
+                    <a href="#">Lihat Semua</a>
+                </div>
+                <div class="rekomendasi-list" id="rekomendasiList">
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,
+            offset: 50,
+        });
+    </script>
+    <script src="/static/js/device-detector.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

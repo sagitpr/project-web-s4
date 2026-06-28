@@ -1,0 +1,67 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panduan Mitra - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/partner-guide/style.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="{% url 'home' %}" aria-label="Warungio"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" /></a>
+      <nav class="progress-steps" aria-label="Status pendaftaran mitra">
+        <span class="step done"><i>&#10003;</i>Buat Akun</span>
+        <span class="line"></span>
+        <span class="step done"><i>&#10003;</i>Verifikasi</span>
+        <span class="line"></span>
+        <span class="step done"><i>&#10003;</i>Informasi Toko</span>
+        <span class="line active"></span>
+        <span class="step current"><i>4</i>Selesai</span>
+      </nav>
+      <a class="dashboard-btn" href="{% url 'page-seller-dashboard' %}">Ke Dashboard</a>
+    </header>
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="hero-copy welcome-panel">
+            <p class="success-text">Selamat!</p>
+            <h1>Anda Telah Mendaftarkan Akun Diri Anda Menjadi <strong>Mitra Toko</strong> Warungio</h1>
+            <p class="hero-subtitle">Akun toko Anda telah aktif. Mulai kelola toko dan tingkatkan penjualan Anda bersama Warungio.</p>
+            <div class="hero-actions">
+              <a class="primary-btn" href="{% url 'page-seller-products' %}">Mulai Penjualan <span>&rarr;</span></a>
+              <a class="secondary-btn" href="{% url 'page-buyer-profile' %}">Lengkapi Profil Toko</a>
+            </div>
+          </div>
+          <div class="hero-visual welcome-panel" aria-label="Ilustrasi mitra Warungio">
+            <img src="{% static 'images/kebutuhan dapur.png' %}" alt="Tas Warungio dengan sayuran segar" />
+            <div class="active-card"><span class="checkmark">&#10003;</span><strong>Akun Toko Aktif</strong></div>
+          </div>
+        </div>
+      </section>
+      <section class="trust-strip">
+        <article><span><img src="{% static 'images/shield.png' %}" alt="" /></span><div><h3>Toko Terverifikasi</h3><p>Akun toko Anda telah berhasil diverifikasi</p></div></article>
+        <article><span><img src="{% static 'images/setting.png' %}" alt="" /></span><div><h3>Siap Berjualan</h3><p>Produk Anda siap dilihat oleh jutaan pelanggan</p></div></article>
+        <article><span><img src="{% static 'images/wallet.png' %}" alt="" /></span><div><h3>Transaksi Aman</h3><p>Pembayaran aman dan terpercaya</p></div></article>
+        <article><span><img src="{% static 'images/online-support.png' %}" alt="" /></span><div><h3>Support 24/7</h3><p>Tim kami siap membantu kapan saja</p></div></article>
+      </section>
+      <section class="section intro">
+        <h2>Mulai Penjualan Harimu</h2>
+        <p>Ikuti langkah-langkah berikut untuk memaksimalkan toko Anda</p>
+        <div class="steps-grid">
+          <article class="selling-card"><span class="number">1</span><h3>Lengkapi Profil Toko</h3><p>Tambahkan foto toko, deskripsi, jam operasional.</p></article>
+          <article class="selling-card"><span class="number">2</span><h3>Tambah Produk</h3><p>Upload produk terbaik Anda dengan foto yang jelas.</p></article>
+          <article class="selling-card"><span class="number">3</span><h3>Atur Pengiriman</h3><p>Atur area pengiriman untuk menjangkau lebih banyak pelanggan.</p></article>
+          <article class="selling-card"><span class="number">4</span><h3>Promosikan Toko</h3><p>Gunakan fitur promosi untuk menarik lebih banyak pelanggan.</p></article>
+          <article class="selling-card"><span class="number">5</span><h3>Terima Pesanan</h3><p>Siap menerima pesanan dan berikan pelayanan terbaik.</p></article>
+        </div>
+      </section>
+    </main>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/pages/seller/partner-guide/script.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pesanan - Warungio Seller</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body style="background:var(--color-surface-secondary);">
+<div style="display:flex; min-height:100vh;">
+    <!-- Sidebar -->
+    <aside id="sellerSidebar" style="width:var(--sidebar-width); background:var(--color-surface); border-right:1px solid var(--color-border); position:fixed; top:0; left:0; bottom:0; z-index:90; display:flex; flex-direction:column; overflow-y:auto; transition:transform 0.3s;">
+        <div style="padding:24px 20px; border-bottom:1px solid var(--color-border-light);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:32px; width:auto;">
+                <div>
+                    <div style="font-size:18px; font-weight:800; color:var(--color-text-primary);"><span style="color:var(--color-brand);">Warung</span>io</div>
+                    <small style="font-size:11px; color:var(--color-text-tertiary);">Manajemen Pesanan</small>
+                </div>
+            </div>
+        </div>
+        <nav style="flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:2px;">
+            <a href="{% url 'page-seller-dashboard' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="{% url 'page-seller-products' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-box"></i> Produk</a>
+            <a href="{% url 'page-seller-orders' %}" class="active" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:white; background:var(--color-brand);"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+            <a href="{% url 'page-seller-keuangan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+            <a href="{% url 'page-seller-pelanggan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-users"></i> Pelanggan</a>
+            <a href="{% url 'page-seller-promo-diskon' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-bullhorn"></i> Promo</a>
+            <a href="{% url 'page-seller-ulasan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-star"></i> Ulasan</a>
+            <a href="{% url 'page-seller-laporan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+            <div style="flex:1;"></div>
+            <a href="{% url 'page-seller-pengaturan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary);"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main style="flex:1; margin-left:var(--sidebar-width); padding:24px; min-width:0;">
+        <!-- Top bar -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:16px 24px; margin-bottom:24px;">
+            <div>
+                <h1 style="font-size:20px; font-weight:800; color:var(--color-text-primary); margin:0;">Daftar Pesanan</h1>
+                <p style="font-size:13px; color:var(--color-text-tertiary); margin:4px 0 0;">Kelola semua pesanan masuk dan perbarui status pengiriman.</p>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuToggle" style="background:var(--color-gray-100);box-shadow:none;"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px;">
+            <div class="stat-card" data-status="all" style="cursor:pointer;">
+                <div class="stat-content"><div class="stat-label">Semua Pesanan</div><div class="stat-value" id="stat-count-all" style="font-size:22px;">0</div></div>
+            </div>
+            <div class="stat-card" data-status="pending" style="cursor:pointer; border-left:3px solid #f59e0b;">
+                <div class="stat-content"><div class="stat-label" style="color:#d97706;">Menunggu</div><div class="stat-value" id="stat-count-pending" style="font-size:22px; color:#d97706;">0</div></div>
+            </div>
+            <div class="stat-card" data-status="processing" style="cursor:pointer; border-left:3px solid #3b82f6;">
+                <div class="stat-content"><div class="stat-label" style="color:#2563eb;">Diproses</div><div class="stat-value" id="stat-count-processing" style="font-size:22px; color:#2563eb;">0</div></div>
+            </div>
+            <div class="stat-card" data-status="shipped" style="cursor:pointer; border-left:3px solid #7c3aed;">
+                <div class="stat-content"><div class="stat-label" style="color:#7c3aed;">Dikirim</div><div class="stat-value" id="stat-count-shipped" style="font-size:22px; color:#7c3aed;">0</div></div>
+            </div>
+            <div class="stat-card" data-status="completed" style="cursor:pointer; border-left:3px solid #16a34a;">
+                <div class="stat-content"><div class="stat-label" style="color:#16a34a;">Selesai</div><div class="stat-value" id="stat-count-completed" style="font-size:22px; color:#16a34a;">0</div></div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; gap:10px;">
+                    <select id="date-filter" class="form-select" style="width:auto; min-height:38px; padding:8px 12px;">
+                        <option value="all">Semua Tanggal</option>
+                        <option value="today">Hari Ini</option>
+                        <option value="7days">7 Hari</option>
+                        <option value="30days">30 Hari</option>
+                    </select>
+                    <div style="position:relative;">
+                        <i class="fa-solid fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-tertiary); font-size:13px;"></i>
+                        <input type="text" id="search-order" placeholder="Cari invoice..." class="form-input" style="width:220px; min-height:38px; padding:8px 12px 8px 34px;">
+                    </div>
+                </div>
+                <div class="tabs" style="margin-left:auto;">
+                    <button class="tab active" data-tab="all">Semua</button>
+                    <button class="tab" data-tab="pending">Menunggu</button>
+                    <button class="tab" data-tab="processing">Diproses</button>
+                    <button class="tab" data-tab="shipped">Dikirim</button>
+                    <button class="tab" data-tab="completed">Selesai</button>
+                    <button class="tab" data-tab="cancelled">Batal</button>
+                </div>
+            </div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                    <table class="w-table">
+                        <thead>
+                            <tr>
+                                <th>Pesanan</th>
+                                <th>Pelanggan</th>
+                                <th>Tanggal</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Pembayaran</th>
+                                <th style="text-align:right;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="orders-empty-state" style="display:none;">
+                    <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <h3>Belum Ada Pesanan</h3>
+                    <p>Pesanan dari pembeli akan muncul di sini.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div id="order-detail-panel" class="card" style="display:none; margin-top:24px;">
+            <div class="card-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span id="detail-invoice" style="font-size:16px; font-weight:800;">#INV-0000</span>
+                    <span id="detail-badge" class="badge badge-yellow">Menunggu</span>
+                </div>
+                <button id="btn-close-detail" class="btn btn-ghost btn-icon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px;">
+                    <div>
+                        <h4 style="font-size:14px; font-weight:700; margin-bottom:12px;">Item Pesanan</h4>
+                        <div id="detail-items-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; border-top:1px solid var(--color-border-light); padding-top:16px; margin-top:16px;">
+                            <div>
+                                <h4 style="font-size:12px; color:var(--color-text-tertiary); margin-bottom:4px;">Pelanggan</h4>
+                                <p id="detail-customer-name" style="font-size:14px; font-weight:700; margin:0;">Budi Santoso</p>
+                                <p id="detail-customer-phone" style="font-size:12px; color:var(--color-text-tertiary); margin:0;">+62 812-3456-7890</p>
+                                <p id="detail-customer-address" style="font-size:12px; color:var(--color-text-secondary); margin-top:8px;">Jl. Merdeka No. 12, Jakarta</p>
+                            </div>
+                            <div>
+                                <h4 style="font-size:12px; color:var(--color-text-tertiary); margin-bottom:8px;">Pengiriman</h4>
+                                <select id="detail-shipping-select" class="form-select" style="font-size:12px; padding:8px;">
+                                    <option value="antar_sendiri">Antar Sendiri</option>
+                                    <option value="instant">Kurir Instan</option>
+                                    <option value="regular">Kurir Reguler</option>
+                                </select>
+                                <textarea id="detail-notes" class="form-textarea" rows="2" placeholder="Catatan..." style="margin-top:8px; min-height:60px;"></textarea>
+                                <div style="display:flex; gap:8px; margin-top:12px;">
+                                    <button id="btn-detail-cancel" class="btn btn-danger btn-sm">Batalkan</button>
+                                    <button id="btn-detail-process" class="btn btn-primary btn-sm" style="flex:1;">Proses Pesanan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+@media (max-width:768px) {
+    #sellerSidebar { transform:translateX(-100%); }
+    #sellerSidebar.open { transform:translateX(0); }
+    main { margin-left:0 !important; padding:16px !important; }
+    .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
+}
+</style>
+
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script src="{% static 'js/utils/toast.js' %}"></script>
+<script src="{% static 'js/utils/format.js' %}"></script>
+<script src="{% static 'js/pages/seller/orders/script.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toggle = document.getElementById('mobileMenuToggle');
+    var sidebar = document.getElementById('sellerSidebar');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() { sidebar.classList.toggle('open'); });
+    }
+});
+</script>
+</body>
+</html>

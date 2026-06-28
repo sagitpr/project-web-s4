@@ -1,0 +1,213 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}Warungio{% endblock %}</title>
+    {% block meta %}{% endblock %}
+
+    {% block tailwind %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } },
+                fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] },
+            } }
+        }
+    </script>
+    {% endblock %}
+
+    {% block fonts %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    {% endblock %}
+
+    {% block favicon %}
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
+    {% endblock %}
+
+    {% block extra_head %}{% endblock %}
+    {% endblock %}
+
+    {% block styles %}
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    {% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% block navbar %}
+<nav class="header" style="margin: 16px 16px 0; position: sticky; top: 16px; z-index: 40;">
+    <div class="flex items-center gap-4" style="flex:1;">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <a href="/" class="flex items-center gap-2">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height: 32px; width: auto;">
+            <span style="font-size: 1.25rem; font-weight: 800; color: var(--color-text-primary);">
+                <span style="color: var(--color-brand);">Warung</span>io
+            </span>
+        </a>
+    </div>
+    <nav class="flex items-center gap-2" id="desktopNav">
+        <a href="/" class="btn btn-ghost btn-sm">Beranda</a>
+        <a href="/home/" class="btn btn-ghost btn-sm">Marketplace</a>
+        <a href="/bantuan/" class="btn btn-ghost btn-sm">Bantuan</a>
+    </nav>
+    <div class="flex items-center gap-3" id="authSection">
+        <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display:none; position: relative;">
+            <div class="profile-box" id="profileBox">
+                <div class="profile-info">
+                    <p id="userName">Guest</p>
+                    <span class="member-badge badge badge-green" id="userRoleBadge">Member</span>
+                </div>
+                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="dropdown-menu-custom" id="dropdownMenu">
+                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+            </div>
+        </div>
+        <div id="guestButtons" class="flex items-center gap-2">
+            <a href="/auth/login/" class="btn btn-ghost btn-sm">Masuk</a>
+            <a href="/auth/register/" class="btn btn-primary btn-sm">Daftar</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+<footer class="footer">
+    <p>&copy; 2026 Warungio. Hak Cipta Dilindungi.</p>
+</footer>
+{% endblock %}
+
+{% block mobile_nav %}
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="/home/">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="/buyer/orders/">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span>Pesanan</span>
+        </a>
+        <a href="/buyer/cart/">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            <span>Keranjang</span>
+        </a>
+        <a href="/bantuan/">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Bantuan</span>
+        </a>
+        <a href="/buyer/profile/">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Profil</span>
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block toast %}
+<div id="toastContainer" class="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showToast(message, type) {
+    var container = document.getElementById('toastContainer');
+    if (!container) return;
+    var t = document.createElement('div');
+    t.className = 'toast ' + (type || 'info');
+    t.innerHTML = '<span>' + message + '</span>';
+    container.appendChild(t);
+    setTimeout(function() { if (t.parentNode) t.remove(); }, 5000);
+}
+</script>
+
+<script src="{% static 'js/utils/toast.js' %}"></script>
+<script src="{% static 'js/utils/websocket.js' %}"></script>
+<script src="{% static 'js/utils/notifications.js' %}"></script>
+<script src="{% static 'js/utils/asset-loader.js' %}"></script>
+<script src="{% static 'js/utils/routes.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile dropdown
+    var profileBox = document.getElementById('profileBox');
+    var dropdown = document.getElementById('dropdownMenu');
+    if (profileBox && dropdown) {
+        profileBox.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', function() {
+            dropdown.classList.remove('show');
+        });
+    }
+
+    // Mobile menu
+    var menuBtn = document.getElementById('mobileMenuBtn');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function() {
+            var overlay = document.getElementById('mobileOverlay');
+            var drawer = document.getElementById('mobileDrawer');
+            if (overlay && drawer) {
+                overlay.classList.toggle('open');
+                drawer.classList.toggle('open');
+            }
+        });
+    }
+
+    // Auth check
+    if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+        var wrap = document.getElementById('profileDropdownWrap');
+        var guest = document.getElementById('guestButtons');
+        if (wrap) wrap.style.display = 'block';
+        if (guest) guest.style.display = 'none';
+
+        try {
+            if (window.WarungioAPI) {
+                window.WarungioAPI.checkAuth().then(function(u) {
+                    if (u && u.user) {
+                        var nameEl = document.getElementById('userName');
+                        var avatarEl = document.getElementById('userAvatar');
+                        if (nameEl) nameEl.textContent = u.user.full_name || u.user.email;
+                        if (avatarEl && u.user.profile_photo) avatarEl.src = u.user.profile_photo;
+                    }
+                }).catch(function() {});
+            }
+        } catch(e) {}
+    }
+
+    // Logout
+    var logoutBtn = document.getElementById('btnLogout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.WarungioAuth) {
+                window.WarungioAuth.logout();
+                window.location.href = '/';
+            }
+        });
+    }
+});
+</script>
+
+{% block extra_scripts %}{% endblock %}
+{% endblock %}
+</body>
+</html>

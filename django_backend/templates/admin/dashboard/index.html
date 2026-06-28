@@ -1,0 +1,101 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Dashboard - Warungio Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block sidebar_links %}{{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="totalUsers">12,847</div>
+            <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 8.2%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe; color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Active Stores</div>
+            <div class="stat-value" id="activeStores">1,423</div>
+            <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 5.7%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value" id="totalOrders">45,291</div>
+            <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 12.3%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3; color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Revenue (30d)</div>
+            <div class="stat-value" id="totalRevenue">Rp 2.8M</div>
+            <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 15.1%</div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Revenue Overview</h3></div>
+        <div class="card-body" style="height:250px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);">
+            <div style="text-align:center;"><i class="fa-solid fa-chart-column fa-3x" style="color:var(--color-gray-200);margin-bottom:12px;"></i><p>Revenue chart will render here</p></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Recent Activity</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                {% for item in recent_activity %}
+                <div style="padding:12px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:center; gap:12px;">
+                    <div style="width:32px;height:32px;border-radius:var(--radius-lg);background:var(--color-brand-soft);display:flex;align-items:center;justify-content:center;color:var(--color-brand);font-size:14px;"><i class="fa-solid fa-circle-check"></i></div>
+                    <div style="flex:1;min-width:0;"><p style="font-size:13px;color:var(--color-text-primary);margin:0;font-weight:500;">{{ item.action }}</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">{{ item.time }}</p></div>
+                </div>
+                {% empty %}
+                <div style="padding:24px; text-align:center; color:var(--color-text-tertiary); font-size:13px;">No recent activity</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Top Stores</h3><a href="#" class="btn btn-ghost btn-sm">View All</a></div>
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap"><table class="w-table">
+                <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
+                <tbody>
+                    <tr><td><div style="font-weight:600;">Warung Bu Sari</div></td><td>1,234</td><td>Rp 45.6M</td></tr>
+                    <tr><td><div style="font-weight:600;">Vega Fresh</div></td><td>982</td><td>Rp 38.2M</td></tr>
+                    <tr><td><div style="font-weight:600;">Toko Segar</div></td><td>756</td><td>Rp 29.1M</td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Pending Actions</h3><a href="#" class="btn btn-ghost btn-sm">View All</a></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Pending Verifications</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">12 stores need review</p></div>
+                    <span class="badge badge-yellow">12</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Support Tickets</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">5 unresolved tickets</p></div>
+                    <span class="badge badge-red">5</span>
+                </div>
+                <div style="padding:14px 20px; display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Flagged Products</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">3 products flagged</p></div>
+                    <span class="badge badge-yellow">3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

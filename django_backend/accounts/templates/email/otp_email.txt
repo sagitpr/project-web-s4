@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kode Verifikasi Warungio</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:48px 16px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card -->
+        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.03);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#108d35 0%,#08752b 100%);padding:44px 32px 36px;text-align:center;">
+              <img src="https://warungio-96622149770.asia-southeast2.run.app/static/images/Warungio-L.png"
+                   alt="Warungio"
+                   width="64"
+                   height="64"
+                   style="display:block;margin:0 auto 14px;border-radius:14px;background-color:#ffffff;padding:4px;box-shadow:0 4px 10px rgba(0,0,0,0.15);" />
+              <h1 style="margin:0;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                Warung<span style="color:#dcfce7;font-weight:300;">io</span>
+              </h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#dcfce7;font-weight:500;opacity:0.9;letter-spacing:0.3px;">
+                Belanja kebutuhan harian lebih mudah
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 36px 32px;">
+              <p style="margin:0 0 10px;font-size:16px;color:#0f172a;line-height:1.5;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                Halo <strong>{{ greeting }}</strong>,
+              </p>
+              <p style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                Kami menerima permintaan
+                {% if purpose == 'registration' %}
+                  verifikasi akun
+                {% elif purpose == 'login' %}
+                  masuk akun
+                {% elif purpose == 'password_reset' %}
+                  reset password
+                {% elif purpose == 'email_change' %}
+                  perubahan email
+                {% elif purpose == 'phone_change' %}
+                  perubahan nomor HP
+                {% elif purpose == 'payment' %}
+                  verifikasi pembayaran
+                {% else %}
+                  verifikasi
+                {% endif %}
+                untuk akun Warungio Anda.
+              </p>
+
+              <!-- OTP Code Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,#f0fdf4 0%,#dcfce7 100%);border:1.5px dashed #86efac;border-radius:12px;padding:26px 20px;margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0 0 10px;font-size:12px;color:#15803d;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                      Kode Verifikasi Anda
+                    </p>
+                    <p style="margin:0;font-size:38px;font-weight:800;color:#108d35;letter-spacing:8px;font-family:'Courier New',monospace;text-shadow:0 1px 2px rgba(16,141,53,0.1);">
+                      {{ otp_code }}
+                    </p>
+                    <p style="margin:12px 0 0;font-size:13px;color:#166534;font-weight:500;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                      Berlaku selama <strong>{{ expiry_minutes }} menit</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 24px;font-size:13px;color:#64748b;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                Jika Anda tidak merasa melakukan permintaan ini, silakan abaikan email ini. Demi keamanan akun Anda, jangan bagikan kode OTP ini kepada siapa pun, termasuk pihak yang mengaku sebagai Warungio.
+              </p>
+
+              <!-- Divider -->
+              <hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0;" />
+
+              <!-- Footer -->
+              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;line-height:1.5;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                &copy; 2026 Warungio. Hak cipta dilindungi undang-undang.
+              </p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+                Butuh bantuan? Hubungi kami di
+                <a href="mailto:{{ support_email }}" style="color:#108d35;text-decoration:none;font-weight:600;">{{ support_email }}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Footer Disclaimer -->
+        <p style="margin:20px 0 0;font-size:11px;color:#94a3b8;text-align:center;max-width:480px;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+          Email ini dikirim secara otomatis oleh sistem Warungio.<br />
+          Mohon tidak membalas email ini secara langsung.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

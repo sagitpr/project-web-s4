@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="../">
+                <img src="/static/images/Warungio L.png" alt="Warungio Logo">
+                <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+            </a>
+            <nav class="main-nav" aria-label="Navigasi utama">
+                <a href="#">Beranda</a>
+                <a href="#">Tentang</a>
+                <a href="#">Fitur</a>
+                <a href="#">Cara Kerja</a>
+                <a href="#">Mitra Warung</a>
+                <a href="#">FAQ</a>
+            </nav>
+            <div class="auth-actions">
+                <a href="../../auth/login/index.html" class="btn btn-outline">Masuk</a>
+                <a href="../../auth/register/index.html" class="btn btn-primary">Daftar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="otp-page">
+        <section class="hero-section">
+            <div class="container hero-grid">
+                <div class="hero-left">
+                    <div class="hero-info">
+                        <div class="hero-visual">
+                            <img src="/static/images/Phone-OTP.png" alt="Ilustrasi pesan kode OTP Warungio">
+                        </div>
+
+                        <div class="hero-copy">
+                            <h1>Satu langkah lagi!<br>Verifikasi untuk <span>lanjut</span></h1>
+                            <p>Kami telah mengirimkan kode OTP ke nomor berikut:</p>
+                            <div class="phone-pill">
+                                <img src="/static/images/call.png" alt="">
+                                <span class="phone-number">+62 812-3456-7890</span>
+                            </div>
+                            <p>Masukkan kode di samping untuk memverifikasi akun Anda.</p>
+                        </div>
+
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <span class="feature-icon">
+                                    <img src="/static/images/verified.png" alt="">
+                                </span>
+                                <div>
+                                    <p>Aman & Terpercaya</p>
+                                    <small>Verifikasi OTP memastikan akun Anda aman.</small>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">
+                                    <img src="/static/images/clock.png" alt="">
+                                </span>
+                                <div>
+                                    <p>Cepat & Mudah</p>
+                                    <small>Proses verifikasi hanya beberapa detik.</small>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">
+                                    <img src="/static/images/shield.png" alt="">
+                                </span>
+                                <div>
+                                    <p>Data Terlindungi</p>
+                                    <small>Informasi Anda selalu kami jaga kerahasiaannya.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-right">
+                    <div class="otp-card">
+                        <div class="otp-icon">
+                            <img src="/static/images/kunci.png" alt="">
+                        </div>
+                        <h2>Verifikasi OTP</h2>
+                        <p class="otp-description">Masukkan kode 6 digit yang telah kami kirimkan ke nomor Anda.</p>
+
+                        <form id="otpForm" method="POST" action="#" class="otp-form-card">
+                            <input type="hidden" name="_csrf_token" value="" autocomplete="off" />
+                            <input type="hidden" id="identifierInput" name="identifier" value="" autocomplete="off">
+                            <input type="hidden" id="otpHidden" name="otp" value="" autocomplete="off">
+                            <div class="otp-input-row">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp1" name="otp1" aria-label="Digit OTP 1">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp2" name="otp2" aria-label="Digit OTP 2">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp3" name="otp3" aria-label="Digit OTP 3">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp4" name="otp4" aria-label="Digit OTP 4">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp5" name="otp5" aria-label="Digit OTP 5">
+                                <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" id="otp6" name="otp6" aria-label="Digit OTP 6">
+                            </div>
+                            <p class="timer-text">Kirim ulang kode dalam <span id="countdown">00:55</span></p>
+                            <button type="submit" class="btn btn-primary btn-block">Verifikasi</button>
+                        </form>
+
+                        <div class="otp-footer">
+                            <div class="otp-helper">atau</div>
+                            <a href="../../auth/register/index.html" class="change-number">
+                                <img src="/static/images/edit.png" alt="">
+                                Ubah Nomor
+                            </a>
+                        </div>
+                        <p class="resend-note">Tidak menerima kode?</p>
+                        <button id="resend-button" class="resend-link" disabled>Kirim ulang kode OTP</button>
+                        <div id="otpMessage" class="otp-message"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-about">
+                <a class="brand footer-brand" href="../">
+                    <img src="/static/images/Warungio L.png" alt="Warungio Logo">
+                    <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+                </a>
+                <p>Warungio menghubungkan kamu dengan warung terdekat untuk belanja kebutuhan sehari-hari dengan mudah, cepat, dan terpercaya.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Navigasi</h3>
+                <ul>
+                    <li><a href="#">Beranda</a></li>
+                    <li><a href="#">Tentang</a></li>
+                    <li><a href="#">Fitur</a></li>
+                    <li><a href="#">Cara Kerja</a></li>
+                    <li><a href="#">Mitra Warung</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Bantuan</h3>
+                <ul>
+                    <li><a href="#">Pusat Bantuan</a></li>
+                    <li><a href="#">Syarat & Ketentuan</a></li>
+                    <li><a href="#">Kebijakan Privasi</a></li>
+                    <li><a href="#">Kontak Kami</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Ikuti Kami</h3>
+                <div class="social-links">
+                    <a href="#" class="social-icon" aria-label="Facebook">
+                        <img src="/static/images/facebook-1.png" alt="">
+                    </a>
+                    <a href="#" class="social-icon" aria-label="Instagram">
+                        <img src="/static/images/instagram.png" alt="">
+                    </a>
+                    <a href="#" class="social-icon" aria-label="Youtube">
+                        <img src="/static/images/youtube.png" alt="">
+                    </a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Download Aplikasi</h3>
+                <div class="app-buttons">
+                    <a href="#" class="store-button">
+                        <img src="/static/images/google-playstore.png" alt="Google Play">
+                    </a>
+                    <a href="#" class="store-button">
+                        <img src="/static/images/appstore.png" alt="App Store">
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Warungio. Hak cipta dilindungi.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/device-detector.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

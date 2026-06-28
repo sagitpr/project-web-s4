@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Warungio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../staticfiles/css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="../../assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/favicon-192x192.png" />
+</head>
+<body>
+    <div class="checkout-shell">
+        <!-- Header -->
+        <header class="checkout-header">
+            <div class="header-inner">
+                <a href="../cart/index.html" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Kembali
+                </a>
+                <div class="header-brand">
+                    <img src="../../assets/images/Warungio L.png" alt="Warungio" class="brand-icon">
+                    <span class="brand-name">Warungio</span>
+                </div>
+                <div class="step-indicator">
+                    <span class="step active">1. Keranjang</span>
+                    <span class="step active">2. Checkout</span>
+                    <span class="step">3. Selesai</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="checkout-body">
+            <!-- Left: Forms -->
+            <div class="checkout-main">
+                <!-- Delivery Address -->
+                <section class="form-section">
+                    <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Alamat Pengiriman</h2>
+                    <div class="form-grid">
+                        <div class="field-full">
+                            <label for="recipientName">Nama Penerima</label>
+                            <input type="text" id="recipientName" placeholder="Masukkan nama penerima" required>
+                        </div>
+                        <div class="field-full">
+                            <label for="recipientPhone">Nomor HP Penerima</label>
+                            <input type="tel" id="recipientPhone" placeholder="08xxxxxxx" required>
+                        </div>
+                        <div class="field-full">
+                            <label for="deliveryAddress">Alamat Lengkap</label>
+                            <textarea id="deliveryAddress" rows="3" placeholder="Jalan, gedung, nomor, RT/RW, kelurahan, kecamatan" required></textarea>
+                        </div>
+                        <div class="field-half">
+                            <label for="deliveryNote">Catatan (opsional)</label>
+                            <input type="text" id="deliveryNote" placeholder="Catatan untuk kurir">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Shipping Method -->
+                <section class="form-section">
+                    <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Metode Pengiriman</h2>
+                    <p class="field-hint">Pilih metode pengiriman cepat untuk kebutuhan harian Anda</p>
+                    <div id="shippingMethods" class="shipping-grid">
+                        <div class="skeleton-payment"></div>
+                        <div class="skeleton-payment"></div>
+                        <div class="skeleton-payment"></div>
+                        <div class="skeleton-payment"></div>
+                    </div>
+                    <div id="shippingError" class="field-error" style="display:none">Gagal memuat metode pengiriman.</div>
+                </section>
+
+                <!-- Payment Method -->
+                <section class="form-section">
+                    <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Metode Pembayaran</h2>
+                    <div id="paymentMethods" class="payment-grid">
+                        <div class="skeleton-payment"></div>
+                        <div class="skeleton-payment"></div>
+                    </div>
+                    <div id="paymentError" class="field-error" style="display:none">Gagal memuat metode pembayaran.</div>
+                </section>
+
+                <!-- Voucher -->
+                <section class="form-section">
+                    <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg> Voucher Diskon</h2>
+                    <div class="voucher-row">
+                        <input type="text" id="voucherCode" placeholder="Masukkan kode voucher" maxlength="20">
+                        <button id="checkVoucherBtn" class="btn-outline">Gunakan</button>
+                    </div>
+                    <div id="voucherResult" class="voucher-result"></div>
+                </section>
+            </div>
+
+            <!-- Right: Order Summary -->
+            <aside class="checkout-sidebar">
+                <div class="order-summary-card">
+                    <h3>Ringkasan Pesanan</h3>
+                    <div id="orderItems" class="order-items">
+                        <div class="skeleton-item"></div>
+                        <div class="skeleton-item"></div>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span id="checkoutSubtotal">Rp 0</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Ongkos Kirim</span>
+                        <span id="checkoutShipping">-</span>
+                    </div>
+                    <div class="summary-line" id="discountLine" style="display:none">
+                        <span>Diskon</span>
+                        <span id="checkoutDiscount" style="color:var(--primary)">-Rp 0</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-line total-line">
+                        <span>Total</span>
+                        <span id="checkoutTotal">Rp 0</span>
+                    </div>
+                    <button id="placeOrderBtn" class="btn-primary btn-place">Buat Pesanan</button>
+                    <p class="order-note">Dengan membuat pesanan, Anda menyetujui Syarat & Ketentuan Warungio.</p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+    </div>
+
+    <script src="../../staticfiles/js/device-detector.js"></script>
+    <script src="../../staticfiles/js/auth.js"></script>
+    <script src="../../staticfiles/js/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

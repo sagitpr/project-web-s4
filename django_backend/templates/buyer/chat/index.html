@@ -1,0 +1,848 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesan Saya - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <style>
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 80px auto 40px;
+            padding: 0 20px;
+            height: calc(100vh - 140px);
+            min-height: 550px;
+        }
+
+        .chat-sidebar {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-sidebar-header {
+            padding: 20px;
+            border-b: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chat-sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 12px;
+        }
+
+        .chat-search-input {
+            position: relative;
+            width: 100%;
+        }
+
+        .chat-search-input input {
+            width: 100%;
+            padding: 10px 16px 10px 38px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .chat-search-input input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        .chat-search-input svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .conversation-item:hover {
+            background: #f8fafc;
+        }
+
+        .conversation-item.active {
+            background: var(--primary-soft);
+            border-left-color: var(--primary);
+        }
+
+        .conversation-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .conversation-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-time {
+            font-size: 10px;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+
+        .conversation-preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .conversation-preview {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-badge {
+            background: var(--danger);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .chat-main {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            z-index: 5;
+        }
+
+        .chat-header-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        .chat-header-info h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .chat-header-info span {
+            font-size: 11px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chat-header-info span.online::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .chat-messages-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .message-bubble.incoming {
+            background: white;
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .message-bubble.outgoing {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px var(--primary-soft);
+        }
+
+        .message-time {
+            font-size: 9px;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+            opacity: 0.6;
+        }
+
+        .chat-input-panel {
+            padding: 16px 24px;
+            background: white;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-input-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input-box input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .chat-input-box input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        .emoji-button-box {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--muted);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .emoji-button-box:hover {
+            color: var(--text);
+        }
+
+        .chat-action-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: #f1f5f9;
+            color: var(--muted);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-action-btn:hover {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .chat-action-btn.send {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-soft);
+        }
+
+        .chat-action-btn.send:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .empty-chat-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-chat-state img {
+            width: 100px;
+            opacity: 0.4;
+            margin-bottom: 16px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+                margin-top: 72px;
+                height: calc(100vh - 100px);
+                padding: 0 12px;
+            }
+            .chat-sidebar {
+                display: block;
+            }
+            .chat-sidebar.hidden-mobile {
+                display: none;
+            }
+            .chat-main {
+                display: none;
+            }
+            .chat-main.show-mobile {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== TOP NAVBAR ========== -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="/buyer/home/" class="topbar-brand">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo" />
+                <span class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></span>
+            </a>
+            <div class="search-panel">
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24" width="20" height="20" color="var(--muted)"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <input type="text" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" aria-label="Notifikasi"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
+                <button class="icon-btn" aria-label="Chat" onclick="window.location.href='/buyer/chat/'"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
+                <button class="icon-btn" aria-label="Cart" onclick="window.location.href='/buyer/cart/'"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge" id="cartBadgeHeader">0</span></button>
+                
+                <div class="profile-dropdown-wrapper">
+                    <div class="profile-box" id="profileBox" style="cursor: pointer;">
+                        <div class="profile-info">
+                            <p id="topbarUserName">Hai, User</p>
+                            <span class="member-badge" id="userRoleBadge">Member</span>
+                        </div>
+                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="topbarUserAvatar">
+                        <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="dropdown-menu-custom" id="dropdownMenu">
+                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                        <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== CHAT LAYOUT ========== -->
+    <div class="chat-layout">
+        <!-- Sidebar: Conversations List -->
+        <aside class="chat-sidebar" id="chatSidebar">
+            <div class="chat-sidebar-header">
+                <h2>Percakapan Saya</h2>
+                <div class="chat-search-input">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <input type="text" id="contactSearch" placeholder="Cari percakapan...">
+                </div>
+            </div>
+            <div class="conversation-list" id="conversationsContainer">
+                <div style="padding:40px; text-align:center; color:var(--muted); font-size:12px;">Memuat percakapan...</div>
+            </div>
+        </aside>
+
+        <!-- Main Panel: Chat Window -->
+        <main class="chat-main" id="chatMain">
+            <div class="empty-chat-state" id="chatEmptyState">
+                <img src="{% static 'images/chat.png' %}" alt="Pesan">
+                <h3>Silakan Pilih Percakapan</h3>
+                <p>Klik salah satu kontak di sebelah kiri untuk mulai berkirim pesan.</p>
+            </div>
+
+            <div style="display: none; flex-direction: column; height: 100%;" id="chatContentArea">
+                <!-- Header -->
+                <div class="chat-header">
+                    <div class="chat-header-user">
+                        <button class="chat-action-btn" id="btnBackToSidebar" style="display: none; width:32px; height:32px; font-size:14px; margin-right:8px;"><i class="fa-solid fa-arrow-left"></i></button>
+                        <img src="{% static 'images/store-icon-T.png' %}" alt="Avatar" class="chat-header-avatar" id="activeChatAvatar">
+                        <div class="chat-header-info">
+                            <h3 id="activeChatName">Nama Warung</h3>
+                            <span class="online" id="activeChatStatus">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages container -->
+                <div class="chat-messages-container" id="chatMessages">
+                    <!-- Messages will be populated dynamically -->
+                </div>
+
+                <!-- Input area -->
+                <div class="chat-input-panel">
+                    <div class="chat-input-row">
+                        <button class="chat-action-btn attachment" id="btnAttachFile" title="Kirim Foto"><i class="fa-solid fa-image"></i></button>
+                        <input type="file" id="chatFileInput" class="hidden" accept="image/*">
+                        <div class="chat-input-box">
+                            <input type="text" id="chatInput" placeholder="Tulis pesan..." autocomplete="off">
+                            <button class="emoji-button-box" id="btnEmoji"><i class="fa-regular fa-face-smile"></i></button>
+                        </div>
+                        <button class="chat-action-btn send" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            let currentUser = null;
+            let currentConversationId = null;
+            let activeParticipantId = null;
+            let conversationsList = [];
+            let lastActivityTime = Date.now();
+            let pollTimeout = null;
+
+            // Auth Check
+            async function initAuth() {
+                if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+                    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+                    return;
+                }
+
+                try {
+                    const u = await WarungioAPI.checkAuth();
+                    if (u && u.user) {
+                        currentUser = u.user;
+                        document.getElementById('topbarUserName').textContent = `Hai, ${u.user.full_name || u.user.email.split('@')[0]}`;
+                        if (u.user.profile_photo) {
+                            document.getElementById('topbarUserAvatar').src = u.user.profile_photo;
+                        }
+                        
+                        // Load cart count
+                        const countRes = await WarungioAPI.getCartCount();
+                        if (countRes && countRes.count !== undefined) {
+                            document.getElementById('cartBadgeHeader').textContent = countRes.count;
+                        }
+
+                        // Load chats
+                        await loadConversations();
+                        
+                        // Check if URL specifies starting a chat with a store
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const storeId = urlParams.get('store');
+                        if (storeId) {
+                            await startChatWithStore(storeId);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Check auth error:', e);
+                }
+            }
+
+            // Start chat with store
+            async function startChatWithStore(storeId) {
+                try {
+                    // Start or fetch existing conversation
+                    // Since startConversation isn't in api.js, let's call the endpoint directly
+                    const res = await window.WarungioAuth.api('/chat/conversations/start/', {
+                        method: 'POST',
+                        body: JSON.stringify({ receiver_id: storeId })
+                    });
+                    if (res && res.id) {
+                        await loadConversations();
+                        selectConversation(res.id);
+                    }
+                } catch (err) {
+                    console.error('Failed to start conversation with store:', err);
+                }
+            }
+
+            // Dropdown profile & Logout
+            const profileBox = document.getElementById('profileBox');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const btnLogout = document.getElementById('btnLogout');
+
+            if (profileBox && dropdownMenu) {
+                profileBox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+                document.addEventListener('click', () => {
+                    dropdownMenu.classList.remove('show');
+                });
+            }
+
+            if (btnLogout) {
+                btnLogout.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.WarungioAuth) {
+                        window.WarungioAuth.logout();
+                        window.location.href = '/home/';
+                    }
+                });
+            }
+
+            // Load conversations
+            async function loadConversations() {
+                try {
+                    const res = await WarungioAPI.getConversations();
+                    conversationsList = Array.isArray(res) ? res : (res.results || []);
+
+                    // Prepend default assistant chat
+                    const assistantConv = {
+                        id: 1,
+                        is_assistant: true,
+                        other_participant: {
+                            id: 1,
+                            full_name: "Warungio Assistant",
+                            photo: "/static/images/store-icon-T.png"
+                        },
+                        last_message_preview: "Ada yang bisa dibantu?",
+                        last_message_time: new Date().toISOString(),
+                        unread_count: 0
+                    };
+
+                    if (!conversationsList.some(c => c.id === 1)) {
+                        conversationsList.unshift(assistantConv);
+                    }
+
+                    renderConversations();
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            // Render conversations list
+            function renderConversations() {
+                const container = document.getElementById('conversationsContainer');
+                if (!container) return;
+
+                container.innerHTML = '';
+                if (conversationsList.length === 0) {
+                    container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted); font-size:12px;">Belum ada percakapan.</div>';
+                    return;
+                }
+
+                conversationsList.forEach(c => {
+                    const name = c.other_participant?.full_name || 'Toko Mitra';
+                    const avatar = c.other_participant?.photo || '/static/images/store-icon-T.png';
+                    const preview = c.last_message_preview || 'Kirim pesan...';
+                    const time = c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+                    const unreadBadge = c.unread_count > 0 ? `<span class="conversation-badge">${c.unread_count}</span>` : '';
+                    const activeClass = c.id === currentConversationId ? 'active' : '';
+
+                    const div = document.createElement('div');
+                    div.className = `conversation-item ${activeClass}`;
+                    div.innerHTML = `
+                        <img src="${avatar}" alt="${name}" class="conversation-avatar">
+                        <div class="conversation-info">
+                            <div class="conversation-name-row">
+                                <span class="conversation-name">${name}</span>
+                                <span class="conversation-time">${time}</span>
+                            </div>
+                            <div class="conversation-preview-row">
+                                <span class="conversation-preview">${preview}</span>
+                                ${unreadBadge}
+                            </div>
+                        </div>
+                    `;
+
+                    div.addEventListener('click', () => {
+                        selectConversation(c.id);
+                        
+                        // Mobile response toggle
+                        if (window.innerWidth <= 768) {
+                            document.getElementById('chatSidebar').classList.add('hidden-mobile');
+                            document.getElementById('chatMain').classList.add('show-mobile');
+                            document.getElementById('btnBackToSidebar').style.display = 'inline-flex';
+                        }
+                    });
+
+                    container.appendChild(div);
+                });
+            }
+
+            // Back button on mobile
+            document.getElementById('btnBackToSidebar').addEventListener('click', () => {
+                document.getElementById('chatSidebar').classList.remove('hidden-mobile');
+                document.getElementById('chatMain').classList.remove('show-mobile');
+            });
+
+            // Select conversation
+            async function selectConversation(id) {
+                currentConversationId = id;
+                document.getElementById('chatEmptyState').style.display = 'none';
+                document.getElementById('chatContentArea').style.display = 'flex';
+
+                const conv = conversationsList.find(c => c.id === id);
+                if (!conv) return;
+
+                activeParticipantId = conv.other_participant?.id || 1;
+                document.getElementById('activeChatName').textContent = conv.other_participant?.full_name || 'Warungio Assistant';
+                document.getElementById('activeChatAvatar').src = conv.other_participant?.photo || '/static/images/store-icon-T.png';
+                document.getElementById('activeChatStatus').textContent = conv.is_assistant ? 'AI Customer Service' : 'Online';
+
+                // Fetch messages
+                await fetchMessages();
+                resetActivityTimer();
+            }
+
+            // Fetch messages
+            async function fetchMessages() {
+                if (!currentConversationId) return;
+                try {
+                    const res = await WarungioAPI.getConversationMessages(currentConversationId);
+                    const messages = Array.isArray(res) ? res : (res.results || []);
+                    renderMessages(messages);
+                } catch (err) {
+                    console.error('Failed to fetch messages:', err);
+                }
+            }
+
+            // Render messages
+            function renderMessages(messages) {
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+
+                container.innerHTML = '';
+                if (messages.length === 0) {
+                    container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted); font-size:12px;">Mulai percakapan dengan mengirim pesan.</div>';
+                    return;
+                }
+
+                messages.forEach(m => {
+                    const isUser = m.sender === currentUser?.id || m.sender_name === currentUser?.full_name || m.sender === 2;
+                    const text = m.content;
+                    const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    const div = document.createElement('div');
+                    div.className = `message-bubble ${isUser ? 'outgoing' : 'incoming'}`;
+                    div.innerHTML = `
+                        <p style="margin:0;">${escapeHtml(text)}</p>
+                        <span class="message-time">${time}</span>
+                    `;
+
+                    container.appendChild(div);
+                });
+
+                container.scrollTop = container.scrollHeight;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Send message
+            async function sendMessage() {
+                const input = document.getElementById('chatInput');
+                if (!input) return;
+
+                const text = input.value.trim();
+                if (!text) return;
+
+                input.value = '';
+
+                // Render locally
+                addLocalBubble(text, true);
+
+                try {
+                    await WarungioAPI.sendMessage({
+                        conversation_id: currentConversationId || 1,
+                        receiver_id: activeParticipantId || 1,
+                        content: text
+                    });
+                    resetActivityTimer();
+                    
+                    if (window.MOCK_API) {
+                        setTimeout(async () => {
+                            await fetchMessages();
+                        }, 1200);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function addLocalBubble(text, isUser) {
+                const container = document.getElementById('chatMessages');
+                const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const div = document.createElement('div');
+                div.className = `message-bubble ${isUser ? 'outgoing' : 'incoming'}`;
+                div.innerHTML = `
+                    <p style="margin:0;">${escapeHtml(text)}</p>
+                    <span class="message-time">${timeStr}</span>
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Event Listeners
+            document.getElementById('btnSend').addEventListener('click', sendMessage);
+            document.getElementById('chatInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Emoji button stub
+            document.getElementById('btnEmoji').addEventListener('click', () => {
+                const input = document.getElementById('chatInput');
+                input.value += '😊';
+                input.focus();
+            });
+
+            // File Upload stub
+            const fileBtn = document.getElementById('btnAttachFile');
+            const fileInput = document.getElementById('chatFileInput');
+            fileBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    addLocalBubble(`📎 ${fileInput.files[0].name}`, true);
+                    fileInput.value = '';
+                }
+            });
+
+            // Adaptive Polling
+            function resetActivityTimer() {
+                lastActivityTime = Date.now();
+                schedulePoll(true);
+            }
+
+            function schedulePoll(immediate = false) {
+                if (pollTimeout) clearTimeout(pollTimeout);
+
+                const elapsed = Date.now() - lastActivityTime;
+                const interval = elapsed > 2 * 60 * 1000 ? 30000 : 8000;
+                
+                pollTimeout = setTimeout(async () => {
+                    if (currentConversationId) {
+                        await fetchMessages();
+                    }
+                    schedulePoll();
+                }, immediate ? 0 : interval);
+            }
+
+            // Contact search filter
+            const contactSearch = document.getElementById('contactSearch');
+            contactSearch.addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                document.querySelectorAll('.conversation-item').forEach(item => {
+                    const name = (item.querySelector('.conversation-name') || {}).textContent || '';
+                    const preview = (item.querySelector('.conversation-preview') || {}).textContent || '';
+                    item.style.display = (name.toLowerCase().includes(q) || preview.toLowerCase().includes(q)) ? 'flex' : 'none';
+                });
+            });
+
+            // Init
+            await initAuth();
+            schedulePoll();
+        });
+    </script>
+</body>
+</html>

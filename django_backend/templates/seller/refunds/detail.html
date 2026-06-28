@@ -1,0 +1,339 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Refund - Warungio Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/ulasan/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <style>
+    .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+    .badge-pending { background:#fef3c7; color:#d97706; }
+    .badge-review { background:#dbeafe; color:#2563eb; }
+    .badge-approved { background:#dcfce7; color:#16a34a; }
+    .badge-rejected { background:#fef2f2; color:#dc2626; }
+    .badge-cancelled { background:#f1f5f9; color:#64748b; }
+    .badge-refunded { background:#dcfce7; color:#16a34a; }
+    .badge-waiting { background:#fef3c7; color:#d97706; }
+    .badge-escalated { background:#fce7f3; color:#db2777; }
+    .action-btn { padding:10px 18px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.15s; }
+    .action-btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .info-item label { font-size:11px; color:#94a3b8; display:block; margin-bottom:2px; }
+    .info-item p { font-size:14px; font-weight:600; color:#1e293b; margin:0; }
+    .timeline-node { position:relative; padding-left:28px; padding-bottom:20px; }
+    .timeline-node:last-child { padding-bottom:0; }
+    .timeline-dot { position:absolute; left:0; top:4px; width:14px; height:14px; border-radius:50%; background:var(--color-brand,#16a34a); border:3px solid #f0fdf4; }
+    .timeline-line { position:absolute; left:6px; top:20px; width:2px; bottom:0; background:#e2e8f0; }
+    .timeline-node:last-child .timeline-line { display:none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Seller Dashboard</small></div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-refunds' %}" class="active"><i class="fa-solid fa-rotate-left"></i> Refund</a>
+                <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+                <p><b>Tangani refund dengan cepat</b></p>
+                <p class="desc">Respons cepat meningkatkan kepercayaan pelanggan.</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+                <button class="btn-learn">Pelajari</button>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div class="shop-name-row">
+                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="notif"><i class="fa-solid fa-bell"></i><span class="notif-badge">3</span></div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap"><img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img"><div class="status-online"></div></div>
+                            <div class="profile-info"><span class="profile-name">Bu Sari</span><span class="profile-role">Seller</span></div>
+                            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="page-title-section" style="padding-bottom:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <a href="{% url 'page-seller-refunds' %}" style="color:#64748b;text-decoration:none;"><i class="fa-solid fa-arrow-left"></i></a>
+                    <h1 style="font-size:20px;font-weight:800;color:#1e293b;margin:0;">Detail Refund</h1>
+                </div>
+            </section>
+
+            <div id="refundDetailContainer">
+                <div style="text-align:center;padding:60px;color:#94a3b8;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+                    <p>Memuat detail refund...</p>
+                </div>
+            </div>
+
+            <footer class="seller-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                        <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
+                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Layanan</h4><a href="#">Cara Belanja</a><a href="#">Metode Pembayaran</a><a href="#">Pengiriman</a><a href="#">Promo & Diskon</a><a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Tentang Warungio</h4><a href="#">Tentang Kami</a><a href="#">Karir</a><a href="#">Blog</a><a href="#">Mitra Warung</a><a href="#">Kontak Kami</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Untuk Seller</h4><a href="#">Panduan Seller</a><a href="#">Tips Sukses</a><a href="#">Komunitas Seller</a><a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="footer-download">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="store-badges">
+                            <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                            <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                        </div>
+                        <div class="social-links">
+                            <span>Ikuti kami di</span>
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast-notification" class="toast"></div>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/nav.js' %}"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', async function() {
+    if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+        window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+        return;
+    }
+
+    var pk = window.location.pathname.split('/').filter(Boolean).pop();
+    var container = document.getElementById('refundDetailContainer');
+
+    function getBadge(status, escalated) {
+        var m = { pending:'pending', under_review:'review', waiting_buyer:'waiting', waiting_seller:'waiting', approved:'approved', rejected:'rejected', cancelled:'cancelled', refunded:'refunded' };
+        return escalated ? 'escalated' : (m[status] || 'pending');
+    }
+    function getLabel(status) {
+        var m = { pending:'Menunggu', under_review:'Ditinjau', waiting_buyer:'Menunggu Pembeli', waiting_seller:'Menunggu Penjual', approved:'Disetujui', rejected:'Ditolak', cancelled:'Dibatalkan', refunded:'Direfund', partial_refund:'Refund Sebagian' };
+        return m[status] || status;
+    }
+    function canAct(status) {
+        return ['pending', 'under_review', 'waiting_seller'].indexOf(status) !== -1;
+    }
+    function formatDate(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+    function formatCurrency(n) {
+        return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    }
+
+    async function loadDetail() {
+        try {
+            var r = await WarungioAPI.getRefund(pk);
+            var badge = getBadge(r.refund_status, r.is_escalated);
+            var label = getLabel(r.refund_status);
+            var actionable = canAct(r.refund_status);
+
+            // Timeline
+            var tlHtml = '';
+            if (r.timeline && r.timeline.length) {
+                tlHtml = '<div style="position:relative;">' + r.timeline.map(function(t, i) {
+                    var isLast = i === r.timeline.length - 1;
+                    return '<div class="timeline-node">' +
+                        '<div class="timeline-dot"></div>' +
+                        (isLast ? '' : '<div class="timeline-line"></div>') +
+                        '<p style="font-size:13px;font-weight:600;margin:0;color:#1e293b;">' + t.description + '</p>' +
+                        '<p style="font-size:11px;color:#94a3b8;margin:2px 0 0;">' + (t.created_by_name || 'Sistem') + ' • ' + formatDate(t.created_at) + '</p>' +
+                        '</div>';
+                }).join('') + '</div>';
+            }
+
+            // Items table
+            var itemsHtml = '';
+            if (r.order_items && r.order_items.length) {
+                itemsHtml = '<table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid #e2e8f0;"><th style="text-align:left;padding:10px 12px;font-size:11px;color:#94a3b8;font-weight:600;">Produk</th><th style="text-align:center;padding:10px 12px;font-size:11px;color:#94a3b8;font-weight:600;">Jml</th><th style="text-align:right;padding:10px 12px;font-size:11px;color:#94a3b8;font-weight:600;">Harga</th><th style="text-align:right;padding:10px 12px;font-size:11px;color:#94a3b8;font-weight:600;">Subtotal</th></tr></thead><tbody>' +
+                    r.order_items.map(function(i) {
+                        return '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px 12px;font-size:13px;color:#1e293b;">' + i.product_name + '</td><td style="padding:10px 12px;text-align:center;font-size:13px;">' + i.qty + '</td><td style="padding:10px 12px;text-align:right;font-size:13px;">' + formatCurrency(i.price) + '</td><td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;">' + formatCurrency(i.subtotal) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+            }
+
+            container.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;padding:20px 28px;">
+                    <div>
+                        <!-- Info Card -->
+                        <div class="card" style="padding:20px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                                <div>
+                                    <h2 style="font-size:16px;font-weight:800;margin:0;color:#1e293b;">${r.reason_display || 'Refund'}</h2>
+                                    <p style="font-size:12px;color:#94a3b8;margin:2px 0 0;">${r.refund_number || ''}</p>
+                                </div>
+                                <span class="status-badge badge-${badge}"><i class="fa-solid fa-circle" style="font-size:6px;"></i> ${r.is_escalated ? 'Dirujuk Admin' : label}</span>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item"><label>Pembeli</label><p>${r.buyer_name || '-'}</p></div>
+                                <div class="info-item"><label>Pesanan</label><p>${r.order_number || '-'}</p></div>
+                                <div class="info-item"><label>Jumlah Diminta</label><p>${formatCurrency(r.amount_requested)}</p></div>
+                                <div class="info-item"><label>Jumlah Disetujui</label><p>${r.amount_approved ? formatCurrency(r.amount_approved) : '-'}</p></div>
+                                <div class="info-item"><label>Diajukan</label><p>${formatDate(r.created_at)}</p></div>
+                                <div class="info-item"><label>Selesai</label><p>${r.resolved_at ? formatDate(r.resolved_at) : '-'}</p></div>
+                            </div>
+                            ${r.reason_text ? '<div style="margin-top:16px;padding:14px;background:#f8fafc;border-radius:12px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">Penjelasan Pembeli</p><p style="font-size:13px;color:#475569;margin:0;">' + r.reason_text + '</p></div>' : ''}
+                        </div>
+
+                        <!-- Items Card -->
+                        <div class="card" style="padding:0;">
+                            <div class="card-header" style="padding:16px 20px;margin:0;border-bottom:1px solid #e2e8f0;">
+                                <h2 style="font-size:14px;font-weight:700;margin:0;">Item Pesanan</h2>
+                            </div>
+                            <div style="padding:0 0 0 0;overflow-x:auto;">
+                                ${itemsHtml || '<p style="padding:20px;color:#94a3b8;font-size:13px;">Tidak ada data item.</p>'}
+                            </div>
+                        </div>
+
+                        <!-- Timeline Card -->
+                        <div class="card" style="padding:20px;">
+                            <div class="card-header" style="margin-bottom:16px;">
+                                <h2 style="font-size:14px;font-weight:700;margin:0;">Timeline</h2>
+                            </div>
+                            ${tlHtml || '<p style="color:#94a3b8;font-size:13px;">Belum ada aktivitas.</p>'}
+                        </div>
+                    </div>
+
+                    <div>
+                        <!-- Action Card -->
+                        <div class="card" style="padding:20px;${actionable ? '' : 'opacity:0.7;'}">
+                            <h3 style="font-size:14px;font-weight:700;color:#1e293b;margin:0 0 16px;">
+                                ${actionable ? 'Tindakan Anda' : 'Refund telah diproses'}
+                            </h3>
+                            ${actionable ? `
+                                <div style="display:flex;flex-direction:column;gap:10px;">
+                                    <textarea id="sellerNotes" rows="3" placeholder="Catatan untuk pembeli (opsional)..." style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;resize:vertical;outline:none;"></textarea>
+                                    <div>
+                                        <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;">Jumlah Disetujui (untuk approve/negosiasi)</label>
+                                        <input type="number" id="approveAmount" class="form-input" placeholder="Jumlah refund" value="${Number(r.amount_requested).toLocaleString('id-ID').replace(/\./g,'')}" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;">
+                                    </div>
+                                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                                        <button class="action-btn" style="background:#16a34a;color:#fff;" onclick="takeAction('approve')"><i class="fa-solid fa-check"></i> Setujui Refund</button>
+                                        <button class="action-btn" style="background:#2563eb;color:#fff;" onclick="takeAction('negotiate')"><i class="fa-solid fa-handshake"></i> Negosiasi</button>
+                                        <button class="action-btn" style="background:#f59e0b;color:#fff;" onclick="takeAction('request_info')"><i class="fa-solid fa-question"></i> Minta Informasi</button>
+                                        <button class="action-btn" style="background:#ef4444;color:#fff;" onclick="takeAction('reject')"><i class="fa-solid fa-times"></i> Tolak Refund</button>
+                                    </div>
+                                    <div id="actionMessage" style="display:none;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:600;"></div>
+                                </div>
+                            ` : `
+                                <p style="font-size:13px;color:#64748b;margin:0;">Status refund saat ini: <strong>${label}</strong></p>
+                                ${r.seller_notes ? '<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;"><p style="font-size:11px;color:#94a3b8;margin:0 0 4px;">Catatan Anda:</p><p style="font-size:13px;color:#475569;margin:0;">' + r.seller_notes + '</p></div>' : ''}
+                            `}
+                        </div>
+
+                        <!-- Buyer Info -->
+                        <div class="card" style="padding:20px;">
+                            <p style="font-size:13px;font-weight:600;margin:0;color:#1e293b;">Informasi Pembeli</p>
+                            <div style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+                                <div style="width:40px;height:40px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:16px;"><i class="fa-solid fa-user"></i></div>
+                                <div><p style="font-size:13px;font-weight:600;margin:0;color:#1e293b;">${r.buyer_name || 'Pembeli'}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch(e) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:#dc2626;"><i class="fa-solid fa-exclamation-triangle fa-2x" style="margin-bottom:12px;"></i><p>Gagal memuat detail refund.</p></div>';
+        }
+    }
+
+    window.takeAction = function(action) {
+        var notes = document.getElementById('sellerNotes').value;
+        var amountEl = document.getElementById('approveAmount');
+        var msgEl = document.getElementById('actionMessage');
+        var amount = amountEl ? Number(amountEl.value) : 0;
+
+        var actionLabels = { approve:'menyetujui', reject:'menolak', negotiate:'menegosiasi', request_info:'meminta informasi' };
+        if (!confirm('Anda yakin ' + (actionLabels[action] || action) + ' refund ini?')) return;
+
+        var payload = { action: action, seller_notes: notes };
+        if (action === 'approve') payload.amount_approved = amount || null;
+        if (action === 'negotiate') {
+            if (!amount || amount <= 0) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = '#fef2f2';
+                msgEl.style.color = '#dc2626';
+                msgEl.textContent = 'Masukkan jumlah negosiasi.';
+                return;
+            }
+            payload.amount_approved = amount;
+        }
+
+        msgEl.style.display = 'none';
+        var btns = document.querySelectorAll('.action-btn');
+        btns.forEach(function(b) { b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...'; });
+
+        WarungioAPI.sellerRefundAction(pk, payload).then(function(resp) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#dcfce7';
+            msgEl.style.color = '#16a34a';
+            msgEl.textContent = 'Refund berhasil diproses! Memuat ulang...';
+            setTimeout(function() { window.location.reload(); }, 1500);
+        }).catch(function(e) {
+            btns.forEach(function(b) { b.disabled = false; b.innerHTML = b.innerHTML.replace('<i class="fa-solid fa-spinner fa-spin"></i> Memproses...', b.dataset.originalText || ''); });
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#fef2f2';
+            msgEl.style.color = '#dc2626';
+            msgEl.textContent = 'Gagal: ' + (e.message || e.error || 'Terjadi kesalahan');
+        });
+    };
+
+    loadDetail();
+});
+    </script>
+</body>
+</html>

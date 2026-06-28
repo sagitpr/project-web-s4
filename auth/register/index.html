@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="id" data-theme="Light">
+  <head>
+    <title>Daftar - Warungio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../auth/login/style.css" />
+    <link rel="stylesheet" href="/static/css/responsive.css" />
+      <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+  <body>
+    <!-- Google Sign-In client library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Facebook SDK -->
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId: 'your-facebook-app-id',
+          cookie: true,
+          xfbml: true,
+          version: 'v18.0'
+        });
+      };
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/id_ID/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
+    <!-- Apple Sign-In -->
+    <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" async defer></script>
+    <div class="page-shell">
+      <div class="login-card">
+        <aside class="hero-panel">
+          <div class="brand-bar">
+            <div class="logo-box">
+              <img src="/static/images/Warungio L.png" alt="Warungio logo" />
+            </div>
+            <div>
+              <p class="brand-label">
+                <span class="brand-main">Warung</span
+                ><span class="brand-highlight">io</span>
+              </p>
+              <p class="brand-caption">Selamat datang di Warungio</p>
+            </div>
+          </div>
+          <div class="hero-copy">
+            <h1>
+              <b>Belanja kebutuhan harian lebih mudah, dari</b>
+              <span style="color: var(--primary)"><b>Warung terdekat</b></span
+              ><b> untuk Anda</b>
+            </h1>
+            <p class="hero-text">
+              Temukan produk segar, harga terjangkau, dan dukung warung lokal di
+              sekitar Anda.
+            </p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong>120+</strong>
+              <span>Lokasi</span>
+            </div>
+            <div class="stat-box">
+              <strong>500+</strong>
+              <span>Produk</span>
+            </div>
+            <div class="stat-box">
+              <strong>98%</strong>
+              <span>Puas</span>
+            </div>
+          </div>
+          <div class="download-apps">
+            <div class="store-visual">
+              <img src="/static/images/store-bike.png" alt="Store visual" />
+            </div>
+          </div>
+          <div class="hero-features">
+            <article>
+              <img src="/static/images/security.png" alt="Aman & Terpercaya" />
+              <strong>Aman & Terpercaya</strong>
+              <p>Mendukung transaksi lancar dan cepat setiap saat.</p>
+            </article>
+            <article>
+              <img src="/static/images/clock.png" alt="Cepat & Praktis" />
+              <strong>Cepat & Praktis</strong>
+              <p>Kelola pesanan dan toko dengan antarmuka intuitif.</p>
+            </article>
+            <article>
+              <img src="/static/images/call.png" alt="Dukungan 24/7" />
+              <strong>Dukungan 24/7</strong>
+              <p>Tim kami siap membantu kapan pun kamu butuh bantuan.</p>
+            </article>
+          </div>
+        </aside>
+        <main class="form-panel">
+          <div class="form-header">
+            <a href="../../auth/login/index.html" class="top-link"
+              >Sudah punya akun? <strong>Masuk</strong></a
+            >
+            <div>
+              <p class="form-title-register">Buat Akun Baru</p>
+              <p class="form-subtitle">
+                Lengkapi data di bawah untuk membuat akun Warungio.
+              </p>
+            </div>
+          </div>            <form
+            id="registerForm"
+            class="login-form"
+            method="post"
+            action="#"
+          >
+            <input type="hidden" name="_csrf_token" value="" autocomplete="off" />
+            <div class="input-group">
+              <label for="name">Nama Lengkap</label>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder="Masukkan nama lengkap Anda"
+                  autocomplete="name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="email">Email</label>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Masukkan email Anda"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="phone">Nomor HP</label>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="Masukkan nomor HP Anda"
+                  autocomplete="tel"
+                  required
+                />
+              </div>
+            </div>
+            <div class="input-group password-group">
+              <div class="label-row">
+                <label for="password">Kata Sandi</label>
+              </div>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect
+                    width="18"
+                    height="11"
+                    x="3"
+                    y="11"
+                    rx="2"
+                    ry="2"
+                  ></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Buat kata sandi"
+                  autocomplete="new-password"
+                  required
+                />
+                <button
+                  class="eye-btn"
+                  id="eyeBtn"
+                  type="button"
+                  aria-label="Tampilkan kata sandi"
+                >
+                  <svg
+                    id="eyeOpen"
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                    />
+                    <path
+                      d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                    />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                  <svg
+                    id="eyeClosed"
+                    class="eye-closed"
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="input-group password-group">
+              <div class="label-row">
+                <label for="confirm_password">Konfirmasi Kata Sandi</label>
+              </div>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect
+                    width="18"
+                    height="11"
+                    x="3"
+                    y="11"
+                    rx="2"
+                    ry="2"
+                  ></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input
+                  type="password"
+                  id="confirm_password"
+                  name="confirm_password"
+                  placeholder="Masukkan ulang kata sandi"
+                  autocomplete="new-password"
+                  required
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="address">Alamat Asal</label>
+              <div class="input-shell">
+                <svg
+                  class="field-icon"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                  ></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  placeholder="Masukkan alamat asal Anda"
+                  autocomplete="street-address"
+                  required
+                />
+              </div>
+            </div>
+            <div class="row-options">
+              <label class="remember" style="align-items: flex-start">
+                <input type="checkbox" autocomplete="off" required />
+                <span class="check-box" style="margin-top: 2px">
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                    <path
+                      d="M1 4.5L4 7.5L10 1.5"
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span
+                  style="
+                    font-weight: normal;
+                    font-size: 0.85rem;
+                    line-height: 1.5;
+                  "
+                  >Saya menyetujui Syarat & Ketentuan dan Kebijakan
+                  Privasi</span
+                >
+              </label>
+            </div>
+            <button type="submit" class="login-button">Daftar Sekarang</button>
+          </form>
+          <div class="social-divider">
+            <span></span>
+            <span>atau daftar dengan</span>
+            <span></span>
+          </div>
+          <div class="social-login">
+            <button class="btn-social facebook">
+              <img src="/static/images/facebook-1.png" alt="Facebook" />
+              <span>Facebook</span>
+            </button>
+            <button class="btn-social google">
+              <img src="/static/images/google-logo.png" alt="Google" />
+              <span>Google</span>
+            </button>
+            <button class="btn-social apple">
+              <img src="/static/images/apple.png" alt="Apple" />
+              <span>Apple</span>
+            </button>
+          </div>
+        </main>
+      </div>
+      <footer class="site-footer">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <img src="/static/images/Warungio L.png" alt="Warungio logo" />
+              <p><span>Warung</span>io</p>
+            </div>
+            <p>
+              Platform belanja kebutuhan sehari-hari langsung dari warung
+              terdekat. Belanja mudah, harga bersahabat!
+            </p>
+            <span>© 2026 Warungio. Hak Cipta Dilindungi.</span>
+          </div>
+          <div class="footer-column">
+            <h3>Layanan</h3>
+            <a href="#">Cara Belanja</a>
+            <a href="#">Metode Pembayaran</a>
+            <a href="#">Pengiriman</a>
+            <a href="#">Promo & Diskon</a>
+            <a href="#">Pusat Bantuan</a>
+          </div>
+          <div class="footer-column">
+            <h3>Tentang Warungio</h3>
+            <a href="#">Tentang Kami</a>
+            <a href="#">Karir</a>
+            <a href="#">Blog</a>
+            <a href="#">Mitra Warung</a>
+            <a href="#">Kontak Kami</a>
+          </div>
+          <div class="footer-column">
+            <h3>Untuk Seller</h3>
+            <a href="#">Panduan Seller</a>
+            <a href="#">Tips Sukses</a>
+            <a href="#">Komunitas Seller</a>
+            <a href="#">Kebijakan & Ketentuan</a>
+          </div>
+          <div class="footer-column download-column">
+            <h3>Download Aplikasi Warungio</h3>
+            <p>Belanja lebih mudah lewat aplikasi Warungio.</p>
+            <div class="footer-badges">
+              <img
+                src="/static/images/google-playstore.png"
+                alt="Google Play Store"
+              />
+              <img src="/static/images/appstore.png" alt="App Store" />
+            </div>
+            <div class="social-row">
+              <span>Ikuti kami di</span>
+              <a href="#"
+                ><img src="/static/images/instagram.png" alt="Instagram"
+              /></a>
+              <a href="#"
+                ><img src="/static/images/facebook.png" alt="Facebook"
+              /></a>
+              <a href="#"
+                ><img src="/static/images/youtube.png" alt="YouTube"
+              /></a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="/static/js/device-detector.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

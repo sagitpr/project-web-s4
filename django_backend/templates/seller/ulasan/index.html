@@ -1,0 +1,270 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulasan - Warungio Seller</title>
+    <meta name="description" content="Kelola ulasan dan rating produk tokomu di Warungio Seller Dashboard.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/ulasan/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Seller Dashboard</small>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}" class="active"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+                <p><b>Ulasan membangun kepercayaan</b></p>
+                <p class="desc">Balas ulasan pelanggan untuk meningkatkan reputasi tokomu.</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+                <button class="btn-learn">Pelajari</button>
+            </div>
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div class="shop-name-row">
+                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="notif">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge">3</span>
+                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <div class="status-online"></div>
+                            </div>
+                            <div class="profile-info">
+                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-role">Seller</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Title -->
+            <section class="page-title-section">
+                <div class="page-title-left">
+                    <h1>Ulasan</h1>
+                    <p class="page-subtitle">Lihat dan balas ulasan pelanggan terhadap produkmu</p>
+                </div>
+                <div class="page-title-right">
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="reviewSearch" placeholder="Cari ulasan..." autocomplete="off">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="icon-box gold"><i class="fa-solid fa-star"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Rating Toko</span>
+                        <h3 class="stat-value" id="avgRating">-</h3>
+                        <p class="stat-trend neutral" id="ratingCount">Dari 0 ulasan</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fa-solid fa-face-smile"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Rating 5 ★</span>
+                        <h3 class="stat-value" id="rating5Count">-</h3>
+                        <p class="stat-trend up">Ulasan positif</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fa-solid fa-face-meh"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Rating 4 ★</span>
+                        <h3 class="stat-value" id="rating4Count">-</h3>
+                        <p class="stat-trend neutral">Cukup baik</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fa-solid fa-face-frown"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Rating 1-3 ★</span>
+                        <h3 class="stat-value" id="ratingLowCount">-</h3>
+                        <p class="stat-trend down">Perlu perhatian</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fa-solid fa-reply"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Sudah Dibalas</span>
+                        <h3 class="stat-value" id="repliedCount">-</h3>
+                        <p class="stat-trend neutral">Dari semua ulasan</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rating Breakdown Bar -->
+            <div class="card rating-breakdown-card">
+                <div class="rating-bars" id="ratingBars">
+                    <div class="rating-bar-row" data-rating="5">
+                        <span class="rating-bar-label">5 ★</span>
+                        <div class="rating-bar-track"><div class="rating-bar-fill" id="bar5" style="width:0%"></div></div>
+                        <span class="rating-bar-value" id="bar5Count">0</span>
+                    </div>
+                    <div class="rating-bar-row" data-rating="4">
+                        <span class="rating-bar-label">4 ★</span>
+                        <div class="rating-bar-track"><div class="rating-bar-fill" id="bar4" style="width:0%"></div></div>
+                        <span class="rating-bar-value" id="bar4Count">0</span>
+                    </div>
+                    <div class="rating-bar-row" data-rating="3">
+                        <span class="rating-bar-label">3 ★</span>
+                        <div class="rating-bar-track"><div class="rating-bar-fill" id="bar3" style="width:0%"></div></div>
+                        <span class="rating-bar-value" id="bar3Count">0</span>
+                    </div>
+                    <div class="rating-bar-row" data-rating="2">
+                        <span class="rating-bar-label">2 ★</span>
+                        <div class="rating-bar-track"><div class="rating-bar-fill" id="bar2" style="width:0%"></div></div>
+                        <span class="rating-bar-value" id="bar2Count">0</span>
+                    </div>
+                    <div class="rating-bar-row" data-rating="1">
+                        <span class="rating-bar-label">1 ★</span>
+                        <div class="rating-bar-track"><div class="rating-bar-fill" id="bar1" style="width:0%"></div></div>
+                        <span class="rating-bar-value" id="bar1Count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="card filter-card">
+                <div class="review-tabs" id="reviewTabs">
+                    <button class="tab-btn active" data-filter="all">Semua</button>
+                    <button class="tab-btn" data-filter="5">5 ★</button>
+                    <button class="tab-btn" data-filter="4">4 ★</button>
+                    <button class="tab-btn" data-filter="3">3 ★</button>
+                    <button class="tab-btn" data-filter="2">2 ★</button>
+                    <button class="tab-btn" data-filter="1">1 ★</button>
+                    <button class="tab-btn" data-filter="unreplied">Belum Dibalas</button>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="reviews-list" id="reviewsList">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;" id="reviewLoadingState">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:16px;"></i>
+                    Memuat ulasan...
+                </div>
+            </div>
+
+            <!-- Reply Modal -->
+            <div id="replyModal" class="modal" style="display:none;">
+                <div class="modal-content modal-sm">
+                    <div class="modal-header">
+                        <h3>Balas Ulasan</h3>
+                        <button class="btn-close-modal" id="btnCloseReplyModal"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="hidden" id="replyReviewId">
+                    <div id="replyReviewPreview" class="reply-preview"></div>
+                    <form id="replyForm">
+                        <div class="form-row">
+                            <label><span>Balasan Anda</span>
+                                <textarea id="replyInput" rows="4" placeholder="Tulis balasan untuk ulasan ini..." required></textarea>
+                            </label>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-action btn-secondary" id="btnCancelReply">Batal</button>
+                            <button type="submit" class="btn-primary" id="btnSendReply">Kirim Balasan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div id="toast-notification" class="toast"></div>
+
+            <!-- Footer -->
+            <footer class="seller-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                        <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
+                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Layanan</h4>
+                        <a href="#">Cara Belanja</a><a href="#">Metode Pembayaran</a><a href="#">Pengiriman</a><a href="#">Promo & Diskon</a><a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Tentang Warungio</h4>
+                        <a href="#">Tentang Kami</a><a href="#">Karir</a><a href="#">Blog</a><a href="#">Mitra Warung</a><a href="#">Kontak Kami</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Untuk Seller</h4>
+                        <a href="#">Panduan Seller</a><a href="#">Tips Sukses</a><a href="#">Komunitas Seller</a><a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="footer-download">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="store-badges">
+                            <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                            <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                        </div>
+                        <div class="social-links">
+                            <span>Ikuti kami di</span>
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/pages/seller/ulasan/script.js' %}"></script>
+</body>
+</html>

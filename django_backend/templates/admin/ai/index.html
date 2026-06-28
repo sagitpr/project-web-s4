@@ -1,0 +1,119 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}AI Management - Warungio Admin{% endblock %}
+{% block page_title %}AI Management{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-microchip"></i></div><div class="stat-content"><div class="stat-label">AI Queries (30d)</div><div class="stat-value">284K</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 22.4%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-brain"></i></div><div class="stat-content"><div class="stat-label">Active Models</div><div class="stat-value">3</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-gauge-high"></i></div><div class="stat-content"><div class="stat-label">Avg Response</div><div class="stat-value">1.2s</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-exclamation-triangle"></i></div><div class="stat-content"><div class="stat-label">Error Rate</div><div class="stat-value">0.8%</div></div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Model Configuration</h3></div>
+        <div class="card-body">
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;"><i class="fa-solid fa-robot"></i></div>
+                        <div><p style="font-size:13px;font-weight:600;margin:0;">Smart Scan AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Product quality analysis</p></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="badge badge-green">Active</span>
+                        <button class="btn btn-ghost btn-sm">Configure</button>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;"><i class="fa-solid fa-comments"></i></div>
+                        <div><p style="font-size:13px;font-weight:600;margin:0;">Chat AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Customer support assistant</p></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="badge badge-green">Active</span>
+                        <button class="btn btn-ghost btn-sm">Configure</button>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;"><i class="fa-solid fa-chart-simple"></i></div>
+                        <div><p style="font-size:13px;font-weight:600;margin:0;">Recommendation AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Product recommendations</p></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="badge badge-green">Active</span>
+                        <button class="btn btn-ghost btn-sm">Configure</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>API Usage (Last 7 Days)</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="padding:16px 20px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <span style="font-size:13px;font-weight:500;">Smart Scan AI</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:120px;height:6px;background:var(--color-gray-200);border-radius:99px;overflow:hidden;"><div style="width:78%;height:100%;background:var(--color-brand);border-radius:99px;"></div></div>
+                        <span style="font-size:12px;font-weight:600;color:var(--color-text-primary);">142K</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <span style="font-size:13px;font-weight:500;">Chat AI</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:120px;height:6px;background:var(--color-gray-200);border-radius:99px;overflow:hidden;"><div style="width:52%;height:100%;background:#3b82f6;border-radius:99px;"></div></div>
+                        <span style="font-size:12px;font-weight:600;color:var(--color-text-primary);">98K</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:13px;font-weight:500;">Recommendation AI</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:120px;height:6px;background:var(--color-gray-200);border-radius:99px;overflow:hidden;"><div style="width:34%;height:100%;background:#f59e0b;border-radius:99px;"></div></div>
+                        <span style="font-size:12px;font-weight:600;color:var(--color-text-primary);">44K</span>
+                    </div>
+                </div>
+            </div>
+            <div style="border-top:1px solid var(--color-border-light); padding:12px 20px; display:flex; justify-content:space-between;">
+                <span style="font-size:12px;color:var(--color-text-tertiary);">Total: 284,212 queries</span>
+                <a href="#" style="font-size:12px;color:var(--color-brand);font-weight:600;">View Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Vertex AI Settings</h3></div>
+    <div class="card-body">
+        <form style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Endpoint ID</label>
+                <input type="text" class="form-input" value="openapi" style="width:100%;padding:10px 14px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Model</label>
+                <input type="text" class="form-input" value="meta/llama-3.3-70b-instruct-maas" style="width:100%;padding:10px 14px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">API Key</label>
+                <input type="password" class="form-input" value="********************" style="width:100%;padding:10px 14px;font-family:monospace;">
+            </div>
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Max Tokens</label>
+                <input type="number" class="form-input" value="2048" style="width:100%;padding:10px 14px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px;">Temperature</label>
+                <input type="number" class="form-input" value="0.7" step="0.1" min="0" max="2" style="width:100%;padding:10px 14px;">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary" style="padding:10px 20px;">Save Settings</button>
+                    <button class="btn btn-secondary" style="padding:10px 20px;">Test Connection</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

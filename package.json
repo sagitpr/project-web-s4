@@ -1,0 +1,28 @@
+{
+  "name": "warungio-backend",
+  "version": "1.0.0",
+  "description": "Backend Express untuk Warungio, berjalan berdampingan dengan backend PHP lama.",
+  "scripts": {
+    "start": "echo 'Warungio uses Django backend. Run: cd django_backend && python manage.py runserver 0.0.0.0:8000'",
+    "dev": "echo 'Warungio uses Django backend. Run: cd django_backend && python manage.py runserver 0.0.0.0:8000'"
+  },
+  "keywords": [
+    "warungio",
+    "express",
+    "mysql"
+  ],
+  "author": "Sagit Faturrakhman",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "latest",
+    "bootstrap": "^5.3.8",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "jsonwebtoken": "latest",
+    "mysql2": "latest"
+  },
+  "devDependencies": {
+    "nodemon": "latest"
+  }
+}

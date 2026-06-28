@@ -1,0 +1,353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesanan Saya - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/orders/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <div class="page-shell">
+        <!-- Top Navbar -->
+        <header class="topbar">
+            <div class="topbar-container">
+                <a href="/buyer/dashboard/" class="brand-logo-link">
+                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="logo-img" />
+                    <span class="logo-text"><span class="logo-green">Warung</span><span class="logo-highlight">io</span></span>
+                </a>
+                
+                <div class="search-panel">
+                    <div class="search-input">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round"/></svg>
+                        <input type="text" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
+                    </div>
+                </div>
+
+                <nav class="navbar-menu">
+                    <a href="/buyer/dashboard/" class="nav-item">Beranda</a>
+                    <a href="/buyer/orders/" class="nav-item active">Pesanan Saya</a>
+                    <a href="/home/" class="nav-item">Produk</a>
+                    <a href="/home/" class="nav-item">Warung Terdekat</a>
+                    <a href="/home/" class="nav-item">Promo</a>
+                </nav>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
+                    <button class="icon-btn"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
+                    <button class="icon-btn" onclick="window.location.href='/buyer/cart/'"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge">2</span></button>
+                    
+                    <div class="profile-dropdown-wrapper">
+                        <div class="profile-box" id="profileBox" style="cursor: pointer;">
+                            <div class="profile-info">
+                                <p id="userName">Hai, {{ user_full_name|default:user.email }}</p>
+                                <span class="member-badge" id="userRoleBadge">Member</span>
+                            </div>
+                            {% if user_photo %}
+                            <img src="{{ user_photo }}" alt="Profile" class="profile-avatar" id="userAvatar">
+                            {% else %}
+                            <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                            {% endif %}
+                            <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="dropdown-menu-custom" id="dropdownMenu">
+                            <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                            <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                            <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                            <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-content-layout">
+            <div class="orders-grid-layout">
+                
+                <!-- Left Section (70%) -->
+                <div class="main-left-column">
+                    <!-- Hero Section -->
+                    <div class="hero-tracking-card">
+                        <div class="hero-tracking-content">
+                            <h1 class="hero-title">Pesananmu Sedang<br>Dalam Perjalanan 📦</h1>
+                            <p class="hero-subtitle">Kami sedang mengantarkan pesananmu sampai ke alamat tujuan.</p>
+                        </div>
+                        <div class="hero-tracking-illustration">
+                            <img src="{% static 'images/orders/courier-delivery.png' %}" alt="Kurir Delivery" />
+                        </div>
+                    </div>
+
+                    <!-- Tracking Details & Timeline Progress Bar -->
+                    <div class="tracking-progress-card" id="activeTrackingCard" style="display:none;">
+                        <div class="tracking-card-header">
+                            <div class="tracking-order-info">
+                                <h3 id="activeOrderNumber">Pesanan #INV/--</h3>
+                                <span class="badge badge-success" id="activeOrderStatus">Dalam Pengiriman</span>
+                            </div>
+                            <button class="btn-lacak-peta" id="btnLacakPeta">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 00-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                Lacak di Peta
+                            </button>
+                        </div>
+                        
+                        <p class="estimasi-tiba" id="activeOrderEstimasi">Estimasi sampai: --</p>
+
+                        <!-- Timeline Progress Bar -->
+                        <div class="timeline-wrapper">
+                            <div class="timeline-connector-bg"></div>
+                            <div class="timeline-connector-active" id="timelineProgressLine"></div>
+                            
+                            <div class="timeline-steps">
+                                <!-- Step 1 -->
+                                <div class="timeline-step" id="step-1">
+                                    <div class="step-circle">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Pesanan Dibuat</span>
+                                    <span class="step-time" id="time-step-1">--</span>
+                                </div>
+                                <!-- Step 2 -->
+                                <div class="timeline-step" id="step-2">
+                                    <div class="step-circle">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Diproses Warung</span>
+                                    <span class="step-time" id="time-step-2">--</span>
+                                </div>
+                                <!-- Step 3 -->
+                                <div class="timeline-step" id="step-3">
+                                    <div class="step-circle">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Dijemput Kurir</span>
+                                    <span class="step-time" id="time-step-3">--</span>
+                                </div>
+                                <!-- Step 4 -->
+                                <div class="timeline-step" id="step-4">
+                                    <div class="step-circle">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Dalam Pengiriman</span>
+                                    <span class="step-time" id="time-step-4">--</span>
+                                </div>
+                                <!-- Step 5 -->
+                                <div class="timeline-step" id="step-5">
+                                    <div class="step-circle">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Sampai Tujuan</span>
+                                    <span class="step-time" id="time-step-5">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History / Riwayat Pesanan -->
+                    <div class="history-orders-card">
+                        <h2 class="history-title">Riwayat Pesanan</h2>
+                        
+                        <!-- Tabs -->
+                        <div class="history-tabs">
+                            <button class="tab-btn active" data-status="all">Semua</button>
+                            <button class="tab-btn" data-status="processed">Dalam Proses</button>
+                            <button class="tab-btn" data-status="shipped">Dalam Pengiriman</button>
+                            <button class="tab-btn" data-status="completed">Selesai</button>
+                            <button class="tab-btn" data-status="cancelled">Dibatalkan</button>
+                        </div>
+
+                        <!-- Orders Container -->
+                        <div id="ordersListContainer" class="orders-list-wrapper">
+                            <!-- Dynamically loaded order items will appear here -->
+                        </div>
+
+                        <!-- Lihat Semua Pesanan -->
+                        <div class="view-more-container" id="viewMoreContainer" style="display:none;">
+                            <button class="btn-view-more" id="btnViewMore">
+                                Lihat Semua Pesanan
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section (30%) -->
+                <div class="main-right-column">
+                    <!-- Detail Pesanan Side Card -->
+                    <div class="order-detail-side-card" id="orderDetailSideCard" style="display:none;">
+                        <div class="side-card-header">
+                            <h3>Detail Pesanan</h3>
+                            <a href="#" class="side-link-btn" id="btnSideDetail">Lihat Detail</a>
+                        </div>
+                        <div class="detail-items">
+                            <div class="detail-item">
+                                <span class="detail-icon">🏪</span>
+                                <div class="detail-text">
+                                    <div class="detail-title-row">
+                                        <span class="store-name" id="sideStoreName">Warung Bu Siti</span>
+                                        <span class="badge-verified">Terverifikasi</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📦</span>
+                                <div class="detail-text flex-row">
+                                    <span id="sideProductCount">3 Produk</span>
+                                    <a href="#" class="side-link-btn-green" id="btnSideProducts">Lihat Produk</a>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💰</span>
+                                <div class="detail-text flex-row">
+                                    <span>Total Pesanan</span>
+                                    <strong id="sideTotalPrice">Rp 125.000</strong>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🚚</span>
+                                <div class="detail-text flex-row">
+                                    <span>Ongkir</span>
+                                    <strong id="sideShippingCost">Rp 8.000</strong>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">💳</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Metode Pembayaran</span>
+                                    <strong id="sidePaymentMethod">COD (Bayar di Tempat)</strong>
+                                </div>
+                            </div>
+                            <div class="detail-item align-start">
+                                <span class="detail-icon">📍</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Alamat Pengiriman</span>
+                                    <p class="address-text" id="sideAddress">Jl. Rajapolah No. 10, Tasikmalaya, Jawa Barat</p>
+                                    <a href="/buyer/profile/" class="side-link-btn-green">Ubah Alamat</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Belanja Aman Card -->
+                    <div class="belanja-aman-card">
+                        <div class="belanja-aman-content">
+                            <h3>🛡️ Belanja Aman di Warungio</h3>
+                            <ul class="aman-list">
+                                <li>
+                                    <span class="check-icon">✓</span>
+                                    <div>
+                                        <strong>Warung Terverifikasi</strong>
+                                        <span>Kualitas terjamin setiap hari</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="check-icon">✓</span>
+                                    <div>
+                                        <strong>Pembayaran Aman</strong>
+                                        <span>Transaksi 100% aman</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="check-icon">✓</span>
+                                    <div>
+                                        <strong>Pengiriman Cepat</strong>
+                                        <span>Sampai ke rumahmu</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="belanja-aman-illustration">
+                            <img src="{% static 'images/sayuran dan tas.png' %}" alt="Belanja Aman" />
+                        </div>
+                    </div>
+
+                    <!-- Butuh Bantuan Card -->
+                    <div class="bantuan-card">
+                        <div class="bantuan-content">
+                            <h3>Butuh Bantuan?</h3>
+                            <p>Hubungi tim support kami, siap membantu!</p>
+                            <a href="/bantuan/" class="btn-hubungi">Hubungi Sekarang</a>
+                        </div>
+                        <div class="bantuan-illustration">
+                            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" class="headset-svg">
+                                <path d="M3 18v-6a9 9 0 0118 0v6M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3M3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Footer Benefits -->
+        <footer class="footer-benefits">
+            <div class="benefits-container">
+                <div class="benefit-item">
+                    <div class="benefit-icon">🥬</div>
+                    <div class="benefit-text">
+                        <h4>Produk Segar</h4>
+                        <p>Kualitas terbaik setiap hari</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🏷️</div>
+                    <div class="benefit-text">
+                        <h4>Harga Terjangkau</h4>
+                        <p>Ekonomis setiap hari</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">📍</div>
+                    <div class="benefit-text">
+                        <h4>Warung Terdekat</h4>
+                        <p>Lebih cepat sampai</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🚚</div>
+                    <div class="benefit-text">
+                        <h4>Gratis Ongkir</h4>
+                        <p>Min. belanja Rp20.000</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">💬</div>
+                    <div class="benefit-text">
+                        <h4>Support 24/7</h4>
+                        <p>Kami siap membantu</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Warungio. Hak Cipta Dilindungi.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirm Cancel Modal -->
+    <div class="modal-backdrop" id="cancelModal" style="display: none;">
+        <div class="confirm-modal">
+            <h3 class="modal-title">Batalkan Pesanan</h3>
+            <p class="modal-body">Apakah Anda yakin ingin membatalkan pesanan ini?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" id="btnDismissCancel">Batal</button>
+                <button class="btn-confirm-cancel" id="btnConfirmCancel">Ya, Batalkan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/pages/buyer/orders/script.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesanan - Warungio Seller</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="64x64" href="../../assets/favicon-64x64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon-180x180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/favicon-192x192.png" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-panel">
+        <img src="../../assets/images/Warungio L.png" alt="Warungio logo" class="brand-logo" />
+        <div>
+          <h1>Warungio</h1>
+          <p>Mitra Pesanan</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="../dashboard/index.html"><i class="fa-solid fa-house"></i> Beranda</a>
+        <a href="../products/index.html"><i class="fa-solid fa-box"></i> Produk</a>
+        <a href="#" class="active"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+        <a href="#"><i class="fa-solid fa-store"></i> Warung</a>
+        <a href="#"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+        <a href="#"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+        <a href="#"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>Perbarui status pesanan secara cepat langsung dari daftar pesanan.</p>
+        <button class="cta-button" onclick="window.location.reload()">Segarkan</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content-area">
+      <header class="header-main">
+        <div class="top-header">
+          <div class="brand-block">
+            <img src="../../assets/images/Warungio L.png" alt="Warungio logo" />
+            <div>
+              <span class="brand-name">Warungio</span>
+              <p class="brand-subtitle">Manajemen Pesanan</p>
+            </div>
+          </div>
+          <div class="user-info">
+            <div id="notifContainer"></div>
+            <div class="profile">
+              <span id="sellerName">Seller</span>
+              <small>Penjual</small>
+              <img src="../../assets/images/av-siti.png" alt="user" />
+            </div>
+          </div>
+        </div>
+        <nav class="top-nav">
+          <div class="nav-links">
+            <a href="../dashboard/index.html">Beranda</a>
+            <a href="../products/index.html">Produk</a>
+            <a href="#" class="active">Pesanan</a>
+            <a href="#">Keuangan</a>
+            <a href="#">Laporan</a>
+            <a href="#">Bantuan</a>
+          </div>
+        </nav>
+      </header>
+
+      <!-- Page Header -->
+      <section class="page-header">
+        <div>
+          <p class="section-tag">Pesanan</p>
+          <h1>Daftar Pesanan</h1>
+          <p class="section-subtitle">Kelola semua pesanan masuk dan perbarui status pengiriman hyperlocal.</p>
+        </div>
+        <div class="header-actions">
+          <span class="last-refresh" id="lastRefresh">Memuat...</span>
+          <button id="refreshBtn" class="btn-secondary" type="button">
+            <i class="fa-solid fa-arrows-rotate"></i> Segarkan
+          </button>
+        </div>
+      </section>
+
+      <!-- Summary Stats -->
+      <section class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon total"><i class="fa-solid fa-receipt"></i></div>
+          <div class="stat-body">
+            <span class="stat-label">Total Pesanan</span>
+            <h3 id="statTotal">0</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon waiting"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div class="stat-body">
+            <span class="stat-label">Menunggu</span>
+            <h3 id="statPending">0</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon processing"><i class="fa-solid fa-gear"></i></div>
+          <div class="stat-body">
+            <span class="stat-label">Diproses</span>
+            <h3 id="statProcessed">0</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon shipping"><i class="fa-solid fa-truck"></i></div>
+          <div class="stat-body">
+            <span class="stat-label">Dalam Perjalanan</span>
+            <h3 id="statShipped">0</h3>
+          </div>
+        </div>
+        <div class="stat-card highlight-stat">
+          <div class="stat-icon revenue"><i class="fa-solid fa-wallet"></i></div>
+          <div class="stat-body">
+            <span class="stat-label">Pendapatan</span>
+            <h3 id="statRevenue">Rp 0</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="filter-bar">
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-btn active" data-filter="">Semua</button>
+          <button class="filter-btn" data-filter="pending">Menunggu</button>
+          <button class="filter-btn" data-filter="paid">Lunas</button>
+          <button class="filter-btn" data-filter="processed">Diproses</button>
+          <button class="filter-btn" data-filter="shipped">Dikirim</button>
+          <button class="filter-btn" data-filter="completed">Selesai</button>
+          <button class="filter-btn" data-filter="cancelled">Dibatalkan</button>
+        </div>
+        <div class="filter-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" id="searchInput" placeholder="Cari nomor pesanan, pembeli..." autocomplete="off" />
+        </div>
+      </section>
+
+      <!-- Orders Table -->
+      <section class="table-section">
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Pesanan</th>
+                  <th>Pembeli</th>
+                  <th>Item</th>
+                  <th>Total</th>
+                  <th>Kurir</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody">
+                <tr><td colspan="7" class="empty-cell">
+                  <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Memuat pesanan...</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Empty state (shown when no orders) -->
+        <div id="emptyState" class="empty-state" style="display:none">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <h3>Belum Ada Pesanan</h3>
+          <p>Pesanan dari pembeli akan muncul di sini.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ MODALS ============ -->
+
+  <!-- Cancel Modal -->
+  <div id="cancelModal" class="modal-overlay" style="display:none">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="cancel-title"><i class="fa-solid fa-circle-exclamation" style="color:#DC2626"></i> Batalkan Pesanan</h3>
+        <button class="modal-close" id="cancelModalClose" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="cancel-warning">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Pembatalan akan mengembalikan stok produk. Tindakan ini tidak dapat dibatalkan.</span>
+        </div>
+        <form id="cancelForm" autocomplete="off">
+          <label class="modal-label">Alasan Pembatalan</label>
+          <select id="cancelReason" class="modal-select" required>
+            <option value="">Pilih alasan...</option>
+            <option value="out_of_stock">Stok habis</option>
+            <option value="seller_unavailable">Penjual tidak bisa melayani</option>
+            <option value="wrong_price">Harga salah</option>
+            <option value="address_invalid">Alamat pengiriman tidak valid</option>
+            <option value="product_damaged">Produk rusak</option>
+            <option value="other">Lainnya</option>
+          </select>
+          <label class="modal-label">Keterangan <span class="optional">(opsional)</span></label>
+          <textarea id="cancelReasonText" class="modal-textarea" placeholder="Detail alasan..." maxlength="500" rows="2"></textarea>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelDismissBtn" class="btn btn-outline modal-btn" type="button">Tutup</button>
+        <button id="cancelConfirmBtn" class="btn btn-danger modal-btn" type="button">
+          <span id="cancelBtnText">Ya, Batalkan</span>
+          <span id="cancelBtnLoading" style="display:none"><i class="fa-solid fa-spinner fa-spin"></i> Membatalkan...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Driver Modal (Kurir Menjemput) -->
+  <div id="driverModal" class="modal-overlay" style="display:none">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-motorcycle" style="color:#C2410C"></i> Kurir Menjemput</h3>
+        <button class="modal-close" id="driverModalClose" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Masukkan informasi kurir yang menjemput pesanan <strong id="driverOrderNumber">#-</strong>.</p>
+        <form id="driverForm" autocomplete="off">
+          <label class="modal-label">Nama Driver</label>
+          <input type="text" id="driverNameInput" class="modal-input" placeholder="Nama driver Gojek/Grab/Maxim" maxlength="100" />
+
+          <label class="modal-label">Nomor HP Driver</label>
+          <input type="text" id="driverPhoneInput" class="modal-input" placeholder="08xxxxxxx" maxlength="20" />
+
+          <label class="modal-label">Kode Penjemputan <span class="optional">(opsional)</span></label>
+          <input type="text" id="pickupCodeInput" class="modal-input" placeholder="6 digit kode pickup" maxlength="10" />
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="driverDismissBtn" class="btn btn-outline modal-btn" type="button">Batal</button>
+        <button id="driverConfirmBtn" class="btn btn-primary modal-btn" type="button">
+          <span id="driverBtnText">Konfirmasi Penjemputan</span>
+          <span id="driverBtnLoading" style="display:none"><i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transit Modal (Dalam Perjalanan) -->
+  <div id="transitModal" class="modal-overlay" style="display:none">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-truck" style="color:#0369A1"></i> Dalam Perjalanan</h3>
+        <button class="modal-close" id="transitModalClose" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Pesanan <strong id="transitOrderNumber">#-</strong> sedang dalam perjalanan.</p>
+        <form id="transitForm" autocomplete="off">
+          <label class="modal-label">Estimasi Tiba</label>
+          <input type="text" id="transitEstimateInput" class="modal-input" placeholder="Contoh: 15 menit lagi / 14:30 WIB" maxlength="100" />
+
+          <label class="modal-label">Kode Tracking <span class="optional">(opsional)</span></label>
+          <input type="text" id="transitTrackInput" class="modal-input" placeholder="Nomor pesanan dari Gojek/Grab/Maxim" maxlength="100" />
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="transitDismissBtn" class="btn btn-outline modal-btn" type="button">Batal</button>
+        <button id="transitConfirmBtn" class="btn btn-info modal-btn" type="button">
+          <span id="transitBtnText">Konfirmasi Dalam Perjalanan</span>
+          <span id="transitBtnLoading" style="display:none"><i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../staticfiles/js/auth.js"></script>
+  <script src="../../staticfiles/js/api.js"></script>
+  <script src="../../src/services/websocket.js"></script>
+  <script src="../../src/utils/notifications.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

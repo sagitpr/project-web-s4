@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Refund Saya - Warungio{% endblock %}
+{% block content %}
+<div class="page-wrapper" style="max-width: 1000px; margin: 0 auto; padding: 24px 16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+    <div><h1 style="font-size:24px;font-weight:800;margin:0;color:var(--color-text-primary);">Pengembalian & Refund</h1><p style="font-size:13px;color:var(--color-text-secondary);margin:4px 0 0;">Ajukan dan lacak permintaan refundmu</p></div>
+    <a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary" style="padding:10px 20px;border-radius:var(--radius-xl);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;"><i class="fa-solid fa-plus"></i> Ajukan Refund</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <div id="refundList">
+        <div style="text-align:center;padding:40px;color:var(--color-text-tertiary);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">Memuat data refund...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  const list = document.getElementById('refundList');
+  try {
+    const data = await WarungioAPI.getMyRefunds();
+    const refunds = data.results || [];
+    if (refunds.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-tertiary);"><i class="fa-solid fa-receipt fa-2x" style="color:var(--color-gray-300);margin-bottom:12px;"></i><p>Belum ada pengajuan refund.</p><a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary btn-sm" style="margin-top:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-plus"></i> Ajukan Refund</a></div>';
+      return;
+    }
+    list.innerHTML = refunds.map(function(r) {
+      var statusColors = { pending: 'badge-yellow', under_review: 'badge-blue', approved: 'badge-green', rejected: 'badge-red', refunded: 'badge-green', cancelled: 'badge-gray' };
+      var sc = statusColors[r.refund_status] || 'badge-gray';
+      return '<a href="/buyer/refunds/' + r.id + '/" style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--color-border-light);text-decoration:none;transition:background 0.1s;" onmouseover="this.style.background=\'var(--color-gray-50)\'" onmouseout="this.style.background=\'transparent\'">' +
+        '<div style="width:40px;height:40px;border-radius:var(--radius-lg);background:var(--color-gray-100);display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);flex-shrink:0;"><i class="fa-solid fa-rotate-left"></i></div>' +
+        '<div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:600;margin:0;color:var(--color-text-primary);">' + r.reason_display + '</p>' +
+        '<p style="font-size:12px;color:var(--color-text-tertiary);margin:2px 0 0;">' + r.store_name + ' • ' + r.order_number + '</p></div>' +
+        '<div style="text-align:right;"><span class="badge ' + sc + '">' + r.status_display + '</span>' +
+        '<p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Rp ' + Number(r.amount_requested).toLocaleString('id-ID') + '</p></div>' +
+        '</a>';
+    }).join('');
+    // Add total
+    list.innerHTML += '<div style="padding:12px 20px;text-align:center;font-size:12px;color:var(--color-text-tertiary);">Total: ' + refunds.length + ' pengajuan</div>';
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;"><i class="fa-solid fa-exclamation-triangle fa-2x"></i><p style="margin-top:8px;">Gagal memuat data. Coba refresh halaman.</p></div>';
+  }
+});
+</script>
+{% endblock %}

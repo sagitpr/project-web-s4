@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warungio - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../staticfiles/css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="../../assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/favicon-192x192.png" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../assets/images/Warungio L.png" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Mitra</small>
+                </div>
+            </div>
+            <nav>
+                <a href="#" class="active"><i class="fa-solid fa-house"></i> Beranda</a>
+                <a href="#"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="#"><i class="fa-solid fa-receipt"></i> Pesanan <span class="badge">12</span></a>
+                <a href="#"><i class="fa-solid fa-store"></i> Warung</a>
+                <a href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="#"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="#"><i class="fa-solid fa-bullhorn"></i> Promosi</a>
+                <a href="../reviews/index.html"><i class="fa-solid fa-star"></i> Penilaian</a>
+                <a href="#"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="#"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <p>Tingkatkan penjualanmu dengan <b>Warungio Ads</b></p>
+                <img src="../../assets/images/ads_penjualan.png" alt="ads">
+                <button>Pelajari Sekarang</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 18px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <div class="brand-block" style="display: flex; align-items: center; gap: 14px;">
+                        <img src="../../assets/images/Warungio L.png" alt="Warungio logo" style="width: 42px; height: 42px;">
+                        <div>
+                            <span class="brand-name" style="font-size: 20px; font-weight: 800; color: #050915;">Warung<span style="color: #108d35;">io</span></span>
+                            <p class="brand-subtitle" style="font-size: 13px; color: #64748b; margin-top: 2px;">Dashboard Mitra</p>
+                        </div>
+                    </div>
+                    
+                    <nav class="top-nav" style="flex: 1; display: flex; justify-content: center; padding: 0;">
+                        <div class="nav-links" style="display: flex; gap: 28px; align-items: center;">
+                            <a href="#" class="active" style="text-decoration: none; color: #108d35; font-weight: 700; position: relative;">Beranda</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Produk</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Pesanan</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Warung</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Keuangan</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Laporan</a>
+                            <a href="#" style="text-decoration: none; color: #64748b; font-weight: 600;">Bantuan</a>
+                        </div>
+                    </nav>
+
+                    <div class="user-info" style="display: flex; align-items: center; gap: 22px;">
+                        <div class="notif" style="position: relative; font-size: 20px; color: #64748b; cursor: pointer;">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="dot" style="position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid white;"></span>
+                        </div>
+                        <div class="profile" style="display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: #1e293b; background: #f8fafc; padding: 6px 16px 6px 6px; border-radius: 99px; border: 1px solid #e2e8f0; cursor: pointer;">
+                            <div style="position: relative;">
+                                <img src="../../assets/images/av-siti.png" alt="user" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                                <div class="status-online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #108d35; border-radius: 50%; border: 2px solid white;"></div>
+                            </div>
+                            <span>Warung Bu Sari</span>
+                            <i class="fa-solid fa-chevron-down" style="color: #94a3b8; font-size: 12px; margin-left: 4px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <div class="stat-info">
+                        <span>Total Penjualan</span>
+                        <h3 id="total-sales">Rp 8.560.000</h3>
+                        <p class="trend up"><i class="fa-solid fa-arrow-up"></i> 12,5% dari kemarin</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fa-solid fa-box-open"></i></div>
+                    <div class="stat-info">
+                        <span>Pesanan Baru</span>
+                        <h3 id="new-orders">12</h3>
+                        <p class="trend up"><i class="fa-solid fa-arrow-up"></i> 3 dari kemarin</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="stat-info">
+                        <span>Produk Aktif</span>
+                        <h3 id="active-products">128</h3>
+                        <p>Semua produk tersedia</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fa-solid fa-star"></i></div>
+                    <div class="stat-info">
+                        <span>Penilaian Toko</span>
+                        <h3 id="store-rating">4.9</h3>
+                        <p>(236) Review</p>
+                    </div>
+                </div>
+                <div class="stat-card balance-card">
+                    <div class="stat-info">
+                        <span>Saldo Warungio</span>
+                        <h3 id="store-balance">Rp 2.350.000</h3>
+                        <a href="#" class="withdraw-btn">Tarik Saldo</a>
+                    </div>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <div class="left-col">
+                    <!-- Kualitas & Stok Section -->
+                    <div class="card quality-section">
+                        <h2>Kualitas & Stok Produk</h2>
+                        <p class="subtitle">Pastikan produk yang kamu jual memenuhi standar kualitas</p>
+                        
+                        <div class="quality-steps">
+                            <div class="step active">
+                                <div class="step-icon"><i class="fa-solid fa-camera"></i></div>
+                                <b>Foto Produk</b>
+                                <span>Ambil foto produk langsung dari kamera</span>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon"><i class="fa-solid fa-robot"></i></div>
+                                <b>AI Cek Kualitas</b>
+                                <span>AI menganalisa kesegaran & kualitas produk</span>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                                <b>Cek Stok</b>
+                                <span>Pastikan stok tersedia sesuai minimum</span>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon"><i class="fa-solid fa-check-double"></i></div>
+                                <b>Siap Dijual</b>
+                                <span>Produk lolos standar dan siap ditampilkan</span>
+                            </div>
+                        </div>
+
+                        <div class="eligibility-container">
+                            <div class="chart-box">
+                                <canvas id="eligibilityChart"></canvas>
+                                <div class="chart-center">92%</div>
+                            </div>
+                            <div class="legend">
+                                <div class="leg-item"><span class="dot s-green"></span> Sangat Segar <b>78</b> <small>56%</small></div>
+                                <div class="leg-item"><span class="dot s-lime"></span> Segar <b>42</b> <small>30%</small></div>
+                                <div class="leg-item"><span class="dot s-yellow"></span> Kurang Segar <b>8</b> <small>6%</small></div>
+                                <div class="leg-item"><span class="dot s-red"></span> Tidak Layak <b>10</b> <small>8%</small></div>
+                            </div>
+                            <a href="#" class="view-all">Lihat Semua Produk <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Table Section -->
+                    <div class="card action-card">
+                        <div class="card-header">
+                            <h2>Produk Perlu Tindakan <span class="badge-red">10</span></h2>
+                            <a href="#" class="view-all">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Status</th>
+                                    <th>Masalah</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table">
+                                <!-- Data from PHP/JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <!-- Tambah Produk Baru -->
+                    <div class="card add-product-card">
+                        <div class="card-header">
+                            <h2>Tambah Produk Baru</h2>
+                        </div>
+                        <p class="subtitle">Masukkan informasi produk agar stok langsung tercatat di dashboard.</p>
+                        <form id="add-product-form" class="product-form">
+                            <div class="form-row">
+                                <label>
+                                    <span>Nama Produk</span>
+                                    <input type="text" name="product_name" placeholder="Contoh: Bayam Hijau" autocomplete="off" required>
+                                </label>
+                                <label>
+                                    <span>Kategori</span>
+                                    <input type="text" name="category" placeholder="Contoh: Sayuran" autocomplete="off" required>
+                                </label>
+                            </div>
+                            <div class="form-row">
+                                <label>
+                                    <span>Harga (Rp)</span>
+                                    <input type="number" name="price" min="0" step="0.01" placeholder="25000" autocomplete="off" required>
+                                </label>
+                                <label>
+                                    <span>Stok</span>
+                                    <input type="number" name="stock" min="0" step="1" placeholder="50" autocomplete="off" required>
+                                </label>
+                            </div>
+                            <div class="form-row full">
+                                <label>
+                                    <span>Satuan</span>
+                                    <input type="text" name="unit" placeholder="Contoh: kg, pcs" autocomplete="off" required>
+                                </label>
+                            </div>
+                            <div class="form-row full">
+                                <label>
+                                    <span>Deskripsi</span>
+                                    <textarea name="description" rows="3" placeholder="Deskripsi singkat produk"></textarea>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-primary">Tambah Produk</button>
+                            <div id="add-product-message" class="message" style="display:none"></div>
+                        </form>
+                    </div>
+
+                    <!-- Recommendation -->
+                    <div class="card rec-card">
+                        <div class="card-header">
+                            <h2>Rekomendasi Produk</h2>
+                            <a href="#" class="view-all">Lihat Semua</a>
+                        </div>
+                        <div class="rec-list">
+                            <div class="rec-item">
+                                <img src="https://via.placeholder.com/40" alt="veg">
+                                <div><b>Bayam Hijau Segar</b><br><small>Permintaan tinggi di Anda</small></div>
+                                <span class="price-up">+20% <i class="fa-solid fa-arrow-trend-up"></i></span>
+                            </div>
+                            <div class="rec-item">
+                                <img src="https://via.placeholder.com/40" alt="veg">
+                                <div><b>Tomat Merah</b><br><small>Stok menipis di sekitar Anda</small></div>
+                                <span class="price-up">+12% <i class="fa-solid fa-arrow-trend-up"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity -->
+                    <div class="card activity-card">
+                        <div class="card-header">
+                            <h2>Aktivitas Terbaru</h2>
+                            <a href="#" class="view-all">Lihat Semua</a>
+                        </div>
+                        <div class="activity-list" id="activity-list">
+                            <!-- Data from PHP/JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../staticfiles/js/device-detector.js"></script>
+    <script src="../../staticfiles/js/auth.js"></script>
+    <script src="../../staticfiles/js/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

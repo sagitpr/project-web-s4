@@ -1,0 +1,661 @@
+STDOUT:
+[
+  {
+    "httpRequest": {
+      "latency": "0.009328286s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1297",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/Warungio%20L.png",
+      "responseSize": "8312",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870009225e66db6190",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.874008955Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "ac3c43b85b56ba9a",
+    "timestamp": "2026-06-21T01:55:19.588076Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/b79c78974c35f1deada4a7bf637d7488"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.108364811s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1346",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/google-logo.png",
+      "responseSize": "8314",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080e54091f9b22",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "cfd36c9f41ec9a68",
+    "timestamp": "2026-06-21T01:55:19.418469Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/ac6976e7037261deada4a7bf637d7809"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.110084982s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1340",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/apple.png",
+      "responseSize": "8290",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870008136b85d4ef56",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "9eb02b5fc82379a5",
+    "timestamp": "2026-06-21T01:55:19.418187Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/596498d5cd6f57acada4a7bf637d7d3a"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.108629337s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1343",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/appstore.png",
+      "responseSize": "8302",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080d8dca251a80",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "45aea7e3a4f3fc83",
+    "timestamp": "2026-06-21T01:55:19.418135Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/26221ef3dc99a889ada4a7bf637d7ccd"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.108543773s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1343",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/facebook.png",
+      "responseSize": "8302",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080dbcfb7daecd",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "1593c9bede9ef904",
+    "timestamp": "2026-06-21T01:55:19.418034Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/0cef4be0651322eaada4a7bf637d71fe"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.108808547s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1351",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/google-playstore.png",
+      "responseSize": "8334",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080e252a91a2af",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "6890dae30f351231",
+    "timestamp": "2026-06-21T01:55:19.417977Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/61927a2179442efdada4a7bf637d726b"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.109318102s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1345",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/instagram.png",
+      "responseSize": "8306",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080da05434695a",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "65a0fca7e77ed5de",
+    "timestamp": "2026-06-21T01:55:19.417462Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/8c70f0944b6db132ada4a7bf637d779c"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.109614358s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1345",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/call.png",
+      "responseSize": "8286",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870007fe4b53d028eb",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "0f173f7adec68280",
+    "timestamp": "2026-06-21T01:55:19.413084Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/fb8dc20aa1cb48a8ada4a7bf637d7a2a"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.114283318s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1344",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/clock.png",
+      "responseSize": "8290",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a37448700080e1185efddf9",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "8a9217a634b14d3a",
+    "timestamp": "2026-06-21T01:55:19.412531Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/9989a8917249d434ada4a7bf637d74f9"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.050749567s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1350",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/store-bike.png",
+      "responseSize": "8310",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870006f4fba61fdd2d",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "ccad75948eb1dc89",
+    "timestamp": "2026-06-21T01:55:19.404354Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/6b0168751ecc7d79ada4a7bf637d7a97"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.047671516s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1349",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/security.png",
+      "responseSize": "8302",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870006e8906b035fd0",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "a2bfd9c5c42f71c3",
+    "timestamp": "2026-06-21T01:55:19.403916Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/06a2818468e64b29ada4a7bf637d7fc8"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.016935757s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1353",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/Warungio%20L.png",
+      "responseSize": "8312",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a374487000647c68ce29d0e",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "73825082d89f9168",
+    "timestamp": "2026-06-21T01:55:19.393769Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/dfed74bb46b32dffe391ebcc689ec25d"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.030401444s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1343",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/youtube.png",
+      "responseSize": "8298",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744870006145328bfb1f9",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "878d38e2a1463461",
+    "timestamp": "2026-06-21T01:55:19.366836Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/b550c0b6d2701f15e391ebcc689ece3f"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.031712224s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/register/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "GET",
+      "requestSize": "1346",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/static/images/facebook-1.png",
+      "responseSize": "8310",
+      "serverIp": "34.143.79.2",
+      "status": 404,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a374487000614c0e1b00c4c",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:55:19.541530038Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "WARNING",
+    "spanId": "5ccd33b2d9ef0160",
+    "timestamp": "2026-06-21T01:55:19.365714Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/87ad6c7857fcbce1e391ebcc689ec1b2"
+  },
+  {
+    "errorGroups": [
+      {
+        "id": "CPXz2_fLnLqDNw"
+      }
+    ],
+    "insertId": "6a3744570005e30e6a10365f",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-06-21T01:54:31.722454847Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "textPayload": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py\", line 42, in inner\n    response = await get_response(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/base.py\", line 253, in _get_response_async\n    response = await wrapped_callback(\n               ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 506, in __call__\n    ret = await asyncio.shield(exec_coro)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/current_thread_executor.py\", line 40, in run\n    result = self.fn(*self.args, **self.kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 561, in thread_handler\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/decorators/csrf.py\", line 56, in wrapper_view\n    return view_func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/generic/base.py\", line 105, in view\n    return self.dispatch(request, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 515, in dispatch\n    response = self.handle_exception(exc)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 475, in handle_exception\n    self.raise_uncaught_exception(exc)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 486, in raise_uncaught_exception\n    raise exc\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 512, in dispatch\n    response = handler(request, *args, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/views.py\", line 77, in post\n    serializer.is_valid(raise_exception=True)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 225, in is_valid\n    self._validated_data = self.run_validation(self.initial_data)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 459, in run_validation\n    value = self.validate(value)\n            ^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/serializers.py\", line 102, in validate\n    user = authenticate(\n           ^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/decorators/debug.py\", line 42, in sensitive_variables_wrapper\n    return func(*func_args, **func_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/contrib/auth/__init__.py\", line 77, in authenticate\n    user = backend.authenticate(request, **credentials)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/backends.py\", line 36, in authenticate\n    user = User.objects.get(lookups)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/manager.py\", line 87, in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 635, in get\n    num = len(clone)\n          ^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 382, in __len__\n    self._fetch_all()\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 1886, in _fetch_all\n    self._result_cache = list(self._iterable_class(self))\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 93, in __iter__\n    results = compiler.execute_sql(\n              ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 1560, in execute_sql\n    cursor = self.connection.cursor()\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 329, in cursor\n    return self._cursor()\n           ^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 305, in _cursor\n    self.ensure_connection()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 287, in ensure_connection\n    with self.wrap_database_errors:\n  File \"/usr/local/lib/python3.11/site-packages/django/db/utils.py\", line 91, in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 288, in ensure_connection\n    self.connect()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 269, in connect\n    self.connection = self.get_new_connection(conn_params)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/mysql/base.py\", line 247, in get_new_connection\n    connection = Database.connect(**conn_params)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/__init__.py\", line 121, in Connect\n    return Connection(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/connections.py\", line 206, in __init__\n    super().__init__(*args, **kwargs2)\ndjango.db.utils.OperationalError: (2002, \"Can't connect to local server through socket '/cloudsql/project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungi' (2)\")",
+    "timestamp": "2026-06-21T01:54:31.385806Z"
+  },
+  {
+    "errorGroups": [
+      {
+        "id": "CMayppP8iaKucA"
+      }
+    ],
+    "insertId": "6a3744570005e2bca559d485",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-06-21T01:54:31.722454847Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "textPayload": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 288, in ensure_connection\n    self.connect()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 269, in connect\n    self.connection = self.get_new_connection(conn_params)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/mysql/base.py\", line 247, in get_new_connection\n    connection = Database.connect(**conn_params)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/__init__.py\", line 121, in Connect\n    return Connection(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/connections.py\", line 206, in __init__\n    super().__init__(*args, **kwargs2)\nMySQLdb.OperationalError: (2002, \"Can't connect to local server through socket '/cloudsql/project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungi' (2)\")",
+    "timestamp": "2026-06-21T01:54:31.385724Z"
+  },
+  {
+    "errorGroups": [
+      {
+        "id": "CPXz2_fLnLqDNw"
+      }
+    ],
+    "insertId": "6a3744570005e283b2d27962",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-06-21T01:54:31.722454847Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "textPayload": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py\", line 42, in inner\n    response = await get_response(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/base.py\", line 253, in _get_response_async\n    response = await wrapped_callback(\n               ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 506, in __call__\n    ret = await asyncio.shield(exec_coro)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/current_thread_executor.py\", line 40, in run\n    result = self.fn(*self.args, **self.kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 561, in thread_handler\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/decorators/csrf.py\", line 56, in wrapper_view\n    return view_func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/generic/base.py\", line 105, in view\n    return self.dispatch(request, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 515, in dispatch\n    response = self.handle_exception(exc)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 475, in handle_exception\n    self.raise_uncaught_exception(exc)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 486, in raise_uncaught_exception\n    raise exc\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 512, in dispatch\n    response = handler(request, *args, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/views.py\", line 77, in post\n    serializer.is_valid(raise_exception=True)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 225, in is_valid\n    self._validated_data = self.run_validation(self.initial_data)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 459, in run_validation\n    value = self.validate(value)\n            ^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/serializers.py\", line 102, in validate\n    user = authenticate(\n           ^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/decorators/debug.py\", line 42, in sensitive_variables_wrapper\n    return func(*func_args, **func_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/contrib/auth/__init__.py\", line 77, in authenticate\n    user = backend.authenticate(request, **credentials)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/backends.py\", line 36, in authenticate\n    user = User.objects.get(lookups)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/manager.py\", line 87, in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 635, in get\n    num = len(clone)\n          ^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 382, in __len__\n    self._fetch_all()\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 1886, in _fetch_all\n    self._result_cache = list(self._iterable_class(self))\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 93, in __iter__\n    results = compiler.execute_sql(\n              ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 1560, in execute_sql\n    cursor = self.connection.cursor()\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 329, in cursor\n    return self._cursor()\n           ^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 305, in _cursor\n    self.ensure_connection()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 287, in ensure_connection\n    with self.wrap_database_errors:\n  File \"/usr/local/lib/python3.11/site-packages/django/db/utils.py\", line 91, in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 288, in ensure_connection\n    self.connect()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 269, in connect\n    self.connection = self.get_new_connection(conn_params)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/mysql/base.py\", line 247, in get_new_connection\n    connection = Database.connect(**conn_params)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/__init__.py\", line 121, in Connect\n    return Connection(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/connections.py\", line 206, in __init__\n    super().__init__(*args, **kwargs2)\ndjango.db.utils.OperationalError: (2002, \"Can't connect to local server through socket '/cloudsql/project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungi' (2)\")",
+    "timestamp": "2026-06-21T01:54:31.385667Z"
+  },
+  {
+    "errorGroups": [
+      {
+        "id": "CMayppP8iaKucA"
+      }
+    ],
+    "insertId": "6a3744570005e2263e0b3731",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-06-21T01:54:31.388569436Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "textPayload": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 288, in ensure_connection\n    self.connect()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 269, in connect\n    self.connection = self.get_new_connection(conn_params)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/mysql/base.py\", line 247, in get_new_connection\n    connection = Database.connect(**conn_params)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/__init__.py\", line 121, in Connect\n    return Connection(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/connections.py\", line 206, in __init__\n    super().__init__(*args, **kwargs2)\nMySQLdb.OperationalError: (2002, \"Can't connect to local server through socket '/cloudsql/project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungi' (2)\")",
+    "timestamp": "2026-06-21T01:54:31.385574Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.069715115s",
+      "protocol": "HTTP/1.1",
+      "referer": "https://warungio-96622149770.asia-southeast2.run.app/auth/login/",
+      "remoteIp": "103.180.123.183",
+      "requestMethod": "POST",
+      "requestSize": "1155",
+      "requestUrl": "https://warungio-96622149770.asia-southeast2.run.app/api/auth/login/",
+      "responseSize": "288419",
+      "serverIp": "34.143.79.2",
+      "status": 500,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "insertId": "6a3744570005eee7a06b5fc0",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-06-21T01:54:31.391251680Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "spanId": "b375e86ec46a7739",
+    "timestamp": "2026-06-21T01:54:31.309245Z",
+    "trace": "projects/project-010f7e8f-fc0f-46fb-8c7/traces/f4e32e73e4309c1aa595704643383f6d",
+    "traceSampled": true
+  },
+  {
+    "errorGroups": [
+      {
+        "id": "CPXz2_fLnLqDNw"
+      }
+    ],
+    "insertId": "6a3743f7000c09f7a5293a3d",
+    "labels": {
+      "instanceId": "002f8ffd475b47c522ed4760e2e85349baea71c3b60a6def5b70db1948bc341f31ce0bd5da0806bfd72da0b891a589e5f99cb82e995bc24a36eb1af0540b1c1fc814ff1614a309cd6a6fd3b97f17081aca"
+    },
+    "logName": "projects/project-010f7e8f-fc0f-46fb-8c7/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-06-21T01:52:55.884367382Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "warungio",
+        "location": "asia-southeast2",
+        "project_id": "project-010f7e8f-fc0f-46fb-8c7",
+        "revision_name": "warungio-00017-nnb",
+        "service_name": "warungio"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "textPayload": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py\", line 42, in inner\n    response = await get_response(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 557, in thread_handler\n    raise exc_info[1]\n  File \"/usr/local/lib/python3.11/site-packages/django/core/handlers/base.py\", line 253, in _get_response_async\n    response = await wrapped_callback(\n               ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 506, in __call__\n    ret = await asyncio.shield(exec_coro)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/current_thread_executor.py\", line 40, in run\n    result = self.fn(*self.args, **self.kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/asgiref/sync.py\", line 561, in thread_handler\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/decorators/csrf.py\", line 56, in wrapper_view\n    return view_func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/views/generic/base.py\", line 105, in view\n    return self.dispatch(request, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 515, in dispatch\n    response = self.handle_exception(exc)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 475, in handle_exception\n    self.raise_uncaught_exception(exc)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 486, in raise_uncaught_exception\n    raise exc\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/views.py\", line 512, in dispatch\n    response = handler(request, *args, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/generics.py\", line 194, in post\n    return self.create(request, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/views.py\", line 33, in create\n    serializer.is_valid(raise_exception=True)\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 225, in is_valid\n    self._validated_data = self.run_validation(self.initial_data)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 456, in run_validation\n    value = self.to_internal_value(data)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/rest_framework/serializers.py\", line 515, in to_internal_value\n    validated_value = validate_method(validated_value)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/django_backend/accounts/serializers.py\", line 62, in validate_email\n    if User.objects.filter(email=value).exists():\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/query.py\", line 1243, in exists\n    return self.query.has_results(using=self.db)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/sql/query.py\", line 600, in has_results\n    return compiler.has_results()\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 1530, in has_results\n    return bool(self.execute_sql(SINGLE))\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 1560, in execute_sql\n    cursor = self.connection.cursor()\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 329, in cursor\n    return self._cursor()\n           ^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 305, in _cursor\n    self.ensure_connection()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 287, in ensure_connection\n    with self.wrap_database_errors:\n  File \"/usr/local/lib/python3.11/site-packages/django/db/utils.py\", line 91, in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 288, in ensure_connection\n    self.connect()\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/base/base.py\", line 269, in connect\n    self.connection = self.get_new_connection(conn_params)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/utils/asyncio.py\", line 26, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/django/db/backends/mysql/base.py\", line 247, in get_new_connection\n    connection = Database.connect(**conn_params)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/__init__.py\", line 121, in Connect\n    return Connection(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/MySQLdb/connections.py\", line 206, in __init__\n    super().__init__(*args, **kwargs2)\ndjango.db.utils.OperationalError: (2002, \"Can't connect to local server through socket '/cloudsql/project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungi' (2)\")",
+    "timestamp": "2026-06-21T01:52:55.788983Z"
+  }
+]
+
+STDERR:

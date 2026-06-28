@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Analytics - Warungio Admin{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+    <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary btn-sm">7 Days</button>
+        <button class="btn btn-ghost btn-sm">30 Days</button>
+        <button class="btn btn-ghost btn-sm">90 Days</button>
+        <button class="btn btn-ghost btn-sm">Custom</button>
+    </div>
+    <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> Export Report</button>
+</div>
+
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-eye"></i></div><div class="stat-content"><div class="stat-label">Page Views</div><div class="stat-value">847K</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 12.4%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-plus"></i></div><div class="stat-content"><div class="stat-label">New Users</div><div class="stat-value">2,847</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 8.2%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div><div class="stat-content"><div class="stat-label">Conversion</div><div class="stat-value">3.2%</div><div class="stat-trend down"><i class="fa-solid fa-arrow-down"></i> 0.4%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Avg Session</div><div class="stat-value">4m 32s</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 2.1%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fa-solid fa-bounce"></i></div><div class="stat-content"><div class="stat-label">Bounce Rate</div><div class="stat-value">38.4%</div><div class="stat-trend down"><i class="fa-solid fa-arrow-down"></i> 1.2%</div></div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:24px; margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Traffic Overview</h3></div>
+        <div class="card-body" style="height:260px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);">
+            <div style="text-align:center;"><i class="fa-solid fa-chart-area fa-3x" style="color:var(--color-gray-200);margin-bottom:12px;"></i><p>Traffic chart will render here</p></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Traffic Sources</h3></div>
+        <div class="card-body">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Direct</span><span style="font-weight:600;">42%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:42%;height:100%;background:var(--color-brand);border-radius:99px;"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Organic Search</span><span style="font-weight:600;">28%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:28%;height:100%;background:#3b82f6;border-radius:99px;"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Social Media</span><span style="font-weight:600;">18%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:18%;height:100%;background:#f59e0b;border-radius:99px;"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Referral</span><span style="font-weight:600;">8%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:8%;height:100%;background:#8b5cf6;border-radius:99px;"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Email</span><span style="font-weight:600;">4%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:4%;height:100%;background:#ec4899;border-radius:99px;"></div></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Device Breakdown</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-mobile-screen-button" style="width:20px;color:var(--color-brand);"></i><span style="font-size:13px;">Mobile</span></div>
+                    <span style="font-weight:700;font-size:14px;">68%</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-tablet-screen-button" style="width:20px;color:#3b82f6;"></i><span style="font-size:13px;">Tablet</span></div>
+                    <span style="font-weight:700;font-size:14px;">8%</span>
+                </div>
+                <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-desktop" style="width:20px;color:#8b5cf6;"></i><span style="font-size:13px;">Desktop</span></div>
+                    <span style="font-weight:700;font-size:14px;">24%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Top Pages</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap"><table class="w-table">
+                <thead><tr><th>Page</th><th>Views</th><th>Avg Time</th></tr></thead>
+                <tbody>
+                    <tr><td>/home/</td><td>284K</td><td>2m 14s</td></tr>
+                    <tr><td>/products/</td><td>156K</td><td>3m 42s</td></tr>
+                    <tr><td>/buyer/cart/</td><td>89K</td><td>1m 08s</td></tr>
+                    <tr><td>/seller/dashboard/</td><td>67K</td><td>4m 56s</td></tr>
+                    <tr><td>/bantuan/</td><td>34K</td><td>2m 31s</td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

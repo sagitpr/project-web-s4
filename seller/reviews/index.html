@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ulasan - Warungio Seller</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-panel">
+        <img src="../../assets/images/Warungio L.png" alt="Warungio logo" />
+        <div>
+          <h1>Warungio</h1>
+          <p>Seller Dashboard</p>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="../dashboard/index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="../products/index.html"><i class="fa-solid fa-box"></i> Produk</a>
+        <a href="../orders/index.html"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+        <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+        <a href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
+        <a href="#"><i class="fa-solid fa-tags"></i> Promo & Diskon</a>
+        <a href="#"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+        <a href="#" class="active"><i class="fa-solid fa-star"></i> Ulasan</a>
+        <a href="#"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+        <a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+        <a href="#"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      </nav>
+      <div class="sidebar-footer">
+        <b>Bangun reputasi toko yang lebih baik</b>
+        <p>Respon cepat dan jaga kualitas produk untuk ulasan positif.</p>
+        <button type="button">Lihat Tips</button>
+      </div>
+    </aside>
+
+    <main class="content-area">
+      <header class="header-main">
+        <button class="menu-btn" type="button" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="store-head">
+          <h2>Warung Bu Sari <span>Aktif</span></h2>
+          <p>ID Warung: WRG12345</p>
+        </div>
+        <div class="user-info">
+          <div class="bell"><i class="fa-regular fa-bell"></i><b>3</b></div>
+          <img src="../../assets/images/av-siti.png" alt="Bu Sari" />
+          <div><strong>Bu Sari</strong><small>Seller</small></div>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+      </header>
+
+      <section class="page-title">
+        <div>
+          <h1>Ulasan</h1>
+          <p>Kelola dan balas semua ulasan yang diberikan pelanggan</p>
+        </div>
+        <div class="welcome" id="welcomeText">Tinjau ulasan pelanggan dan tingkatkan reputasi tokomu</div>
+      </section>
+
+      <section class="metrics-grid" id="metricsGrid"></section>
+
+      <section class="review-layout">
+        <aside class="insight-stack">
+          <div class="panel rating-panel">
+            <h3>Review Distribution</h3>
+            <div class="rating-score">
+              <strong id="avgRating">0.0</strong>
+              <div><span id="avgStars"></span><small id="totalReviews">0 ulasan</small></div>
+            </div>
+            <div class="bars" id="ratingBars"></div>
+          </div>
+          <div class="panel tips-panel">
+            <h3>Tips Meningkatkan Ulasan</h3>
+            <div class="tip"><i class="fa-regular fa-comments"></i><span>Balas ulasan dengan ramah dan profesional</span></div>
+            <div class="tip"><i class="fa-solid fa-box-open"></i><span>Kirim produk berkualitas dan sesuai deskripsi</span></div>
+            <div class="tip"><i class="fa-regular fa-clock"></i><span>Kirim tepat waktu sesuai estimasi pengiriman</span></div>
+            <a href="#">Lihat Panduan Lengkap <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </aside>
+
+        <section class="panel reviews-panel">
+          <div class="toolbar">
+            <label class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="searchInput" type="search" placeholder="Cari produk, nama pelanggan, atau isi ulasan..." />
+            </label>
+            <select id="ratingFilter">
+              <option value="">Semua Rating</option>
+              <option value="5">5 Star</option>
+              <option value="4">4 Star</option>
+              <option value="3">3 Star</option>
+              <option value="2">2 Star</option>
+              <option value="1">1 Star</option>
+            </select>
+            <select id="statusFilter">
+              <option value="">Semua Status</option>
+              <option value="unreplied">Belum Dibalas</option>
+              <option value="replied">Sudah Dibalas</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pelanggan</th>
+                  <th>Produk</th>
+                  <th>Rating</th>
+                  <th>Ulasan</th>
+                  <th>Tanggal</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="reviewsBody"></tbody>
+            </table>
+          </div>
+          <div class="mobile-list" id="mobileReviews"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="reviewModal" aria-hidden="true">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header class="modal-head">
+        <div>
+          <p>Detail Ulasan</p>
+          <h2 id="modalTitle">Ulasan Pelanggan</h2>
+        </div>
+        <button id="closeModal" class="icon-button" type="button" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <div class="modal-body" id="modalBody"></div>
+      <footer class="reply-dock">
+        <textarea id="replyInput" rows="3" placeholder="Tulis balasan untuk pelanggan..."></textarea>
+        <div class="reply-actions">
+          <button id="aiReplyBtn" class="btn ai" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> Buat Balasan AI</button>
+          <button id="deleteReplyBtn" class="btn danger" type="button"><i class="fa-solid fa-trash"></i> Delete Reply</button>
+          <button id="saveReplyBtn" class="btn primary" type="button"><i class="fa-solid fa-paper-plane"></i> Reply</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

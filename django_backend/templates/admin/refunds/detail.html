@@ -1,0 +1,207 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Refund Detail - Warungio Admin{% endblock %}
+{% block page_title %}Refund Detail{% endblock %}
+
+{% block extra_styles %}
+<style>
+.status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge-pending { background:#fef3c7; color:#d97706; }
+.badge-review { background:#dbeafe; color:#2563eb; }
+.badge-approved { background:#dcfce7; color:#16a34a; }
+.badge-rejected { background:#fef2f2; color:#dc2626; }
+.badge-cancelled { background:#f1f5f9; color:#64748b; }
+.badge-refunded { background:#dcfce7; color:#16a34a; }
+.badge-waiting { background:#fef3c7; color:#d97706; }
+.badge-escalated { background:#fce7f3; color:#db2777; }
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.info-item label { font-size:11px; color:var(--color-text-tertiary); display:block; margin-bottom:2px; }
+.info-item p { font-size:14px; font-weight:600; color:var(--color-text-primary); margin:0; }
+.timeline-node { position:relative; padding-left:24px; padding-bottom:16px; }
+.timeline-node:last-child { padding-bottom:0; }
+.timeline-dot { position:absolute; left:0; top:4px; width:10px; height:10px; border-radius:50%; background:var(--color-brand); border:2px solid var(--color-surface); }
+.timeline-line { position:absolute; left:4px; top:16px; width:2px; bottom:0; background:var(--color-border); }
+.timeline-node:last-child .timeline-line { display:none; }
+.admin-action-btn { padding:8px 16px; border-radius:var(--radius-lg); border:none; font-size:13px; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.15s; }
+.admin-action-btn:disabled { opacity:0.5; cursor:not-allowed; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+    <a href="{% url 'admin-refunds' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-secondary);text-decoration:none;"><i class="fa-solid fa-arrow-left"></i> Back to Refunds</a>
+</div>
+
+<div id="refundDetailContainer">
+    <div style="text-align:center;padding:60px;color:var(--color-text-tertiary);">
+        <i class="fa-solid fa-spinner fa-spin fa-2x" style="margin-bottom:12px;"></i>
+        <p>Loading refund detail...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const pk = window.location.pathname.split('/').filter(Boolean).pop();
+    const container = document.getElementById('refundDetailContainer');
+
+    function getBadge(status, escal) {
+        const m = { pending:'pending', under_review:'review', waiting_buyer:'waiting', waiting_seller:'waiting', approved:'approved', rejected:'rejected', cancelled:'cancelled', refunded:'refunded' };
+        return escal ? 'escalated' : (m[status] || 'pending');
+    }
+    function getLabel(status) {
+        const m = { pending:'Pending', under_review:'Review', waiting_buyer:'Wait Buyer', waiting_seller:'Wait Seller', approved:'Approved', rejected:'Rejected', cancelled:'Cancelled', refunded:'Refunded', partial_refund:'Partial' };
+        return m[status] || status;
+    }
+    function fmtCurrency(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+    function fmtDate(d) { return d ? new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-'; }
+
+    function canIntervene(status) { return ['pending','under_review','waiting_buyer','waiting_seller','approved'].indexOf(status) !== -1; }
+
+    async function loadDetail() {
+        try {
+            const r = await WarungioAPI.getRefund(pk);
+            const badge = getBadge(r.refund_status, r.is_escalated);
+            const label = getLabel(r.refund_status);
+            const actionable = canIntervene(r.refund_status);
+
+            // Timeline
+            let tlHtml = '';
+            if (r.timeline && r.timeline.length) {
+                tlHtml = '<div style="position:relative;">' + r.timeline.map(t => {
+                    return '<div class="timeline-node"><div class="timeline-dot"></div><div class="timeline-line"></div>' +
+                        '<p style="font-size:13px;font-weight:600;margin:0;color:var(--color-text-primary);">' + t.description + '</p>' +
+                        '<p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">' + (t.created_by_name || 'System') + ' • ' + fmtDate(t.created_at) + '</p></div>';
+                }).join('') + '</div>';
+            }
+
+            // Items
+            let itemsHtml = '';
+            if (r.order_items && r.order_items.length) {
+                itemsHtml = '<table class="w-table"><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>' +
+                    r.order_items.map(i => '<tr><td>' + i.product_name + '</td><td>' + i.qty + '</td><td>' + fmtCurrency(i.price) + '</td><td>' + fmtCurrency(i.subtotal) + '</td></tr>').join('') +
+                    '</tbody></table>';
+            }
+
+            const statusLabel = r.is_escalated ? 'Escalated' : label;
+
+            container.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+                <div>
+                    <div class="card">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                            <div><h3>${r.reason_display || 'Refund'}</h3><p style="font-size:12px;color:var(--color-text-tertiary);margin:2px 0 0;">${r.refund_number || ''}</p></div>
+                            <span class="status-badge badge-${badge}"><i class="fa-solid fa-circle" style="font-size:6px;"></i> ${statusLabel}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-grid">
+                                <div class="info-item"><label>Buyer</label><p>${r.buyer_name || '-'}</p></div>
+                                <div class="info-item"><label>Store</label><p>${r.store_name || '-'}</p></div>
+                                <div class="info-item"><label>Order</label><p>${r.order_number || '-'}</p></div>
+                                <div class="info-item"><label>Amount Requested</label><p>${fmtCurrency(r.amount_requested)}</p></div>
+                                <div class="info-item"><label>Amount Approved</label><p>${r.amount_approved ? fmtCurrency(r.amount_approved) : '-'}</p></div>
+                                <div class="info-item"><label>Resolution</label><p>${r.resolution_display || '-'}</p></div>
+                                <div class="info-item"><label>Created</label><p>${fmtDate(r.created_at)}</p></div>
+                                <div class="info-item"><label>Resolved</label><p>${r.resolved_at ? fmtDate(r.resolved_at) : '-'}</p></div>
+                            </div>
+                            ${r.reason_text ? '<div style="margin-top:16px;padding:14px;background:var(--color-surface-secondary);border-radius:var(--radius-lg);"><p style="font-size:11px;color:var(--color-text-tertiary);margin:0 0 4px;">Buyer Explanation</p><p style="font-size:13px;color:var(--color-text-secondary);margin:0;">' + r.reason_text + '</p></div>' : ''}
+                            ${r.seller_notes ? '<div style="margin-top:12px;padding:14px;background:#fef3c7;border-radius:var(--radius-lg);border:1px solid #fde68a;"><p style="font-size:11px;color:#d97706;margin:0 0 4px;">Seller Notes</p><p style="font-size:13px;color:#92400e;margin:0;">' + r.seller_notes + '</p></div>' : ''}
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:16px;">
+                        <div class="card-header"><h3>Order Items</h3></div>
+                        <div class="card-body" style="padding:0;">${itemsHtml || '<p style="padding:20px;color:var(--color-text-tertiary);font-size:13px;">No order items data.</p>'}</div>
+                    </div>
+
+                    <div class="card" style="margin-top:16px;">
+                        <div class="card-header"><h3>Timeline</h3></div>
+                        <div class="card-body">${tlHtml || '<p style="color:var(--color-text-tertiary);font-size:13px;">No timeline events.</p>'}</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card" style="${actionable ? '' : 'opacity:0.7;'}">
+                        <div class="card-header"><h3>${actionable ? 'Admin Action' : 'Processed'}</h3></div>
+                        <div class="card-body">
+                            ${actionable ? `
+                                <div style="display:flex;flex-direction:column;gap:10px;">
+                                    <textarea id="adminNotes" rows="3" placeholder="Admin notes..." style="width:100%;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-lg);font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;resize:vertical;outline:none;"></textarea>
+                                    <div><label style="font-size:11px;color:var(--color-text-tertiary);display:block;margin-bottom:4px;">Approved Amount</label>
+                                        <input type="number" id="adminAmount" class="form-input" placeholder="Amount" value="${Number(r.amount_requested).toLocaleString('id-ID').replace(/\./g,'')}" style="width:100%;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-lg);font-size:13px;outline:none;"></div>
+                                    <div><label style="font-size:11px;color:var(--color-text-tertiary);display:block;margin-bottom:4px;">Resolution</label>
+                                        <select id="adminResolution" class="form-select" style="width:100%;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-lg);font-size:13px;outline:none;">
+                                            <option value="full_refund">Full Refund</option>
+                                            <option value="partial_refund">Partial Refund</option>
+                                            <option value="replacement">Replacement</option>
+                                            <option value="store_credit">Store Credit</option>
+                                            <option value="no_refund">No Refund</option>
+                                        </select>
+                                    </div>
+                                    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                                        <button class="admin-action-btn" style="background:#16a34a;color:#fff;" onclick="adminAction('resolve')"><i class="fa-solid fa-check-circle"></i> Resolve Refund</button>
+                                        <button class="admin-action-btn" style="background:#db2777;color:#fff;" onclick="adminAction('escalate')"><i class="fa-solid fa-flag"></i> Escalate Review</button>
+                                        <button class="admin-action-btn" style="background:#64748b;color:#fff;" onclick="adminAction('close')"><i class="fa-solid fa-ban"></i> Close Refund</button>
+                                    </div>
+                                    <div id="adminActionMsg" style="display:none;padding:10px 14px;border-radius:var(--radius-lg);font-size:12px;font-weight:600;"></div>
+                                </div>
+                            ` : `
+                                <p style="font-size:13px;color:var(--color-text-secondary);margin:0;">Status: <strong>${statusLabel}</strong></p>
+                                ${r.admin_notes ? '<div style="margin-top:12px;padding:12px;background:var(--color-surface-secondary);border-radius:var(--radius-lg);"><p style="font-size:11px;color:var(--color-text-tertiary);margin:0 0 4px;">Admin Notes:</p><p style="font-size:13px;color:var(--color-text-secondary);margin:0;">' + r.admin_notes + '</p></div>' : ''}
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:12px;">
+                        <div class="card-header"><h3>Summary</h3></div>
+                        <div class="card-body" style="padding:16px;">
+                            <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--color-text-tertiary);">Requested</span><strong>${fmtCurrency(r.amount_requested)}</strong></div>
+                            <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--color-text-tertiary);">Approved</span><strong>${r.amount_approved ? fmtCurrency(r.amount_approved) : '-'}</strong></div>
+                            <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-top:1px solid var(--color-border);margin-top:4px;padding-top:8px;"><span style="color:var(--color-text-tertiary);">Status</span><span class="status-badge badge-${badge}" style="font-size:10px;">${statusLabel}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            window.adminAction = function(action) {
+                const notes = document.getElementById('adminNotes').value;
+                const amountEl = document.getElementById('adminAmount');
+                const resEl = document.getElementById('adminResolution');
+                const msgEl = document.getElementById('adminActionMsg');
+                const amount = amountEl ? Number(amountEl.value) : 0;
+
+                if (!confirm('Confirm admin action: ' + action + '?')) return;
+
+                const payload = { action, admin_notes: notes };
+                if (action === 'resolve') {
+                    payload.amount_approved = amount || Number(r.amount_requested);
+                    payload.resolution = resEl ? resEl.value : 'full_refund';
+                }
+
+                msgEl.style.display = 'none';
+                const btns = document.querySelectorAll('.admin-action-btn');
+                btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; });
+
+                WarungioAPI.adminRefundAction(pk, payload).then(() => {
+                    msgEl.style.display = 'block';
+                    msgEl.style.background = '#dcfce7';
+                    msgEl.style.color = '#16a34a';
+                    msgEl.textContent = 'Action completed successfully! Reloading...';
+                    setTimeout(() => window.location.reload(), 1500);
+                }).catch(e => {
+                    btns.forEach(b => { b.disabled = false; });
+                    msgEl.style.display = 'block';
+                    msgEl.style.background = '#fef2f2';
+                    msgEl.style.color = '#dc2626';
+                    msgEl.textContent = 'Error: ' + (e.message || e.error || 'Failed');
+                });
+            };
+        } catch(e) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:#dc2626;"><i class="fa-solid fa-exclamation-triangle fa-2x" style="margin-bottom:12px;"></i><p>Failed to load refund detail.</p></div>';
+        }
+    }
+    loadDetail();
+});
+</script>
+{% endblock %}

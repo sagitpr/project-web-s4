@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo & Diskon - Warungio Seller</title>
+    <meta name="description" content="Kelola promo dan diskon tokomu di Warungio Seller Dashboard.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/promo-diskon/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Seller Dashboard</small>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}" class="active"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+                <p><b>Tingkatkan penjualan dengan promo!</b></p>
+                <p class="desc">Buat diskon dan promo menarik untuk menarik lebih banyak pembeli.</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+                <button class="btn-learn">Buat Promo Baru</button>
+            </div>
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div class="shop-name-row">
+                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="notif">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge">3</span>
+                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <div class="status-online"></div>
+                            </div>
+                            <div class="profile-info">
+                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-role">Seller</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Title -->
+            <section class="page-title-section">
+                <div class="page-title-left">
+                    <h1>Promo & Diskon</h1>
+                    <p class="page-subtitle">Buat dan kelola promo untuk menarik lebih banyak pembeli</p>
+                </div>
+                <div class="page-title-right">
+                    <button class="btn-primary" id="btnCreatePromo"><i class="fa-solid fa-plus"></i> Buat Promo Baru</button>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fa-solid fa-bullhorn"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Promo Aktif</span>
+                        <h3 class="stat-value" id="activePromos">-</h3>
+                        <p class="stat-trend neutral">Sedang berjalan</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fa-solid fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Akan Datang</span>
+                        <h3 class="stat-value" id="scheduledPromos">-</h3>
+                        <p class="stat-trend neutral">Terjadwal</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Segera Berakhir</span>
+                        <h3 class="stat-value" id="endingSoonPromos">-</h3>
+                        <p class="stat-trend down"><i class="fa-solid fa-clock"></i> &lt; 3 hari</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fa-solid fa-tag"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Digunakan</span>
+                        <h3 class="stat-value" id="totalUsage">-</h3>
+                        <p class="stat-trend neutral">Semua promo</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box gold"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Estimasi Dampak</span>
+                        <h3 class="stat-value" id="estimatedImpact">-</h3>
+                        <p class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> Potensi penjualan</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status Filter Tabs -->
+            <div class="card filter-card">
+                <div class="promo-tabs" id="promoTabs">
+                    <button class="tab-btn active" data-filter="all">Semua</button>
+                    <button class="tab-btn" data-filter="active">Aktif</button>
+                    <button class="tab-btn" data-filter="scheduled">Terjadwal</button>
+                    <button class="tab-btn" data-filter="ending_soon">Akan Berakhir</button>
+                    <button class="tab-btn" data-filter="expired">Kadaluwarsa</button>
+                    <button class="tab-btn" data-filter="inactive">Nonaktif</button>
+                </div>
+            </div>
+
+            <!-- Promo List -->
+            <div class="promo-list" id="promoList">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;" id="promoLoadingState">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:16px;"></i>
+                    Memuat promo...
+                </div>
+            </div>
+
+            <!-- Create/Edit Promo Modal -->
+            <div id="promoModal" class="modal" style="display:none;">
+                <div class="modal-content modal-lg">
+                    <div class="modal-header">
+                        <h3 id="promoModalTitle">Buat Promo Baru</h3>
+                        <button class="btn-close-modal" id="btnClosePromoModal"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <form id="promoForm">
+                        <input type="hidden" id="promoId">
+                        <div class="form-row">
+                            <label><span>Nama Promo</span><input type="text" id="promoNameInput" placeholder="Contoh: Diskon Lebaran" required></label>
+                        </div>
+                        <div class="form-row">
+                            <label><span>Jenis Promo</span>
+                                <select id="promoTypeInput" required>
+                                    <option value="percentage">Diskon Persentase</option>
+                                    <option value="fixed">Diskon Nominal (Rp)</option>
+                                    <option value="free_shipping">Gratis Ongkir</option>
+                                    <option value="flash_sale">Flash Sale</option>
+                                    <option value="buy_x_get_y">Beli X Gratis Y</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="form-row half" id="discountFields">
+                            <label><span>Diskon (%)</span><input type="number" id="discountPercentInput" min="0" max="100" placeholder="0-100"></label>
+                            <label><span>Diskon (Rp)</span><input type="number" id="discountAmountInput" min="0" placeholder="0"></label>
+                        </div>
+                        <div class="form-row half">
+                            <label><span>Min. Belanja (Rp)</span><input type="number" id="minPurchaseInput" min="0" placeholder="0"></label>
+                            <label><span>Maks. Penggunaan</span><input type="number" id="maxUsageInput" min="0" placeholder="0 = tidak terbatas"></label>
+                        </div>
+                        <div class="form-row">
+                            <label><span>Kode Promo (opsional)</span><input type="text" id="promoCodeInput" placeholder="Contoh: LEBARAN20"></label>
+                        </div>
+                        <div class="form-row half">
+                            <label><span>Tanggal Mulai</span><input type="date" id="startDateInput" required></label>
+                            <label><span>Tanggal Berakhir</span><input type="date" id="endDateInput" required></label>
+                        </div>
+                        <div class="form-row">
+                            <label><span>Deskripsi</span><textarea id="promoDescInput" rows="2" placeholder="Deskripsi promo..."></textarea></label>
+                        </div>
+                        <div class="form-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="promoActiveInput" checked>
+                                <span>Aktifkan promo</span>
+                            </label>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-action btn-secondary" id="btnCancelPromoForm">Batal</button>
+                            <button type="submit" class="btn-primary" id="btnSavePromo">Simpan Promo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteModal" class="modal" style="display:none;">
+                <div class="modal-content modal-sm">
+                    <div class="modal-header">
+                        <h3>Hapus Promo</h3>
+                        <button class="btn-close-modal" id="btnCloseDeleteModal"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;text-align:center;">Apakah Anda yakin ingin menghapus promo ini? Tindakan ini tidak dapat dibatalkan.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-action btn-secondary" id="btnCancelDelete">Batal</button>
+                        <button type="button" class="btn-primary" id="btnConfirmDelete" style="background:#ef4444;">Hapus</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div id="toast-notification" class="toast"></div>
+
+            <!-- Footer -->
+            <footer class="seller-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                        <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
+                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Layanan</h4>
+                        <a href="#">Cara Belanja</a><a href="#">Metode Pembayaran</a><a href="#">Pengiriman</a><a href="#">Promo & Diskon</a><a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Tentang Warungio</h4>
+                        <a href="#">Tentang Kami</a><a href="#">Karir</a><a href="#">Blog</a><a href="#">Mitra Warung</a><a href="#">Kontak Kami</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Untuk Seller</h4>
+                        <a href="#">Panduan Seller</a><a href="#">Tips Sukses</a><a href="#">Komunitas Seller</a><a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="footer-download">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="store-badges">
+                            <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                            <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                        </div>
+                        <div class="social-links">
+                            <span>Ikuti kami di</span>
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/pages/seller/promo-diskon/script.js' %}"></script>
+</body>
+</html>

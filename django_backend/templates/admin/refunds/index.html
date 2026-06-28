@@ -1,0 +1,178 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Refunds - Warungio Admin{% endblock %}
+{% block page_title %}Refund Management{% endblock %}
+
+{% block sidebar_links %}
+{{ block.super }}
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+.status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge-pending { background:#fef3c7; color:#d97706; }
+.badge-review { background:#dbeafe; color:#2563eb; }
+.badge-approved { background:#dcfce7; color:#16a34a; }
+.badge-rejected { background:#fef2f2; color:#dc2626; }
+.badge-cancelled { background:#f1f5f9; color:#64748b; }
+.badge-refunded { background:#dcfce7; color:#16a34a; }
+.badge-waiting { background:#fef3c7; color:#d97706; }
+.badge-escalated { background:#fce7f3; color:#db2777; }
+.refund-table-row { transition:background 0.1s; cursor:pointer; }
+.refund-table-row:hover { background:var(--color-gray-50); }
+.filter-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.filter-pill { padding:5px 12px; border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:12px; font-weight:500; color:var(--color-text-secondary); cursor:pointer; transition:all 0.15s; font-family:'Plus Jakarta Sans',sans-serif; }
+.filter-pill:hover { border-color:var(--color-brand); color:var(--color-brand); }
+.filter-pill.active { background:var(--color-brand); color:white; border-color:var(--color-brand); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-clock"></i></div>
+        <div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">-</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe; color:#2563eb;"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <div class="stat-content"><div class="stat-label">Under Review</div><div class="stat-value" id="statReview">-</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check-circle"></i></div>
+        <div class="stat-content"><div class="stat-label">Approved</div><div class="stat-value" id="statApproved">-</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef2f2; color:#dc2626;"><i class="fa-solid fa-times-circle"></i></div>
+        <div class="stat-content"><div class="stat-label">Rejected</div><div class="stat-value" id="statRejected">-</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3; color:#db2777;"><i class="fa-solid fa-flag"></i></div>
+        <div class="stat-content"><div class="stat-label">Escalated</div><div class="stat-value" id="statEscalated">-</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#f1f5f9; color:#64748b;"><i class="fa-solid fa-rotate-left"></i></div>
+        <div class="stat-content"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">-</div></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <h3>All Refund Requests</h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="refundSearch" placeholder="Search refunds..." style="padding:7px 12px; border:1px solid var(--color-border); border-radius:var(--radius-lg); font-size:12px; outline:none; width:200px; font-family:'Plus Jakarta Sans',sans-serif;">
+        </div>
+    </div>
+    <div class="filter-pills" style="padding:0 20px;">
+        <button class="filter-pill active" data-filter="all">All</button>
+        <button class="filter-pill" data-filter="pending">Pending</button>
+        <button class="filter-pill" data-filter="under_review">Under Review</button>
+        <button class="filter-pill" data-filter="approved">Approved</button>
+        <button class="filter-pill" data-filter="rejected">Rejected</button>
+        <button class="filter-pill" data-filter="refunded">Refunded</button>
+        <button class="filter-pill" data-filter="escalated">Escalated</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+            <table class="w-table" id="refundTable">
+                <thead>
+                    <tr>
+                        <th>Refund #</th>
+                        <th>Buyer</th>
+                        <th>Store</th>
+                        <th>Order</th>
+                        <th>Reason</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="refundTableBody">
+                    <tr><td colspan="8" style="text-align:center;color:var(--color-text-tertiary);padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let allRefunds = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    const tbody = document.getElementById('refundTableBody');
+    const searchInput = document.getElementById('refundSearch');
+    const filterPills = document.querySelectorAll('.filter-pill');
+
+    function getBadge(status, escalated) {
+        const m = { pending:'pending', under_review:'review', waiting_buyer:'waiting', waiting_seller:'waiting', approved:'approved', rejected:'rejected', cancelled:'cancelled', refunded:'refunded' };
+        return escalated ? 'escalated' : (m[status] || 'pending');
+    }
+    function getLabel(status) {
+        const m = { pending:'Pending', under_review:'Review', waiting_buyer:'Wait Buyer', waiting_seller:'Wait Seller', approved:'Approved', rejected:'Rejected', cancelled:'Cancelled', refunded:'Refunded', partial_refund:'Partial' };
+        return m[status] || status;
+    }
+    function formatCurrency(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+    function formatDate(d) { return d ? new Date(d).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-'; }
+
+    function renderTable() {
+        let filtered = allRefunds.filter(r => {
+            if (currentFilter === 'escalated' && !r.is_escalated) return false;
+            if (currentFilter !== 'all' && currentFilter !== 'escalated' && r.refund_status !== currentFilter) return false;
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                return (r.refund_number||'').toLowerCase().indexOf(q) !== -1 ||
+                       (r.order_number||'').toLowerCase().indexOf(q) !== -1 ||
+                       (r.store_name||'').toLowerCase().indexOf(q) !== -1;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-text-tertiary);padding:40px;">No refund requests found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = filtered.map(r => {
+            const badge = getBadge(r.refund_status, r.is_escalated);
+            const label = r.is_escalated ? 'Escalated' : getLabel(r.refund_status);
+            return `<tr class="refund-table-row" onclick="window.location.href='/admin-panel/refunds/${r.id}/'">
+                <td><strong>${r.refund_number || '-'}</strong></td>
+                <td><span style="font-size:12px;">${r.buyer_name || 'N/A'}</span></td>
+                <td><span style="font-size:12px;">${r.store_name || '-'}</span></td>
+                <td><span style="font-size:12px;">${r.order_number || '-'}</span></td>
+                <td><span style="font-size:12px;">${r.reason_display || r.reason || '-'}</span></td>
+                <td><strong>${formatCurrency(r.amount_requested)}</strong></td>
+                <td><span class="status-badge badge-${badge}"><i class="fa-solid fa-circle" style="font-size:6px;"></i> ${label}</span></td>
+                <td><span style="font-size:12px;">${formatDate(r.created_at)}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            filterPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderTable();
+        });
+    });
+
+    searchInput && searchInput.addEventListener('input', function() {
+        searchQuery = this.value;
+        renderTable();
+    });
+
+    async function loadData() {
+        try {
+            const [refundData, statsData] = await Promise.all([
+                WarungioAPI.getAdminRefunds(),
+                WarungioAPI.getRefundStats()
+            ]);
+            allRefunds = (refundData.results || []).map(function(r) { return Object.assign(r, { buyer_name: r.buyer_name || 'N/A' }); });
+            renderTable();
+
+            const s = statsData || {};
+            document.getElementById('statPending').textContent = s.pending || 0;
+            document.getElementById('statReview').textContent = (s.under_review || 0) + (s.waiting_seller || 0);
+            document.getElementById('statApproved').textContent = s.approved || 0;
+            document.getElementById('statRejected').textContent = s.rejected || 0;
+            document.getElementById('statEscalated').textContent = s.escalated || 0;
+            document.getElementById('statTotal').textContent = s.total || 0;
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#dc2626;padding:40px;">Failed to load refund data.</td></tr>';
+        }
+    }
+    loadData();
+});
+</script>
+{% endblock %}

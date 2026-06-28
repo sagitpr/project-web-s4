@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detail Pesanan - Warungio Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/order-detail/style.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" /><div><h1>Warungio</h1><p>Mitra</p></div></div>
+        <nav class="nav-menu">
+          <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+          <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+          <a href="{% url 'page-seller-orders' %}" class="active"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+          <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+          <a href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
+          <a href="#"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+          <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+          <a href="#"><i class="fa-solid fa-star"></i> Ulasan</a>
+          <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+          <a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+          <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+        </nav>
+      </aside>
+      <main class="content-area">
+        <section class="page-header"><div><h1>Detail Pesanan</h1><p class="section-subtitle">Informasi lengkap pesanan dari pembeli.</p></div></section>
+        <p style="color:var(--muted);text-align:center;padding:40px">Halaman detail pesanan akan tersedia segera.</p>
+      </main>
+    </div>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+  </body>
+</html>

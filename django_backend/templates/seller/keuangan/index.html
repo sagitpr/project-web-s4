@@ -1,0 +1,398 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangan - Warungio Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/keuangan/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Seller Dashboard</small>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}" class="active"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <p><b>Kelola keuangan lebih mudah!</b></p>
+                <p class="desc">Pantau pemasukan, penarikan, dan riwayat transaksi di sini.</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-coins">
+                <button class="btn-learn">Pelajari Selengkapnya</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button class="hamburger-btn" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="shop-name">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div class="notif">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="badge">3</span>
+                        </div>
+                        <div class="profile-block">
+                            <div style="position: relative; width: 36px; height: 36px;">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <div class="status-online"></div>
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-role">Seller</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-title-block">
+                <h1>Keuangan</h1>
+                <p class="subtitle">Kelola pemasukan, saldo, dan transaksi keuangan tokomu</p>
+            </div>
+
+            <!-- Statistic Cards Grid -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="stat-info">
+                        <span>Total Saldo</span>
+                        <h3 id="finance-total-balance">Rp0</h3>
+                        <p class="sub-desc">Saldo tersedia</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="stat-info">
+                        <span>Total Pemasukan (30 Hari)</span>
+                        <h3 id="finance-total-income">Rp0</h3>
+                        <p class="trend up" id="income-trend-pct"><i class="fa-solid fa-arrow-up"></i> 0% dari 30 hari sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fa-solid fa-circle-arrow-up"></i></div>
+                    <div class="stat-info">
+                        <span>Total Penarikan (30 Hari)</span>
+                        <h3 id="finance-total-withdrawal">Rp0</h3>
+                        <p class="trend up" id="withdrawal-trend-pct"><i class="fa-solid fa-arrow-up"></i> 0% dari 30 hari sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fa-solid fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span>Saldo Tertahan</span>
+                        <h3 id="finance-held-balance">Rp0</h3>
+                        <p class="sub-desc">Dana dalam proses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box green-light"><i class="fa-solid fa-arrows-rotate"></i></div>
+                    <div class="stat-info">
+                        <span>Total Transaksi</span>
+                        <h3 id="finance-total-transactions">0</h3>
+                        <p class="sub-desc">30 hari terakhir</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts & Info Row -->
+            <div class="dashboard-grid">
+                <!-- Line Chart -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h2>Grafik Pemasukan</h2>
+                        <select id="finance-period-select" class="period-select">
+                            <option value="30" selected>30 Hari Terakhir</option>
+                            <option value="7">7 Hari Terakhir</option>
+                            <option value="90">90 Hari Terakhir</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Balance Breakdown -->
+                <div class="card info-card ringkasan-card">
+                    <div class="card-header">
+                        <h2>Ringkasan Saldo</h2>
+                    </div>
+                    <div class="balance-breakdown">
+                        <div class="breakdown-item">
+                            <span>Saldo Disponibel</span>
+                            <span class="value green-txt" id="breakdown-available">Rp0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>Saldo Tertahan</span>
+                            <span class="value orange-txt" id="breakdown-held">Rp0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>Dalam Proses Penarikan</span>
+                            <span class="value" id="breakdown-pending">Rp0</span>
+                        </div>
+                        <hr class="divider" />
+                        <div class="breakdown-item total">
+                            <span>Total Saldo</span>
+                            <span class="value green-txt bold-txt" id="breakdown-total">Rp0</span>
+                        </div>
+                    </div>
+                    <button class="btn-withdraw-action btn-primary" id="btn-open-withdraw">Tarik Saldo</button>
+                </div>
+
+                <!-- Bank Accounts -->
+                <div class="card info-card bank-card">
+                    <div class="card-header">
+                        <h2>Metode Penarikan</h2>
+                        <button class="btn-manage-bank" id="btn-manage-bank">Kelola</button>
+                    </div>
+                    <div class="bank-accounts-list" id="bank-accounts-list">
+                        <!-- Loaded dynamically -->
+                        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Memuat rekening...</div>
+                    </div>
+                    <div class="add-bank-link" id="add-bank-link">
+                        <i class="fa-solid fa-plus"></i> Tambah Rekening Bank
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History Block -->
+            <div class="card table-card">
+                <div class="card-header flex-column">
+                    <div class="header-main-row">
+                        <h2>Riwayat Transaksi</h2>
+                        <div class="search-filter-block">
+                            <div class="search-input-wrapper">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="search-transaction" placeholder="Cari transaksi..." autocomplete="off">
+                            </div>
+                            <button class="btn-filter" id="btn-filter-toggle"><i class="fa-solid fa-sliders"></i> Filter</button>
+                        </div>
+                    </div>
+                    <div class="tabs-row">
+                        <div class="finance-tabs" id="finance-tabs">
+                            <button class="tab-btn active" data-tab="all">Semua</button>
+                            <button class="tab-btn" data-tab="income">Pemasukan</button>
+                            <button class="tab-btn" data-tab="withdrawal">Penarikan</button>
+                            <button class="tab-btn" data-tab="held">Saldo Tertahan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Jenis Transaksi</th>
+                                <th>Deskripsi</th>
+                                <th>Kategori</th>
+                                <th>Metode</th>
+                                <th>Jumlah</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-tbody">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="transactions-empty-state" style="display: none;">
+                    <i class="fa-solid fa-receipt"></i>
+                    <h3>Belum ada transaksi</h3>
+                    <p>Semua riwayat transaksi keuangan Anda akan muncul di sini.</p>
+                </div>
+
+                <!-- Skeleton Loader -->
+                <div class="skeleton-loader" id="transactions-skeleton" style="display: none;">
+                    <div class="skeleton-row"></div>
+                    <div class="skeleton-row"></div>
+                    <div class="skeleton-row"></div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="table-footer">
+                    <span class="pagination-info" id="pagination-info">Menampilkan 0 - 0 dari 0 transaksi</span>
+                    <div class="pagination-controls" id="pagination-controls">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Footer -->
+            <footer class="dashboard-footer">
+                <div class="footer-brand">
+                    <div class="f-logo">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                        <span>Warungio</span>
+                    </div>
+                    <p class="desc">Platform belanja kebutuhan sehari-hari langsung dari warung terdekat. Belanja mudah, harga bersahabat!</p>
+                    <p class="copy">© 2026 Warungio. All rights reserved.</p>
+                </div>
+                <div class="footer-links-grid">
+                    <div>
+                        <h4>Layanan</h4>
+                        <a href="#">Cara Belanja</a>
+                        <a href="#">Metode Pembayaran</a>
+                        <a href="#">Pengiriman</a>
+                        <a href="#">Promo & Diskon</a>
+                        <a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div>
+                        <h4>Tentang Warungio</h4>
+                        <a href="#">Tentang Kami</a>
+                        <a href="#">Karir</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Mitra Warung</a>
+                        <a href="#">Kontak Kami</a>
+                    </div>
+                    <div>
+                        <h4>Untuk Seller</h4>
+                        <a href="#">Panduan Seller</a>
+                        <a href="#">Tips Sukses</a>
+                        <a href="#">Komunitas Seller</a>
+                        <a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="app-downloads">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="download-btns">
+                            <a href="#"><img src="{% static 'images/googleplay.png' %}" alt="Google Play"></a>
+                            <a href="#"><img src="{% static 'images/appstore.png' %}" alt="App Store"></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Modals Workspace -->
+    
+    <!-- Bank Account CRUD Modal -->
+    <div id="bank-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="bank-modal-title">Tambah Rekening Bank</h3>
+                <button class="btn-close-modal" id="btn-close-bank-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="bank-form">
+                <input type="hidden" id="bank-account-id">
+                <div class="form-group">
+                    <label for="bank-select">Nama Bank</label>
+                    <select id="bank-select" required>
+                        <option value="">-- Pilih Bank --</option>
+                        <option value="BCA">BCA (Bank Central Asia)</option>
+                        <option value="BRI">BRI (Bank Rakyat Indonesia)</option>
+                        <option value="Mandiri">Bank Mandiri</option>
+                        <option value="BNI">BNI (Bank Negara Indonesia)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="account-number-input">Nomor Rekening</label>
+                    <input type="text" id="account-number-input" placeholder="Masukkan nomor rekening" required pattern="\d+" title="Nomor rekening harus berupa angka">
+                </div>
+                <div class="form-group">
+                    <label for="account-holder-input">Nama Pemilik Rekening</label>
+                    <input type="text" id="account-holder-input" placeholder="Nama sesuai buku tabungan" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="is-primary-checkbox">
+                    <label for="is-primary-checkbox">Set sebagai rekening utama</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-action btn-secondary" id="btn-cancel-bank-form">Batal</button>
+                    <button type="submit" class="btn-primary" id="btn-save-bank-form">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bank Accounts Management Dialog -->
+    <div id="manage-banks-modal" class="modal" style="display: none;">
+        <div class="modal-content text-left">
+            <div class="modal-header">
+                <h3>Kelola Rekening Bank</h3>
+                <button class="btn-close-modal" id="btn-close-manage-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="manage-banks-list" id="manage-banks-list">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary" id="btn-add-bank-from-manage"><i class="fa-solid fa-plus"></i> Tambah Rekening</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdraw-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tarik Saldo</h3>
+                <button class="btn-close-modal" id="btn-close-withdraw-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="withdraw-dest-block" id="withdraw-destination-info">
+                <!-- Info primary bank account -->
+            </div>
+            <form id="withdraw-form">
+                <div class="form-group">
+                    <label for="withdraw-amount-input">Nominal Penarikan (Rp)</label>
+                    <input type="number" id="withdraw-amount-input" placeholder="Minimal Rp 10.000" min="10000" required>
+                    <span class="available-info" id="withdraw-available-info">Saldo tersedia: Rp0</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-action btn-secondary" id="btn-cancel-withdraw">Batal</button>
+                    <button type="submit" class="btn-primary" id="btn-confirm-withdraw">Tarik Saldo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global Toast Component -->
+    <div id="toast-notification" class="toast"></div>
+
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/pages/seller/keuangan/script.js' %}"></script>
+</body>
+</html>

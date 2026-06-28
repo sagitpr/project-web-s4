@@ -1,0 +1,164 @@
+/**
+ * Warungio Responsive Layout
+ * Breakpoints: mobile 0-639, tablet 640-1023, desktop 1024+
+ */
+
+/* ── Global overflow prevention ── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ── Mobile menu toggle (landing / marketing) ── */
+.menu-toggle,
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  padding: var(--space-2);
+  cursor: pointer;
+  color: var(--color-text, #0F3B1F);
+}
+
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 59, 31, 0.45);
+  z-index: 998;
+}
+
+.mobile-nav-overlay.open { display: block; }
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: min(320px, 85vw);
+  height: 100vh;
+  background: var(--color-surface, #fff);
+  z-index: 999;
+  padding: var(--space-6);
+  transition: right 0.3s ease;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.mobile-nav-drawer.open { right: 0; }
+
+.mobile-nav-drawer .nav-link {
+  display: block;
+  padding: var(--space-3) 0;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-line, #e2e8f0);
+}
+
+/* ── Bottom tab bar (app shell) ── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--bottom-nav-height, 64px);
+  background: var(--color-surface, #fff);
+  border-top: 1px solid var(--color-line, #e2e8f0);
+  z-index: 900;
+  padding: 0 var(--space-2);
+}
+
+.bottom-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748b);
+  text-decoration: none;
+  min-width: 56px;
+  padding: var(--space-1);
+}
+
+.bottom-nav a.active { color: var(--color-primary, #16A34A); }
+.bottom-nav a img, .bottom-nav a svg { width: 22px; height: 22px; }
+
+/* ── Tablet ── */
+@media (max-width: 1023px) {
+  .page-shell {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s ease;
+    border-radius: 0;
+  }
+
+  .sidebar.open { left: 0; }
+
+  .menu-toggle { display: flex; align-items: center; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-inner { flex-direction: column; }
+  .trust-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header .nav { display: none; }
+  .header .auth-buttons { display: none; }
+  .mobile-menu-btn { display: flex; align-items: center; }
+
+  .sidebar { display: none; }
+  .sidebar.open { display: flex; }
+
+  .content-area { padding: var(--space-4); padding-bottom: calc(var(--bottom-nav-height) + var(--space-4)); }
+  .cart-container { grid-template-columns: 1fr; }
+  .hero-inner { flex-direction: column; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .trust-strip { grid-template-columns: repeat(2, 1fr); }
+
+  .bottom-nav { display: block; }
+
+  body.has-bottom-nav { padding-bottom: var(--bottom-nav-height); }
+
+  .profile-layout { flex-direction: column; }
+  .profile-layout .sidebar { display: none; width: 100%; position: static; height: auto; }
+
+  .products-table { display: block; overflow-x: auto; }
+  .order-card-dash { margin-bottom: var(--space-3); }
+
+  .dashboard-header .top-nav { display: none !important; }
+  .dashboard-header .top-header { flex-wrap: wrap; gap: var(--space-3); }
+}
+
+@media (max-width: 639px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .hero-buttons { flex-direction: column; }
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary { width: 100%; }
+  .form-row { flex-direction: column; }
+  .footer-top { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .status-filter { gap: 4px; }
+  .filter-btn { font-size: 0.8rem; padding: 6px 14px; }
+}

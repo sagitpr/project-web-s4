@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Marketplace - Warungio Admin{% endblock %}
+{% block page_title %}Marketplace Management{% endblock %}
+{% block content %}
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-store"></i></div><div class="stat-content"><div class="stat-label">Total Stores</div><div class="stat-value">1,423</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-box"></i></div><div class="stat-content"><div class="stat-label">Total Products</div><div class="stat-value">18,756</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-tag"></i></div><div class="stat-content"><div class="stat-label">Categories</div><div class="stat-value">24</div></div></div>
+</div>
+<div class="card"><div class="card-header"><h3>Stores</h3><div style="display:flex; gap:8px;"><div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search stores..." class="form-input" style="width:220px;min-height:38px;padding:8px 12px 8px 34px;"></div><select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Status</option><option>Active</option><option>Pending</option><option>Suspended</option></select></div></div>
+    <div class="card-body" style="padding:0;"><div class="table-wrap"><table class="w-table">
+        <thead><tr><th>Store</th><th>Owner</th><th>Products</th><th>Orders</th><th>Rating</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody><tr><td><div style="font-weight:600;">Warung Bu Sari</div></td><td>Siti Rahma</td><td>128</td><td>1,234</td><td>4.9</td><td><span class="badge badge-green">Active</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Manage</button></td></tr>
+        <tr><td><div style="font-weight:600;">Vega Fresh</div></td><td>Budi Santoso</td><td>89</td><td>982</td><td>4.7</td><td><span class="badge badge-green">Active</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Manage</button></td></tr>
+        <tr><td><div style="font-weight:600;">Toko Segar</div></td><td>Ani Wulandari</td><td>56</td><td>756</td><td>4.5</td><td><span class="badge badge-yellow">Pending</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Manage</button></td></tr></tbody>
+    </table></div></div>
+</div>
+{% endblock %}

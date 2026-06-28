@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Produk - Warungio Seller Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/static/css/responsive.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+      <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="/static/images/Warungio L.png" alt="logo" />
+          <div class="logo-text">
+            <span class="brand-name">Warungio</span>
+            <small class="brand-tag">Seller Dashboard</small>
+          </div>
+        </div>
+        <nav>
+          <a href="../../seller/dashboard/index.html"
+            ><i class="fa-solid fa-house"></i> Dashboard</a
+          >
+          <a href="#" class="active"><i class="fa-solid fa-box"></i> Produk</a>
+          <a href="../../buyer/orders/index.html"
+            ><i class="fa-solid fa-receipt"></i> Pesanan</a
+          >
+          <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+          <a href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
+          <a href="#"><i class="fa-solid fa-tag"></i> Promo & Diskon</a>
+          <a href="#"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+          <a href="../reviews/index.html"><i class="fa-solid fa-star"></i> Ulasan</a>
+          <a href="#"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+          <a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+          <a href="#"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+        </nav>
+        <div class="sidebar-ads">
+          <p>Tingkatkan penjualanmu dengan <b>Warungio Ads</b></p>
+          <img src="/static/images/ads_penjualan.png" alt="ads" />
+          <button>Pelajari Sekarang</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header>
+          <div class="top-header">
+            <div class="brand-block">
+              <img src="/static/images/Warungio L.png" alt="Warungio logo" />
+              <div>
+                <h2 class="brand-name">Warung Bu Sari</h2>
+                <span class="status-badge aktif">Aktif</span>
+              </div>
+            </div>
+            <div class="user-info">
+              <div class="notif">
+                <i class="fa-solid fa-bell"></i><span class="dot"></span>
+              </div>
+              <div class="profile">
+                <span>Bu Sari</span>
+                <small>Seller</small>
+                <img src="/static/images/av-siti.png" alt="user" />
+              </div>
+              <button class="dropdown-toggle" aria-label="Menu dropdown">
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section class="page-header">
+          <div>
+            <h1>Produk</h1>
+            <p>Kelola semua produk yang dijual di tokomu</p>
+          </div>
+          <div class="header-actions">
+            <div class="filter-group">
+              <select
+                class="dropdown-filter"
+                id="categoryFilter"
+                aria-label="Filter kategori"
+              >
+                <option value="">Semua Kategori</option>
+                <option value="sayuran">Sayuran</option>
+                <option value="buah">Buah</option>
+                <option value="protein">Protein</option>
+                <option value="sembako">Sembako</option>
+              </select>
+            </div>
+            <button class="btn-secondary" id="filterBtn">
+              <i class="fa-solid fa-filter"></i> Filter
+            </button>
+          </div>
+          <button class="btn-primary" id="addProductBtn">
+            <i class="fa-solid fa-plus"></i> Tambah Produk
+          </button>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="stat-content">
+              <span>Total Produk</span>
+              <h3 id="totalProducts">48</h3>
+              <small>Produk Aktif</small>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="stat-content">
+              <span>Stok Habis</span>
+              <h3 id="emptyStock">3</h3>
+              <small>Perlu restock</small>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon info"><i class="fa-solid fa-tags"></i></div>
+            <div class="stat-content">
+              <span>Total Kategori</span>
+              <h3 id="totalCategories">6</h3>
+              <small>Kategori</small>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon success"><i class="fa-solid fa-eye"></i></div>
+            <div class="stat-content">
+              <span>Dilihat Hari Ini</span>
+              <h3 id="viewedToday">1.250</h3>
+              <small>Product dilihat</small>
+            </div>
+          </div>
+        </section>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Daftar Produk</h2>
+            </div>
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input
+                type="text"
+                id="searchProducts"
+                placeholder="Cari produk, kategori, atau SKU..."
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div class="table-controls">
+            <select
+              class="table-filter"
+              id="statusFilter"
+              aria-label="Filter status produk"
+            >
+              <option value="">Status: Aktif</option>
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Non-Aktif</option>
+            </select>
+            <select
+              class="table-filter"
+              id="stockFilter"
+              aria-label="Filter stok produk"
+            >
+              <option value="">Stok: Semua</option>
+              <option value="ada">Ada Stok</option>
+              <option value="habis">Habis Stok</option>
+            </select>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th>Produk</th>
+                  <th>Kategori</th>
+                  <th>Harga</th>
+                  <th>Stok</th>
+                  <th>Status</th>
+                  <th>Dilihat</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody"></tbody>
+            </table>
+            <div id="emptyState" class="empty-state hidden">
+              <i class="fa-solid fa-inbox"></i>
+              <h3>Belum ada produk</h3>
+              <p>
+                Mulai tambahkan produk Anda sekarang untuk memulai penjualan.
+              </p>
+              <button class="btn-primary" onclick="openAddProductModal()">
+                <i class="fa-solid fa-plus"></i> Tambah Produk Pertama
+              </button>
+            </div>
+          </div>
+
+          <div class="pagination">
+            <button
+              class="page-nav"
+              id="prevPage"
+              disabled
+              aria-label="Halaman sebelumnya"
+            >
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button
+              class="page-nav"
+              id="nextPage"
+              aria-label="Halaman berikutnya"
+            >
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="productModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Tambah Produk Baru</h2>
+          <button
+            class="modal-close"
+            onclick="closeProductModal()"
+            aria-label="Tutup modal"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="productForm" class="product-form">
+          <input type="hidden" id="productId" name="product_id" autocomplete="off" />
+
+          <div class="form-group">
+            <label for="productName">Nama Produk *</label>
+            <input
+              type="text"
+              id="productName"
+              name="product_name"
+              required
+              placeholder="Contoh: Bayam Hijau Segar"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="productCategory">Kategori *</label>
+              <select id="productCategory" name="category" required>
+                <option value="">Pilih kategori</option>
+                <option value="sayuran">Sayuran</option>
+                <option value="buah">Buah</option>
+                <option value="protein">Protein</option>
+                <option value="sembako">Sembako</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="productSKU">SKU *</label>
+              <input
+                type="text"
+                id="productSKU"
+                name="sku"
+                required
+                placeholder="Contoh: BYM001"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="productPrice">Harga *</label>
+              <div class="input-prefix">
+                <span>Rp</span>
+                <input
+                  type="number"
+                  id="productPrice"
+                  name="price"
+                  required
+                  placeholder="Harga produk"
+                  min="0"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="productStock">Stok *</label>
+              <input
+                type="number"
+                id="productStock"
+                name="stock"
+                required
+                placeholder="Jumlah stok"
+                min="0"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="productDescription">Deskripsi Produk</label>
+            <textarea
+              id="productDescription"
+              name="description"
+              rows="4"
+              placeholder="Jelaskan detail produk Anda..."
+              autocomplete="off"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="productImage">Foto Produk</label>
+            <div class="image-upload">
+              <input
+                type="file"
+                id="productImage"
+                name="product_image"
+                accept="image/*"
+                autocomplete="off"
+              />
+              <div id="imagePreview" class="image-preview"></div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeProductModal()"
+            >
+              Batal
+            </button>
+            <button type="submit" class="btn-primary">Simpan Produk</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="/static/images/Warungio L.png" alt="Warungio" />
+            <span>Warungio</span>
+          </div>
+          <p>
+            Platform belanja kebutuhan sehari-hari langsung dari warung
+            terdekat.
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>Layanan</h4>
+          <a href="#">Cara Belanja</a>
+          <a href="#">Pengiriman</a>
+          <a href="#">Promosi</a>
+        </div>
+        <div class="footer-column">
+          <h4>Untuk Seller</h4>
+          <a href="#">Panduan Seller</a>
+          <a href="#">Komunitas</a>
+          <a href="#">Bantuan</a>
+        </div>
+        <div class="footer-column">
+          <h4>Tentang</h4>
+          <a href="#">Tentang Kami</a>
+          <a href="#">Karir</a>
+          <a href="#">Kontak</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Warungio. Hak cipta dilindungi.</p>
+      </div>
+    </footer>
+
+    <script src="/static/js/device-detector.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

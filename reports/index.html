@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warung Bu Sari - Laporan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+<body class="bg-gray-50">
+
+<div class="flex h-screen overflow-hidden">
+
+  <div class="w-64 bg-emerald-800 text-white flex flex-col">
+    <div class="p-6 border-b border-emerald-700 flex items-center gap-3">
+      <div class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-emerald-800 font-bold text-3xl">W</div>
+      <div>
+        <h1 class="text-2xl font-bold">Warungio</h1>
+        <p class="text-xs opacity-75">Seller Dashboard</p>
+      </div>
+    </div>
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-700">🏠 Dashboard</a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-700 rounded-2xl">📦 Produk</a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-700 rounded-2xl">📋 Pesanan</a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-700 rounded-2xl">🚚 Pengiriman</a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-700 rounded-2xl">👥 Pelanggan</a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 bg-emerald-700 rounded-2xl">📊 Laporan</a>
+    </nav>
+  </div>
+
+  <div class="flex-1 overflow-auto">
+    <header class="bg-white border-b px-8 py-5 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-semibold">Warung Bu Sari</h1>
+        <p class="text-sm text-gray-500">ID Warung: WRG12345</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="bg-gray-100 px-5 py-2.5 rounded-3xl text-sm">20 Mei 2025 - 18 Juni 2025</div>
+        <button onclick="exportReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-3xl">Export Laporan</button>
+      </div>
+    </header>
+
+    <div class="p-8">
+      <h2 class="text-3xl font-bold mb-1">Laporan</h2>
+      <p class="text-gray-600 mb-8">Pantau performa toko dan perkembangan bisnismu</p>
+
+      <div class="grid grid-cols-5 gap-6" id="kpiContainer"></div>
+
+      <div class="grid grid-cols-12 gap-6 mt-8">
+        <div class="col-span-7 bg-white rounded-3xl p-6 shadow">
+          <h3 class="font-semibold mb-4">Grafik Penjualan</h3>
+          <canvas id="salesChart"></canvas>
+        </div>
+        <div class="col-span-5 bg-white rounded-3xl p-6 shadow">
+          <h3 class="font-semibold mb-4">Penjualan Berdasarkan Kategori</h3>
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="col-span-5 bg-white rounded-3xl p-6 shadow">
+          <h3 class="font-semibold mb-4">Penjualan Berdasarkan Perangkat</h3>
+          <canvas id="deviceChart"></canvas>
+        </div>
+        <div class="col-span-7 bg-white rounded-3xl p-6 shadow">
+          <h3 class="font-semibold mb-4">Produk Terlaris</h3>
+          <table class="w-full" id="topProductsTable"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script src="../src/utils/auth.js"></script>
+    <script src="../src/services/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

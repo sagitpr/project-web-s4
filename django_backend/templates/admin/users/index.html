@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Users - Warungio Admin{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:10px;">
+            <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search users..." class="form-input" style="width:260px;min-height:38px;padding:8px 12px 8px 34px;"></div>
+            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Roles</option><option>Buyer</option><option>Seller</option><option>Admin</option></select>
+            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Status</option><option>Active</option><option>Inactive</option></select>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add User</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap"><table class="w-table">
+            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Store</th><th>Status</th><th>Joined</th><th style="text-align:right;">Actions</th></tr></thead>
+            <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:10px;"><img src="{% static 'images/av-siti.png' %}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"><div style="font-weight:600;">Siti Rahma</div></div></td><td>siti@email.com</td><td><span class="badge badge-blue">Seller</span></td><td>Warung Bu Sari</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--color-gray-200);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">B</div><div style="font-weight:600;">Budi Santoso</div></div></td><td>budi@email.com</td><td><span class="badge badge-green">Buyer</span></td><td>-</td><td><span class="badge badge-green">Active</span></td><td>Mar 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--color-gray-200);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">A</div><div style="font-weight:600;">Admin Warungio</div></div></td><td>admin@warungio.com</td><td><span class="badge badge-purple">Admin</span></td><td>-</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+</div>
+{% endblock %}

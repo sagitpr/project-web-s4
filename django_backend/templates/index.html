@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warungio - Belanja dari Warung Terdekat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
+    <meta http-equiv="refresh" content="0; url=/home/">
+</head>
+<body>
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+        <div style="text-align:center;">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="width:80px;height:80px;margin-bottom:16px;">
+            <h1 style="font-size:24px;font-weight:800;color:#14532d;">Selamat datang di <span style="color:#16a34a;">Warungio</span></h1>
+            <p style="color:#4B6F54;margin-top:8px;">Mengalihkan ke halaman utama...</p>
+            <a href="/home/" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#16a34a;color:white;border-radius:12px;text-decoration:none;font-weight:700;">Lanjut ke Beranda</a>
+        </div>
+    </div>
+</body>
+</html>

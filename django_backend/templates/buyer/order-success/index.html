@@ -1,0 +1,35 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pesanan Berhasil - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/orders/style.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" /><div><h1>Warungio</h1><p>Pembeli</p></div></div>
+        <nav class="nav-menu">
+          <a href="{% url 'page-buyer-dashboard' %}">Beranda</a>
+          <a href="{% url 'page-buyer-orders' %}">Pesanan</a>
+        </nav>
+      </aside>
+      <main class="content-area">
+        <section class="page-header"><div><h1>Pesanan Berhasil</h1><p class="section-subtitle">Pesanan kamu telah dikonfirmasi.</p></div></section>
+        <div style="text-align:center;padding:60px 20px">
+          <div style="font-size:64px;color:var(--primary);margin-bottom:16px">&#10003;</div>
+          <h2>Pesanan Berhasil!</h2>
+          <p>Pesanan kamu sedang diproses oleh penjual.</p>
+          <a href="{% url 'page-buyer-orders' %}" class="btn-primary" style="display:inline-block;margin-top:16px">Lihat Pesanan</a>
+        </div>
+      </main>
+    </div>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+  </body>
+</html>

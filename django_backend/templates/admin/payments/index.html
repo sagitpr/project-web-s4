@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Payments - Warungio Admin{% endblock %}
+{% block page_title %}Payment Management{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-money-bill-wave"></i></div><div class="stat-content"><div class="stat-label">Total Revenue</div><div class="stat-value">Rp 8.2M</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 15.3%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-check-circle"></i></div><div class="stat-content"><div class="stat-label">Successful</div><div class="stat-value">Rp 7.1M</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">Rp 890K</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-rotate-left"></i></div><div class="stat-content"><div class="stat-label">Refunded</div><div class="stat-value">Rp 210K</div></div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Payment Methods</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:12px;"><div style="width:36px;height:36px;border-radius:var(--radius-lg);background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;"><i class="fa-solid fa-building-columns"></i></div><div><p style="font-size:13px;font-weight:600;margin:0;">Bank Transfer</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">BCA, Mandiri, BRI, BNI</p></div></div>
+                    <span style="font-weight:700;font-size:14px;color:var(--color-text-primary);">52%</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:12px;"><div style="width:36px;height:36px;border-radius:var(--radius-lg);background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;"><i class="fa-solid fa-mobile-screen-button"></i></div><div><p style="font-size:13px;font-weight:600;margin:0;">E-Wallet</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">GoPay, OVO, DANA</p></div></div>
+                    <span style="font-weight:700;font-size:14px;color:var(--color-text-primary);">28%</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:12px;"><div style="width:36px;height:36px;border-radius:var(--radius-lg);background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;"><i class="fa-solid fa-qrcode"></i></div><div><p style="font-size:13px;font-weight:600;margin:0;">QRIS</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">QR Code</p></div></div>
+                    <span style="font-weight:700;font-size:14px;color:var(--color-text-primary);">15%</span>
+                </div>
+                <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:12px;"><div style="width:36px;height:36px;border-radius:var(--radius-lg);background:#fce7f3;display:flex;align-items:center;justify-content:center;color:#db2777;"><i class="fa-solid fa-credit-card"></i></div><div><p style="font-size:13px;font-weight:600;margin:0;">Credit Card</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Visa, Mastercard</p></div></div>
+                    <span style="font-weight:700;font-size:14px;color:var(--color-text-primary);">5%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Midtrans Transactions</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Success Rate</p></div>
+                    <span style="font-weight:700;font-size:14px;color:#16a34a;">94.2%</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Avg Processing Time</p></div>
+                    <span style="font-weight:700;font-size:14px;color:var(--color-text-primary);">1.4s</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Failed Transactions (30d)</p></div>
+                    <span style="font-weight:700;font-size:14px;color:#db2777;">127</span>
+                </div>
+                <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Disputes Open</p></div>
+                    <span style="font-weight:700;font-size:14px;color:#d97706;">3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <h3>Transaction History</h3>
+        <div style="display:flex; gap:8px;">
+            <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search..." class="form-input" style="width:200px;min-height:38px;padding:8px 12px 8px 34px;"></div>
+            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Status</option><option>Settlement</option><option>Pending</option><option>Failed</option><option>Refund</option></select>
+        </div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap"><table class="w-table">
+            <thead><tr><th>Transaction ID</th><th>Order</th><th>Method</th><th>Amount</th><th>Status</th><th>Date</th><th style="text-align:right;">Actions</th></tr></thead>
+            <tbody>
+                <tr><td><span style="font-weight:600;font-size:12px;font-family:monospace;">TRX-28471</span></td><td>#ORD-28471</td><td>Bank BCA</td><td>Rp 156.000</td><td><span class="badge badge-green">Settlement</span></td><td>Jun 27</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Detail</button></td></tr>
+                <tr><td><span style="font-weight:600;font-size:12px;font-family:monospace;">TRX-28470</span></td><td>#ORD-28470</td><td>GoPay</td><td>Rp 45.000</td><td><span class="badge badge-green">Settlement</span></td><td>Jun 27</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Detail</button></td></tr>
+                <tr><td><span style="font-weight:600;font-size:12px;font-family:monospace;">TRX-28469</span></td><td>#ORD-28469</td><td>QRIS</td><td>Rp 89.500</td><td><span class="badge badge-yellow">Pending</span></td><td>Jun 26</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Detail</button></td></tr>
+                <tr><td><span style="font-weight:600;font-size:12px;font-family:monospace;">TRX-28466</span></td><td>#ORD-28466</td><td>Bank Mandiri</td><td>Rp 178.500</td><td><span class="badge badge-red">Refund</span></td><td>Jun 25</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Detail</button></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+</div>
+{% endblock %}

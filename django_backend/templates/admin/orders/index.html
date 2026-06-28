@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Orders - Warungio Admin{% endblock %}
+{% block page_title %}Order Management{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-circle-check"></i></div><div class="stat-content"><div class="stat-label">Completed</div><div class="stat-value" id="completedOrders">38,421</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-spinner"></i></div><div class="stat-content"><div class="stat-label">Processing</div><div class="stat-value" id="processingOrders">2,847</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value" id="pendingOrders">1,234</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-ban"></i></div><div class="stat-content"><div class="stat-label">Cancelled</div><div class="stat-value" id="cancelledOrders">2,789</div></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search orders..." class="form-input" style="width:220px;min-height:38px;padding:8px 12px 8px 34px;"></div>
+            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Status</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Completed</option><option>Cancelled</option></select>
+            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Payment</option><option>Paid</option><option>Unpaid</option><option>Refunded</option></select>
+            <input type="date" class="form-input" style="width:auto;min-height:38px;padding:8px 12px;" value="2026-01-01">
+            <input type="date" class="form-input" style="width:auto;min-height:38px;padding:8px 12px;" value="2026-06-27">
+        </div>
+        <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> Export</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap"><table class="w-table">
+            <thead><tr><th>Order ID</th><th>Buyer</th><th>Store</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th style="text-align:right;">Actions</th></tr></thead>
+            <tbody>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28471</span></td><td>Siti Rahma</td><td>Warung Bu Sari</td><td>3</td><td>Rp 156.000</td><td><span class="badge badge-green">Paid</span></td><td><span class="badge badge-blue">Processing</span></td><td>Jun 27</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28470</span></td><td>Budi Santoso</td><td>Vega Fresh</td><td>1</td><td>Rp 45.000</td><td><span class="badge badge-green">Paid</span></td><td><span class="badge badge-green">Completed</span></td><td>Jun 27</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28469</span></td><td>Ani Wulandari</td><td>Toko Segar</td><td>2</td><td>Rp 89.500</td><td><span class="badge badge-yellow">Pending</span></td><td><span class="badge badge-yellow">Pending</span></td><td>Jun 26</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28468</span></td><td>Dewi Lestari</td><td>Warung Bu Sari</td><td>5</td><td>Rp 234.000</td><td><span class="badge badge-green">Paid</span></td><td><span class="badge badge-purple">Shipped</span></td><td>Jun 26</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28467</span></td><td>Rudi Hartono</td><td>Vega Fresh</td><td>1</td><td>Rp 32.000</td><td><span class="badge badge-yellow">Pending</span></td><td><span class="badge badge-green">Completed</span></td><td>Jun 25</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+                <tr><td><span style="font-weight:600;font-size:13px;">#ORD-28466</span></td><td>Sari Dewi</td><td>Toko Segar</td><td>4</td><td>Rp 178.500</td><td><span class="badge badge-red">Refunded</span></td><td><span class="badge badge-red">Cancelled</span></td><td>Jun 25</td><td style="text-align:right;"><div class="btn-group"><button class="btn btn-ghost btn-sm">Detail</button><button class="btn btn-ghost btn-sm">Update</button></div></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+    <div style="padding:14px 20px; border-top:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between; font-size:13px;">
+        <span style="color:var(--color-text-tertiary);">Showing 1-6 of 45,291 orders</span>
+        <div style="display:flex; gap:4px;">
+            <button class="btn btn-ghost btn-sm" disabled><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="btn btn-primary btn-sm" style="width:32px;padding:0;">1</button>
+            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">2</button>
+            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">3</button>
+            <span style="display:flex;align-items:center;padding:0 4px;color:var(--color-text-tertiary);">...</span>
+            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">24</button>
+            <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}

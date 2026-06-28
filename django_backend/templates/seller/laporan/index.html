@@ -1,0 +1,373 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan - Warungio Seller</title>
+    <meta name="description" content="Pantau performa toko dan perkembangan bisnismu di Warungio Seller Dashboard.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/laporan/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+</head>
+<body>
+    <!-- Welcome Animation Overlay -->
+    <div id="welcomeOverlay" class="welcome-overlay" style="display:none;">
+        <div class="welcome-content">
+            <i class="fa-solid fa-chart-line welcome-icon"></i>
+            <h2 id="welcomeText">Selamat Datang Kembali</h2>
+            <p>Pantau performa toko dan perkembangan bisnismu</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+                <div class="logo-text">
+                    <span class="brand-name">Warungio</span>
+                    <small class="brand-tag">Seller Dashboard</small>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+                <a href="{% url 'page-seller-laporan' %}" class="active"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+            <div class="sidebar-ads">
+                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+                <p><b>Kelola bisnismu dengan data yang tepat</b></p>
+                <p class="desc">Pantau performa toko kamu dan tingkatkan penjualan!</p>
+                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+                <button class="btn-learn">Lihat Insight</button>
+            </div>
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                        <div class="shop-status-block">
+                            <div class="shop-name-row">
+                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="badge-active">Aktif</span>
+                            </div>
+                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="notif">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge">3</span>
+                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <div class="status-online"></div>
+                            </div>
+                            <div class="profile-info">
+                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-role">Seller</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Title + Filters -->
+            <section class="page-title-section">
+                <div class="page-title-left">
+                    <h1>Laporan</h1>
+                    <p class="page-subtitle">Pantau performa toko dan perkembangan bisnismu</p>
+                </div>
+                <div class="page-title-right">
+                    <div class="date-filter-wrap">
+                        <i class="fa-regular fa-calendar"></i>
+                        <select id="dateFilter" class="date-filter-select">
+                            <option value="today">Hari Ini</option>
+                            <option value="7days">7 Hari</option>
+                            <option value="30days" selected>30 Hari</option>
+                            <option value="this_month">Bulan Ini</option>
+                            <option value="this_year">Tahun Ini</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <span class="date-range-label" id="dateRangeLabel"></span>
+                    </div>
+                    <div class="export-dropdown">
+                        <button class="btn-export" id="exportBtn"><i class="fa-solid fa-download"></i> Export Laporan</button>
+                        <div class="export-menu" id="exportMenu">
+                            <a href="#" data-format="excel"><i class="fa-solid fa-file-excel"></i> Excel (.xlsx)</a>
+                            <a href="#" data-format="csv"><i class="fa-solid fa-file-csv"></i> CSV (.csv)</a>
+                            <a href="#" data-format="pdf"><i class="fa-solid fa-file-pdf"></i> PDF (.pdf)</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Metric Cards -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Penjualan</span>
+                        <h3 class="stat-value" id="totalSales">-</h3>
+                        <p class="stat-trend up" id="salesTrend"><i class="fa-solid fa-arrow-up"></i> <span>0%</span> dari periode sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Pesanan</span>
+                        <h3 class="stat-value" id="totalOrders">-</h3>
+                        <p class="stat-trend up" id="ordersTrend"><i class="fa-solid fa-arrow-up"></i> <span>0%</span> dari periode sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Produk Terjual</span>
+                        <h3 class="stat-value" id="productsSold">-</h3>
+                        <p class="stat-trend up" id="productsTrend"><i class="fa-solid fa-arrow-up"></i> <span>0%</span> dari periode sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fa-solid fa-user-plus"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Pelanggan Baru</span>
+                        <h3 class="stat-value" id="newCustomers">-</h3>
+                        <p class="stat-trend up" id="customersTrend"><i class="fa-solid fa-arrow-up"></i> <span>0%</span> dari periode sebelumnya</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box gold"><i class="fa-solid fa-star"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Rata-rata Rating</span>
+                        <h3 class="stat-value" id="avgRating">-</h3>
+                        <p class="stat-trend neutral" id="ratingTrend"><i class="fa-solid fa-minus"></i> <span>0</span> dari periode sebelumnya</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Row -->
+            <section class="charts-row">
+                <div class="card chart-card chart-line-card">
+                    <div class="card-header">
+                        <h2>Grafik Penjualan</h2>
+                        <div class="chart-legend-inline">
+                            <span class="legend-dot green-dot"></span> Penjualan (Rp)
+                            <span class="legend-dot gray-dot"></span> Pesanan
+                        </div>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="card chart-card chart-pie-card">
+                    <div class="card-header">
+                        <h2>Penjualan Berdasarkan Kategori</h2>
+                    </div>
+                    <div class="chart-pie-wrap">
+                        <div class="pie-canvas-wrap">
+                            <canvas id="categoryChart"></canvas>
+                            <div class="pie-center-label">
+                                <span class="pie-center-title">Total</span>
+                                <span class="pie-center-value" id="pieTotalValue">-</span>
+                            </div>
+                        </div>
+                        <div class="pie-legend" id="categoryLegend"></div>
+                    </div>
+                </div>
+                <div class="card chart-card chart-device-card">
+                    <div class="card-header">
+                        <h2>Penjualan Berdasarkan Perangkat</h2>
+                    </div>
+                    <div class="chart-device-wrap" id="deviceChartWrap">
+                        <div class="device-canvas-wrap">
+                            <canvas id="deviceChart"></canvas>
+                        </div>
+                        <div class="device-legend" id="deviceLegend"></div>
+                    </div>
+                    <div class="device-empty-state" id="deviceEmpty" style="display:none;">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <p>Data perangkat belum tersedia</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Section: 3 Columns -->
+            <section class="bottom-grid">
+                <!-- Top Products -->
+                <div class="card bottom-card">
+                    <div class="card-header">
+                        <h2>Produk Terlaris</h2>
+                        <a href="{% url 'page-seller-products' %}" class="view-all">Lihat Semua</a>
+                    </div>
+                    <table class="data-table" id="topProductsTable">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Produk</th>
+                                <th>Terjual</th>
+                                <th>Penjualan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsBody">
+                            <tr><td colspan="4" class="empty-cell">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Daily Sales -->
+                <div class="card bottom-card">
+                    <div class="card-header">
+                        <h2>Penjualan Harian <span class="header-badge" id="dailySalesPeriod">(10 Hari Terakhir)</span></h2>
+                        <a href="#" class="view-all">Lihat Detail</a>
+                    </div>
+                    <table class="data-table" id="dailySalesTable">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Penjualan</th>
+                                <th>Pesanan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailySalesBody">
+                            <tr><td colspan="3" class="empty-cell">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Performance Summary -->
+                <div class="card bottom-card perf-card">
+                    <div class="card-header">
+                        <h2>Ringkasan Performa</h2>
+                    </div>
+                    <div class="perf-list" id="perfList">
+                        <div class="perf-item">
+                            <div class="perf-icon green-bg"><i class="fa-solid fa-calendar-check"></i></div>
+                            <div class="perf-info">
+                                <span class="perf-label">Hari terbaik</span>
+                                <span class="perf-sub" id="perfBestDay">-</span>
+                            </div>
+                            <div class="perf-value" id="perfBestDayValue">-</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-icon orange-bg"><i class="fa-solid fa-trophy"></i></div>
+                            <div class="perf-info">
+                                <span class="perf-label">Produk terlaris</span>
+                                <span class="perf-sub" id="perfTopProduct">-</span>
+                            </div>
+                            <div class="perf-value" id="perfTopProductValue">-</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-icon blue-bg"><i class="fa-solid fa-layer-group"></i></div>
+                            <div class="perf-info">
+                                <span class="perf-label">Kategori terlaris</span>
+                                <span class="perf-sub" id="perfTopCategory">-</span>
+                            </div>
+                            <div class="perf-value" id="perfTopCategoryValue">-</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-icon teal-bg"><i class="fa-solid fa-mobile-screen"></i></div>
+                            <div class="perf-info">
+                                <span class="perf-label">Sumber penjualan utama</span>
+                                <span class="perf-sub" id="perfTopDevice">-</span>
+                            </div>
+                            <div class="perf-value" id="perfTopDeviceValue">-</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-icon purple-bg"><i class="fa-solid fa-users"></i></div>
+                            <div class="perf-info">
+                                <span class="perf-label">Pelanggan baru terbanyak</span>
+                                <span class="perf-sub" id="perfNewCustomersDate">-</span>
+                            </div>
+                            <div class="perf-value" id="perfNewCustomersValue">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="seller-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio">
+                            <span>Warungio</span>
+                        </div>
+                        <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.<br>Belanja mudah, harga bersahabat!</p>
+                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Layanan</h4>
+                        <a href="#">Cara Belanja</a>
+                        <a href="#">Metode Pembayaran</a>
+                        <a href="#">Pengiriman</a>
+                        <a href="#">Promo & Diskon</a>
+                        <a href="#">Pusat Bantuan</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Tentang Warungio</h4>
+                        <a href="#">Tentang Kami</a>
+                        <a href="#">Karir</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Mitra Warung</a>
+                        <a href="#">Kontak Kami</a>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Untuk Seller</h4>
+                        <a href="#">Panduan Seller</a>
+                        <a href="#">Tips Sukses</a>
+                        <a href="#">Komunitas Seller</a>
+                        <a href="#">Kebijakan & Ketentuan</a>
+                    </div>
+                    <div class="footer-download">
+                        <h4>Download Aplikasi Warungio</h4>
+                        <p>Belanja lebih mudah melalui aplikasi</p>
+                        <div class="store-badges">
+                            <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                            <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                        </div>
+                        <div class="social-links">
+                            <span>Ikuti kami di</span>
+                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                            <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/asset-loader.js' %}"></script>
+    <script src="{% static 'js/utils/routes.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/pages/seller/laporan/script.js' %}"></script>
+</body>
+</html>

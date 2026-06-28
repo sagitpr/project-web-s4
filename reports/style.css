@@ -1,0 +1,62 @@
+/* ==================== GLOBAL STYLES ==================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system_ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Card Styling */
+.kpi-card {
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Table Styling */
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 8px;
+}
+
+th {
+  font-weight: 600;
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+/* Chart Container */
+canvas {
+  max-height: 320px;
+}
+
+/* Sidebar Active Link */
+nav a {
+  transition: all 0.2s ease;
+}
+
+nav a:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+/* Custom Tailwind Override */
+.rounded-3xl {
+  border-radius: 1.75rem;
+}
+
+/* Header Shadow */
+header {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}

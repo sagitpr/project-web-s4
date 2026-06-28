@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product_name|default:"Detail Produk" }} - Warungio{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/product-detail/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px;">
+
+  <!-- Breadcrumb -->
+  <nav class="pd-breadcrumb" style="margin-bottom: 20px;">
+    <a href="/buyer/home/">Beranda</a>
+    <span class="separator"><i class="fa-solid fa-chevron-right"></i></span>
+    <a href="/products/">Produk</a>
+    <span class="separator"><i class="fa-solid fa-chevron-right"></i></span>
+    <span class="current" id="pdBreadcrumbTitle">Detail Produk</span>
+  </nav>
+
+  <!-- Mobile back button -->
+  <a href="/products/" class="pd-mobile-back">
+    <i class="fa-solid fa-arrow-left"></i> Kembali ke Produk
+  </a>
+
+  <!-- ================================================================ -->
+  <!-- MAIN PRODUCT SECTION -->
+  <!-- ================================================================ -->
+  <div class="pd-main-grid">
+
+    <!-- ── Left: Gallery ── -->
+    <div class="pd-gallery">
+      <div class="pd-main-image">
+        <img id="pdMainImg" src="{% static 'images/paket-sayur.png' %}" alt="Produk">
+        <div class="pd-zoom-lens" id="pdZoomLens"></div>
+        <div class="pd-image-badge">
+          <span class="badge badge-green" style="font-size:10px;">Produk Segar</span>
+        </div>
+      </div>
+      <div class="pd-thumbnails" id="pdThumbnails"></div>
+    </div>
+
+    <!-- ── Right: Product Info ── -->
+    <div class="pd-info">
+
+      <!-- Category -->
+      <div class="pd-category-badge" id="pdCategory">
+        <i class="fa-solid fa-tag"></i> Kategori Produk
+      </div>
+
+      <!-- Title -->
+      <h1 class="pd-title" id="pdTitle">Memuat produk...</h1>
+
+      <!-- Rating Row -->
+      <div class="pd-rating-row">
+        <span class="pd-rating-stars" id="pdRatingStars"><i class="fa-regular fa-star"></i></span>
+        <span class="pd-rating-value" id="pdRatingValue">0.0</span>
+        <span class="pd-rating-count" id="pdRatingCount">(0 ulasan)</span>
+        <span class="pd-separator">|</span>
+        <span class="pd-sold-count" id="pdSoldCount">Terjual 0 pcs</span>
+      </div>
+
+      <!-- Price Box -->
+      <div class="pd-price-box">
+        <span class="pd-current-price" id="pdCurrentPrice">Rp 0</span>
+        <span class="pd-original-price" id="pdOriginalPrice" style="display:none;">Rp 0</span>
+        <span class="pd-discount-badge" id="pdDiscountBadge" style="display:none;">-0%</span>
+      </div>
+
+      <!-- Stock Status -->
+      <div class="pd-stock-row">
+        <span class="pd-stock-dot in-stock" id="pdStockDot"></span>
+        <span class="pd-stock-text in-stock" id="pdStockText">Stok Tersedia</span>
+      </div>
+
+      <!-- Promo Badge -->
+      <div class="pd-promo-badge" id="pdPromoBadge" style="display:none;">
+        <i class="fa-solid fa-gift"></i>
+        <span>Gratis Ongkir untuk pembelian pertama!</span>
+      </div>
+
+      <!-- Seller Card -->
+      <div class="pd-seller-card">
+        <div class="pd-seller-left">
+          <img id="pdSellerLogo" src="{% static 'images/store-icon-T.png' %}" alt="Warung" class="pd-seller-logo">
+          <div class="pd-seller-info">
+            <div class="pd-seller-name">
+              <span id="pdSellerName">Warung Mitra</span>
+              <i class="fa-solid fa-circle-check" style="color:var(--color-brand);font-size:14px;" title="Terverifikasi"></i>
+            </div>
+            <div class="pd-seller-meta" id="pdSellerMeta">Tasikmalaya</div>
+          </div>
+        </div>
+        <div class="pd-seller-actions">
+          <button class="btn btn-ghost btn-sm" id="pdBtnChat"><i class="fa-solid fa-comment"></i> Chat</button>
+          <button class="btn btn-secondary btn-sm" id="pdBtnVisitStore">Kunjungi</button>
+        </div>
+      </div>
+
+      <!-- Delivery Info -->
+      <div class="pd-delivery">
+        <div class="pd-delivery-item">
+          <div class="pd-delivery-icon"><i class="fa-solid fa-truck"></i></div>
+          <div>
+            <span class="pd-delivery-label">Estimasi Pengiriman</span>
+            <span class="pd-delivery-value">1-3 hari kerja</span>
+          </div>
+        </div>
+        <div class="pd-delivery-item">
+          <div class="pd-delivery-icon"><i class="fa-solid fa-box"></i></div>
+          <div>
+            <span class="pd-delivery-label">Dikirim dari</span>
+            <span class="pd-delivery-value" id="pdDeliveryCity">Tasikmalaya</span>
+          </div>
+        </div>
+        <div class="pd-delivery-item">
+          <div class="pd-delivery-icon"><i class="fa-solid fa-rotate-left"></i></div>
+          <div>
+            <span class="pd-delivery-label">Kebijakan Retur</span>
+            <span class="pd-delivery-value">24 jam setelah diterima</span>
+          </div>
+        </div>
+        <div class="pd-delivery-item">
+          <div class="pd-delivery-icon"><i class="fa-solid fa-shield"></i></div>
+          <div>
+            <span class="pd-delivery-label">Garansi</span>
+            <span class="pd-delivery-value">Produk Segar Terjamin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div>
+        <span style="font-size:11px;font-weight:600;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Metode Pembayaran</span>
+        <div class="pd-payment-methods">
+          <span class="pd-payment-item"><i class="fa-solid fa-building-columns"></i> BCA</span>
+          <span class="pd-payment-item"><i class="fa-solid fa-building-columns"></i> Mandiri</span>
+          <span class="pd-payment-item"><i class="fa-solid fa-building-columns"></i> BRI</span>
+          <span class="pd-payment-item"><i class="fa-solid fa-mobile-screen"></i> GoPay</span>
+          <span class="pd-payment-item"><i class="fa-solid fa-mobile-screen"></i> OVO</span>
+          <span class="pd-payment-item"><i class="fa-solid fa-qrcode"></i> QRIS</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pd-actions">
+        <div class="pd-qty-picker">
+          <button class="pd-qty-btn" id="pdBtnMinus">−</button>
+          <input type="number" class="pd-qty-input" id="pdQtyInput" value="1" min="1" readonly>
+          <button class="pd-qty-btn" id="pdBtnPlus">+</button>
+        </div>
+
+        <button class="pd-btn-cart" id="pdBtnAddCart">
+          <i class="fa-solid fa-cart-shopping"></i> Tambah ke Keranjang
+        </button>
+
+        <button class="pd-btn-buy" id="pdBtnBuy">
+          Beli Langsung
+        </button>
+
+        <div class="pd-icon-btn-row" style="display:flex;gap:8px;">
+          <button class="pd-icon-btn" id="pdBtnWishlist" title="Favorit">
+            <i class="fa-regular fa-heart"></i>
+          </button>
+          <button class="pd-icon-btn" id="pdBtnShare" title="Bagikan">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- PRODUCT DETAILS / SPECIFICATIONS -->
+  <!-- ================================================================ -->
+  <section style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-2xl);padding:28px;margin-top:24px;">
+    <h2 class="pd-section-title"><i class="fa-solid fa-list-ul" style="color:var(--color-brand);font-size:16px;"></i> Detail Produk</h2>
+    <div class="pd-details-grid">
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px;">Spesifikasi</h3>
+        <table class="pd-specs-table" id="pdSpecTable"></table>
+      </div>
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px;">Deskripsi</h3>
+        <div class="pd-description" id="pdDescription">Tidak ada deskripsi produk.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- REVIEWS -->
+  <!-- ================================================================ -->
+  <section style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-2xl);padding:28px;margin-top:24px;">
+    <h2 class="pd-section-title"><i class="fa-solid fa-star" style="color:#f59e0b;font-size:16px;"></i> Ulasan Pelanggan</h2>
+    <div class="pd-reviews-grid">
+      <div class="pd-review-summary" id="pdReviewSummary">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="pd-review-list" id="pdReviewList">
+        <div style="text-align:center;padding:20px;color:var(--color-text-tertiary);font-size:13px;">Memuat ulasan...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- RELATED PRODUCTS -->
+  <!-- ================================================================ -->
+  <section id="pdRelatedSection" style="margin-top:24px;">
+    <h2 class="pd-section-title"><i class="fa-solid fa-layer-group" style="color:var(--color-brand);font-size:16px;"></i> Produk Terkait</h2>
+    <div class="pd-carousel">
+      <div class="pd-carousel-track" id="pdRelatedTrack">
+        <div style="text-align:center;padding:20px;color:var(--color-text-tertiary);font-size:13px;width:100%;">Memuat rekomendasi...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- RECENTLY VIEWED -->
+  <!-- ================================================================ -->
+  <section id="pdRecentlySection" style="margin-top:24px;">
+    <h2 class="pd-section-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--color-text-tertiary);font-size:16px;"></i> Baru Dilihat</h2>
+    <div class="pd-recently-viewed" id="pdRecentlyTrack">
+      <div style="text-align:center;padding:20px;color:var(--color-text-tertiary);font-size:13px;width:100%;">Memuat...</div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/pages/buyer/product-detail/script.js' %}"></script>
+{% endblock %}

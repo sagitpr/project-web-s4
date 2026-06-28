@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Ajukan Refund - Warungio{% endblock %}
+{% block content %}
+<div class="page-wrapper" style="max-width: 720px; margin: 0 auto; padding: 24px 16px;">
+  <a href="{% url 'page-buyer-refunds' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-secondary);text-decoration:none;margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
+  <h1 style="font-size:24px;font-weight:800;color:var(--color-text-primary);margin-bottom:24px;">Ajukan Pengembalian & Refund</h1>
+
+  <div class="card">
+    <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px;">Pilih Pesanan</label>
+        <select id="orderSelect" class="form-select" style="width:100%;padding:10px 14px;">
+          <option value="">Pilih pesanan yang ingin direfund...</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px;">Alasan Refund</label>
+        <select id="reasonSelect" class="form-select" style="width:100%;padding:10px 14px;">
+          <option value="">Pilih alasan...</option>
+          <option value="wrong_product">Produk Tidak Sesuai</option>
+          <option value="product_damaged">Produk Rusak/Cacat</option>
+          <option value="not_as_described">Tidak Sesuai Deskripsi</option>
+          <option value="expired">Produk Kadaluarsa</option>
+          <option value="missing_items">Barang Kurang</option>
+          <option value="defective">Produk Cacat</option>
+          <option value="change_mind">Berubah Pikiran</option>
+          <option value="other">Lainnya</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px;">Penjelasan Alasan</label>
+        <textarea id="reasonText" class="form-input" rows="3" placeholder="Jelaskan secara detail masalah yang Anda alami..." style="width:100%;padding:10px 14px;resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px;">Jumlah Refund (Rp)</label>
+        <input type="number" id="amountInput" class="form-input" placeholder="Masukkan nominal refund" min="1" style="width:100%;padding:10px 14px;">
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px;">Bukti Pendukung (opsional)</label>
+        <input type="file" id="evidenceInput" class="form-input" accept="image/*" multiple style="width:100%;padding:10px 14px;">
+        <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;">Upload foto atau screenshot sebagai bukti</p>
+      </div>
+      <div style="padding-top:8px;border-top:1px solid var(--color-border-light);">
+        <button id="submitRefundBtn" class="btn btn-primary" style="padding:12px 32px;border-radius:var(--radius-xl);font-size:15px;font-weight:700;"><i class="fa-solid fa-paper-plane"></i> Ajukan Refund</button>
+        <button id="cancelBtn" class="btn btn-ghost" style="padding:12px 24px;border-radius:var(--radius-xl);font-size:14px;margin-left:8px;">Batal</button>
+      </div>
+      <div id="formMessage" style="display:none;padding:12px 16px;border-radius:var(--radius-lg);font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  var orderSelect = document.getElementById('orderSelect');
+  var reasonSelect = document.getElementById('reasonSelect');
+  var reasonText = document.getElementById('reasonText');
+  var amountInput = document.getElementById('amountInput');
+  var submitBtn = document.getElementById('submitRefundBtn');
+  var formMessage = document.getElementById('formMessage');
+
+  document.getElementById('cancelBtn').onclick = function() { window.location.href = '/buyer/refunds/'; };
+
+  // Load eligible orders
+  try {
+    var ordersData = await WarungioAPI.getOrders();
+    var orders = ordersData.results || [];
+    var eligible = orders.filter(function(o) { return ['completed','paid','on_delivery'].indexOf(o.order_status) !== -1; });
+    if (eligible.length === 0) {
+      orderSelect.innerHTML = '<option value="">Tidak ada pesanan yang eligible untuk refund</option>';
+    } else {
+      orderSelect.innerHTML = '<option value="">Pilih pesanan...</option>' + eligible.map(function(o) {
+        return '<option value="' + o.id + '">' + o.order_number + ' - ' + (o.store_name || '') + ' (Rp ' + Number(o.total_price).toLocaleString('id-ID') + ')</option>';
+      }).join('');
+    }
+  } catch(e) {
+    // For demo, add a sample order
+    orderSelect.innerHTML = '<option value="">Pilih pesanan...</option><option value="1">WRG-20260601-001 - Vega Fresh (Rp 40.000)</option><option value="2">WRG-20260603-002 - Vega Fresh (Rp 94.000)</option>';
+  }
+
+  submitBtn.addEventListener('click', async function() {
+    var order = orderSelect.value;
+    var reason = reasonSelect.value;
+    var amount = amountInput.value;
+
+    if (!order) { showMessage('Silakan pilih pesanan.', 'error'); return; }
+    if (!reason) { showMessage('Silakan pilih alasan refund.', 'error'); return; }
+    if (!amount || amount <= 0) { showMessage('Masukkan jumlah refund yang valid.', 'error'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+
+    try {
+      var result = await WarungioAPI.createRefund({ order: Number(order), reason: reason, reason_text: reasonText.value, amount_requested: Number(amount) });
+      showMessage('Refund berhasil diajukan! Nomor: ' + (result.refund_number || 'RFN-...'), 'success');
+      setTimeout(function() { window.location.href = '/buyer/refunds/' + result.id + '/'; }, 1500);
+    } catch(e) {
+      showMessage('Gagal mengajukan refund: ' + (e.message || e.error || 'Terjadi kesalahan'), 'error');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Ajukan Refund';
+    }
+  });
+
+  function showMessage(msg, type) {
+    formMessage.style.display = 'block';
+    formMessage.textContent = msg;
+    formMessage.style.background = type === 'success' ? '#dcfce7' : '#fef2f2';
+    formMessage.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+    formMessage.style.border = '1px solid ' + (type === 'success' ? '#bbf7d0' : '#fecaca');
+  }
+});
+</script>
+{% endblock %}

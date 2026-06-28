@@ -1,0 +1,51 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keranjang Belanja - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/cart/style.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-panel">
+          <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" />
+          <div><h1>Warungio</h1><p>Pembeli</p></div>
+        </div>
+        <nav class="nav-menu">
+          <a href="{% url 'page-buyer-dashboard' %}">Beranda</a>
+          <a href="#" class="active">Keranjang</a>
+          <a href="{% url 'page-buyer-orders' %}">Pesanan</a>
+          <a href="{% url 'page-buyer-profile' %}">Profil</a>
+        </nav>
+        <div class="sidebar-footer">
+          <p>Belanja dari warung terdekat, jadi lebih mudah.</p>
+          <a href="{% url 'home' %}" class="cta-button">Kembali Belanja</a>
+        </div>
+      </aside>
+      <main class="content-area">
+        <header class="topbar">
+          <div class="topbar-left"><h1>Keranjang Belanja</h1><p class="cart-status">Memuat keranjang...</p></div>
+        </header>
+        <div class="empty-state" style="text-align:center;padding:60px 20px">
+          <div class="empty-icon" style="font-size:64px;margin-bottom:16px">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </div>
+          <h2>Keranjang Belanja Kosong</h2>
+          <p>Belum ada produk di keranjang. Yuk mulai belanja!</p>
+          <a href="{% url 'home' %}" class="btn-primary">Mulai Belanja</a>
+        </div>
+      </main>
+    </div>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/pages/buyer/cart/script.js' %}"></script>
+  </body>
+</html>

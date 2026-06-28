@@ -1,0 +1,10 @@
+/* Buyer cart page */
+@import url("../orders/style.css");
+.cart-container{display:grid;grid-template-columns:1fr 320px;gap:24px}
+.cart-items{display:flex;flex-direction:column;gap:16px}
+.cart-item{display:flex;gap:16px;padding:20px;background:var(--surface);border-radius:12px;border:1px solid var(--line)}
+.summary-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px}
+.summary-row{display:flex;justify-content:space-between;margin:8px 0;font-size:.95rem}
+.total-row{font-weight:700;font-size:1.1rem}
+.summary-divider{height:1px;background:var(--line);margin:12px 0}
+.badge-count{background:var(--primary);color:#fff;padding:2px 10px;border-radius:99px;font-weight:700;font-size:.85rem}

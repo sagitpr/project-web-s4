@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesanan Mitra - Warungio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand-panel">
+                <img src="/static/images/Warungio L.png" alt="Warungio logo" class="brand-logo">
+                <div>
+                    <h1>Warungio</h1>
+                    <p>Mitra Pesanan</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu" aria-label="Navigasi utama">
+                <a href="../../seller/dashboard/index.html"><i class="fa-solid fa-house"></i> Beranda</a>
+                <a href="../../seller/products/index.html"><i class="fa-solid fa-box"></i> Produk</a>
+                <a href="#" class="active"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+                <a href="#"><i class="fa-solid fa-store"></i> Warung</a>
+                <a href="#"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+                <a href="#"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+                <a href="#"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>Perbarui status pesanan secara cepat dan tetap terhubung ke database.</p>
+                <button class="cta-button">Pelajari Lebih</button>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <header class="header-main">
+                <div class="top-header">
+                    <div class="brand-block">
+                        <img src="/static/images/Warungio L.png" alt="Warungio logo">
+                        <div>
+                            <span class="brand-name">Warungio</span>
+                            <p class="brand-subtitle">Dashboard Pesanan</p>
+                        </div>
+                    </div>
+                    <div class="user-info">
+                        <div id="notifContainer"></div>
+                        <div class="profile">
+                            <span>Bu Sari</span>
+                            <small>Seller</small>
+                            <img src="/static/images/av-siti.png" alt="user">
+                        </div>
+                    </div>
+                </div>
+                <nav class="top-nav">
+                    <div class="nav-links">
+                        <a href="../../seller/dashboard/index.html">Beranda</a>
+                        <a href="../../seller/products/index.html">Produk</a>
+                        <a href="#" class="active">Pesanan</a>
+                        <a href="#">Keuangan</a>
+                        <a href="#">Laporan</a>
+                        <a href="#">Bantuan</a>
+                    </div>
+                </nav>
+            </header>
+
+            <section class="page-header">
+                <div>
+                    <p class="section-tag">Pesanan</p>
+                    <h1>Manajemen Pesanan</h1>
+                    <p class="section-subtitle">Pantau pesanan masuk dari database secara realtime dengan tampilan konsisten.</p>
+                </div>
+                <button id="pageRefreshButton" class="btn-secondary" type="button">
+                    <i class="fa-solid fa-arrows-rotate"></i> Segarkan Sekarang
+                </button>
+            </section>
+
+            <section class="summary-grid">
+                <article class="summary-card">
+                    <div class="card-head">
+                        <span>Total Pesanan</span>
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <h3 id="totalOrders">0</h3>
+                    <p>Pesanan terakhir dari database.</p>
+                </article>
+                <article class="summary-card">
+                    <div class="card-head">
+                        <span>Menunggu</span>
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    </div>
+                    <h3 id="pendingOrders">0</h3>
+                    <p>Pesanan yang belum diproses.</p>
+                </article>
+                <article class="summary-card">
+                    <div class="card-head">
+                        <span>Dalam Proses</span>
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <h3 id="processedOrders">0</h3>
+                    <p>Pesanan sedang dikemas / dikirim.</p>
+                </article>
+                <article class="summary-card highlight-card">
+                    <div class="card-head">
+                        <span>Pendapatan</span>
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <h3 id="totalRevenue">Rp 0</h3>
+                    <p>Total harga pesanan terbayar.</p>
+                </article>
+            </section>
+
+            <section class="orders-section">
+                <div class="orders-header">
+                    <div>
+                        <h3>Pesanan Terbaru</h3>
+                        <p>Koneksi realtime: halaman akan memuat ulang setiap 12 detik.</p>
+                    </div>
+                    <div class="order-actions">
+                        <label>
+                            <span class="sr-only">Filter status pesanan</span>
+                            <select id="statusFilter" aria-label="Filter status pesanan">
+                                <option value="">Semua Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="processed">Processed</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </label>
+                        <div class="search-group">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input id="searchInput" type="search" placeholder="Cari nama, ID, atau alamat..." autocomplete="off" aria-label="Cari pesanan">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-status">
+                        <span id="refreshStatus">Memuat data...</span>
+                        <span id="lastUpdated"></span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="orders-table" aria-label="Daftar pesanan">
+                            <thead>
+                                <tr>
+                                    <th>ID Pesanan</th>
+                                    <th>Pembeli</th>
+                                    <th>Jumlah Item</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Dibuat</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr><td colspan="7" class="loading-cell">Memuat pesanan...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="detailsPanel" class="details-panel hidden" aria-live="polite">
+                    <div class="details-header">
+                        <div>
+                            <h4>Detail Pesanan</h4>
+                            <p id="detailsOrderId"></p>
+                        </div>
+                        <button id="closeDetails" class="icon-button" aria-label="Tutup detail pesanan"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="details-grid">
+                        <div>
+                            <p class="detail-label">Nama Pembeli</p>
+                            <p id="detailsBuyer"></p>
+                        </div>
+                        <div>
+                            <p class="detail-label">Metode Pembayaran</p>
+                            <p id="detailsPayment"></p>
+                        </div>
+                        <div>
+                            <p class="detail-label">Alamat Pengiriman</p>
+                            <p id="detailsAddress"></p>
+                        </div>
+                        <div>
+                            <p class="detail-label">Status Pesanan</p>
+                            <p id="detailsStatus"></p>
+                        </div>
+                    </div>
+                    <div class="items-table-wrapper">
+                        <h5>Item Pesanan</h5>
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Qty</th>
+                                    <th>Harga</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderItemsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/device-detector.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="../../src/services/websocket.js"></script>
+    <script src="../../src/utils/notifications.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

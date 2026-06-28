@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detail Pesanan - Warungio</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../../staticfiles/css/responsive.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="64x64" href="../../assets/favicon-64x64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon-180x180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/favicon-192x192.png" />
+</head>
+<body>
+  <div class="page-shell">
+    <!-- Header -->
+    <header class="detail-header">
+      <div class="header-top">
+        <a href="../orders/index.html" class="back-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+          Kembali ke Pesanan
+        </a>
+        <div class="header-brand">
+          <img src="../../assets/images/Warungio L.png" alt="Warungio" class="brand-icon" />
+          <span class="brand-name">Warungio</span>
+        </div>
+      </div>
+
+      <div class="order-hero">
+        <div class="order-hero-left">
+          <p class="order-number-label">Pesanan</p>
+          <h1 id="orderNumber">-</h1>
+        </div>
+        <div id="statusBadge" class="status-badge status-pending">Menunggu</div>
+      </div>
+    </header>
+
+    <div class="detail-body">
+      <!-- Left column -->
+      <div class="detail-main">
+        <!-- Status Timeline -->
+        <section class="card timeline-card" id="timelineSection">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Status Pesanan
+          </h3>
+          <div class="timeline" id="timeline">
+            <div class="timeline-step active" data-step="1">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Pesanan Dibuat</span>
+                <span class="step-time" id="stepCreated">-</span>
+              </div>
+            </div>
+            <div class="timeline-step" data-step="2">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Diproses Penjual</span>
+                <span class="step-time" id="stepProcessed">-</span>
+              </div>
+            </div>
+            <div class="timeline-step" data-step="3">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Menunggu Penjemputan</span>
+                <span class="step-time" id="stepReady">-</span>
+              </div>
+            </div>
+            <div class="timeline-step" data-step="4">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Kurir Menjemput</span>
+                <span class="step-time" id="stepCourier">-</span>
+              </div>
+            </div>
+            <div class="timeline-step" data-step="5">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Dalam Perjalanan</span>
+                <span class="step-time" id="stepShipped">-</span>
+              </div>
+            </div>
+            <div class="timeline-step" data-step="6">
+              <div class="step-dot"></div>
+              <div class="step-info">
+                <span class="step-title">Pesanan Diterima</span>
+                <span class="step-time" id="stepCompleted">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tracking History (Courier Milestones) -->
+        <section class="card tracking-card" id="trackingCard" style="display:none">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            Lacak Pengiriman
+            <span class="live-badge" id="liveBadge" style="display:none">
+              <span class="live-dot"></span>
+              <span class="live-text">Langsung</span>
+            </span>
+          </h3>
+          <div class="tracking-meta">
+            <span class="tracking-courier" id="trackingCourier">-</span>
+            <span class="tracking-resi" id="trackingResi">-</span>
+          </div>
+          <div class="tracking-driver" id="trackingDriver" style="display:none">
+            <i class="fa-solid fa-user"></i>
+            <span id="trackingDriverName">-</span>
+            <a id="trackingDriverPhone" href="#" class="driver-phone-link">-</a>
+          </div>
+          <div class="tracking-pickup" id="trackingPickup" style="display:none">
+            <span class="pickup-label">Kode Pickup</span>
+            <span class="pickup-code" id="trackingPickupCode">-</span>
+          </div>
+          <div class="tracking-timeline" id="trackingTimeline">
+            <div class="tracking-loading">
+              <span class="tracking-pulse"></span>
+              <span>Memuat status pengiriman...</span>
+            </div>
+          </div>
+          <div class="tracking-error" id="trackingError" style="display:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="trackingErrorMessage">Gagal memuat status pengiriman.</span>
+            <button id="retryTrackingBtn" class="tracking-retry">Coba Lagi</button>
+          </div>
+        </section>
+
+        <!-- Store Info -->
+        <section class="card store-card">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Toko
+          </h3>
+          <div class="store-row">
+            <div class="store-avatar" id="storeAvatar">T</div>
+            <div class="store-details">
+              <p class="store-name" id="storeName">-</p>
+              <p class="store-meta">Warungio</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Items List -->
+        <section class="card items-card">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Item Pesanan
+          </h3>
+          <div id="itemsList" class="items-list">
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+          </div>
+        </section>
+
+        <!-- Notes -->
+        <section class="card notes-card" id="notesSection" style="display:none">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Catatan
+          </h3>
+          <p id="orderNotes" class="notes-text">-</p>
+        </section>
+      </div>
+
+      <!-- Right column -->
+      <aside class="detail-sidebar">
+        <!-- Delivery Info -->
+        <div class="card info-card">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            Pengiriman
+          </h3>
+          <div class="info-grid">
+            <div class="info-row">
+              <span class="info-label">Alamat</span>
+              <span class="info-value" id="deliveryAddress">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Penerima</span>
+              <span class="info-value" id="recipientName">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">No. HP</span>
+              <span class="info-value" id="recipientPhone">-</span>
+            </div>
+            <div class="info-row" id="courierRow" style="display:none">
+              <span class="info-label">Kurir</span>
+              <span class="info-value" id="courierName">-</span>
+            </div>
+            <div class="info-row" id="trackingRow" style="display:none">
+              <span class="info-label">No. Resi</span>
+              <span class="info-value">
+                <a id="trackingNumber" href="#" target="_blank" rel="noopener" class="tracking-link">-</a>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="card info-card">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Pembayaran
+          </h3>
+          <div class="info-grid">
+            <div class="info-row">
+              <span class="info-label">Metode</span>
+              <span class="info-value" id="paymentMethod">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status</span>
+              <span class="info-value" id="paymentStatusText">-</span>
+            </div>
+            <div class="info-row" id="vaRow" style="display:none">
+              <span class="info-label">Virtual Account</span>
+              <span class="info-value" id="vaNumber">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="card info-card summary-card">
+          <h3 class="section-title">Ringkasan</h3>
+          <div class="summary-lines">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="summarySubtotal">Rp 0</span>
+            </div>
+            <div class="summary-row">
+              <span>Ongkos Kirim</span>
+              <span id="summaryShipping">Rp 0</span>
+            </div>
+            <div class="summary-row" id="summaryDiscountRow" style="display:none">
+              <span>Diskon</span>
+              <span id="summaryDiscount" style="color:var(--primary)">-Rp 0</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row total-row">
+              <span>Total</span>
+              <span id="summaryTotal">Rp 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+          <a href="../orders/index.html" class="btn btn-outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Semua Pesanan
+          </a>
+          <button id="cancelOrderBtn" class="btn btn-danger" style="display:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Batalkan Pesanan
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>Memuat detail pesanan...</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="errorState" class="error-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h2>Pesanan Tidak Ditemukan</h2>
+      <p id="errorMessage">Pesanan yang Anda cari tidak tersedia.</p>
+      <a href="../orders/index.html" class="btn btn-primary">Kembali ke Pesanan</a>
+    </div>
+  </div>
+
+  <!-- Cancel Order Modal -->
+  <div id="cancelModal" class="modal-overlay" style="display:none">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Batalkan Pesanan</h3>
+        <button class="modal-close" id="cancelModalClose" type="button" aria-label="Tutup">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="modal-form">
+          <label class="modal-label">Alasan Pembatalan</label>
+          <div class="reason-grid">
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="change_mind" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Berubah pikiran</span>
+            </label>
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="found_cheaper" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Menemukan harga lebih murah</span>
+            </label>
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="delivery_too_long" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Pengiriman terlalu lama</span>
+            </label>
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="wrong_address" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Alamat salah</span>
+            </label>
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="duplicate_order" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Pesanan ganda</span>
+            </label>
+            <label class="reason-option">
+              <input type="radio" name="cancelReason" value="other" />
+              <span class="reason-check"></span>
+              <span class="reason-text">Lainnya</span>
+            </label>
+          </div>
+          <textarea id="cancelReasonText" class="modal-textarea" placeholder="Ceritakan lebih detail (opsional)" maxlength="500" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelDismissBtn" class="btn btn-outline modal-btn">Tidak, Kembali</button>
+        <button id="cancelConfirmBtn" class="btn btn-danger modal-btn">
+          <span id="cancelBtnText">Ya, Batalkan</span>
+          <span id="cancelBtnLoading" style="display:none">
+            <svg class="btn-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="50" stroke-linecap="round"/></svg>
+            Membatalkan...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../staticfiles/js/device-detector.js"></script>
+  <script src="../../staticfiles/js/auth.js"></script>
+  <script src="../../staticfiles/js/api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

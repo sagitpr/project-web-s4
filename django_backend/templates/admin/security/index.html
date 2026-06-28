@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Security - Warungio Admin{% endblock %}
+{% block page_title %}Security{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-shield-check"></i></div><div class="stat-content"><div class="stat-label">Security Score</div><div class="stat-value">A</div><div class="stat-trend up"><i class="fa-solid fa-shield"></i> Strong</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-users-slash"></i></div><div class="stat-content"><div class="stat-label">Blocked Users</div><div class="stat-value">47</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="stat-content"><div class="stat-label">Active Flags</div><div class="stat-value">12</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-lock"></i></div><div class="stat-content"><div class="stat-label">Failed Logins (24h)</div><div class="stat-value">238</div></div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Authentication Settings</h3></div>
+        <div class="card-body">
+            <form style="display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Two-Factor Authentication (2FA)</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Require 2FA for admin accounts</p></div>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;"><input type="checkbox" checked style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:var(--color-brand);border-radius:99px;transition:0.3s;"><span style="position:absolute;content:'';height:18px;width:18px;border-radius:50%;background:white;top:3px;left:23px;transition:0.3s;"></span></span></label>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Rate Limiting</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Limit login attempts per IP</p></div>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;"><input type="checkbox" checked style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:var(--color-brand);border-radius:99px;transition:0.3s;"><span style="position:absolute;content:'';height:18px;width:18px;border-radius:50%;background:white;top:3px;left:23px;transition:0.3s;"></span></span></label>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Session Timeout</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Auto-logout inactive users</p></div>
+                    <select class="form-select" style="width:120px;padding:6px 10px;">
+                        <option>30 min</option>
+                        <option>1 hour</option>
+                        <option selected>2 hours</option>
+                        <option>4 hours</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">Password Policy</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Minimum password strength requirements</p></div>
+                    <select class="form-select" style="width:120px;padding:6px 10px;">
+                        <option>Basic</option>
+                        <option selected>Standard</option>
+                        <option>Strict</option>
+                    </select>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div><p style="font-size:13px;font-weight:600;margin:0;">JWT Token Expiry</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Access token lifetime</p></div>
+                    <select class="form-select" style="width:120px;padding:6px 10px;">
+                        <option>15 min</option>
+                        <option selected>30 min</option>
+                        <option>1 hour</option>
+                        <option>2 hours</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" style="align-self:flex-start;padding:10px 24px;">Save Security Settings</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Active Sessions</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div style="display:flex; flex-direction:column;">
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;"><i class="fa-solid fa-desktop"></i></div>
+                        <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Chrome on Windows</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Jakarta • Active now</p></div>
+                        <span style="font-size:11px;color:var(--color-text-tertiary);">This device</span>
+                    </div>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Safari on iOS</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Jakarta • 2 hours ago</p></div>
+                        <button class="btn btn-ghost btn-sm" style="color:#db2777;">Revoke</button>
+                    </div>
+                </div>
+                <div style="padding:14px 20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:#fce7f3;display:flex;align-items:center;justify-content:center;color:#db2777;"><i class="fa-solid fa-globe"></i></div>
+                        <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Chrome on Android</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Bandung • 1 day ago</p></div>
+                        <button class="btn btn-ghost btn-sm" style="color:#db2777;">Revoke</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 20px; border-top:1px solid var(--color-border-light);">
+            <button class="btn btn-danger btn-sm"><i class="fa-solid fa-sign-out-alt"></i> Revoke All Other Sessions</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Security Events (Last 7 Days)</h3></div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap"><table class="w-table">
+            <thead><tr><th>Event</th><th>User</th><th>IP Address</th><th>Location</th><th>Device</th><th>Time</th><th style="text-align:right;">Status</th></tr></thead>
+            <tbody>
+                <tr><td>Failed Login</td><td>siti@email.com</td><td style="font-family:monospace;font-size:12px;">192.168.1.45</td><td>Jakarta</td><td>Chrome / Win</td><td>2 min ago</td><td style="text-align:right;"><span class="badge badge-red">Blocked</span></td></tr>
+                <tr><td>Password Change</td><td>budi@email.com</td><td style="font-family:monospace;font-size:12px;">10.0.0.12</td><td>Bandung</td><td>Safari / iOS</td><td>1 hour ago</td><td style="text-align:right;"><span class="badge badge-green">Approved</span></td></tr>
+                <tr><td>2FA Enabled</td><td>admin@warungio.com</td><td style="font-family:monospace;font-size:12px;">172.16.0.8</td><td>Jakarta</td><td>Chrome / Win</td><td>3 hours ago</td><td style="text-align:right;"><span class="badge badge-green">Approved</span></td></tr>
+                <tr><td>Suspicious Login</td><td>unknown</td><td style="font-family:monospace;font-size:12px;">45.33.32.156</td><td>US</td><td>Firefox / Linux</td><td>6 hours ago</td><td style="text-align:right;"><span class="badge badge-red">Flagged</span></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+</div>
+{% endblock %}
