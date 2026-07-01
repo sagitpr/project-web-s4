@@ -135,14 +135,14 @@ class Command(BaseCommand):
         # ── Safety guard: --fake-all logs a warning ──
         if self.fake_all and not self.dry_run:
             self.stdout.write(self.style.WARNING(
-                '\n⚠️  --fake-all: ALL remaining migrations will be faked. '
-                'Only use this in emergency if you\'re sure the DB schema is correct.\n'
+                '\n[!] --fake-all: ALL remaining migrations will be faked. '
+                "Only use this in emergency if you're sure the DB schema is correct.\n"
             ))
 
         self.stdout.write(self.style.MIGRATE_HEADING(
-            '\n═══════════════════════════════════════════\n'
+            '\n===========================================\n'
             '   Warungio Migration Sync\n'
-            '═══════════════════════════════════════════'
+            '==========================================='
         ))
 
         # ── Step 1: Backup ──
@@ -150,7 +150,7 @@ class Command(BaseCommand):
             self._backup_migrations_table()
 
         # ── Step 2: Load migration graph ──
-        self.stdout.write('\n📦 Loading migration graph...')
+        self.stdout.write('\n[LOAD] Loading migration graph...')
         loader = MigrationLoader(connection, ignore_no_migrations=True)
         graph = loader.graph
         recorder = MigrationRecorder(connection)
@@ -158,7 +158,7 @@ class Command(BaseCommand):
         self.stdout.write(f'   Applied in DB:   {len(applied)} migrations')
 
         # ── Step 3: Inspect database schema ──
-        self.stdout.write('\n🔍 Inspecting database schema...')
+        self.stdout.write('\n[SCAN] Inspecting database schema...')
         existing_tables = set(connection.introspection.table_names())
         self.stdout.write(f'   Tables found:    {len(existing_tables)}')
 
@@ -243,16 +243,16 @@ class Command(BaseCommand):
         # ── Step 8: Fake migrations that are already reflected ──
         if to_fake and not self.dry_run:
             self.stdout.write(self.style.SUCCESS(
-                f'\n⏩ Faking {len(to_fake)} migration(s) (already in DB)...'
+                f'\n[FAKE] Faking {len(to_fake)} migration(s) (already in DB)...'
             ))
             for app_lbl, mig_name in to_fake:
                 try:
                     recorder.record_applied(app_lbl, mig_name)
                     if self.verbose:
-                        self.stdout.write(f'   ✅ {app_lbl}.{mig_name}')
+                        self.stdout.write(f'   [OK] {app_lbl}.{mig_name}')
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(
-                        f'   ❌ {app_lbl}.{mig_name}: {e}'
+                        f'   [FAIL] {app_lbl}.{mig_name}: {e}'
                     ))
             self.stdout.write(self.style.SUCCESS('   Faking complete.'))
 
@@ -260,22 +260,22 @@ class Command(BaseCommand):
         if not self.dry_run:
             if to_run:
                 self.stdout.write(self.style.WARNING(
-                    f'\n▶️  Running migrate for {len(to_run)} missing migration(s)...'
+                    f'\n[RUN] Running migrate for {len(to_run)} missing migration(s)...'
                 ))
             else:
-                self.stdout.write('\n✅ All migrations already applied. Running migrate --noinput to verify...')
+                self.stdout.write('\n[OK] All migrations already applied. Running migrate --noinput to verify...')
 
-            call_command('migrate', no_input=True, verbosity=self.verbosity)
+            call_command('migrate', no_input=True, verbosity=options.get('verbosity', 1))
 
             self.stdout.write(self.style.SUCCESS(
-                '\n═══════════════════════════════════════════\n'
-                '   ✅ Migration sync complete.\n'
-                '═══════════════════════════════════════════'
+                '\n===========================================\n'
+                '   [OK] Migration sync complete.\n'
+                '==========================================='
             ))
 
         elif self.dry_run:
             self.stdout.write(self.style.WARNING(
-                '\n⚠️  DRY RUN — no changes were made. Run without --dry-run to apply.'
+                '\n[!] DRY RUN -- no changes were made. Run without --dry-run to apply.'
             ))
 
     # ──────────────────────────────────────────────────────────────────────
@@ -285,15 +285,15 @@ class Command(BaseCommand):
         """Backup django_migrations table before making changes."""
         tables = connection.introspection.table_names()
         if 'django_migrations' not in tables:
-            self.stdout.write('\n📤 django_migrations table does not exist — no backup needed.')
+            self.stdout.write('\n[BACKUP] django_migrations table does not exist - no backup needed.')
             return
 
         ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         backup = f'django_migrations_backup_{ts}'
-        self.stdout.write(self.style.WARNING(f'\n📤 Backing up django_migrations → {backup}...'))
+        self.stdout.write(self.style.WARNING(f'\n[BACKUP] Backing up django_migrations -> {backup}...'))
         with connection.cursor() as c:
             c.execute(f'CREATE TABLE `{backup}` SELECT * FROM django_migrations')
-        self.stdout.write(self.style.SUCCESS(f'   Backup saved as `{backup}`.'))
+        self.stdout.write(self.style.SUCCESS(f'   Backup saved as [{backup}].'))
 
     # ──────────────────────────────────────────────────────────────────────
     # TOPOLOGICAL SORT
@@ -544,21 +544,21 @@ class Command(BaseCommand):
     # REPORT
     # ──────────────────────────────────────────────────────────────────────
     def _print_report(self, to_fake, to_run):
-        self.stdout.write(f'\n{"─" * 56}')
+        self.stdout.write(f'\n{"-" * 56}')
         self.stdout.write(f'  SYNC RESULTS')
-        self.stdout.write(f'    ✅ Already in DB (fake):  {len(to_fake)}')
-        self.stdout.write(f'    ▶️  Missing (migrate):    {len(to_run)}')
-        self.stdout.write(f'{"─" * 56}')
+        self.stdout.write(f'    [OK] Already in DB (fake):  {len(to_fake)}')
+        self.stdout.write(f'    [RUN] Missing (migrate):    {len(to_run)}')
+        self.stdout.write(f'{"-" * 56}')
 
         if to_fake:
-            self.stdout.write(self.style.SUCCESS('\n  ⏩ Will fake (already reflected in DB):'))
+            self.stdout.write(self.style.SUCCESS('\n  [FAKE] Will fake (already reflected in DB):'))
             for app, name in to_fake[:10]:
                 self.stdout.write(f'    {app}.{name}')
             if len(to_fake) > 10:
                 self.stdout.write(f'    ... and {len(to_fake) - 10} more')
 
         if to_run:
-            self.stdout.write(self.style.WARNING('\n  ▶️  Will run (missing from DB):'))
+            self.stdout.write(self.style.WARNING('\n  [RUN] Will run (missing from DB):'))
             for app, name in to_run[:10]:
                 self.stdout.write(f'    {app}.{name}')
             if len(to_run) > 10:
@@ -569,5 +569,5 @@ class Command(BaseCommand):
                                     if n[0] == 'token_blacklist']
         if token_blacklist_pending:
             self.stdout.write(self.style.WARNING(
-                '\n  ⚠️  token_blacklist migrations pending — will be created by migrate.'
+                '\n  [!] token_blacklist migrations pending -- will be created by migrate.'
             ))
