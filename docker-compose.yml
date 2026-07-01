@@ -103,7 +103,8 @@ services:
       - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/warungio.conf:ro
       - static_volume:/app/staticfiles:ro
       - media_volume:/app/django_backend/media:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # Let's Encrypt SSL certificates (live symlinks to /etc/letsencrypt/archive/warungio.web.id/)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./assets:/app/assets:ro
     healthcheck:
       test: ["CMD", "sh", "-c", "nginx -t 2>/dev/null && [ -f /var/run/nginx.pid ]"]
