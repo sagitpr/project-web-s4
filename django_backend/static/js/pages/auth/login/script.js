@@ -135,10 +135,23 @@
       }
 
       try {
+        if (typeof WarungioAPI === 'undefined' || typeof WarungioAPI.login !== 'function') {
+          setMessage('Gagal memuat API. Periksa koneksi internet atau coba refresh halaman.');
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Masuk';
+          }
+          return;
+        }
         const data = await WarungioAPI.login(email, password);
         handleAuthResponse(data);
       } catch (err) {
-        setMessage(err.message);
+        // Network errors (server down) show "Failed to fetch" — replace with friendlier message
+        var msg = err.message;
+        if (!msg || msg === 'Failed to fetch' || msg === 'NetworkError' || msg.indexOf('NetworkError') !== -1 || msg.indexOf('Failed to fetch') !== -1) {
+          msg = 'Gagal terhubung ke server. Pastikan server Warungio berjalan.';
+        }
+        setMessage(msg);
         if (loginBtn) {
           loginBtn.disabled = false;
           loginBtn.textContent = 'Masuk';
@@ -187,7 +200,8 @@
             } catch (err) {
               setMessage(err.message);
               googleBtn.disabled = false;
-              googleBtn.innerHTML = `<img src="${WarungioAssets.img('google-logo.png')}" alt="Google" /><span>Google</span>`;
+              var googleImg = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img) ? WarungioAssets.img('google-logo.png') : '/static/images/google-logo.png';
+              googleBtn.innerHTML = '<img src="' + googleImg + '" alt="Google" /><span>Google</span>';
             }
           }
         },
@@ -220,7 +234,8 @@
           } catch (err) {
             setMessage(err.message);
             fbBtn.disabled = false;
-            fbBtn.innerHTML = `<img src="${WarungioAssets.img('facebook-1.png')}" alt="Facebook" /><span>Facebook</span>`;
+            var fbImg = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img) ? WarungioAssets.img('facebook-1.png') : '/static/images/facebook-1.png';
+            fbBtn.innerHTML = '<img src="' + fbImg + '" alt="Facebook" /><span>Facebook</span>';
           }
         } else {
           setMessage('Login Facebook dibatalkan.');
