@@ -106,6 +106,15 @@ class CreateSnapTransactionView(views.APIView):
                 'name': 'Biaya Pengiriman',
             })
 
+        # Add admin fee (admin_fee_buyer) as item so item_details total matches gross_amount
+        if float(order.admin_fee_buyer) > 0:
+            item_details.append({
+                'id': 'ADMIN_FEE',
+                'price': int(float(order.admin_fee_buyer)),
+                'quantity': 1,
+                'name': 'Biaya Admin Pembelian',
+            })
+
         # Build request payload — credit_card config available for all Snap methods
         payload = {
             'transaction_details': transaction_details,
@@ -562,12 +571,18 @@ class FinanceSummaryView(views.APIView):
     def get(self, request):
         store = request.user.store
 
-        # 1. Total Pemasukan / Revenue (Completed orders)
+        # 1. Total Pemasukan KOTOR / Revenue (Completed orders, includes admin_fee)
         completed_orders = Order.objects.filter(
             store=store,
             order_status='completed'
         )
-        total_income = completed_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        total_income_gross = completed_orders.aggregate(total=Sum('total_price'))['total'] or 0
+
+        # 1b. Total Admin Fee Seller yang dipotong dari seller (Rp 1.000)
+        total_admin_fees = completed_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
+
+        # 1c. Pemasukan BERSIH seller (setelah dipotong admin_fee)
+        total_income_net = total_income_gross - total_admin_fees
 
         # 2. Total Penarikan / Withdrawals (Successful or pending withdrawals)
         withdrawals_qs = Payment.objects.filter(
@@ -578,16 +593,15 @@ class FinanceSummaryView(views.APIView):
         total_withdrawals = withdrawals_qs.filter(payment_status='paid').aggregate(total=Sum('amount'))['total'] or 0
         total_pending_withdrawals = withdrawals_qs.filter(payment_status='pending').aggregate(total=Sum('amount'))['total'] or 0
 
-        # 3. Saldo Tertahan (Paid, Processed, Shipped orders)
+        # 3. Saldo Tertahan (Paid, Processed, Shipped orders) — total termasuk admin_fee
         held_orders = Order.objects.filter(
             store=store,
             order_status__in=['paid', 'processed', 'shipped']
         )
         held_balance = held_orders.aggregate(total=Sum('total_price'))['total'] or 0
 
-        # 4. Available Balance (Saldo Tersedia = Total Income - All Withdrawals)
-        # Note: We subtract both pending and paid withdrawals to avoid double-withdrawal race conditions
-        available_balance = max(0, total_income - (total_withdrawals + total_pending_withdrawals))
+        # 4. Available Balance (Saldo Tersedia = Net Income - All Withdrawals)
+        available_balance = max(0, total_income_net - (total_withdrawals + total_pending_withdrawals))
 
         # 5. Total Transactions count in past 30 days
         thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -606,13 +620,16 @@ class FinanceSummaryView(views.APIView):
             d = today - timedelta(days=i)
             labels.append(d.strftime('%d %b'))
 
-            # Daily Income
-            daily_inc = Order.objects.filter(
+            # Daily Income NET (setelah admin_fee)
+            daily_orders = Order.objects.filter(
                 store=store,
                 order_status='completed',
                 completed_at__date=d
-            ).aggregate(total=Sum('total_price'))['total'] or 0
-            income_trend.append(float(daily_inc))
+            )
+            daily_gross = daily_orders.aggregate(total=Sum('total_price'))['total'] or 0
+            daily_admin = daily_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
+            daily_net = daily_gross - daily_admin
+            income_trend.append(float(daily_net))
 
             # Daily Withdrawals
             daily_wdr = Payment.objects.filter(
@@ -627,7 +644,9 @@ class FinanceSummaryView(views.APIView):
             'total_balance': float(available_balance + held_balance),
             'available_balance': float(available_balance),
             'held_balance': float(held_balance),
-            'total_income': float(total_income),
+            'total_income_gross': float(total_income_gross),
+            'total_income_net': float(total_income_net),
+            'total_admin_fees': float(total_admin_fees),
             'total_withdrawals': float(total_withdrawals),
             'total_pending_withdrawals': float(total_pending_withdrawals),
             'total_transactions': total_transactions,

@@ -116,6 +116,16 @@ class Payment(models.Model):
         self.order.payment_status = 'paid'
         self.order.order_status = 'paid'
         self.order.save(update_fields=['payment_status', 'order_status'])
+        # Record admin fee seller for platform owner payout (Rp 1.000 per transaksi)
+        if self.order.store_id and float(self.order.admin_fee_seller) > 0:
+            AdminFeeTransaction.objects.get_or_create(
+                order=self.order,
+                defaults={
+                    'store': self.order.store,
+                    'amount': self.order.admin_fee_seller,
+                    'owner_phone': '089667850425',
+                }
+            )
 
 
 class MidtransTransaction(models.Model):
@@ -210,3 +220,51 @@ class BankAccount(models.Model):
             self.store.bank_account = self.account_number
             self.store.bank_owner = self.account_holder
             self.store.save(update_fields=['bank_name', 'bank_account', 'bank_owner'])
+
+
+class AdminFeeTransaction(models.Model):
+    """
+    Mencatat biaya admin seller Rp 1.000 per transaksi yang masuk ke platform owner.
+    
+    Setiap kali order selesai (completed), Rp 1.000 dari admin_fee_seller dicatat di sini
+    sebagai pending payout ke e-wallet owner (089667850425).
+    """
+    PAYOUT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+    ]
+
+    order = models.OneToOneField(
+        'orders.Order', on_delete=models.CASCADE,
+        related_name='admin_fee_record',
+        verbose_name='Pesanan'
+    )
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.SET_NULL,
+        null=True, related_name='admin_fees',
+        verbose_name='Toko'
+    )
+    amount = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        verbose_name='Jumlah Fee'
+    )
+    payout_status = models.CharField(
+        max_length=20, choices=PAYOUT_STATUS_CHOICES,
+        default='pending', verbose_name='Status Pencairan'
+    )
+    # Target e-wallet owner
+    owner_phone = models.CharField(
+        max_length=20, default='089667850425',
+        verbose_name='No. HP Owner (E-Wallet)'
+    )
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'admin_fee_transactions'
+        verbose_name = 'Fee Admin'
+        verbose_name_plural = 'Fee Admin'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'AdminFee Rp {self.amount} - Order #{self.order_id} ({self.payout_status})'

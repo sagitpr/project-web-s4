@@ -1,10 +1,4 @@
-"""
-Warungio Email Service — OTP email delivery via Django send_mail.
-
-Provides:
-- validate_email_settings()   — verify SMTP can connect
-- send_otp_email(...)         — send a formatted OTP email
-"""
+"""OTP email delivery via Django send_mail."""
 
 import logging
 from smtplib import SMTPException, SMTPAuthenticationError
@@ -17,15 +11,11 @@ from django.utils.html import strip_tags
 logger = logging.getLogger('django_backend.accounts.email')
 
 
-# ───────────────────────────── helpers ─────────────────────────────
-
 def _email_configured() -> bool:
-    """Return True if SMTP credentials are present."""
     return bool(settings.EMAIL_HOST_USER) and bool(settings.EMAIL_HOST_PASSWORD)
 
 
 def _subject_for_purpose(purpose: str, otp_code: str) -> str:
-    """Return a human-readable email subject based on OTP purpose."""
     labels = {
         'registration': 'Kode Verifikasi Akun Warungio',
         'login':        'Kode OTP Masuk Warungio',
@@ -38,22 +28,8 @@ def _subject_for_purpose(purpose: str, otp_code: str) -> str:
     return f'{base} — {otp_code}'
 
 
-# ───────────────────────── public functions ─────────────────────────
-
 def validate_email_settings() -> dict:
-    """
-    Verify that the current EMAIL_* settings are plausible.
-
-    Checks:
-      - SMTP host / port are set
-      - Credentials are non-empty
-      - Django can connect (handshake)
-
-    Returns a dict with keys:
-      success  (bool)
-      message  (str)
-      error    (str | None)
-    """
+    """Verify SMTP settings and attempt a connection handshake."""
     errors = []
 
     if not settings.EMAIL_HOST:
@@ -107,37 +83,7 @@ def send_otp_email(
     expiry_minutes: int | None = None,
     user_full_name: str | None = None,
 ) -> dict:
-    """
-    Send an OTP email via Django's send_mail.
-
-    Parameters
-    ----------
-    email : str
-        Recipient email address.
-    otp_code : str
-        The 6-digit OTP code to embed in the message.
-    purpose : str
-        One of 'registration', 'login', 'password_reset', 'email_change',
-        'phone_change', 'payment'.
-    expiry_minutes : int | None
-        Override the default OTP expiry from settings.
-    user_full_name : str | None
-        Personalise the greeting.
-
-    Returns
-    -------
-    dict
-        {
-            'success': bool,
-            'message': str,
-            'error': str | None,
-        }
-
-    Behaviour on failure
-    --------------------
-    NEVER raises.  Returns a dict with ``success=False`` and a human-readable
-    ``error`` so callers can issue a warning without rolling back the user/OTP.
-    """
+    """Send an OTP email via Django's send_mail. Never raises on failure."""
     if not _email_configured():
         msg = (
             'Email tidak dikirim — SMTP belum dikonfigurasi. '

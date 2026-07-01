@@ -73,6 +73,11 @@ class Product(models.Model):
         validators=[MinValueValidator(0)], default=0,
         verbose_name='Stok'
     )
+    reserved_stock = models.IntegerField(
+        validators=[MinValueValidator(0)], default=0,
+        verbose_name='Stok Dipesan',
+        help_text='Jumlah yang sudah dipesan buyer tapi belum di-scan untuk packing'
+    )
     unit = models.CharField(max_length=50, default='pcs', verbose_name='Satuan')
     
     # Quality
@@ -130,6 +135,12 @@ class Product(models.Model):
     @property
     def store_name(self):
         return self.store.store_name if self.store else ''
+
+    @property
+    @property
+    def available_stock(self):
+        """Stok yang benar-benar tersedia untuk dijual (total - reserved)."""
+        return max(0, self.stock - self.reserved_stock)
 
     @property
     def is_low_stock(self):

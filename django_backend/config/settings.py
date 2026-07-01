@@ -9,35 +9,23 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# =============================================================================
-# LOAD .ENV FROM PROJECT ROOT (single source of truth)
-# =============================================================================
-# All backends (PHP, Node.js, Django) share the same root .env file.
-# Django specific settings can be overridden via django_backend/.env
-
+# All backends (PHP, Django) share the same root .env file.
 try:
     from dotenv import load_dotenv
     root_env = BASE_DIR / '.env'
     django_env = BASE_DIR / 'django_backend' / '.env'
-    # Load root .env first (shared config) — override=True so .env always wins
     if root_env.exists():
         load_dotenv(root_env, override=True)
-    # Then load Django-specific .env (overrides)
     if django_env.exists():
         load_dotenv(django_env, override=True)
 except ImportError:
-    pass  # python-dotenv not installed — rely on system env vars
+    pass
 
-# =============================================================================
-# SECURITY
-# =============================================================================
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-warungio-marketplace-key-change-in-production'
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
-
-# Production security — configurable via env vars, defaults safe for dev
 SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
 SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
@@ -50,9 +38,6 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
-# =============================================================================
-# APPLICATION DEFINITION
-# =============================================================================
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -92,6 +77,7 @@ LOCAL_APPS = [
     'monitoring.apps.MonitoringConfig',
     'regions.apps.RegionsConfig',
     'inventory.apps.InventoryConfig',
+    'core',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

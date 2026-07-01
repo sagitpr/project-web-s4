@@ -48,7 +48,8 @@ mariadb-10.*/
 mariadb-10.*-winx64/
 
 # Static / Media (generated at runtime via collectstatic)
-django_backend/staticfiles/
+# STATIC_ROOT = BASE_DIR / 'staticfiles' (project root, not inside django_backend/)
+/staticfiles/
 django_backend/media/
 
 # Logs

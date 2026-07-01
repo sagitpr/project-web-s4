@@ -30,4 +30,17 @@ urlpatterns = [
 
     # Delivery Tracking
     path('<int:order_id>/tracking/', views.DeliveryTrackingView.as_view(), name='delivery-tracking'),
+
+    # Offline Sales (pembelian langsung di toko)
+    path('offline-sale/', views.OfflineSaleCreateView.as_view(), name='offline-sale-create'),
+    path('offline-sales/', views.OfflineSaleListView.as_view(), name='offline-sale-list'),
+
+    # Packing Flow (Scan at Packing)
+    path('<int:order_id>/packing/start/', views.PackingStartView.as_view(), name='packing-start'),
+    path('<int:order_id>/packing/<int:session_id>/scan/', views.PackingScanItemView.as_view(), name='packing-scan'),
+    path('<int:order_id>/packing/<int:session_id>/complete/', views.PackingCompleteView.as_view(), name='packing-complete'),
+    path('<int:order_id>/packing/status/', views.PackingStatusView.as_view(), name='packing-status'),
+
+    # POS Offline (Multi-item Scan & Pay)
+    path('pos/checkout/', views.POSOfflineCreateView.as_view(), name='pos-checkout'),
 ]

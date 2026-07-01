@@ -1,11 +1,11 @@
 # =============================================================================
-# Warungio Marketplace — Docker Compose (Production)
+# Warungio Marketplace — Docker Compose (Production — 1GB RAM Optimized)
 # Services: Django (Daphne), MariaDB, Redis, Nginx
-# Target: Ubuntu VPS
+# Target: Ubuntu VPS with 1GB RAM
 # =============================================================================
 
 services:
-  # ---- MariaDB Database ----
+  # ---- MariaDB Database (Low Memory Optimized) ----
   mysql:
     image: mariadb:10.11
     container_name: warungio-mysql
@@ -22,32 +22,42 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/warungio_full_schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # Custom low-memory MariaDB config (128MB buffer pool, 30 max connections)
+      - ./mariadb/conf.d/low-memory.cnf:/etc/mysql/mariadb.conf.d/99-low-memory.cnf:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
+      interval: 30s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
+      start_period: 60s
+    # Limit resources for 1GB VPS
+    mem_limit: 300m
+    mem_reservation: 200m
+    cpus: 1.0
     networks:
       - warungio_net
 
-  # ---- Redis (Channels, Cache, Celery) ----
+  # ---- Redis (Channels, Cache) — 64MB Max Memory ----
   redis:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 30s
       timeout: 3s
-      retries: 5
+      retries: 3
       start_period: 10s
+    mem_limit: 96m
+    mem_reservation: 64m
+    cpus: 0.5
     networks:
       - warungio_net
 
-  # ---- Django Backend (Daphne ASGI) ----
+  # ---- Django Backend (Daphne ASGI — 1 Worker) ----
   django:
     build:
       context: .
@@ -64,10 +74,15 @@ services:
     environment:
       PORT: "8000"
       DJANGO_SETTINGS_MODULE: config.settings
+      # Celery nonaktif — tidak ada worker Celery yang berjalan
+      CELERY_ENABLED: "false"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/django_backend/media
       - ./logs:/app/logs
+    mem_limit: 400m
+    mem_reservation: 256m
+    cpus: 1.0
     networks:
       - warungio_net
 
@@ -90,6 +105,15 @@ services:
       - media_volume:/app/django_backend/media:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./assets:/app/assets:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nginx -t 2>/dev/null && [ -f /var/run/nginx.pid ]"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    mem_limit: 64m
+    mem_reservation: 32m
+    cpus: 0.5
     networks:
       - warungio_net
 

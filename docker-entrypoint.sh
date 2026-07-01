@@ -3,13 +3,23 @@
 # Warungio Marketplace — Docker Entrypoint (SINGLE STARTUP FLOW)
 #
 # THIS IS THE SINGLE ENTRYPOINT. No CMD or command: override in docker-compose.
-# Order: 1) Wait for DB (real auth check)  2) Collect static files
-#        3) Migrate (fail if fails)        4) Superuser (optional)
-#        5) Celery (background)            6) Daphne (foreground)
+# Order:
+#   1) Wait for DB (real auth check)
+#   2) Sync migrations (backup → per-op validation → fake existing → migrate missing)
+#   3) Run migrate (safety net for any genuinely missing migrations)
+#   4) Collect static files
+#   5) Superuser (optional)
+#   6) Celery (background, nonaktif default)
+#   7) Daphne (foreground)
 # =============================================================================
 
 set -o pipefail
 set -e  # Exit immediately on any unhandled error
+
+# ─── Celery Enablement ───────────────────────────────────────────────────────
+# Set CELERY_ENABLED=true in .env to reactivate Celery workers.
+# For 1GB VPS, Celery is DISABLED by default to save ~100MB RAM.
+CELERY_ENABLED=${CELERY_ENABLED:-false}
 
 cd /app/django_backend
 
@@ -26,7 +36,7 @@ PORT="${PORT:-8000}"
 # STEP 0: Wait for MariaDB with REAL AUTHENTICATION CHECK
 # ------------------------------------------------------------------
 if [ "${USE_MYSQL}" = "true" ] || [ "${USE_MYSQL}" = "1" ]; then
-    echo "[1/5] Waiting for MariaDB (real auth check)..."
+    echo "[1/6] Waiting for MariaDB (real auth check)..."
 
     db_host="${DB_HOST:-127.0.0.1}"
     db_port="${DB_PORT:-3306}"
@@ -59,13 +69,35 @@ if [ "${USE_MYSQL}" = "true" ] || [ "${USE_MYSQL}" = "1" ]; then
         exit 1
     fi
 else
-    echo "[1/5] Using SQLite — no database wait needed."
+    echo "[1/6] Using SQLite — no database wait needed."
 fi
 
 # ------------------------------------------------------------------
-# STEP 1: Collect static files (non-fatal on warnings)
+# STEP 1: Sync migrations (Permanent solution for pre-existing DB)
 # ------------------------------------------------------------------
-echo "[2/5] Collecting static files..."
+# sync_migrations:
+#   1. Backup django_migrations table
+#   2. Detect migrations already reflected in the database (per-operation)
+#   3. Fake those migrations as applied
+#   4. Run 'migrate' for genuinely missing migrations (e.g. token_blacklist)
+#
+#   This is safe to run repeatedly — fully idempotent.
+# ------------------------------------------------------------------
+echo "[2/6] Syncing migrations with existing database..."
+python manage.py sync_migrations --no-backup
+echo "  -> Migration sync complete."
+
+# ------------------------------------------------------------------
+# STEP 2: Run database migrations (safety net for any remaining)
+# ------------------------------------------------------------------
+echo "[3/6] Applying any remaining migrations..."
+python manage.py migrate --noinput
+echo "  -> Migrations complete."
+
+# ------------------------------------------------------------------
+# STEP 3: Collect static files (non-fatal on warnings)
+# ------------------------------------------------------------------
+echo "[4/6] Collecting static files..."
 set +e
 python manage.py collectstatic --noinput 2>&1
 COLLECTSTATUS=$?
@@ -77,14 +109,7 @@ else
 fi
 
 # ------------------------------------------------------------------
-# STEP 2: Run database migrations (single migrate command)
-# ------------------------------------------------------------------
-echo "[3/5] Running database migrations..."
-python manage.py migrate --noinput
-echo "  -> Migrations complete."
-
-# ------------------------------------------------------------------
-# STEP 3: Create superuser (optional, non-fatal)
+# STEP 4: Create superuser (optional, non-fatal)
 # ------------------------------------------------------------------
 if [ -n "${DJANGO_SUPERUSER_EMAIL}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" ]; then
     echo "  -> Creating superuser..."
@@ -109,13 +134,21 @@ if email and password:
 fi
 
 # ------------------------------------------------------------------
-# STEP 4: Start Celery worker + beat (background, only if Redis configured)
+# STEP 5: Celery — NONAKTIF (hemat ~100MB RAM untuk VPS 1GB)
 # ------------------------------------------------------------------
-# Kill any stale Celery beat PID files before starting
-rm -f /app/logs/celerybeat.pid /app/logs/celerybeat-schedule.db 2>/dev/null || true
+# Celery dinonaktifkan secara default. Untuk mengaktifkan:
+#   Set CELERY_ENABLED=true di .env
+#
+# Saat diaktifkan, Celery hanya jalan jika REDIS_URL terkonfigurasi
+# dan bukan localhost (broker Redis harus reachable).
+# ------------------------------------------------------------------
+echo "[5/6] Celery — SKIP (nonaktif, hemat memori)"
 
-# Only start Celery if REDIS_URL is configured to a non-localhost remote
-REDIS_CHECK=$(python3 -c "
+if [ "${CELERY_ENABLED}" = "true" ] || [ "${CELERY_ENABLED}" = "1" ]; then
+    # Kill any stale Celery beat PID files before starting
+    rm -f /app/logs/celerybeat.pid /app/logs/celerybeat-schedule.db 2>/dev/null || true
+
+    REDIS_CHECK=$(python3 -c "
 import os
 url = os.environ.get('REDIS_URL', '')
 if url and not url.startswith('redis://localhost') and not url.startswith('redis://127.0.0.1'):
@@ -124,27 +157,29 @@ else:
     print('skip')
 " 2>/dev/null || echo "skip")
 
-if [ "${REDIS_CHECK}" = "ready" ]; then
-    echo "[4/5] Starting Celery worker..."
-    mkdir -p /app/logs
-    # Start Celery worker in background; log failure but don't block Daphne
-    celery -A config worker --loglevel=INFO --concurrency=2 \
-        --detach --logfile=/app/logs/celery.log 2>&1 || \
-        echo "  -> WARNING: Celery worker failed to start. Check /app/logs/celery.log"
-    celery -A config beat --loglevel=INFO \
-        --detach --logfile=/app/logs/celery_beat.log 2>&1 || \
-        echo "  -> WARNING: Celery beat failed to start. Check /app/logs/celery_beat.log"
-    echo "  -> Celery worker & beat started."
-else
-    echo "[4/5] Redis not configured — skipping Celery."
+    if [ "${REDIS_CHECK}" = "ready" ]; then
+        echo "  -> Celery ENABLED — Starting worker..."
+        mkdir -p /app/logs
+        celery -A config worker --loglevel=INFO --concurrency=1 \
+            --detach --logfile=/app/logs/celery.log 2>&1 || \
+            echo "  -> WARNING: Celery worker failed to start."
+        celery -A config beat --loglevel=INFO \
+            --detach --logfile=/app/logs/celery_beat.log 2>&1 || \
+            echo "  -> WARNING: Celery beat failed to start."
+        echo "  -> Celery worker & beat started (concurrency=1)."
+    else
+        echo "  -> Redis not configured — skipping Celery."
+    fi
 fi
 
 # ------------------------------------------------------------------
 # START Daphne ASGI server (foreground — container stays alive)
 # ------------------------------------------------------------------
-echo "[5/5] Starting Daphne on 0.0.0.0:${PORT}..."
+echo "[6/6] Starting Daphne on 0.0.0.0:${PORT}..."
 echo "================================================"
 echo "  Warungio running on 0.0.0.0:${PORT}"
 echo "================================================"
 
+# Daphne dengan 1 worker process untuk hemat memori
+# Gunakan -w 2 atau -w 4 jika RAM > 2GB
 exec daphne -b 0.0.0.0 -p ${PORT} config.asgi:application

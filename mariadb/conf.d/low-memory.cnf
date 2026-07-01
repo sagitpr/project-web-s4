@@ -1,0 +1,69 @@
+# =============================================================================
+# Warungio Marketplace — MariaDB Low-Memory Configuration
+# Target: 1GB RAM VPS (Docker container)
+# =============================================================================
+#
+# Allocate ~200MB total for MariaDB, leaving 800MB for other services.
+# Adjust innodb_buffer_pool_size upward if you upgrade RAM later.
+# =============================================================================
+
+[mysqld]
+
+# ── InnoDB ───────────────────────────────────────────────────────────────────
+# Rule of thumb: 50-70% of available RAM for InnoDB on a dedicated DB server.
+# On a 1GB shared VPS, 128M is conservative and leaves room for OS + others.
+innodb_buffer_pool_size        = 128M
+
+# Keep log small to reduce I/O and memory
+innodb_log_file_size           = 32M
+innodb_log_buffer_size         = 4M
+
+# Safer flushing without full ACID durability (speed vs. safety trade-off)
+# Value 2 = flushed once per second (lose 1 sec of data on crash, not corrupt)
+innodb_flush_log_at_trx_commit = 2
+
+# ── Connections ──────────────────────────────────────────────────────────────
+# Warungio is a small marketplace — 30 concurrent connections is generous
+max_connections                = 30
+
+# ── MyISAM (needed for system tables) ────────────────────────────────────────
+key_buffer_size                = 4M
+
+# ── Query Cache (DISABLED — causes contention on write-heavy workloads) ─────
+# Modern MariaDB + InnoDB performs better without query cache
+query_cache_type               = 0
+query_cache_size               = 0
+
+# ── Temp Tables ──────────────────────────────────────────────────────────────
+# Sufficient for most Django ORM queries
+tmp_table_size                 = 16M
+max_heap_table_size            = 16M
+
+# ── Table Cache ──────────────────────────────────────────────────────────────
+# Warungio has ~30 tables; 200 is generous
+table_open_cache               = 200
+table_definition_cache         = 200
+
+# ── Thread & Buffer Settings ─────────────────────────────────────────────────
+thread_cache_size              = 4
+sort_buffer_size               = 256K
+read_buffer_size               = 128K
+read_rnd_buffer_size           = 256K
+join_buffer_size               = 128K
+bulk_insert_buffer_size        = 4M
+
+# ── Networking ───────────────────────────────────────────────────────────────
+# Skip name resolution (faster connections, no DNS)
+skip_name_resolve
+
+# ── Character Set ────────────────────────────────────────────────────────────
+character_set_server           = utf8mb4
+collation_server               = utf8mb4_unicode_ci
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+# Minimal logging to save I/O
+log_error                      = /var/lib/mysql/error.log
+# General log OFF (default, explicit for clarity)
+general_log                    = OFF
+# Slow query log — useful for debugging, disable in extreme memory pressure
+slow_query_log                 = OFF

@@ -641,7 +641,8 @@
 
   MockHandlers.getShippingMethods = function () { return ok({ count: shippingMethods.length, results: shippingMethods }); };
   MockHandlers.getPaymentMethods = function () { return ok({ count: paymentMethods.length, results: paymentMethods }); };
-  MockHandlers.getPaymentConfig = function () { return ok({ client_key: 'SB-Mid-client-mock_key', snap_url: 'https://app.sandbox.midtrans.com/snap/snap.js', is_production: false, merchant_id: 'MOCK-MERCHANT' }); };
+    // ⚠️  Mock client_key — ganti dengan nilai dari .env saat testing sungguhan
+  MockHandlers.getPaymentConfig = function () { return ok({ client_key: 'SB-Mid-client-MOCK_REPLACE_ME', snap_url: 'https://app.sandbox.midtrans.com/snap/snap.js', is_production: false, merchant_id: 'MOCK_MERCHANT_ID' }); };
   MockHandlers.createSnapTransaction = function (orderId, paymentMethod) {
     var order = orders.find(function (o) { return o.id === Number(orderId); }); if (!order) return fail('Pesanan tidak ditemukan.', 404);
     order.payment_status = 'paid'; order.order_status = 'paid';

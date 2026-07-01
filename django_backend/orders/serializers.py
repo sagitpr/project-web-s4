@@ -3,7 +3,7 @@ Orders serializers for Warungio Marketplace.
 """
 
 from rest_framework import serializers
-from .models import Cart, Order, OrderItem, Delivery, ShippingMethod
+from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale
 
 
 class ShippingMethodSerializer(serializers.ModelSerializer):
@@ -43,9 +43,10 @@ class CartSerializer(serializers.ModelSerializer):
             from products.models import Product
             try:
                 prod = Product.objects.get(id=product)
-                if value > prod.stock:
+                available = prod.available_stock
+                if value > available:
                     raise serializers.ValidationError(
-                        f"Stok tidak mencukupi. Tersedia: {prod.stock}"
+                        f"Stok tidak mencukupi. Tersedia: {available}"
                     )
             except Product.DoesNotExist:
                 pass
@@ -69,9 +70,10 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'order_number', 'store_name', 'store_logo',
-                  'subtotal', 'shipping_cost', 'discount', 'total_price',
-                  'payment_method', 'order_status', 'item_count',
-                  'created_at', 'completed_at')
+                  'subtotal', 'shipping_cost', 'discount',
+                  'admin_fee', 'admin_fee_buyer',
+                  'total_price', 'payment_method', 'order_status',
+                  'item_count', 'created_at', 'completed_at')
 
     def get_store_logo(self, obj):
         if obj.store and obj.store.store_logo:
@@ -201,3 +203,54 @@ class CancelOrderSerializer(serializers.Serializer):
         'wrong_address', 'duplicate_order', 'other'
     ], required=False, allow_blank=True)
     reason_text = serializers.CharField(required=False, allow_blank=True, max_length=500)
+
+
+class OfflineSaleSerializer(serializers.ModelSerializer):
+    """Serializer untuk mencatat penjualan offline & mengurangi stok."""
+    product_name = serializers.CharField(read_only=True)
+    total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    store_name = serializers.CharField(source='store.store_name', read_only=True)
+    recorded_by_name = serializers.CharField(source='recorded_by.full_name', read_only=True)
+    price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False,
+        help_text='Harga satuan. Default: harga produk saat ini'
+    )
+
+    class Meta:
+        model = OfflineSale
+        fields = ('id', 'store', 'store_name', 'product', 'product_name',
+                  'quantity', 'price', 'total', 'buyer_name', 'buyer_phone',
+                  'notes', 'payment_method', 'recorded_by', 'recorded_by_name',
+                  'created_at')
+        read_only_fields = ('store', 'recorded_by', 'created_at')
+        extra_kwargs = {
+            'buyer_name': {'required': False, 'allow_blank': True},
+            'buyer_phone': {'required': False, 'allow_blank': True},
+            'notes': {'required': False, 'allow_blank': True},
+            'payment_method': {'required': False},
+        }
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Jumlah harus lebih dari 0.")
+        return value
+
+    def validate(self, data):
+        product = data.get('product')
+        quantity = data.get('quantity', 0)
+        if product and product.stock < quantity:
+            raise serializers.ValidationError(
+                f"Stok tidak mencukupi. Tersedia: {product.stock}, diminta: {quantity}"
+            )
+        return data
+
+
+class OfflineSaleListSerializer(serializers.ModelSerializer):
+    """Serializer ringkas untuk daftar penjualan offline."""
+    product_name = serializers.CharField(read_only=True)
+    total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = OfflineSale
+        fields = ('id', 'product', 'product_name', 'quantity', 'price',
+                  'total', 'buyer_name', 'payment_method', 'created_at')

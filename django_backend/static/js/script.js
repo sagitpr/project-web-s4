@@ -511,15 +511,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         submitBtn.textContent = 'Memproses...';
         
         try {
-          // Fetch midtrans client key
-          let midtransClientKey = 'SB-Mid-client-wZQ4B2RbLEEIlCq9';
+          // ⚠️  Client key HARUS dari backend! Jangan hardcode.
+          let midtransClientKey = '';
           try {
             const config = await WarungioAPI.getPaymentConfig();
             if (config && config.client_key) {
               midtransClientKey = config.client_key;
             }
           } catch (e) {
-            console.warn('Payment config fetch failed, using fallback key:', e);
+            console.error('Payment config fetch failed — cannot proceed:', e);
+            alert('Gagal memuat konfigurasi pembayaran. Coba refresh halaman.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Top Up Sekarang';
+            return;
           }
           
           // Load Midtrans Snap JS dynamically

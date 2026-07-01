@@ -3,9 +3,10 @@ Orders views for Warungio Marketplace.
 Cart management, order placement, order tracking.
 """
 
+import logging
 from asgiref.sync import async_to_sync
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Sum
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
@@ -14,14 +15,18 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Cart, Order, OrderItem, Delivery, ShippingMethod
+from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale, PackingSession, PackedItem
 from .serializers import (
     CartSerializer, OrderListSerializer, OrderDetailSerializer,
     OrderCreateSerializer, OrderStatusSerializer, DeliverySerializer,
-    ShippingMethodSerializer, CancelOrderSerializer
+    ShippingMethodSerializer, CancelOrderSerializer,
+    OfflineSaleSerializer, OfflineSaleListSerializer
 )
 from stores.models import Store
 from products.models import Product
+from inventory.models import MasterProduct, ProductBatch
+from inventory.services.barcode_lookup import lookup_barcode
+from inventory.services.fefo_engine import stock_out
 from accounts.permissions import IsSeller, IsOrderOwner
 from notifications.models import Notification
 from .services.courier_tracking import get_tracking_status
@@ -257,15 +262,16 @@ class OrderCreateView(views.APIView):
                 product = cart_item.product
                 price = float(product.price)
                 
-                if product.stock < cart_item.qty:
+                if product.available_stock < cart_item.qty:
                     raise ValidationError(
-                        f"Stok {product.product_name} tidak mencukupi."
+                        f"Stok {product.product_name} tidak mencukupi. "
+                        f"Tersedia: {product.available_stock}"
                     )
 
-                # Reduce stock atomically
+                # Reserve stock atomically (bukan kurangi langsung)
+                # Stock akan benar-benar berkurang saat seller scan barang di packing
                 Product.objects.filter(id=product.id).update(
-                    stock=F('stock') - cart_item.qty,
-                    sold_count=F('sold_count') + cart_item.qty
+                    reserved_stock=F('reserved_stock') + cart_item.qty
                 )
 
                 OrderItem.objects.create(
@@ -475,9 +481,9 @@ class OrderStatusUpdateView(views.APIView):
             with transaction.atomic():
                 for item in order.items.all():
                     if item.product:
+                        # Release reserved_stock (stock tidak pernah berkurang saat order)
                         Product.objects.filter(id=item.product.id).update(
-                            stock=F('stock') + item.qty,
-                            sold_count=F('sold_count') - item.qty
+                            reserved_stock=F('reserved_stock') - item.qty,
                         )
                 Store.objects.filter(id=order.store_id).update(
                     total_sales=F('total_sales') - order.total_price
@@ -709,3 +715,491 @@ class OrderHistoryView(generics.ListAPIView):
         if status_filter:
             qs = qs.filter(order_status=status_filter)
         return qs.select_related('store').prefetch_related('items')[:50]
+
+
+# =============================================================================
+# OFFLINE SALE — Pembelian langsung di toko
+# =============================================================================
+
+class OfflineSaleCreateView(views.APIView):
+    """
+    [DEPRECATED] Gunakan POST /api/orders/pos/checkout/ untuk multi-item.
+    
+    Catat penjualan offline single-item (legacy).
+    Stok berkurang via FEFO stock_out, konsisten dengan POS.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = OfflineSaleSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        product = serializer.validated_data['product']
+        quantity = serializer.validated_data['quantity']
+
+        # Validasi kepemilikan produk
+        if product.store.user != request.user:
+            return Response(
+                {'error': 'Produk bukan milik toko Anda.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Validasi stok mencukupi (available_stock = stock - reserved_stock)
+        available = product.available_stock
+        if available < quantity:
+            return Response(
+                {'error': f'Stok tidak mencukupi. Tersedia: {available}, diminta: {quantity}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # FEFO: stock_out (konsisten dengan POS checkout)
+        master = MasterProduct.objects.filter(
+            product_name__icontains=product.product_name
+        ).first()
+
+        if master:
+            stock_result = stock_out(
+                store=request.user.store,
+                master_product=master,
+                quantity=quantity,
+                notes=f'Offline Sale: {product.product_name}',
+                created_by=request.user,
+                reference_type='offline_sale',
+            )
+            if not stock_result['success']:
+                return Response(
+                    {'error': stock_result.get('error', 'Gagal kurangi stok via FEFO.')},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Fallback: langsung kurangi stock jika tidak ada master product
+            Product.objects.filter(id=product.id).update(
+                stock=F('stock') - quantity
+            )
+
+        # Refresh product
+        product.refresh_from_db()
+
+        # Simpan record penjualan offline
+        offline_sale = OfflineSale.objects.create(
+            store=product.store,
+            product=product,
+            product_name=product.product_name,
+            quantity=quantity,
+            price=serializer.validated_data.get('price', product.price),
+            buyer_name=serializer.validated_data.get('buyer_name', ''),
+            buyer_phone=serializer.validated_data.get('buyer_phone', ''),
+            notes=serializer.validated_data.get('notes', ''),
+            payment_method=serializer.validated_data.get('payment_method', 'cash'),
+            recorded_by=request.user,
+        )
+
+        # Update store total sales
+        Store.objects.filter(id=product.store_id).update(
+            total_sales=F('total_sales') + float(offline_sale.total)
+        )
+
+        return Response({
+            'message': f'Penjualan offline berhasil dicatat. Stok {product.product_name}: {product.stock + quantity} → {product.stock}',
+            'offline_sale': OfflineSaleSerializer(offline_sale).data,
+            'new_stock': product.stock,
+        }, status=status.HTTP_201_CREATED)
+
+
+# =============================================================================
+# PACKING SESSION — Scan barang untuk pesanan online
+# =============================================================================
+
+class PackingStartView(views.APIView):
+    """
+    Mulai sesi packing untuk pesanan online.
+    Seller scan barang yang keluar → FEFO stock_out.
+
+    POST /api/orders/{order_id}/packing/start/
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request, order_id):
+        order = Order.objects.filter(
+            id=order_id, store__user=request.user, order_status='paid'
+        ).first()
+
+        if not order:
+            return Response(
+                {'error': 'Pesanan tidak ditemukan atau status bukan "paid".'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Tutup sesi packing sebelumnya yang masih aktif
+        PackingSession.objects.filter(
+            order=order, status='packing'
+        ).update(status='cancelled')
+
+        total_items = sum(item.qty for item in order.items.all())
+
+        session = PackingSession.objects.create(
+            order=order,
+            store=request.user.store,
+            status='packing',
+            total_items=total_items,
+        )
+
+        # Update order status ke 'processed'
+        order.order_status = 'processed'
+        order.save(update_fields=['order_status'])
+
+        return Response({
+            'session_id': session.id,
+            'total_items': total_items,
+            'message': f'Sesi packing dimulai. Scan {total_items} item.',
+        }, status=status.HTTP_201_CREATED)
+
+
+class PackingScanItemView(views.APIView):
+    """
+    Scan satu item saat packing.
+    Barcode/OCR → lookup master product → FEFO stock_out → record.
+
+    POST /api/orders/{order_id}/packing/{session_id}/scan/
+    {
+        "barcode": "8991234567890",
+        "quantity": 2
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request, order_id, session_id):
+        session = PackingSession.objects.filter(
+            id=session_id, order_id=order_id,
+            store=request.user.store, status='packing'
+        ).first()
+
+        if not session:
+            return Response(
+                {'error': 'Sesi packing tidak ditemukan atau sudah selesai.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        barcode = request.data.get('barcode', '').strip()
+        quantity = int(request.data.get('quantity', 1))
+
+        if not barcode:
+            return Response(
+                {'error': 'Barcode wajib diisi.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cari master product via barcode
+        lookup_result = lookup_barcode(barcode, store=request.user.store)
+
+        if not lookup_result.get('found'):
+            return Response(
+                {'error': f'Produk dengan barcode {barcode} tidak ditemukan.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        master = lookup_result['master_product']
+        mp_id = master['id']
+
+        # Cari Product listing yang cocok
+        product = Product.objects.filter(
+            store=request.user.store,
+            product_name__icontains=master['product_name']
+        ).first()
+
+        if not product:
+            # Cari product dari order items
+            order_item = session.order.items.filter(
+                product__product_name__icontains=master['product_name']
+            ).first()
+            product = order_item.product if order_item else None
+
+        if not product:
+            return Response(
+                {'error': 'Produk tidak ditemukan di pesanan ini.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Cari OrderItem yang cocok dan belum ter-scan penuh
+        master_model = MasterProduct.objects.get(id=mp_id)
+
+        # FEFO: stock_out dengan batch terdekat expiry
+        stock_result = stock_out(
+            store=request.user.store,
+            master_product=master_model,
+            quantity=quantity,
+            notes=f'Packing Order #{session.order.order_number}',
+            created_by=request.user,
+            reference_type='packing',
+            reference_id=str(session.id),
+        )
+
+        if not stock_result['success']:
+            return Response(
+                {'error': stock_result.get('error', 'Stok tidak mencukupi.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Record packed item
+        batch_model = stock_result['transactions'][0]['batch_id'] if stock_result.get('transactions') else None
+        batch = None
+        if batch_model:
+            batch = ProductBatch.objects.get(id=batch_model)
+
+        # Cari order_item yang cocok
+        order_item = session.order.items.filter(product=product).first()
+
+        PackedItem.objects.create(
+            packing_session=session,
+            order_item=order_item,
+            product=product,
+            batch=batch,
+            quantity=quantity,
+        )
+
+        # Update scanned count
+        session.scanned_items = PackedItem.objects.filter(
+            packing_session=session
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        session.save(update_fields=['scanned_items', 'updated_at'])
+
+        # Release reserved_stock
+        Product.objects.filter(id=product.id).update(
+            reserved_stock=F('reserved_stock') - quantity
+        )
+
+        return Response({
+            'success': True,
+            'product_name': master['product_name'],
+            'quantity': quantity,
+            'scanned': session.scanned_items,
+            'total': session.total_items,
+            'progress': session.progress_pct,
+            'message': f'{master["product_name"]} x{quantity} di-scan. '
+                      f'Progress: {session.scanned_items}/{session.total_items}',
+        })
+
+
+class PackingCompleteView(views.APIView):
+    """
+    Selesaikan sesi packing.
+    Semua item harus sudah di-scan.
+
+    POST /api/orders/{order_id}/packing/{session_id}/complete/
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request, order_id, session_id):
+        session = PackingSession.objects.filter(
+            id=session_id, order_id=order_id,
+            store=request.user.store, status='packing'
+        ).first()
+
+        if not session:
+            return Response(
+                {'error': 'Sesi packing tidak ditemukan.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if session.scanned_items < session.total_items:
+            return Response({
+                'error': f'Belum semua item di-scan. '
+                         f'{session.scanned_items}/{session.total_items} item.',
+                'scanned': session.scanned_items,
+                'total': session.total_items,
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Selesaikan sesi
+        session.status = 'completed'
+        session.completed_at = timezone.now()
+        session.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+        # Update status order
+        order = session.order
+        order.order_status = 'shipped'
+        order.save(update_fields=['order_status'])
+
+        return Response({
+            'success': True,
+            'message': 'Packing selesai! Semua item sudah di-scan dan stok berkurang.',
+            'total_items': session.total_items,
+        })
+
+
+class PackingStatusView(views.APIView):
+    """
+    Cek status packing terkini.
+
+    GET /api/orders/{order_id}/packing/status/
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request, order_id):
+        session = PackingSession.objects.filter(
+            order_id=order_id, store=request.user.store
+        ).order_by('-started_at').first()
+
+        if not session:
+            return Response({'active': False, 'message': 'Belum ada sesi packing.'})
+
+        return Response({
+            'active': session.status == 'packing',
+            'session_id': session.id,
+            'status': session.status,
+            'total_items': session.total_items,
+            'scanned_items': session.scanned_items,
+            'progress_pct': session.progress_pct,
+            'started_at': session.started_at,
+            'completed_at': session.completed_at,
+            'items': [
+                {
+                    'product_name': p.product.product_name if p.product else '?',
+                    'quantity': p.quantity,
+                    'batch_number': p.batch.batch_number if p.batch else '-',
+                    'scanned_at': p.scanned_at,
+                }
+                for p in session.packed_items.all()
+            ],
+        })
+
+
+# =============================================================================
+# POS OFFLINE — Multi-item scan & pay
+# =============================================================================
+
+class POSOfflineCreateView(views.APIView):
+    """
+    Mencatat penjualan offline dengan scan barcode (multi-item).
+    Stok otomatis berkurang via FEFO.
+
+    POST /api/orders/pos/checkout/
+    {
+        "items": [
+            {"barcode": "8991234567890", "quantity": 2},
+            {"barcode": "8991234567891", "quantity": 1}
+        ],
+        "buyer_name": "Budi",
+        "payment_method": "cash"
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request):
+        items_data = request.data.get('items', [])
+        if not items_data:
+            return Response(
+                {'error': 'Minimal 1 item wajib diisi.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        buyer_name = request.data.get('buyer_name', '')
+        payment_method = request.data.get('payment_method', 'cash')
+        notes = request.data.get('notes', '')
+
+        created_sales = []
+        errors = []
+        total_amount = 0
+
+        for entry in items_data:
+            barcode = entry.get('barcode', '').strip()
+            quantity = int(entry.get('quantity', 1))
+
+            if not barcode:
+                errors.append({'error': 'Barcode kosong.', 'item': entry})
+                continue
+
+            # Cari via barcode
+            lookup_result = lookup_barcode(barcode, store=request.user.store)
+            if not lookup_result.get('found'):
+                errors.append({
+                    'barcode': barcode,
+                    'error': 'Produk tidak ditemukan.',
+                })
+                continue
+
+            master = lookup_result['master_product']
+            master_model = MasterProduct.objects.get(id=master['id'])
+
+            # Cari Product listing
+            product = Product.objects.filter(
+                store=request.user.store,
+                product_name__icontains=master['product_name']
+            ).first()
+
+            if not product:
+                errors.append({
+                    'barcode': barcode,
+                    'error': f'Produk {master["product_name"]} tidak ditemukan di toko Anda.',
+                })
+                continue
+
+            # Validasi stok
+            available = product.available_stock
+            if available < quantity:
+                errors.append({
+                    'product': master['product_name'],
+                    'error': f'Stok tidak mencukupi. Tersedia: {available}',
+                })
+                continue
+
+            # FEFO: stock_out
+            stock_result = stock_out(
+                store=request.user.store,
+                master_product=master_model,
+                quantity=quantity,
+                notes=f'POS Offline: {buyer_name or "Anonymous"}',
+                created_by=request.user,
+                reference_type='pos_offline',
+            )
+
+            if not stock_result['success']:
+                errors.append({
+                    'product': master['product_name'],
+                    'error': stock_result.get('error', 'Gagal kurangi stok.'),
+                })
+                continue
+
+            # Catat offline sale
+            sale = OfflineSale.objects.create(
+                store=request.user.store,
+                product=product,
+                product_name=product.product_name,
+                quantity=quantity,
+                price=product.price,
+                buyer_name=buyer_name,
+                notes=notes,
+                payment_method=payment_method,
+                recorded_by=request.user,
+            )
+
+            created_sales.append(OfflineSaleSerializer(sale).data)
+            total_amount += float(sale.total)
+
+            # Update store total sales
+            Store.objects.filter(id=product.store_id).update(
+                total_sales=F('total_sales') + float(sale.total)
+            )
+
+        return Response({
+            'success': len(errors) == 0,
+            'sales': created_sales,
+            'total_amount': total_amount,
+            'total_items': len(created_sales),
+            'errors': errors if errors else None,
+            'message': f'{len(created_sales)} item berhasil dicatat. Total: Rp {total_amount:,.0f}',
+        })
+
+
+class OfflineSaleListView(generics.ListAPIView):
+    """Daftar penjualan offline untuk seller."""
+    serializer_class = OfflineSaleListSerializer
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get_queryset(self):
+        return OfflineSale.objects.filter(
+            store__user=self.request.user
+        ).select_related('product').order_by('-created_at')

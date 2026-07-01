@@ -431,14 +431,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       // STEP 1: Get Midtrans client key from backend config
-      midtransClientKey = 'SB-Mid-client-wZQ4B2RbLEEIlCq9'; // fallback default
+      // ⚠️  Client key HARUS dari backend! Jangan hardcode.
+      // Fallback kosong — akan error jika backend tidak merespon,
+      // mencegah penggunaan key yang salah atau bocor.
       try {
         var config = await WarungioAPI.getPaymentConfig();
         if (config && config.client_key) {
           midtransClientKey = config.client_key;
         }
       } catch (e) {
-        console.warn('Payment config fetch failed, using fallback key:', e);
+        console.error('Payment config fetch failed — cannot proceed without client key:', e);
+        showToast('Gagal memuat konfigurasi pembayaran.', 'error');
+        return;
       }
 
       // STEP 2: Create Snap transaction — let Snap handle method selection

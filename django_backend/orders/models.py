@@ -115,6 +115,10 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    admin_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('1000.00'),
+                                    verbose_name='Biaya Admin (Seller)')
+    admin_fee_buyer = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('1500.00'),
+                                         verbose_name='Biaya Admin (Buyer)')
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
     # Payment
@@ -176,8 +180,10 @@ class Order(models.Model):
         self.subtotal = sum(item.subtotal for item in items)
         shipping = Decimal(str(self.shipping_cost))
         disc = Decimal(str(self.discount))
-        self.total_price = self.subtotal + shipping - disc
-        self.save(update_fields=['subtotal', 'total_price'])
+        # Buyer: total_price = subtotal + shipping - discount + admin_fee_buyer (Rp 1.500)
+        # Seller: admin_fee_seller (Rp 1.000) dipotong dari pendapatan seller ke e-wallet owner.
+        self.total_price = self.subtotal + shipping - disc + Decimal(str(self.admin_fee_buyer))
+        self.save(update_fields=['subtotal', 'total_price', 'admin_fee', 'admin_fee_buyer'])
 
 
 class OrderItem(models.Model):
@@ -279,3 +285,155 @@ class Delivery(models.Model):
 
     def __str__(self):
         return f'Delivery for Order #{self.order.order_number}'
+
+
+class OfflineSale(models.Model):
+    """
+    Offline purchase record — untuk pembelian langsung di toko (offline).
+    Saat pembeli datang ke toko dan membeli barang secara offline,
+    seller mencatat penjualan di sini, dan stok produk otomatis berkurang.
+    """
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.CASCADE,
+        related_name='offline_sales', verbose_name='Toko'
+    )
+    product = models.ForeignKey(
+        'products.Product', on_delete=models.CASCADE,
+        related_name='offline_sales', verbose_name='Produk'
+    )
+    product_name = models.CharField(
+        max_length=150, blank=True, verbose_name='Nama Produk (snapshot)'
+    )
+    quantity = models.IntegerField(
+        validators=[MinValueValidator(1)], verbose_name='Jumlah'
+    )
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name='Harga Satuan'
+    )
+    total = models.DecimalField(
+        max_digits=12, decimal_places=2, verbose_name='Total'
+    )
+    buyer_name = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name='Nama Pembeli'
+    )
+    buyer_phone = models.CharField(
+        max_length=20, blank=True, null=True, verbose_name='No. HP Pembeli'
+    )
+    notes = models.TextField(
+        blank=True, null=True, verbose_name='Catatan'
+    )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('cash', 'Tunai'),
+            ('transfer', 'Transfer'),
+            ('qris', 'QRIS'),
+        ],
+        default='cash', verbose_name='Metode Pembayaran'
+    )
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='recorded_offline_sales',
+        verbose_name='Dicatat Oleh'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'offline_sales'
+        verbose_name = 'Penjualan Offline'
+        verbose_name_plural = 'Penjualan Offline'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['store', '-created_at']),
+            models.Index(fields=['product']),
+        ]
+
+    def __str__(self):
+        return f'Offline: {self.product_name} x{self.quantity} (Rp {self.total})'
+
+    def save(self, *args, **kwargs):
+        if not self.product_name and self.product:
+            self.product_name = self.product.product_name
+        self.total = self.price * self.quantity
+        super().save(*args, **kwargs)
+
+
+class PackingSession(models.Model):
+    """
+    Mencatat sesi packing untuk pesanan online.
+    Seller scan barang yang keluar → FEFO stock_out → stok berkurang.
+    """
+    STATUS_CHOICES = [
+        ('packing', 'Packing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE,
+        related_name='packing_sessions', verbose_name='Pesanan'
+    )
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.CASCADE,
+        related_name='packing_sessions', verbose_name='Toko'
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='packing',
+        verbose_name='Status Packing'
+    )
+    total_items = models.IntegerField(default=0, verbose_name='Total Item')
+    scanned_items = models.IntegerField(default=0, verbose_name='Sudah Di-scan')
+    started_at = models.DateTimeField(auto_now_add=True, verbose_name='Mulai')
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name='Selesai')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'packing_sessions'
+        verbose_name = 'Sesi Packing'
+        verbose_name_plural = 'Sesi Packing'
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'Packing #{self.id} - Order #{self.order.order_number} ({self.get_status_display()})'
+
+    @property
+    def progress_pct(self):
+        if self.total_items > 0:
+            return round((self.scanned_items / self.total_items) * 100, 1)
+        return 0
+
+
+class PackedItem(models.Model):
+    """
+    Mencatat setiap item yang sudah di-scan saat packing.
+    Terkait dengan batch inventory (FEFO) yang dipilih.
+    """
+    packing_session = models.ForeignKey(
+        PackingSession, on_delete=models.CASCADE,
+        related_name='packed_items', verbose_name='Sesi Packing'
+    )
+    order_item = models.ForeignKey(
+        'OrderItem', on_delete=models.CASCADE,
+        related_name='packed_items', verbose_name='Item Pesanan'
+    )
+    product = models.ForeignKey(
+        'products.Product', on_delete=models.SET_NULL,
+        null=True, related_name='packed_items', verbose_name='Produk'
+    )
+    batch = models.ForeignKey(
+        'inventory.ProductBatch', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='packed_items',
+        verbose_name='Batch (FEFO)'
+    )
+    quantity = models.IntegerField(
+        validators=[MinValueValidator(1)], verbose_name='Jumlah'
+    )
+    scanned_at = models.DateTimeField(auto_now_add=True, verbose_name='Waktu Scan')
+
+    class Meta:
+        db_table = 'packed_items'
+        verbose_name = 'Item Ter-packing'
+        verbose_name_plural = 'Item Ter-packing'
+
+    def __str__(self):
+        return f'{self.product.product_name if self.product else "?"} x{self.quantity}'
