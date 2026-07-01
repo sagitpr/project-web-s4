@@ -4,8 +4,7 @@
  * Integrates Midtrans Snap popup for online payments.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '../../auth/login/index.html?redirect=' + encodeURIComponent(window.location.pathname);
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

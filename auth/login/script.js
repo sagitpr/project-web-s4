@@ -130,6 +130,18 @@
         const data = await WarungioAPI.login(email, password);
         handleAuthResponse(data);
       } catch (err) {
+        // Check if the error indicates the account needs OTP verification
+        if (err.needs_verification || (err.data && err.data.needs_verification)) {
+          const verificationEmail = err.email || (err.data && err.data.email) || email;
+          // Reset button state before redirect
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Masuk';
+          }
+          // Redirect to OTP verification page
+          window.location.href = '/auth/otp/index.html?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
+          return;
+        }
         setMessage(err.message);
         if (loginBtn) {
           loginBtn.disabled = false;

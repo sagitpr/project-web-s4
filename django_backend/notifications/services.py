@@ -6,11 +6,14 @@ across the application. Centralizes Notification model creation +
 WebSocket broadcasting logic.
 """
 
+import logging
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.utils import timezone
 
 from .models import Notification
+
+logger = logging.getLogger('django_backend.notifications')
 
 
 def send_notification(
@@ -182,5 +185,5 @@ def _broadcast_to_user(user_id, message):
                 f'notifications_{user_id}',
                 message,
             )
-    except Exception:
-        pass  # WebSocket layer unavailable silently
+    except Exception as e:
+        logger.error('WebSocket broadcast error (notification): %s', str(e))

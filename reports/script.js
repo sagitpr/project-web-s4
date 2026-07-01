@@ -3,8 +3,7 @@
  * Displays sales analytics and reports from Django analytics API.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '../auth/login/index.html';
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

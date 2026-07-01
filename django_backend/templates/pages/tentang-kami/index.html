@@ -1,0 +1,72 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tentang Kami - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <style>
+        .page-hero { background:linear-gradient(135deg, #059669 0%, #10b981 100%); padding:60px 24px; text-align:center; color:white; }
+        .page-hero h1 { font-size:36px; font-weight:800; margin:0 0 8px; }
+        .page-hero p { font-size:16px; opacity:0.9; max-width:600px; margin:0 auto; }
+        .page-content { max-width:800px; margin:0 auto; padding:40px 24px; }
+        .page-content h2 { font-size:22px; font-weight:700; color:var(--color-text-primary); margin:32px 0 12px; }
+        .page-content p { font-size:15px; line-height:1.7; color:var(--color-text-secondary); margin:0 0 16px; }
+        .value-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:24px; margin:32px 0; }
+        .value-card { background:var(--color-surface); border-radius:var(--radius-lg); padding:24px; border:1px solid var(--color-border); text-align:center; }
+        .value-card i { font-size:32px; color:var(--color-brand); margin-bottom:12px; }
+        .value-card h3 { font-size:16px; font-weight:700; margin:0 0 8px; }
+        .value-card p { font-size:13px; color:var(--color-text-tertiary); margin:0; }
+        .footer-links { border-top:1px solid var(--color-border); padding:24px; text-align:center; }
+        .footer-links a { color:var(--color-brand); text-decoration:none; margin:0 12px; font-size:13px; }
+    </style>
+</head>
+<body>
+    <div class="page-hero">
+        <h1>Tentang Warungio</h1>
+        <p>Hyperlocal marketplace yang menghubungkan warung tetangga dengan kebutuhan harian Anda.</p>
+    </div>
+    <div class="page-content">
+        <h2>Misi Kami</h2>
+        <p>Warungio hadir untuk memberdayakan warung dan UMKM lokal Indonesia dengan teknologi digital. Kami percaya bahwa warung tetangga memiliki produk terbaik dengan keramahan yang khas. Melalui platform kami, kami mempermudah proses pemesanan, pembayaran yang aman melalui Midtrans, dan pengantaran instan.</p>
+        
+        <h2>Nilai-Nilai Kami</h2>
+        <div class="value-grid">
+            <div class="value-card">
+                <i class="fa-solid fa-handshake"></i>
+                <h3>Kolaborasi Lokal</h3>
+                <p>Memberdayakan ekonomi lokal dengan menghubungkan warung dan pelanggan di sekitar.</p>
+            </div>
+            <div class="value-card">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h3>Kepercayaan</h3>
+                <p>Transaksi aman dengan sistem pembayaran terverifikasi dan perlindungan data.</p>
+            </div>
+            <div class="value-card">
+                <i class="fa-solid fa-bolt"></i>
+                <h3>Kecepatan</h3>
+                <p>Pengiriman hyperlocal dalam hitungan menit, bukan jam.</p>
+            </div>
+            <div class="value-card">
+                <i class="fa-solid fa-star"></i>
+                <h3>Kualitas</h3>
+                <p>Produk segar dan berkualitas dari warung kepercayaan Anda.</p>
+            </div>
+        </div>
+
+        <h2>Tim Kami</h2>
+        <p>Warungio dibangun oleh tim yang bersemangat dari Indonesia, terdiri dari para ahli teknologi, logistik, dan pemberdayaan UMKM. Kami berdedikasi untuk menciptakan dampak positif bagi komunitas lokal.</p>
+    </div>
+    <div class="footer-links">
+        <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
+        <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+        <a href="{% url 'page-kontak-kami' %}">Kontak Kami</a>
+        <a href="{% url 'page-bantuan' %}">Pusat Bantuan</a>
+        <a href="{% url 'home' %}">Kembali ke Beranda</a>
+    </div>
+</body>
+</html>

@@ -235,9 +235,8 @@
       'use strict';
 
       document.addEventListener('DOMContentLoaded', async function() {
-        // Auth guard — redirect unauthenticated users to login
-        if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-          window.location.href = '/auth/login/';
+        // Auth guard — redirect unauthenticated or unverified users
+        if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
           return;
         }
 

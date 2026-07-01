@@ -1,10 +1,11 @@
 # =============================================================================
 # Warungio Marketplace — Dockerfile
 # Multi-stage build: base → dependencies → runtime
+# Target: Ubuntu VPS + Docker Compose + Cloud Run
 # =============================================================================
 
-# ---- Base Stage ----
-FROM python:3.14-slim AS base
+# ---- Base Stage (build deps + pip packages) ----
+FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -19,37 +20,57 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmariadb-dev \
     pkg-config \
     gettext \
+    ca-certificates \
+    curl \
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- Dependencies Stage ----
 FROM base AS deps
 
-COPY django_backend/requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install gunicorn daphne
+COPY django_backend/requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r /app/requirements.txt && \
+    pip install daphne channels-redis
 
-# ---- Runtime Stage ----
-FROM base AS runtime
+# ---- Runtime Stage (CLEAN — no build-essential, no pkg-config) ----
+FROM python:3.12-slim AS runtime
 
-COPY --from=deps /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install ONLY runtime libraries — no build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmariadb-dev-compat \
+    ca-certificates \
+    curl \
+    mariadb-client \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
 
-COPY . .
+COPY . /app/
 
-# Critical: Set PYTHONPATH so Django can find the 'config' module (lives at /app/django_backend/config/)
 ENV PYTHONPATH=/app/django_backend
 
-# Create static/media directories
 RUN mkdir -p /app/staticfiles /app/django_backend/media /app/logs
 
-RUN apt-get update && apt-get install -y dos2unix
+# Normalize line endings and make entrypoint executable
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    dos2unix && \
+    dos2unix /app/docker-entrypoint.sh && \
+    chmod +x /app/docker-entrypoint.sh && \
+    apt-get purge -y dos2unix && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN dos2unix /app/docker-entrypoint.sh
-# Make entrypoint executable
-RUN chmod +x /app/docker-entrypoint.sh
+EXPOSE 8000
 
-EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD python -c "import os, urllib.request; req = urllib.request.Request(f'http://localhost:{os.getenv(\"PORT\",\"8000\")}/health/'); req.add_header('X-Forwarded-Proto', 'https'); urllib.request.urlopen(req)"
 
-# Use entrypoint script that runs migrations + collectstatic + starts Daphne
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/app/docker-entrypoint.sh"]

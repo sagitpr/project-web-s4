@@ -249,6 +249,11 @@ class Delivery(models.Model):
     tracking_number = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kode Tracking')
     pickup_code = models.CharField(max_length=20, blank=True, null=True, verbose_name='Kode Penjemputan')
 
+    # Distance and Coordinates
+    distance = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Jarak (km)')
+    buyer_latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Latitude Pembeli')
+    buyer_longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Longitude Pembeli')
+
     # Status
     delivery_status = models.CharField(
         max_length=30, choices=HYPELOCAL_STATUS,

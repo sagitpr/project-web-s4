@@ -114,6 +114,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                 'delivery_status': delivery.delivery_status,
                 'estimated_time': delivery.estimated_time,
                 'estimated_pickup': delivery.estimated_pickup,
+                'distance': float(delivery.distance) if delivery.distance else None,
+                'buyer_latitude': float(delivery.buyer_latitude) if delivery.buyer_latitude else None,
+                'buyer_longitude': float(delivery.buyer_longitude) if delivery.buyer_longitude else None,
             }
         except Delivery.DoesNotExist:
             return None
@@ -135,6 +138,8 @@ class OrderCreateSerializer(serializers.Serializer):
     vouchers = serializers.ListField(
         child=serializers.CharField(), required=False, allow_empty=True
     )
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, allow_null=True)
 
     def validate_cart_items(self, value):
         from .models import Cart

@@ -27,7 +27,7 @@ require_once __DIR__ . '/function.php';
 
 define('GOOGLE_MAPS_API_KEY', env(
     'GOOGLE_MAPS_API_KEY',
-    'AIzaSyBXr9qOQ5DfcxG-tH288SE9tpdJ5ty7S4I' // Default dev key
+    ''  // Set GOOGLE_MAPS_API_KEY in .env for production
 ));
 
 function getGoogleMapsApiKey()
@@ -114,8 +114,8 @@ function validateApiKeys()
 {
     $warnings = [];
 
-    if (GOOGLE_MAPS_API_KEY === 'AIzaSyBXr9qOQ5DfcxG-tH288SE9tpdJ5ty7S4I') {
-        $warnings[] = 'GOOGLE_MAPS_API_KEY is using default dev key. Set GOOGLE_MAPS_API_KEY in .env for production.';
+    if (empty(GOOGLE_MAPS_API_KEY)) {
+        $warnings[] = 'GOOGLE_MAPS_API_KEY not configured. Set GOOGLE_MAPS_API_KEY in .env for production.';
     }
 
     if (empty(GOOGLE_CLIENT_ID) || GOOGLE_CLIENT_ID === 'your-google-client-id.apps.googleusercontent.com') {

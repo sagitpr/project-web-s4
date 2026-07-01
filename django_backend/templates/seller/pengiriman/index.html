@@ -1,0 +1,87 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pengiriman - Warungio Seller</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/pages/seller/pengiriman/style.css' %}">
+<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.app-shell{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-width);background:var(--color-surface);border-right:1px solid var(--color-border);position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s var(--ease-out)}.brand-panel{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--color-border)}.brand-logo{height:28px;width:auto}.brand-panel h1{font-size:16px;font-weight:800;margin:0}.brand-panel p{font-size:10px;color:var(--color-text-tertiary);margin:0;text-transform:uppercase;letter-spacing:.06em}.nav-menu{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}.nav-menu a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:600;color:var(--color-text-secondary);text-decoration:none;transition:all .15s}.nav-menu a:hover{background:var(--color-gray-100);color:var(--color-text-primary)}.nav-menu a.active{background:var(--color-brand);color:white}.content-area{flex:1;margin-left:var(--sidebar-width);padding:24px;min-width:0}.page-header h1{font-size:24px;font-weight:800;margin:0}.page-subtitle{font-size:14px;color:var(--color-text-tertiary);margin:4px 0 24px}.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}.stat-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:20px;border:1px solid var(--color-border)}.stat-card .stat-label{font-size:12px;color:var(--color-text-tertiary);margin-bottom:4px}.stat-card .stat-value{font-size:24px;font-weight:800;color:var(--color-text-primary)}.stat-card .stat-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:4px}.delivery-table{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);overflow:hidden}.delivery-table table{width:100%;border-collapse:collapse}.delivery-table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-tertiary);background:var(--color-gray-50);border-bottom:1px solid var(--color-border)}.delivery-table td{padding:14px 16px;font-size:13px;border-bottom:1px solid var(--color-border)}.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}.badge-waiting{background:#fef3c7;color:#d97706}.badge-processing{background:#dbeafe;color:#2563eb}.badge-pickup{background:#e0e7ff;color:#4338ca}.badge-delivery{background:#d1fae5;color:#059669}.badge-completed{background:#dcfce7;color:#16a34a}.badge-cancelled{background:#fee2e2;color:#dc2626}.empty-state{text-align:center;padding:60px 24px}.empty-state i{font-size:48px;color:var(--color-gray-300);margin-bottom:16px}.empty-state p{font-size:15px;color:var(--color-text-tertiary)}@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.content-area{margin-left:0;padding:16px}.stats-row{grid-template-columns:1fr 1fr}}.mobile-toggle{display:none;position:fixed;top:16px;left:16px;z-index:100;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-md)}@media(max-width:768px){.mobile-toggle{display:flex}}.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:89}.overlay.open{display:block}.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}.filter-btn:hover{border-color:var(--color-brand);color:var(--color-brand)}.filter-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}</style>
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+<div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="app-shell">
+    <aside class="sidebar" id="sellerSidebar">
+        <div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo"><div><h1>Warungio</h1><p>Seller</p></div></div>
+        <nav class="nav-menu">
+            <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+            <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+            <a href="{% url 'page-seller-pengiriman' %}" class="active"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+            <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+            <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+            <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+            <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+            <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+            <a href="{% url 'page-seller-refunds' %}"><i class="fa-solid fa-rotate-left"></i> Refund</a>
+            <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+        </nav>
+    </aside>
+    <main class="content-area">
+        <div class="page-header"><h1>Pengiriman</h1><p class="page-subtitle">Pantau status pengiriman pesanan Anda secara real-time.</p></div>
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="stat-label">Dalam Perjalanan</div><div class="stat-value" id="countOnDelivery">0</div></div>
+            <div class="stat-card"><div class="stat-label">Menunggu Penjemputan</div><div class="stat-value" id="countPickup">0</div></div>
+            <div class="stat-card"><div class="stat-label">Siap Dikirim</div><div class="stat-value" id="countReady">0</div></div>
+            <div class="stat-card"><div class="stat-label">Telah Sampai</div><div class="stat-value" id="countCompleted">0</div></div>
+        </div>
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" data-filter="all">Semua</button>
+            <button class="filter-btn" data-filter="menunggu_konfirmasi">Menunggu</button>
+            <button class="filter-btn" data-filter="diproses_penjual">Diproses</button>
+            <button class="filter-btn" data-filter="menunggu_penjemputan">Jemput</button>
+            <button class="filter-btn" data-filter="kurir_menjemput">Kurir Jemput</button>
+            <button class="filter-btn" data-filter="dalam_perjalanan">Dikirim</button>
+            <button class="filter-btn" data-filter="pesanan_diterima">Sampai</button>
+            <button class="filter-btn" data-filter="dibatalkan">Batal</button>
+        </div>
+        <div class="delivery-table"><table><thead><tr><th>No. Pesanan</th><th>Pembeli</th><th>Kurir</th><th>Status</th><th>Driver</th><th>Estimasi</th><th>Aksi</th></tr></thead><tbody id="deliveryTableBody"><tr><td colspan="7" class="empty-state"><i class="fa-solid fa-truck"></i><p>Memuat data pengiriman...</p></td></tr></tbody></table></div>
+    </main>
+</div>
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+function toggleSidebar(){document.getElementById('sellerSidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open')}
+const LABELS={menunggu_konfirmasi:'Menunggu Konfirmasi',diproses_penjual:'Diproses Penjual',menunggu_penjemputan:'Menunggu Jemput',kurir_menjemput:'Kurir Menjemput',dalam_perjalanan:'Dalam Perjalanan',pesanan_diterima:'Pesanan Diterima',dibatalkan:'Dibatalkan'};
+const BADGES={menunggu_konfirmasi:'badge-waiting',diproses_penjual:'badge-processing',menunggu_penjemputan:'badge-pickup',kurir_menjemput:'badge-pickup',dalam_perjalanan:'badge-delivery',pesanan_diterima:'badge-completed',dibatalkan:'badge-cancelled'};
+let currentFilter='all';let allDeliveries=[];
+async function loadDeliveries(){try{
+    const orders=await WarungioAPI.getSellerOrders();
+    allDeliveries=orders.results||orders||[];
+    renderDeliveries();
+}catch(e){document.getElementById('deliveryTableBody').innerHTML='<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-truck"></i><p>Gagal memuat data. Pastikan Anda sudah login.</p></td></tr>'}}
+function renderDeliveries(){
+    const filtered=currentFilter==='all'?allDeliveries:allDeliveries.filter(o=>o.order_status===currentFilter);
+    const stats={menunggu_konfirmasi:0,diproses_penjual:0,menunggu_penjemputan:0,kurir_menjemput:0,dalam_perjalanan:0,pesanan_diterima:0,dibatalkan:0};
+    allDeliveries.forEach(o=>{if(stats[o.order_status]!==undefined)stats[o.order_status]++});
+    document.getElementById('countOnDelivery').textContent=stats.dalam_perjalanan||0;
+    document.getElementById('countPickup').textContent=stats.menunggu_penjemputan||0;
+    document.getElementById('countReady').textContent=(stats.diproses_penjual||0)+(stats.kurir_menjemput||0);
+    document.getElementById('countCompleted').textContent=stats.pesanan_diterima||0;
+    if(!filtered.length){document.getElementById('deliveryTableBody').innerHTML='<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-box-open"></i><p>Tidak ada data pengiriman.</p></td></tr>';return}
+    document.getElementById('deliveryTableBody').innerHTML=filtered.map(o=>{
+        const status=o.order_status||'menunggu_konfirmasi';
+        return '<tr><td><strong>'+o.order_number+'</strong></td><td>'+(o.recipient_name||'-')+'</td><td>'+(o.courier||'GoSend')+'</td><td><span class="badge '+(BADGES[status]||'badge-waiting')+'">'+(LABELS[status]||status)+'</span></td><td>'+(o.delivery?.driver_name||'-')+'</td><td>'+(o.delivery?.estimated_time||'-')+'</td><td><a href="{% url "page-seller-order-detail" %}?id='+o.id+'" style="color:var(--color-brand);text-decoration:none;font-weight:600;font-size:12px">Detail</a></td></tr>'
+    }).join('')}
+document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');currentFilter=this.dataset.filter;renderDeliveries()
+})});
+document.addEventListener('DOMContentLoaded',loadDeliveries);
+document.addEventListener('warungio:auth_ready',loadDeliveries);
+</script>
+</body>
+</html>

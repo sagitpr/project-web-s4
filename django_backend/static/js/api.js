@@ -953,6 +953,143 @@
     return ok({ suggestions: all, products: matchedProducts, stores: matchedStores, categories: matchedCategories });
   };
 
+  // ── Finance / Keuangan Mock ──
+  var mockFinanceData = {
+    total_balance: 56780000,
+    available_balance: 45200000,
+    held_balance: 8200000,
+    total_income: 23500000,
+    total_withdrawals: 8900000,
+    total_pending_withdrawals: 3360000,
+    total_transactions: 47,
+    chart_data: (function() {
+      var labels = [];
+      var income = [];
+      var withdrawal = [];
+      for (var t = 0; t < 30; t++) {
+        var dd = new Date();
+        dd.setDate(dd.getDate() - (29 - t));
+        labels.push(dd.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+        income.push(500000 + Math.floor(Math.random() * 2500000));
+        withdrawal.push(Math.floor(Math.random() * 500000));
+      }
+      return { labels: labels, income: income, withdrawal: withdrawal };
+    })(),
+  };
+
+  var mockTransactions = [];
+  (function() {
+    var types = ['income', 'income', 'income', 'withdrawal', 'income', 'held', 'income'];
+    var descs = ['Pembayaran pesanan WRG-20260601-001', 'Pembayaran pesanan WRG-20260603-002', 'Pendapatan penjualan sayuran', 'Penarikan saldo ke BCA', 'Pembayaran pesanan WRG-20260605-004', 'Dana ditahan pesanan WRG-20260604-003', 'Pembayaran pesanan WRG-20260606-005'];
+    var cats = ['Penjualan Produk', 'Penjualan Produk', 'Penjualan Produk', 'Transfer Bank', 'Penjualan Produk', 'Penjualan Tertahan', 'Penjualan Produk'];
+    var methods = ['GoPay', 'Bank Transfer', 'QRIS', 'BCA', 'COD', 'GoPay', 'Bank Transfer'];
+    for (var i = 0; i < 47; i++) {
+      var dd = new Date();
+      dd.setDate(dd.getDate() - Math.floor(Math.random() * 30));
+      var t = types[i % types.length];
+      mockTransactions.push({
+        id: i + 1,
+        date: dd.toISOString().slice(0, 10),
+        type: t,
+        type_label: t === 'income' ? 'Pemasukan' : t === 'withdrawal' ? 'Penarikan' : 'Saldo Tertahan',
+        description: descs[i % descs.length] + ' #' + (i + 1),
+        category: cats[i % cats.length],
+        method: methods[i % methods.length],
+        amount: 5000 + Math.floor(Math.random() * 495000),
+        status: Math.random() > 0.15 ? 'success' : 'pending',
+        status_label: Math.random() > 0.15 ? 'Berhasil' : 'Menunggu',
+      });
+    }
+    // Sort by date descending
+    mockTransactions.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  })();
+
+  var mockBankAccounts = [
+    { id: 1, bank_name: 'BCA', bank_code: '014', account_number: '1234567890', account_holder: 'Budi Santoso', is_primary: true, created_at: '2026-01-15T08:00:00Z' },
+    { id: 2, bank_name: 'Mandiri', bank_code: '008', account_number: '9876543210', account_holder: 'Budi Santoso', is_primary: false, created_at: '2026-03-01T08:00:00Z' },
+  ];
+
+  MockHandlers.getFinanceSummary = function (days) {
+    var data = JSON.parse(JSON.stringify(mockFinanceData));
+    return ok(data);
+  };
+
+  MockHandlers.getFinanceTransactions = function (params) {
+    params = params || {};
+    var list = mockTransactions.slice();
+    var page = Number(params.page) || 1;
+    var pageSize = Number(params.page_size) || 15;
+    var total = list.length;
+    var start = (page - 1) * pageSize;
+    var pageData = list.slice(start, start + pageSize);
+    return ok({
+      count: total,
+      results: pageData,
+      next: start + pageSize < total ? page + 1 : null,
+      previous: page > 1 ? page - 1 : null,
+    });
+  };
+
+  MockHandlers.getBankAccounts = function () {
+    return ok({ count: mockBankAccounts.length, results: mockBankAccounts });
+  };
+
+  MockHandlers.createBankAccount = function (data) {
+    var newAcc = {
+      id: uid(),
+      bank_name: data.bank_name || 'BCA',
+      bank_code: data.bank_code || '014',
+      account_number: data.account_number || '',
+      account_holder: data.account_holder || '',
+      is_primary: data.is_primary || false,
+      created_at: new Date().toISOString(),
+    };
+    if (newAcc.is_primary) {
+      mockBankAccounts.forEach(function(a) { a.is_primary = false; });
+    }
+    mockBankAccounts.push(newAcc);
+    return ok(newAcc);
+  };
+
+  MockHandlers.updateBankAccount = function (id, data) {
+    var acc = mockBankAccounts.find(function(a) { return a.id === Number(id); });
+    if (!acc) return fail('Rekening tidak ditemukan.', 404);
+    Object.keys(data).forEach(function(k) { if (data[k] !== undefined) acc[k] = data[k]; });
+    if (data.is_primary) {
+      mockBankAccounts.forEach(function(a) {
+        if (a.id !== Number(id)) a.is_primary = false;
+      });
+    }
+    return ok(acc);
+  };
+
+  MockHandlers.deleteBankAccount = function (id) {
+    var idx = mockBankAccounts.findIndex(function(a) { return a.id === Number(id); });
+    if (idx === -1) return fail('Rekening tidak ditemukan.', 404);
+    mockBankAccounts.splice(idx, 1);
+    return ok({ message: 'Rekening berhasil dihapus.' });
+  };
+
+  MockHandlers.submitWithdrawal = function (data) {
+    var amount = Number(data.amount) || 0;
+    if (amount <= 0) return fail('Jumlah penarikan tidak valid.', 400);
+    mockFinanceData.available_balance = Math.max(0, mockFinanceData.available_balance - amount);
+    mockFinanceData.total_balance = mockFinanceData.available_balance + mockFinanceData.held_balance;
+    mockTransactions.unshift({
+      id: uid(),
+      date: new Date().toISOString().slice(0, 10),
+      type: 'withdrawal',
+      type_label: 'Penarikan',
+      description: 'Penarikan saldo ke ' + (mockBankAccounts.find(function(a) { return a.is_primary; }) || mockBankAccounts[0] || {}).bank_name || 'Bank',
+      category: 'Transfer Bank',
+      method: 'Bank Transfer',
+      amount: amount,
+      status: 'pending',
+      status_label: 'Menunggu',
+    });
+    return ok({ message: 'Permintaan penarikan berhasil dikirim.', amount: amount, remaining_balance: mockFinanceData.available_balance });
+  };
+
   // ── Stock Alerts Mock ──
   MockHandlers.getLowStockProducts = function (threshold) {
     threshold = threshold || 5;
@@ -994,6 +1131,37 @@
   });
 
   // If mock mode is active, overlay mock handlers with delay
+  // Add RealAPI methods for finance
+  RealAPI.getFinanceSummary = function (days) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/summary/');
+  };
+  RealAPI.getFinanceTransactions = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/payments/finance/transactions/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getBankAccounts = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/');
+  };
+  RealAPI.createBankAccount = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateBankAccount = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.deleteBankAccount = function (id) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/' + id + '/', { method: 'DELETE' });
+  };
+  RealAPI.submitWithdrawal = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/withdraw/', { method: 'POST', body: JSON.stringify(data) });
+  };
+
   if (window.MOCK_API) {
     Object.keys(MockHandlers).forEach(function (k) {
       var mockFn = MockHandlers[k];

@@ -34,6 +34,15 @@
     followedStores: '/buyer/followed-stores/',
     recentlyViewed: '/buyer/recently-viewed/',
     stockAlerts: '/seller/stock-alerts/',
+    // NEW dedicated pages (v2.0.0)
+    products: '/products/',
+    favorites: '/favorites/',
+    promo: '/promo/',
+    settings: '/settings/',
+    buyerProducts: '/buyer/products/',
+    buyerFavorites: '/buyer/favorites/',
+    buyerPromo: '/buyer/promo/',
+    buyerSettings: '/buyer/settings/',
   };
 
   window.WarungioRoutes.redirectByRole = function (role) {

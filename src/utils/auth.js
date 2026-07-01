@@ -62,10 +62,39 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       return !!this.getAccessToken();
     },
 
+    /** Check if user is verified (OTP completed) */
+    isVerified() {
+      const user = this.getUser();
+      return user && user.is_verified === true;
+    },
+
     /** Check if user is a seller */
     isSeller() {
       const user = this.getUser();
       return user && user.role === 'seller';
+    },
+
+    /** Redirect to OTP verification page with the user's email */
+    redirectToVerification(email) {
+      const emailToUse = email || (this.getUser() && this.getUser().email);
+      window.location.href = '/auth/otp/index.html?email=' + encodeURIComponent(emailToUse || '') + '&purpose=registration';
+    },
+
+    /**
+     * Check if the current user needs verification and redirect if so.
+     * Returns true if redirected, false if verification is not needed.
+     */
+    requireVerified() {
+      if (!this.isAuthenticated()) {
+        window.location.href = '/auth/login/index.html';
+        return true;
+      }
+      if (!this.isVerified()) {
+        const user = this.getUser();
+        this.redirectToVerification(user ? user.email : '');
+        return true;
+      }
+      return false;
     },
 
     /** Try to refresh the access token */
@@ -139,7 +168,18 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
           (data.email ? data.email.join(', ') : null) ||
           (data.password ? data.password.join(', ') : null) ||
           'Terjadi kesalahan. Silakan coba lagi.';
-        throw new Error(msg);
+        
+        // Create an error with extra fields so the caller can inspect
+        // needs_verification, email, etc. for OTP redirect logic
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        // Attach top-level fields for convenience
+        if (data.needs_verification) {
+          err.needs_verification = true;
+          err.email = data.email || '';
+        }
+        throw err;
       }
 
       return data;

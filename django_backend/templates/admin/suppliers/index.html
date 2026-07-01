@@ -1,0 +1,75 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Supplier Management - Warungio Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}"><link rel="stylesheet" href="{% static 'css/style.css' %}"><link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.admin-sidebar{width:var(--sidebar-width);background:var(--color-gray-900);color:white;position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}.admin-sidebar a{color:rgba(255,255,255,0.7);text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:500;transition:all .15s}.admin-sidebar a:hover{background:rgba(255,255,255,0.08);color:white}.admin-sidebar a.active{background:var(--color-brand);color:white;font-weight:600}.admin-sidebar .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.35);padding:16px 16px 6px;font-weight:600}.admin-main{flex:1;margin-left:var(--sidebar-width);min-height:100vh;background:var(--color-surface-secondary)}.admin-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:12px 24px;position:sticky;top:0;z-index:50}.admin-content{padding:24px}.card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);overflow:hidden}.card-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-weight:700;font-size:15px}.card-body{padding:20px}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}.stat-box{padding:20px;background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border)}.stat-box .num{font-size:28px;font-weight:800}.stat-box .lbl{font-size:12px;color:var(--color-text-tertiary);margin-top:4px}.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;font-weight:600;color:var(--color-text-secondary);cursor:pointer}.filter-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}table{width:100%;border-collapse:collapse}th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);background:var(--color-gray-50);border-bottom:1px solid var(--color-border)}td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--color-border)}.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}.badge-green{background:#dcfce7;color:#16a34a}.badge-yellow{background:#fef3c7;color:#d97706}.badge-red{background:#fee2e2;color:#dc2626}.badge-gray{background:#f1f5f9;color:#64748b}@media(max-width:768px){.admin-sidebar{transform:translateX(-100%)}.admin-sidebar.open{transform:translateX(0)}.admin-main{margin-left:0}}</style>
+</head>
+<body>
+<aside class="admin-sidebar" id="adminSidebar">
+<div style="padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)"><div style="display:flex;align-items:center;gap:10px;"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:28px;filter:brightness(0)invert(1)"><div><div style="font-size:16px;font-weight:800;color:white"><span style="color:var(--color-brand);">Warung</span>io</div><small style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:.06em;text-transform:uppercase">Admin Panel</small></div></div></div>
+<nav style="flex:1;padding:12px">
+<div class="section-label">Overview</div>
+<a href="{% url 'admin-dashboard' %}"><i class="fa-solid fa-gauge-high" style="width:18px"></i> Dashboard</a>
+<a href="{% url 'admin-analytics' %}"><i class="fa-solid fa-chart-line" style="width:18px"></i> Analytics</a>
+<div class="section-label">Management</div>
+<a href="{% url 'admin-users' %}"><i class="fa-solid fa-users" style="width:18px"></i> Users</a>
+<a href="{% url 'admin-marketplace' %}"><i class="fa-solid fa-store" style="width:18px"></i> Marketplace</a>
+<a href="{% url 'admin-orders' %}"><i class="fa-solid fa-receipt" style="width:18px"></i> Orders</a>
+<a href="{% url 'admin-payments' %}"><i class="fa-solid fa-credit-card" style="width:18px"></i> Payments</a>
+<a href="{% url 'admin-suppliers' %}" class="active"><i class="fa-solid fa-truck-field" style="width:18px"></i> Suppliers</a>
+<div class="section-label">System</div>
+<a href="{% url 'admin-loyalty' %}"><i class="fa-solid fa-gem" style="width:18px"></i> Loyalty</a>
+<a href="{% url 'admin-monitoring' %}"><i class="fa-solid fa-desktop" style="width:18px"></i> Monitoring</a>
+<a href="{% url 'admin-ai' %}"><i class="fa-solid fa-brain" style="width:18px"></i> AI Management</a>
+<a href="{% url 'admin-security' %}"><i class="fa-solid fa-shield-halved" style="width:18px"></i> Security</a>
+<a href="{% url 'admin-audit' %}"><i class="fa-solid fa-clipboard-list" style="width:18px"></i> Audit Logs</a>
+<a href="{% url 'admin-refunds' %}"><i class="fa-solid fa-rotate-left" style="width:18px"></i> Refunds</a>
+<a href="{% url 'admin-settings' %}"><i class="fa-solid fa-gear" style="width:18px"></i> Settings</a>
+</nav></aside>
+<div class="admin-main">
+<div class="admin-topbar"><h1 style="font-size:18px;font-weight:700;margin:0">Supplier Management</h1></div>
+<div class="admin-content">
+<div class="stats-grid">
+<div class="stat-box"><div class="num" id="totalSuppliers">0</div><div class="lbl">Total Supplier</div></div>
+<div class="stat-box"><div class="num" id="activeSuppliers" style="color:#16a34a">0</div><div class="lbl">Active</div></div>
+<div class="stat-box"><div class="num" id="pendingSuppliers" style="color:#d97706">0</div><div class="lbl">Pending</div></div>
+<div class="stat-box"><div class="num" id="verifiedSuppliers" style="color:#2563eb">0</div><div class="lbl">Verified</div></div>
+</div>
+<div class="card"><div class="card-header"><i class="fa-solid fa-truck-field" style="margin-right:8px;color:var(--color-brand)"></i> Daftar Supplier</div>
+<div class="card-body">
+<div class="filter-bar">
+<input type="text" id="searchInput" placeholder="Cari supplier..." style="flex:1;padding:8px 12px;border:1px solid var(--color-border);border-radius:var(--radius-lg);font-size:13px;min-height:36px">
+</div>
+<div style="overflow-x:auto"><table><thead><tr><th>Nama Supplier</th><th>Kategori</th><th>Kota</th><th>Status</th><th>Verifikasi</th><th>Rating</th><th>Produk</th><th>Aksi</th></tr></thead><tbody id="supplierTableBody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--color-text-tertiary)">Memuat data...</td></tr></tbody></table></div>
+</div></div></div></div>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+let allSuppliers=[];
+async function loadSuppliers(){try{
+    const api=await WarungioAPI||{get:()=>Promise.resolve({results:[]})};
+    const data=await api.get('/api/suppliers/');
+    allSuppliers=data.results||data||[];
+    renderSuppliers(allSuppliers);
+}catch(e){document.getElementById('supplierTableBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--color-text-tertiary)">Gagal memuat data: '+e.message+'</td></tr>'}}
+function renderSuppliers(list){
+    document.getElementById('totalSuppliers').textContent=list.length;
+    document.getElementById('activeSuppliers').textContent=list.filter(s=>s.status==='active').length;
+    document.getElementById('pendingSuppliers').textContent=list.filter(s=>s.status==='pending').length;
+    document.getElementById('verifiedSuppliers').textContent=list.filter(s=>s.verification_level==='verified'||s.verification_level==='premium').length;
+    if(!list.length){document.getElementById('supplierTableBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--color-text-tertiary)">Belum ada supplier.</td></tr>';return}
+    document.getElementById('supplierTableBody').innerHTML=list.map(s=>{
+        const statusClass=s.status==='active'?'badge-green':s.status==='pending'?'badge-yellow':s.status==='blacklisted'?'badge-red':'badge-gray';
+        const verifClass=s.verification_level==='verified'||s.verification_level==='premium'?'badge-green':'badge-yellow';
+        return '<tr><td><strong>'+s.supplier_name+'</strong></td><td>'+(s.category?.name||'-')+'</td><td>'+(s.city||'-')+'</td><td><span class="badge '+statusClass+'">'+s.status+'</span></td><td><span class="badge '+verifClass+'">'+s.verification_level+'</span></td><td>'+(s.rating_avg||'0')+'</td><td>'+(s.total_products_supplied||0)+'</td><td><a href="/admin-panel/suppliers/'+s.id+'/" style="color:var(--color-brand);text-decoration:none;font-weight:600;font-size:12px">Detail</a></td></tr>'
+    }).join('')}
+document.getElementById('searchInput')?.addEventListener('input',function(){
+    const q=this.value.toLowerCase();
+    renderSuppliers(allSuppliers.filter(s=>s.supplier_name?.toLowerCase().includes(q)||s.city?.toLowerCase().includes(q)))
+});
+document.addEventListener('DOMContentLoaded',loadSuppliers);
+</script>
+</body>
+</html>

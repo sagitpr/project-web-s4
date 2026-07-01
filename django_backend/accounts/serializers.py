@@ -1,46 +1,10 @@
-import re
 from django.contrib.auth import authenticate
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 
 from .models import User, OTP
-
-
-def normalize_indonesian_phone(value):
-    if not value:
-        raise serializers.ValidationError("Nomor HP wajib diisi.")
-    
-    # Strip spaces, hyphens, parentheses, and non-digit/non-plus characters
-    cleaned = re.sub(r'[^\d+]', '', str(value))
-    
-    # Try parsing
-    if cleaned.startswith('+62'):
-        if not cleaned.startswith('+628'):
-            raise serializers.ValidationError("Nomor HP harus menggunakan prefix provider Indonesia (08xx / 628xx / +628xx).")
-        digits_only = cleaned[1:]
-        if not (11 <= len(digits_only) <= 14):
-            raise serializers.ValidationError("Panjang nomor HP tidak valid (harus 10-13 digit).")
-        return cleaned
-        
-    elif cleaned.startswith('62'):
-        if not cleaned.startswith('628'):
-            raise serializers.ValidationError("Nomor HP harus menggunakan prefix provider Indonesia (08xx / 628xx / +628xx).")
-        if not (11 <= len(cleaned) <= 14):
-            raise serializers.ValidationError("Panjang nomor HP tidak valid (harus 10-13 digit).")
-        return '+' + cleaned
-        
-    elif cleaned.startswith('08'):
-        normalized = '+62' + cleaned[1:]
-        digits_only = normalized[1:]
-        if not (11 <= len(digits_only) <= 14):
-            raise serializers.ValidationError("Panjang nomor HP tidak valid (harus 10-13 digit).")
-        return normalized
-        
-    else:
-        raise serializers.ValidationError("Format nomor HP tidak valid. Gunakan format seperti 08xxxxxxxxxx atau +628xxxxxxxxxx.")
-
+from .services.indonesia_validators import normalize_indonesian_phone
+from .services.captcha_service import verify_captcha_token
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -53,10 +17,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     phone = serializers.CharField(required=True)
 
+    captcha_token = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
     class Meta:
         model = User
         fields = ('id', 'email', 'full_name', 'phone', 'password', 'password2',
-                  'address', 'role')
+                  'address', 'role', 'captcha_token')
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -70,6 +36,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return normalized
 
     def validate(self, attrs):
+        captcha_token = attrs.pop('captcha_token', None)
+        request = self.context.get('request')
+        ip_address = request.META.get('REMOTE_ADDR') if request else None
+        if not verify_captcha_token(captcha_token, ip_address):
+            raise serializers.ValidationError({
+                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+            })
         if attrs['password'] != attrs.pop('password2'):
             raise serializers.ValidationError({
                 "password": "Password tidak cocok."
@@ -250,7 +223,16 @@ class OTPRequestSerializer(serializers.Serializer):
         default='registration'
     )
 
+    captcha_token = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
     def validate(self, attrs):
+        captcha_token = attrs.pop('captcha_token', None)
+        request = self.context.get('request')
+        ip_address = request.META.get('REMOTE_ADDR') if request else None
+        if not verify_captcha_token(captcha_token, ip_address):
+            raise serializers.ValidationError({
+                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+            })
         if not attrs.get('email') and not attrs.get('phone'):
             raise serializers.ValidationError(
                 "Email atau nomor HP harus diisi."
@@ -280,11 +262,10 @@ class TokenSerializer(serializers.Serializer):
     access = serializers.CharField()
     refresh = serializers.CharField()
     user = UserSerializer()
-
-
 class ForgotPasswordSerializer(serializers.Serializer):
     """Forgot password request serializer."""
     email = serializers.EmailField(required=True)
+    captcha_token = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     def validate_email(self, value):
         if not User.objects.filter(email=value).exists():
@@ -292,6 +273,16 @@ class ForgotPasswordSerializer(serializers.Serializer):
                 "Email tidak ditemukan dalam sistem."
             )
         return value
+
+    def validate(self, attrs):
+        captcha_token = attrs.pop('captcha_token', None)
+        request = self.context.get('request')
+        ip_address = request.META.get('REMOTE_ADDR') if request else None
+        if not verify_captcha_token(captcha_token, ip_address):
+            raise serializers.ValidationError({
+                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+            })
+        return attrs
 
 
 class ResetPasswordSerializer(serializers.Serializer):

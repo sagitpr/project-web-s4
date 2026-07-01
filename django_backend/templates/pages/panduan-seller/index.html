@@ -1,0 +1,21 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Panduan Seller - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9}.page-content{max-width:800px;margin:0 auto;padding:40px 24px}.section-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--color-border);margin-bottom:20px}.section-card h3{font-size:16px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:10px}.section-card h3 i{color:var(--color-brand)}.section-card p{font-size:14px;color:var(--color-text-secondary);line-height:1.6;margin:0}.section-card a{color:var(--color-brand);text-decoration:none;font-weight:600}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+</head>
+<body>
+<div class="page-hero"><h1>Panduan Seller</h1><p>Mulai dan kembangkan bisnis Anda di Warungio.</p></div>
+<div class="page-content">
+<div class="section-card"><h3><i class="fa-solid fa-store"></i> Mendaftar sebagai Mitra</h3><p>Daftarkan toko Anda melalui halaman <a href="{% url 'page-register-mitra' %}">Registrasi Mitra</a>. Lengkapi profil toko, alamat, dan informasi bank untuk pencairan dana. Setelah terverifikasi, Anda bisa mulai menjual produk.</p></div>
+<div class="section-card"><h3><i class="fa-solid fa-box"></i> Mengelola Produk</h3><p>Tambahkan produk dengan foto menarik, deskripsi jelas, dan harga kompetitif. Gunakan fitur Smart Scan AI untuk analisis kualitas produk. Pantau stok dan atur promo melalui <a href="{% url 'page-seller-products' %}">halaman Produk</a>.</p></div>
+<div class="section-card"><h3><i class="fa-solid fa-receipt"></i> Memproses Pesanan</h3><p>Terima notifikasi saat ada pesanan baru. Konfirmasi, proses, dan siapkan pesanan untuk dijemput kurir. Lacak status pengiriman melalui <a href="{% url 'page-seller-orders' %}">halaman Pesanan</a>.</p></div>
+<div class="section-card"><h3><i class="fa-solid fa-wallet"></i> Pencairan Dana</h3><p>Pantau pendapatan Anda di <a href="{% url 'page-seller-keuangan' %}">halaman Keuangan</a>. Ajukan penarikan dana kapan saja dengan minimal Rp 10.000. Dana akan ditransfer ke rekening bank terdaftar.</p></div>
+<div class="section-card"><h3><i class="fa-solid fa-star"></i> Tips Sukses</h3><p>Jaga kualitas produk,respon cepat terhadap pesanan, berikan layanan ramah, dan manfaatkan fitur promo untuk meningkatkan penjualan. Kunjungi <a href="{% url 'page-tips-sukses' %}">Tips Sukses</a> untuk strategi lebih lanjut.</p></div>
+</div>
+<div class="footer-links"><a href="{% url 'page-komunitas' %}">Komunitas Seller</a><a href="{% url 'page-tips-sukses' %}">Tips Sukses</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+</body>
+</html>

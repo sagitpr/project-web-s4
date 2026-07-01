@@ -3,8 +3,7 @@
  * Manages cart: list items, update qty, remove items, checkout flow.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/?redirect=' + encodeURIComponent(window.location.pathname);
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

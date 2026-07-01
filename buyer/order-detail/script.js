@@ -3,8 +3,7 @@
  * Loads order detail via API and renders timeline, items, delivery & payment info.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '../../auth/login/index.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

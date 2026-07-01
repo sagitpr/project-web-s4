@@ -18,13 +18,13 @@
           <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
           <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
           <a href="{% url 'page-seller-orders' %}" class="active"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-          <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
-          <a href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
-          <a href="#"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+          <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+          <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+          <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
           <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
-          <a href="#"><i class="fa-solid fa-star"></i> Ulasan</a>
+          <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
           <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
-          <a href="#"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+          <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
           <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
         </nav>
       </aside>

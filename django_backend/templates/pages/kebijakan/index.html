@@ -1,0 +1,37 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kebijakan & Ketentuan - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9}.page-content{max-width:800px;margin:0 auto;padding:40px 24px}.page-content h2{font-size:20px;font-weight:700;color:var(--color-text-primary);margin:32px 0 12px}.page-content h3{font-size:16px;font-weight:600;color:var(--color-text-primary);margin:24px 0 8px}.page-content p{font-size:14px;line-height:1.7;color:var(--color-text-secondary);margin:0 0 12px}.page-content ul{padding-left:20px}.page-content li{font-size:14px;color:var(--color-text-secondary);margin-bottom:6px}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+</head>
+<body>
+<div class="page-hero"><h1>Kebijakan & Ketentuan</h1><p>Syarat dan ketentuan penggunaan platform Warungio.</p></div>
+<div class="page-content">
+<h2>1. Ketentuan Umum</h2>
+<p>Dengan mengakses dan menggunakan platform Warungio, Anda menyetujui untuk terikat oleh syarat dan ketentuan yang tercantum di halaman ini. Jika Anda tidak setuju dengan bagian manapun dari ketentuan ini, Anda tidak diperkenankan menggunakan platform kami.</p>
+
+<h2>2. Penggunaan Platform</h2>
+<p>Warungio menyediakan platform marketplace hyperlocal yang menghubungkan pembeli dengan warung dan UMKM lokal. Kami tidak bertanggung jawab atas kualitas produk yang dijual oleh penjual, namun kami berkomitmen untuk memfasilitasi penyelesaian sengketa secara adil.</p>
+
+<h2>3. Hak dan Kewajiban Pengguna</h2>
+<h3>Pembeli</h3>
+<ul><li>Wajib memberikan informasi yang akurat saat mendaftar</li><li>Bertanggung jawab atas keamanan akun dan password</li><li>Wajib menyelesaikan pembayaran sesuai metode yang dipilih</li><li>Tidak diperbolehkan melakukan penyalahgunaan sistem promo</li></ul>
+<h3>Penjual (Mitra)</h3>
+<ul><li>Wajib menyediakan produk yang sesuai dengan deskripsi</li><li>Bertanggung jawab atas kualitas dan keamanan produk</li><li>Wajib memproses pesanan tepat waktu</li><li>Tidak diperbolehkan menjual produk ilegal atau terlarang</li></ul>
+
+<h2>4. Kebijakan Privasi</h2>
+<p>Kami melindungi data pribadi Anda sesuai dengan peraturan perlindungan data yang berlaku. Data Anda digunakan untuk:<br>- Memproses pesanan dan pembayaran<br>- Mengirim notifikasi terkait pesanan<br>- Meningkatkan kualitas layanan<br>- Keperluan analitik internal</p>
+
+<h2>5. Pembayaran & Refund</h2>
+<p>Pembayaran diproses melalui Midtrans dengan keamanan enkripsi SSL. Kebijakan refund mengikuti ketentuan yang berlaku di platform Warungio, dimana pembeli berhak mengajukan refund dalam waktu 7 hari setelah pesanan diterima dengan alasan yang valid.</p>
+
+<h2>6. Perubahan Ketentuan</h2>
+<p>Kami berhak untuk mengubah ketentuan ini sewaktu-waktu. Perubahan akan diinformasikan melalui platform atau email terdaftar.</p>
+<p style="margin-top:32px;font-size:12px;color:var(--color-text-tertiary)">Terakhir diperbarui: 28 Juni 2026</p>
+</div>
+<div class="footer-links"><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="{% url 'page-kontak-kami' %}">Kontak Kami</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+</body>
+</html>

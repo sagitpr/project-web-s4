@@ -13,6 +13,7 @@ from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from rest_framework import status, generics, permissions, views
@@ -43,8 +44,8 @@ def notify_payment_update(user_id, order_id, order_number, payment_status, messa
                     'message': message,
                 }
             )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error('WebSocket broadcast error (payment update): %s', str(e))
 
 
 class PaymentMethodListView(generics.ListAPIView):
@@ -58,6 +59,7 @@ class CreateSnapTransactionView(views.APIView):
     """Create Midtrans Snap transaction."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         serializer = MidtransSnapRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -153,7 +155,7 @@ class CreateSnapTransactionView(views.APIView):
 
             snap_response = response.json()
 
-            # Create or update payment record
+            # Create or update payment record (inside transaction)
             payment, created = Payment.objects.get_or_create(
                 order=order,
                 defaults={
@@ -202,6 +204,7 @@ class MidtransNotificationView(views.APIView):
     """Handle Midtrans payment notification callback."""
     permission_classes = (permissions.AllowAny,)
 
+    @transaction.atomic
     def post(self, request):
         serializer = MidtransNotificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -403,6 +406,7 @@ class WalletTopUpView(views.APIView):
     """Initiate a Midtrans Snap transaction for wallet top-up."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         amount = request.data.get('amount')
         if not amount:
@@ -751,6 +755,7 @@ class WithdrawBalanceView(views.APIView):
     """Initiate withdrawal process for the seller."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
+    @transaction.atomic
     def post(self, request):
         store = request.user.store
         amount_val = request.data.get('amount')
@@ -788,7 +793,7 @@ class WithdrawBalanceView(views.APIView):
         if amount > available_balance:
             return Response({'error': 'Saldo tidak mencukupi untuk melakukan penarikan.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 3. Create a Payment withdrawal record
+        # 3. Create a Payment withdrawal record (inside transaction)
         withdrawal_tx = Payment.objects.create(
             order=None,
             user=request.user,

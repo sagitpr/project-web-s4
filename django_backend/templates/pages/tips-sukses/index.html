@@ -1,0 +1,23 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tips Sukses - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9}.page-content{max-width:800px;margin:0 auto;padding:40px 24px}.tip-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--color-border);margin-bottom:16px;display:flex;gap:16px;align-items:flex-start}.tip-num{width:40px;height:40px;border-radius:50%;background:var(--color-brand);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}.tip-content h3{font-size:15px;font-weight:700;margin:0 0 6px}.tip-content p{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin:0}.cta-section{text-align:center;background:var(--color-surface-secondary);border-radius:var(--radius-lg);padding:32px;margin:32px 0}.cta-section h2{font-size:20px;font-weight:700;margin:0 0 8px}.cta-section p{font-size:14px;color:var(--color-text-secondary);margin:0 0 16px}.cta-btn{display:inline-block;padding:12px 24px;background:var(--color-brand);color:white;border-radius:var(--radius-lg);text-decoration:none;font-weight:600}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+</head>
+<body>
+<div class="page-hero"><h1>Tips Sukses untuk Seller</h1><p>Strategi dan praktik terbaik untuk mengembangkan bisnis Anda di Warungio.</p></div>
+<div class="page-content">
+<div class="tip-card"><div class="tip-num">1</div><div class="tip-content"><h3>Foto Produk Berkualitas</h3><p>Gunakan foto produk dengan pencahayaan baik dan latar bersih. Produk dengan foto menarik meningkatkan konversi hingga 40%. Gunakan fitur Smart Scan AI untuk analisis kualitas.</p></div></div>
+<div class="tip-card"><div class="tip-num">2</div><div class="tip-content"><h3>Respons Cepat</h3><p>Balas chat dan pesanan dengan cepat. Seller dengan respons time di bawah 5 menit mendapatkan 2x lebih banyak pesanan. Aktifkan notifikasi push untuk selalu update.</p></div></div>
+<div class="tip-card"><div class="tip-num">3</div><div class="tip-content"><h3>Kelola Stok dengan Bijak</h3><p>Gunakan fitur Low Stock Alert dan Stock Prediction untuk mengelola inventaris. Jangan sampai kehabisan stok produk favorit pelanggan.</p></div></div>
+<div class="tip-card"><div class="tip-num">4</div><div class="tip-content"><h3>Manfaatkan Promo</h3><p>Buat promo menarik seperti diskon khusus, gratis ongkir, atau bundle produk. Pantau performa promo di dashboard Analytics.</p></div></div>
+<div class="tip-card"><div class="tip-num">5</div><div class="tip-content"><h3>Jaga Reputasi</h3><p>Berikan pelayanan terbaik dan tanggapi ulasan pelanggan dengan profesional. Rating tinggi meningkatkan kepercayaan pembeli baru.</p></div></div>
+<div class="tip-card"><div class="tip-num">6</div><div class="tip-content"><h3>Analisis Data Bisnis</h3><p>Gunakan Seller Report dan AI Business Insight untuk memahami tren penjualan, produk terlaris, dan perilaku pelanggan. Data-driven decision = bisnis yang berkembang.</p></div></div>
+<div class="cta-section"><h2>Siap Memulai?</h2><p>Gabung dengan ribuan mitra Warungio dan kembangkan bisnis Anda.</p><a class="cta-btn" href="{% url 'page-register-mitra' %}">Daftar Jadi Mitra</a></div>
+</div>
+<div class="footer-links"><a href="{% url 'page-panduan-seller' %}">Panduan Seller</a><a href="{% url 'page-komunitas' %}">Komunitas</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+</body>
+</html>

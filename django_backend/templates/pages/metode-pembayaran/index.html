@@ -1,0 +1,25 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Metode Pembayaran - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9;max-width:600px;margin:0 auto}.pay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:900px;margin:0 auto;padding:40px 24px}.pay-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--color-border)}.pay-card i{font-size:28px;color:var(--color-brand);margin-bottom:12px}.pay-card h3{font-size:16px;font-weight:700;margin:0 0 8px}.pay-card p{font-size:13px;color:var(--color-text-tertiary);margin:0}.section-title{text-align:center;font-size:22px;font-weight:700;margin:40px 0 0;padding:0 24px}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+</head>
+<body>
+<div class="page-hero"><h1>Metode Pembayaran</h1><p>Warungio mendukung berbagai metode pembayaran untuk kemudahan Anda.</p></div>
+<h2 class="section-title">Pembayaran Online (Midtrans)</h2>
+<div class="pay-grid">
+<div class="pay-card"><i class="fa-solid fa-building-columns"></i><h3>Transfer Bank</h3><p>BCA, BNI, BRI, Mandiri, CIMB, Permata. Bayar melalui ATM, mobile banking, atau internet banking.</p></div>
+<div class="pay-card"><i class="fa-solid fa-mobile-screen-button"></i><h3>E-Wallet</h3><p>GoPay, OVO, DANA, ShopeePay, LinkAja. Bayar instan dari dompet digital favorit Anda.</p></div>
+<div class="pay-card"><i class="fa-solid fa-qrcode"></i><h3>QRIS</h3><p>Bayar menggunakan QRIS dari aplikasi pembayaran manapun. Scan code QR dan konfirmasi pembayaran.</p></div>
+<div class="pay-card"><i class="fa-solid fa-credit-card"></i><h3>Kartu Kredit/Debit</h3><p>Visa, Mastercard, JCB. Pembayaran aman dengan enkripsi 3D Secure.</p></div>
+</div>
+<h2 class="section-title">Pembayaran Langsung</h2>
+<div class="pay-grid" style="padding-top:0">
+<div class="pay-card"><i class="fa-solid fa-money-bill-wave"></i><h3>COD (Cash on Delivery)</h3><p>Bayar tunai saat pesanan diterima. Tersedia di wilayah tertentu dengan biaya tambahan.</p></div>
+</div>
+<div class="footer-links"><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="{% url 'page-cara-belanja' %}">Cara Belanja</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+</body>
+</html>

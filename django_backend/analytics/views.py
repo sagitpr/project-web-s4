@@ -20,7 +20,8 @@ from .serializers import (
 from orders.models import Order, OrderItem
 from products.models import Product, Review
 from stores.models import StoreFollower
-from accounts.permissions import IsSeller
+from accounts.permissions import IsSeller, IsAdmin
+from .services.ai_insight import AISellerInsightService
 
 
 class DashboardSummaryView(views.APIView):
@@ -345,6 +346,163 @@ class RealTimeAnalyticsView(views.APIView):
                 store=store, order_status='pending'
             ).count(),
         })
+
+# =============================================================================
+# AI BUSINESS INSIGHT
+# =============================================================================
+
+
+class AIBusinessInsightView(views.APIView):
+    """Get AI-powered business insights for seller.
+
+    Returns comprehensive analysis including:
+    - Sales insights with growth trends
+    - Product performance analysis
+    - Customer behavior insights
+    - Inventory health check
+    - Actionable recommendations
+
+    Flutter-ready JSON response.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        days = int(request.query_params.get('days', 30))
+        service = AISellerInsightService(request.user.store)
+        insights = service.get_comprehensive_insights(days)
+        return Response(insights)
+
+
+class AIQuickInsightView(views.APIView):
+    """Get quick dashboard insights."""
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        service = AISellerInsightService(request.user.store)
+        insights = service.get_quick_insights()
+        return Response(insights)
+
+
+class AIGrowthTipsView(views.APIView):
+    """Get AI-generated growth tips."""
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        service = AISellerInsightService(request.user.store)
+        tips = service.get_growth_tips()
+        return Response(tips)
+
+
+class AdminAIBusinessOverviewView(views.APIView):
+    """Admin overview of all AI business insights."""
+    permission_classes = (permissions.IsAuthenticated, IsAdmin)
+
+    def get(self, request):
+        from stores.models import Store
+        stores = Store.objects.filter(status='active')[:10]
+        all_insights = []
+        for store in stores:
+            try:
+                service = AISellerInsightService(store)
+                quick = service.get_quick_insights()
+                all_insights.append({
+                    'store_id': store.id,
+                    'store_name': store.store_name,
+                    'quick_stats': quick.get('quick_stats', {}),
+                    'alerts': quick.get('alerts', []),
+                })
+            except Exception:
+                pass
+        return Response({
+            'stores_analyzed': len(all_insights),
+            'insights': all_insights,
+        })
+
+
+class MockAIBusinessInsightView(views.APIView):
+    """Mock AI insight data for Flutter development."""
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        return Response({
+            'store_id': 1,
+            'store_name': 'Warung Makmur',
+            'period': {
+                'start': (timezone.now()-timedelta(days=30)).strftime('%Y-%m-%d'),
+                'end': timezone.now().strftime('%Y-%m-%d'),
+                'days': 30,
+            },
+            'sales_insights': {
+                'total_sales': 15750000,
+                'total_orders': 234,
+                'avg_daily_sales': 525000,
+                'avg_daily_orders': 7.8,
+                'sales_growth_percent': 23.5,
+                'order_growth_percent': 18.2,
+                'avg_order_value': 67307,
+                'best_day': {'date': '2026-06-15', 'total_sales': 1250000, 'order_count': 18},
+                'summary': 'Total penjualan Rp 15.750.000 dari 234 pesanan. Naik 23.5% 📈',
+            },
+            'product_insights': {
+                'top_products': [
+                    {'product_name': 'Beras Premium 5kg', 'total_sold': 45, 'total_revenue': 2925000},
+                    {'product_name': 'Minyak Goreng 1L', 'total_sold': 38, 'total_revenue': 684000},
+                    {'product_name': 'Gula Pasir 1kg', 'total_sold': 32, 'total_revenue': 480000},
+                ],
+                'total_active_products': 48,
+                'products_with_sales': 35,
+                'summary': '35 dari 48 produk aktif memiliki penjualan.',
+            },
+            'customer_insights': {
+                'total_customers': 87,
+                'new_customers': 34,
+                'returning_customers': 53,
+                'return_rate': 60.9,
+                'total_followers': 156,
+                'new_followers': 22,
+                'summary': '34 pelanggan baru, 53 pelanggan kembali (61% retensi).',
+            },
+            'inventory_insights': {
+                'total_products': 48,
+                'total_stock_units': 1250,
+                'total_stock_value': 85000000,
+                'healthy_stock': 33,
+                'low_stock': 12,
+                'out_of_stock': 3,
+                'stock_health_percent': 68.8,
+                'summary': '33 produk stok sehat, 12 stok rendah, 3 habis.',
+            },
+            'growth_insights': {
+                'sales_growth_percent': 23.5,
+                'order_growth_percent': 18.2,
+                'growth_stage': 'growing',
+                'growth_label': 'Berkembang',
+                'summary': 'Berkembang: Penjualan naik 24% dibanding periode sebelumnya.',
+            },
+            'recommendations': [
+                {
+                    'type': 'inventory',
+                    'priority': 'high',
+                    'title': 'Stok Menipis',
+                    'description': '12 produk memiliki stok rendah.',
+                    'action': 'Restock sekarang',
+                    'action_url': '/seller/products/',
+                },
+                {
+                    'type': 'customer',
+                    'priority': 'medium',
+                    'title': 'Ulasan Belum Dibalas',
+                    'description': '8 ulasan pelanggan belum mendapat balasan.',
+                    'action': 'Lihat ulasan',
+                    'action_url': '/seller/ulasan/',
+                },
+            ],
+            'meta': {
+                'api_version': '1.0.0',
+                'source': 'mock',
+            },
+        })
+
 
 class SellerReportView(views.APIView):
     """Live seller report built from existing order, product, review, and analytics records."""

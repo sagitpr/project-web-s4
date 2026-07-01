@@ -4,9 +4,7 @@
  * Actions: Proses -> Siap Diambil -> Kurir Jemput (modal) -> Dalam Perjalanan (modal) -> Selesai
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '../../auth/login/index.html?redirect=' +
-      encodeURIComponent(window.location.pathname + window.location.search);
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

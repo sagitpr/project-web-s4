@@ -1,0 +1,59 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Poin Saya - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.app-shell{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-width);background:var(--color-surface);border-right:1px solid var(--color-border);position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}.brand-panel{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--color-border)}.brand-logo{height:28px}.brand-panel h1{font-size:16px;font-weight:800;margin:0}.brand-panel p{font-size:10px;color:var(--color-text-tertiary);margin:0;text-transform:uppercase}.nav-menu{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}.nav-menu a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:600;color:var(--color-text-secondary);text-decoration:none}.nav-menu a:hover{background:var(--color-gray-100)}.nav-menu a.active{background:var(--color-brand);color:white}.content-area{flex:1;margin-left:var(--sidebar-width);padding:24px}.points-header{background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:var(--radius-xl);padding:32px;color:white;margin-bottom:24px;position:relative;overflow:hidden}.points-header::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:200%;background:rgba(255,255,255,.05);border-radius:50%}.points-header .label{font-size:13px;opacity:.9;position:relative}.points-header .points{font-size:42px;font-weight:800;margin:4px 0;position:relative}.points-header .tier{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.2);font-size:12px;font-weight:700;position:relative;backdrop-filter:blur(10px)}.tier-progress{margin-top:12px;position:relative}.tier-progress-bar{height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}.tier-progress-fill{height:100%;background:white;border-radius:3px;transition:width 1s}.tier-progress-label{font-size:11px;opacity:.8;margin-top:4px;display:flex;justify-content:space-between}.card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);overflow:hidden;margin-bottom:20px}.card-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-weight:700;font-size:15px}.card-body{padding:20px}.reward-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}.reward-item{padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-lg);text-align:center}.reward-item .cost{font-size:20px;font-weight:800;color:var(--color-brand);margin:8px 0}.reward-item .name{font-size:13px;font-weight:600;margin:0 0 4px}.reward-item .desc{font-size:11px;color:var(--color-text-tertiary);margin:0 0 12px}.reward-item .btn-redeem{padding:6px 16px;border-radius:var(--radius-lg);background:var(--color-brand);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer}.reward-item .btn-redeem:hover{opacity:.9}.tx-list .tx-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--color-gray-100);font-size:13px}.tx-list .tx-item:last-child{border-bottom:none}.tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}.tx-earn{background:#d1fae5;color:#16a34a}.tx-redeem{background:#fee2e2;color:#dc2626}.tx-pts{font-weight:700;margin-left:auto}@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.content-area{margin-left:0;padding:16px}.points-header .points{font-size:32px}}</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar"><div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo"><div><h1>Warungio</h1><p>Pembeli</p></div></div>
+<nav class="nav-menu"><a href="{% url 'page-buyer-dashboard' %}"><i class="fa-solid fa-house"></i> Beranda</a><a href="{% url 'page-buyer-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a><a href="{% url 'page-buyer-cart' %}"><i class="fa-solid fa-cart-shopping"></i> Keranjang</a><a href="{% url 'page-buyer-loyalty' %}" class="active"><i class="fa-solid fa-gem"></i> Poin Saya</a><a href="{% url 'page-wallet' %}"><i class="fa-solid fa-wallet"></i> Dompet</a><a href="{% url 'page-favorites' %}"><i class="fa-solid fa-heart"></i> Favorit</a><a href="{% url 'page-buyer-profile' %}"><i class="fa-solid fa-user"></i> Profil</a></nav></aside>
+<main class="content-area">
+<div class="points-header">
+<div class="label">Saldo Poin Loyalty</div>
+<div class="points" id="pointsBalance">0</div>
+<div><span class="tier" id="userTier">Bronze</span></div>
+<div class="tier-progress"><div class="tier-progress-bar"><div class="tier-progress-fill" id="tierProgressFill" style="width:0%"></div></div><div class="tier-progress-label"><span id="currentTierLabel">Bronze</span><span id="nextTierLabel">Silver</span></div></div>
+</div>
+<div class="card"><div class="card-header"><i class="fa-solid fa-gift" style="color:var(--color-brand);margin-right:8px"></i> Reward Tersedia</div>
+<div class="card-body"><div class="reward-grid" id="rewardGrid"><p style="font-size:13px;color:var(--color-text-tertiary);grid-column:1/-1">Memuat reward...</p></div></div></div>
+<div class="card"><div class="card-header"><i class="fa-solid fa-clock-rotate-left" style="color:var(--color-brand);margin-right:8px"></i> Riwayat Poin</div>
+<div class="card-body"><div class="tx-list" id="txList"><p style="font-size:13px;color:var(--color-text-tertiary)">Memuat riwayat...</p></div></div></div>
+</main></div>
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+async function loadLoyalty(){
+    const api=WarungioAPI||{get:()=>Promise.resolve({})};
+    try{
+        const account=await api.get('/api/loyalty/account/');
+        const pts=account.points_balance||0;document.getElementById('pointsBalance').textContent=pts.toLocaleString('id-ID')+' pts';
+        const tier=account.tier?.name||'Bronze';document.getElementById('userTier').textContent=tier;
+        const tiers=['Bronze','Silver','Gold','Platinum','Diamond'];const tierIdx=tiers.indexOf(tier);
+        if(tierIdx<tiers.length-1){document.getElementById('nextTierLabel').textContent=tiers[tierIdx+1];document.getElementById('tierProgressFill').style.width=((tierIdx+1)/tiers.length*100)+'%'}
+        else{document.getElementById('nextTierLabel').textContent='MAX';document.getElementById('tierProgressFill').style.width='100%'}
+    }catch(e){document.getElementById('pointsBalance').textContent='0 pts';}
+    try{
+        const rewards=await api.get('/api/loyalty/rewards/');
+        const items=rewards.results||rewards||[];
+        if(items.length){document.getElementById('rewardGrid').innerHTML=items.map(r=>
+            '<div class="reward-item"><div class="name">'+r.name+'</div><div class="cost">'+r.points_required+' pts</div><div class="desc">'+(r.description||'')+'</div><button class="btn-redeem" onclick="redeem('+r.id+')">Tukar</button></div>'
+        ).join('')}
+    }catch(e){}
+    try{
+        const txs=await api.get('/api/loyalty/transactions/recent/');
+        const list=txs.results||txs||[];
+        if(list.length){document.getElementById('txList').innerHTML=list.map(t=>
+            '<div class="tx-item"><div class="tx-icon '+(t.transaction_type==='earn'||t.transaction_type==='bonus'||t.transaction_type==='referral'?'tx-earn':'tx-redeem')+'"><i class="fa-solid '+(t.transaction_type==='earn'?'fa-plus':t.transaction_type==='bonus'?'fa-gift':t.transaction_type==='referral'?'fa-user-plus':'fa-minus')+'"></i></div><div><div>'+(t.description||'Transaksi')+'</div><small style="color:var(--color-text-tertiary)">'+(t.created_at?new Date(t.created_at).toLocaleDateString('id-ID'):'')+'</small></div><div class="tx-pts" style="color:'+(t.points>0?'#16a34a':'#dc2626')+'">'+(t.points>0?'+':'')+t.points+' pts</div></div>'
+        ).join('')}
+    }catch(e){}}
+function redeem(id){alert('Fitur redeem reward akan segera tersedia. Reward ID: '+id)}
+document.addEventListener('DOMContentLoaded',loadLoyalty);
+document.addEventListener('warungio:auth_ready',loadLoyalty);
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Apple Authentication Callback - Warungio</title>
+    <script>
+        // Capture hash fragment and redirect back to main login page with the fragment intact
+        if (window.location.hash) {
+            window.location.href = '/auth/login/' + window.location.hash;
+        } else {
+            // Fallback: check query params and convert to hash or redirect to login
+            const search = window.location.search;
+            if (search) {
+                window.location.href = '/auth/login/' + search.replace('?', '#');
+            } else {
+                window.location.href = '/auth/login/';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div style="font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #1f2937;">
+        <div style="border: 4px solid #f3f3f3; border-top: 4px solid #7c3aed; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+        <p style="font-size: 15px; font-weight: 500;">Menghubungkan dengan Apple...</p>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>

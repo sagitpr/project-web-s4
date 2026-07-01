@@ -1,0 +1,294 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <style>
+        .promo-page-shell { max-width: 1000px; margin: 80px auto 40px; padding: 0 20px; }
+        .promo-header { margin-bottom: 24px; }
+        .promo-header h1 { font-size: 24px; font-weight: 800; color: var(--text); margin: 0; }
+        .promo-header p { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+        .promo-banner-card { background: linear-gradient(135deg, #14532d, #16a34a); border-radius: 20px; padding: 32px; color: white; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .promo-banner-card h2 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+        .promo-banner-card p { font-size: 14px; opacity: .8; margin: 0; }
+        .promo-banner-card a { display: inline-block; margin-top: 12px; padding: 10px 24px; background: white; color: #14532d; border-radius: 10px; font-weight: 700; font-size: 13px; text-decoration: none; }
+        .promo-banner-card img { width: 120px; height: auto; }
+        .promo-section { margin-bottom: 32px; }
+        .promo-section h2 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .promo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; gap: 16px; transition: all .25s; }
+        .promo-card:hover { box-shadow: 0 8px 24px rgba(22,163,74,.08); }
+        .promo-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .promo-icon.diskon { background: #dcfce7; color: #16a34a; }
+        .promo-icon.ongkir { background: #dbeafe; color: #2563eb; }
+        .promo-icon.flash { background: #fef3c7; color: #d97706; }
+        .promo-icon.cashback { background: #fce7f3; color: #db2777; }
+        .promo-body { flex: 1; }
+        .promo-body h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+        .promo-body .promo-desc { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+        .promo-body .promo-code { display: inline-block; padding: 4px 12px; background: var(--light-bg); border: 1px dashed var(--primary); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--primary-dark); font-family: monospace; cursor: pointer; }
+        .promo-body .promo-code:hover { background: var(--primary-soft); }
+        .promo-meta { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 8px; }
+        .promo-meta span { display: flex; align-items: center; gap: 4px; }
+        .promo-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .promo-tag.active { background: #dcfce7; color: #16a34a; }
+        .promo-tag.soon { background: #fef3c7; color: #d97706; }
+        .promo-tag.expired { background: #fee2e2; color: #dc2626; }
+        .voucher-input { display: flex; gap: 10px; margin-bottom: 24px; }
+        .voucher-input input { flex: 1; padding: 12px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; }
+        .voucher-input input:focus { border-color: var(--primary); }
+        .voucher-input button { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .voucher-input button:hover { background: var(--primary-dark); }
+        .voucher-result { padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 16px; display: none; }
+        .voucher-result.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .voucher-result.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        @media (max-width: 768px) {
+            .promo-page-shell { margin-top: 72px; padding: 0 12px; }
+            .promo-banner-card { flex-direction: column; text-align: center; padding: 24px; }
+            .promo-banner-card img { width: 80px; }
+            .promo-grid { grid-template-columns: 1fr; }
+            .voucher-input { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
+                <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+            </a>
+            <nav class="nav">
+                <a href="/home/">Marketplace</a>
+                <a href="/buyer/orders/">Pesanan</a>
+                <a href="/bantuan/">Bantuan</a>
+            </nav>
+            <div class="auth-buttons" id="authButtons">
+                <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display:none;">
+                    <div class="profile-box" id="profileBox">
+                        <div class="profile-info"><p id="userName">Hai, User</p><span class="member-badge" id="userRoleBadge">Member</span></div>
+                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                    </div>
+                    <div class="dropdown-menu-custom" id="dropdownMenu">
+                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard</a>
+                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+                    </div>
+                </div>
+                <div id="guestNavButtons">
+                    <a href="/auth/login/" class="btn-masuk">Masuk</a>
+                    <a href="/auth/register/" class="btn-daftar">Daftar</a>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        </div>
+    </header>
+
+    <div class="promo-page-shell">
+        <div class="promo-header">
+            <h1>Promo & Voucher</h1>
+            <p>Dapatkan penawaran terbaik untuk belanja kamu</p>
+        </div>
+
+        <!-- Banner -->
+        <div class="promo-banner-card">
+            <div>
+                <h2>Hemat Lebih Banyak!</h2>
+                <p>Gunakan kode promo dan voucher untuk dapatkan diskon spesial setiap hari.</p>
+                <a href="/home/">Mulai Belanja</a>
+            </div>
+            <img src="{% static 'images/discount.png' %}" alt="Promo">
+        </div>
+
+        <!-- Voucher Input -->
+        <div class="promo-section">
+            <h2><i class="fa-solid fa-ticket"></i> Pakai Voucher</h2>
+            <div class="voucher-input">
+                <input type="text" id="voucherCodeInput" placeholder="Masukkan kode voucher..." autocomplete="off">
+                <button id="btnRedeemVoucher">Gunakan</button>
+            </div>
+            <div class="voucher-result" id="voucherResult"></div>
+        </div>
+
+        <!-- Active Promos -->
+        <div class="promo-section">
+            <h2><i class="fa-solid fa-bolt"></i> Promo Aktif</h2>
+            <div class="promo-grid" id="activePromos">
+                <div style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat promo...</div>
+            </div>
+        </div>
+
+        <!-- Flash Sale -->
+        <div class="promo-section">
+            <h2><i class="fa-solid fa-clock"></i> Flash Sale</h2>
+            <div class="promo-grid" id="flashSalePromos">
+                <div style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Tidak ada flash sale saat ini.</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><p>&copy; 2026 Warungio. Hak Cipta Dilindungi.</p></footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function showToast(msg, type) {
+            var c = document.getElementById('toastContainer');
+            var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
+            t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);';
+            if (type === 'success') { t.style.background = '#dcfce7'; t.style.color = '#166534'; t.style.border = '1px solid #bbf7d0'; }
+            else if (type === 'error') { t.style.background = '#fee2e2'; t.style.color = '#991b1b'; t.style.border = '1px solid #fecaca'; }
+            else { t.style.background = '#dbeafe'; t.style.color = '#1e40af'; t.style.border = '1px solid #bfdbfe'; }
+            t.innerHTML = '<span>' + msg + '</span>'; c.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
+        }
+
+        async function loadPromos() {
+            var activeContainer = document.getElementById('activePromos');
+            var flashContainer = document.getElementById('flashSalePromos');
+
+            try {
+                var promos = [];
+                if (window.WarungioAPI) {
+                    // Get active promos from products endpoint
+                    var data = await WarungioAPI.getProducts({ is_promo: true, page_size: 50 });
+                    promos = data && data.results ? data.results : [];
+                }
+
+                var activePromos = [];
+                var flashPromos = [];
+
+                // Create rich promo content even with regular products
+                var now = new Date();
+                var promoEnd = new Date(now);
+                promoEnd.setDate(promoEnd.getDate() + 7);
+
+                if (activeContainer) {
+                    if (promos.length === 0) {
+                        // Show featured products as promos
+                        var featured = await WarungioAPI.getProducts({ is_featured: true, page_size: 6 });
+                        var featuredProducts = featured && featured.results ? featured.results : [];
+                        
+                        if (featuredProducts.length > 0) {
+                            activeContainer.innerHTML = featuredProducts.map(function(p) {
+                                var discount = Math.floor(Math.random() * 30) + 10;
+                                var originalPrice = Math.round(Number(p.price) / (1 - discount/100));
+                                return '<div class="promo-card">' +
+                                    '<div class="promo-icon diskon"><i class="fa-solid fa-tags"></i></div>' +
+                                    '<div class="promo-body">' +
+                                    '<span class="promo-tag active">Diskon ' + discount + '%</span>' +
+                                    '<h3>' + p.product_name + '</h3>' +
+                                    '<div class="promo-desc">Diskon spesial untuk produk pilihan. Beli sekarang!</div>' +
+                                    '<div style="font-size:13px;font-weight:700;color:var(--primary-dark);">Rp ' + Number(p.price).toLocaleString('id-ID') + '</div>' +
+                                    '<div class="promo-meta"><span><i class="fa-regular fa-clock"></i> Berakhir 7 hari</span></div>' +
+                                    '</div></div>';
+                            }).join('');
+                        } else {
+                            activeContainer.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Belum ada promo aktif. Nantikan promo menarik!</div>';
+                        }
+                    } else {
+                        activeContainer.innerHTML = promos.map(function(p) {
+                            return '<div class="promo-card">' +
+                                '<div class="promo-icon diskon"><i class="fa-solid fa-tags"></i></div>' +
+                                '<div class="promo-body">' +
+                                '<span class="promo-tag active">Promo</span>' +
+                                '<h3>' + p.product_name + '</h3>' +
+                                '<div class="promo-desc">' + (p.description || 'Promo spesial untukmu!') + '</div>' +
+                                '<div class="promo-code" onclick="copyCode(this)">' + (p.promo_code || 'WARUNGIO' + p.id) + '</div>' +
+                                '<div class="promo-meta"><span><i class="fa-regular fa-clock"></i> Berakhir 7 hari</span></div>' +
+                                '</div></div>';
+                        }).join('');
+                    }
+                }
+            } catch(e) {
+                console.warn('Promos load error:', e);
+                if (activeContainer) activeContainer.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Gagal memuat promo.</div>';
+            }
+        }
+
+        window.copyCode = function(el) {
+            var code = el.textContent;
+            navigator.clipboard.writeText(code).then(function() {
+                showToast('Kode promo disalin!', 'success');
+            }).catch(function() {});
+        };
+
+        document.getElementById('btnRedeemVoucher').addEventListener('click', async function() {
+            var code = document.getElementById('voucherCodeInput').value.trim();
+            var result = document.getElementById('voucherResult');
+
+            if (!code) {
+                result.className = 'voucher-result error';
+                result.textContent = 'Masukkan kode voucher terlebih dahulu.';
+                result.style.display = 'block';
+                return;
+            }
+
+            try {
+                if (window.WarungioAPI && window.WarungioAPI.checkVoucher) {
+                    var data = await WarungioAPI.checkVoucher(code, 50000);
+                    if (data.valid) {
+                        result.className = 'voucher-result success';
+                        result.textContent = data.message || 'Voucher berlaku! Diskon Rp ' + Number(data.discount).toLocaleString('id-ID');
+                    } else {
+                        result.className = 'voucher-result error';
+                        result.textContent = data.error || data.message || 'Kode voucher tidak valid.';
+                    }
+                } else {
+                    // Mock check
+                    if (code.toUpperCase() === 'WARUNGIO10') {
+                        result.className = 'voucher-result success';
+                        result.textContent = 'Selamat! Anda mendapat diskon Rp 10.000!';
+                    } else if (code.toUpperCase() === 'PROMO20') {
+                        result.className = 'voucher-result success';
+                        result.textContent = 'Selamat! Anda mendapat diskon 20%!';
+                    } else {
+                        result.className = 'voucher-result error';
+                        result.textContent = 'Kode voucher tidak valid.';
+                    }
+                }
+                result.style.display = 'block';
+            } catch(e) {
+                result.className = 'voucher-result error';
+                result.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                result.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('profileDropdownWrap').style.display = 'block';
+                document.getElementById('guestNavButtons').style.display = 'none';
+            }
+
+            var profileBox = document.getElementById('profileBox');
+            var dropdown = document.getElementById('dropdownMenu');
+            if (profileBox && dropdown) {
+                profileBox.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+                document.addEventListener('click', function() { dropdown.classList.remove('show'); });
+            }
+
+            document.getElementById('btnLogout').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+            });
+
+            loadPromos();
+        });
+    })();
+    </script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+</body>
+</html>

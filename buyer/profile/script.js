@@ -60,8 +60,7 @@
   if (saveProfileBtn) saveProfileBtn.dataset.originalText = 'Simpan Perubahan';
   if (changePwdBtn) changePwdBtn.dataset.originalText = 'Ubah Kata Sandi';
 
-  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
 

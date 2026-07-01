@@ -47,6 +47,12 @@ urlpatterns = [
     # Search Suggestions (autocomplete)
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search-suggestions'),
     
+    # Smart Stock Prediction (seller)
+    path('stock-prediction/', views.StockPredictionView.as_view(), name='stock-prediction'),
+    path('store-forecast/', views.StoreStockForecastView.as_view(), name='store-forecast'),
+    path('reorder-suggestions/', views.ReorderSuggestionView.as_view(), name='reorder-suggestions'),
+    path('mock/stock-prediction/', views.MockStockPredictionView.as_view(), name='mock-stock-prediction'),
+
     # Low Stock Alerts (seller)
     path('low-stock/', views.LowStockProductsView.as_view(), name='low-stock-products'),
 

@@ -1,0 +1,12 @@
+# =============================================================================
+# Warungio Marketplace — Docker Compose PRODUCTION Override
+# Enables SSL termination via nginx/warungio.conf
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+  nginx:
+    # Override the dev nginx config with the production SSL config
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/warungio.conf:/etc/nginx/conf.d/warungio.conf:ro

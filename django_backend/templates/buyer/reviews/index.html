@@ -1,0 +1,60 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Penilaian Saya - Warungio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<style>.app-shell{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-width);background:var(--color-surface);border-right:1px solid var(--color-border);position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}.brand-panel{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--color-border)}.brand-logo{height:28px}.brand-panel h1{font-size:16px;font-weight:800;margin:0}.brand-panel p{font-size:10px;color:var(--color-text-tertiary);margin:0;text-transform:uppercase}.nav-menu{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}.nav-menu a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:600;color:var(--color-text-secondary);text-decoration:none}.nav-menu a:hover{background:var(--color-gray-100)}.nav-menu a.active{background:var(--color-brand);color:white}.content-area{flex:1;margin-left:var(--sidebar-width);padding:24px}.page-header h1{font-size:24px;font-weight:800;margin:0}.page-subtitle{font-size:14px;color:var(--color-text-tertiary);margin:4px 0 24px}.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px}.stat-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:20px;border:1px solid var(--color-border);text-align:center}.stat-card .num{font-size:28px;font-weight:800}.stat-card .lbl{font-size:12px;color:var(--color-text-tertiary);margin-top:4px}.stars{color:#f59e0b;font-size:14px}.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}.filter-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}.review-card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);padding:16px 20px;margin-bottom:12px;display:flex;gap:16px;align-items:flex-start}.review-card .product-img{width:56px;height:56px;border-radius:var(--radius-md);background:var(--color-gray-100);object-fit:cover;flex-shrink:0}.review-card .review-body{flex:1;min-width:0}.review-card .product-name{font-weight:700;font-size:14px;margin:0 0 4px}.review-card .review-date{font-size:11px;color:var(--color-text-tertiary);margin:0 0 6px}.review-card .review-text{font-size:13px;color:var(--color-text-secondary);margin:6px 0 0;line-height:1.5}.review-card .review-actions{display:flex;gap:8px;margin-top:8px}.review-card .review-actions a{font-size:12px;color:var(--color-brand);text-decoration:none;font-weight:600}.empty-state{text-align:center;padding:60px 24px}.empty-state i{font-size:48px;color:var(--color-gray-300);margin-bottom:16px}.empty-state p{font-size:15px;color:var(--color-text-tertiary)}@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.content-area{margin-left:0;padding:16px}}</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar"><div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo"><div><h1>Warungio</h1><p>Pembeli</p></div></div>
+<nav class="nav-menu"><a href="{% url 'page-buyer-dashboard' %}"><i class="fa-solid fa-house"></i> Beranda</a><a href="{% url 'page-buyer-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a><a href="{% url 'page-buyer-cart' %}"><i class="fa-solid fa-cart-shopping"></i> Keranjang</a><a href="{% url 'page-buyer-loyalty' %}"><i class="fa-solid fa-gem"></i> Poin Saya</a><a href="{% url 'page-wallet' %}"><i class="fa-solid fa-wallet"></i> Dompet</a><a href="{% url 'page-buyer-reviews' %}" class="active"><i class="fa-solid fa-star"></i> Penilaian</a><a href="{% url 'page-buyer-profile' %}"><i class="fa-solid fa-user"></i> Profil</a></nav></aside>
+<main class="content-area">
+<div class="page-header"><h1>Penilaian Saya</h1><p class="page-subtitle">Lihat dan kelola ulasan produk yang pernah Anda tulis.</p></div>
+<div class="stats-row">
+<div class="stat-card"><div class="num" id="totalReviews">0</div><div class="lbl">Total Ulasan</div></div>
+<div class="stat-card"><div class="num" id="avgRating" style="color:#f59e0b">0.0</div><div class="lbl"><span class="stars">&#9733;</span> Rata-rata</div></div>
+<div class="stat-card"><div class="num" id="withPhotos" style="color:#16a34a">0</div><div class="lbl">Dengan Foto</div></div>
+</div>
+<div class="filter-bar">
+<button class="filter-btn active" data-filter="all">Semua</button>
+<button class="filter-btn" data-filter="5">5 &#9733;</button>
+<button class="filter-btn" data-filter="4">4 &#9733;</button>
+<button class="filter-btn" data-filter="3">3 &#9733;</button>
+<button class="filter-btn" data-filter="2">2 &#9733;</button>
+<button class="filter-btn" data-filter="1">1 &#9733;</button>
+</div>
+<div id="reviewList"><div class="empty-state"><i class="fa-solid fa-star"></i><p>Belum ada ulasan. Belanja sekarang dan berikan penilaian!</p></div></div>
+</main></div>
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+let allReviews=[];let currentFilter='all';
+async function loadReviews(){try{
+    const api=WarungioAPI||{get:()=>Promise.resolve({results:[]})};
+    const data=await api.get('/api/products/reviews/mine/');
+    allReviews=data.results||data||[];
+    renderReviews();
+}catch(e){document.getElementById('reviewList').innerHTML='<div class=\"empty-state\"><i class=\"fa-solid fa-star\"></i><p>Gagal memuat ulasan.</p></div>'}}
+function renderReviews(){
+    const filtered=currentFilter==='all'?allReviews:allReviews.filter(r=>r.rating===parseInt(currentFilter));
+    document.getElementById('totalReviews').textContent=allReviews.length;
+    const avg=allReviews.length?allReviews.reduce((s,r)=>s+(r.rating||0),0)/allReviews.length:0;
+    document.getElementById('avgRating').textContent=avg.toFixed(1);
+    document.getElementById('withPhotos').textContent=allReviews.filter(r=>r.photos?.length).length;
+    if(!filtered.length){document.getElementById('reviewList').innerHTML='<div class=\"empty-state\"><i class=\"fa-solid fa-star\"></i><p>'+(currentFilter==='all'?'Belum ada ulasan.':'Tidak ada ulasan dengan rating ini.')+'</p></div>';return}
+    document.getElementById('reviewList').innerHTML=filtered.map(r=>{
+        const stars=Array(5).fill(0).map((_,i)=>'&#9733;').join('');
+        const filled=Array(r.rating||0).fill(0).map((_,i)=>'&#9733;').join('');
+        const empty=Array(5-(r.rating||0)).fill(0).map((_,i)=>'&#9734;').join('');
+        return '<div class=\"review-card\"><img class=\"product-img\" src=\"'+(r.product?.product_photo_url||'{% static "images/placeholder.png" %}')+'\" alt=\"\" onerror=\"this.src=\\'{% static \"images/placeholder.png\" %}\\'\"><div class=\"review-body\"><p class=\"product-name\">'+(r.product?.name||'Produk')+'</p><div class=\"stars\">'+filled+empty+'</div><p class=\"review-date\">'+(r.created_at?new Date(r.created_at).toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'}):'')+'</p>'+(r.comment?'<p class=\"review-text\">'+r.comment+'</p>':'')+'<div class=\"review-actions\"><a href=\"#\" onclick=\"deleteReview('+r.id+',this)\">Hapus</a></div></div></div>'
+    }).join('')}
+function deleteReview(id,el){if(confirm('Hapus ulasan ini?')){el.closest('.review-card').remove();allReviews=allReviews.filter(r=>r.id!==id);renderReviews();showToast('Ulasan dihapus','success')}}
+document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');currentFilter=this.dataset.filter;renderReviews()})});
+document.addEventListener('DOMContentLoaded',loadReviews);
+</script>
+</body>
+</html>

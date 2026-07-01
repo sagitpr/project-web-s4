@@ -68,6 +68,12 @@ urlpatterns = [
     path(f'{api_prefix}notifications/', include('notifications.urls')),
     path(f'{api_prefix}refunds/', include('refunds.urls')),
     path(f'{api_prefix}support/', include('support.urls')),
+    # NEW API (v2.0.0)
+    path(f'{api_prefix}suppliers/', include('suppliers.urls')),
+    path(f'{api_prefix}loyalty/', include('loyalty.urls')),
+    path(f'{api_prefix}monitoring/', include('monitoring.urls')),
+    path(f'{api_prefix}regions/', include('regions.urls')),
+    path(f'{api_prefix}inventory/', include('inventory.urls')),
 
     # JWT Endpoints
     path(f'{api_prefix}token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
@@ -90,8 +96,17 @@ urlpatterns += [
     path('auth/otp/', TemplateView.as_view(template_name='auth/otp/index.html'), name='page-otp'),
     path('auth/reset-password/', TemplateView.as_view(template_name='auth/reset-password/index.html'), name='page-reset-password'),
     path('auth/register-mitra/', TemplateView.as_view(template_name='auth/register-mitra/index.html'), name='page-register-mitra'),
+    path('social-callback/apple.html', TemplateView.as_view(template_name='auth/social-callback/apple.html'), name='page-apple-callback'),
     # Buyer pages
     path('buyer/home/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-buyer-home'),
+    # New dedicated buyer pages
+    path('buyer/products/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-buyer-products'),
+    path('buyer/favorites/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-buyer-favorites'),
+    path('buyer/promo/', login_required(TemplateView.as_view(template_name='buyer/promo/index.html')), name='page-buyer-promo'),
+    path('buyer/settings/', login_required(TemplateView.as_view(template_name='buyer/settings/index.html')), name='page-buyer-settings'),
+    path('buyer/loyalty/', login_required(TemplateView.as_view(template_name='buyer/loyalty/index.html')), name='page-buyer-loyalty'),
+    path('buyer/wallet/', login_required(TemplateView.as_view(template_name='buyer/wallet/index.html')), name='page-buyer-wallet'),
+    path('buyer/reviews/', login_required(TemplateView.as_view(template_name='buyer/reviews/index.html')), name='page-buyer-reviews'),
     path('buyer/dashboard/', login_required(TemplateView.as_view(template_name='buyer/dashboard/index.html')), name='page-buyer-dashboard'),
     path('buyer/orders/', login_required(TemplateView.as_view(template_name='buyer/orders/index.html')), name='page-buyer-orders'),
     path('buyer/cart/', login_required(TemplateView.as_view(template_name='buyer/cart/index.html')), name='page-buyer-cart'),
@@ -102,6 +117,7 @@ urlpatterns += [
     path('products/<int:pk>/', login_required(TemplateView.as_view(template_name='buyer/product-detail/index.html')), name='page-product-detail'),
     # Seller pages (all protected with login_required)
     path('seller/dashboard/', login_required(TemplateView.as_view(template_name='seller/dashboard/index.html')), name='page-seller-dashboard'),
+    path('seller/pengiriman/', login_required(TemplateView.as_view(template_name='seller/pengiriman/index.html')), name='page-seller-pengiriman'),
     path('seller/products/', login_required(TemplateView.as_view(template_name='seller/products/index.html')), name='page-seller-products'),
     path('seller/orders/', login_required(TemplateView.as_view(template_name='seller/orders/index.html')), name='page-seller-orders'),
     path('seller/order-detail/', login_required(TemplateView.as_view(template_name='seller/order-detail/index.html')), name='page-seller-order-detail'),
@@ -112,14 +128,16 @@ urlpatterns += [
     path('seller/pengaturan/', login_required(TemplateView.as_view(template_name='seller/pengaturan/index.html')), name='page-seller-pengaturan'),
     path('seller/promo-diskon/', login_required(TemplateView.as_view(template_name='seller/promo-diskon/index.html')), name='page-seller-promo-diskon'),
     path('seller/ulasan/', login_required(TemplateView.as_view(template_name='seller/ulasan/index.html')), name='page-seller-ulasan'),
+    path('seller/supplier/', login_required(TemplateView.as_view(template_name='seller/supplier/index.html')), name='page-seller-supplier'),
+    path('seller/stock-prediction/', login_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html')), name='page-seller-stock-prediction'),
     # Home / Landing
     path('home/', TemplateView.as_view(template_name='home/index.html'), name='page-landing'),
-    path('products/', TemplateView.as_view(template_name='home/index.html'), name='page-products'),
-    path('orders/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-orders'),
-    path('promo/', TemplateView.as_view(template_name='home/index.html'), name='page-promo'),
-    path('favorites/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-favorites'),
-    path('wallet/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-wallet'),
-    path('settings/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-settings'),
+    path('products/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-products'),
+    path('orders/', login_required(TemplateView.as_view(template_name='buyer/orders/index.html')), name='page-orders'),
+    path('promo/', login_required(TemplateView.as_view(template_name='buyer/promo/index.html')), name='page-promo'),
+    path('favorites/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-favorites'),
+    path('wallet/', login_required(TemplateView.as_view(template_name='buyer/wallet/index.html')), name='page-wallet'),
+    path('settings/', login_required(TemplateView.as_view(template_name='buyer/settings/index.html')), name='page-settings'),
     path('buyer/chat/', login_required(TemplateView.as_view(template_name='buyer/chat/index.html')), name='page-buyer-chat'),
     # Buyer Refund pages
     path('buyer/refunds/', login_required(TemplateView.as_view(template_name='buyer/refunds/index.html')), name='page-buyer-refunds'),
@@ -140,6 +158,9 @@ urlpatterns += [
     path('admin-panel/orders/', staff(TemplateView.as_view(template_name='admin/orders/index.html')), name='admin-orders'),
     path('admin-panel/payments/', staff(TemplateView.as_view(template_name='admin/payments/index.html')), name='admin-payments'),
     path('admin-panel/notifications/', staff(TemplateView.as_view(template_name='admin/notifications/index.html')), name='admin-notifications'),
+    path('admin-panel/suppliers/', staff(TemplateView.as_view(template_name='admin/suppliers/index.html')), name='admin-suppliers'),
+    path('admin-panel/loyalty/', staff(TemplateView.as_view(template_name='admin/loyalty/index.html')), name='admin-loyalty'),
+    path('admin-panel/monitoring/', staff(TemplateView.as_view(template_name='admin/monitoring/index.html')), name='admin-monitoring'),
     path('admin-panel/ai/', staff(TemplateView.as_view(template_name='admin/ai/index.html')), name='admin-ai'),
     path('admin-panel/analytics/', staff(TemplateView.as_view(template_name='admin/analytics/index.html')), name='admin-analytics'),
     path('admin-panel/reports/', staff(TemplateView.as_view(template_name='admin/reports/index.html')), name='admin-reports'),
@@ -151,8 +172,34 @@ urlpatterns += [
 ]
 
 
+# Info Pages (public)
+urlpatterns += [
+    path('info/tentang-kami/', TemplateView.as_view(template_name='pages/tentang-kami/index.html'), name='page-tentang-kami'),
+    path('info/cara-belanja/', TemplateView.as_view(template_name='pages/cara-belanja/index.html'), name='page-cara-belanja'),
+    path('info/metode-pembayaran/', TemplateView.as_view(template_name='pages/metode-pembayaran/index.html'), name='page-metode-pembayaran'),
+    path('info/kontak-kami/', TemplateView.as_view(template_name='pages/kontak-kami/index.html'), name='page-kontak-kami'),
+    path('info/kebijakan/', TemplateView.as_view(template_name='pages/kebijakan/index.html'), name='page-kebijakan'),
+    path('info/blog/', TemplateView.as_view(template_name='pages/blog/index.html'), name='page-blog'),
+    path('info/panduan-seller/', TemplateView.as_view(template_name='pages/panduan-seller/index.html'), name='page-panduan-seller'),
+    path('info/komunitas/', TemplateView.as_view(template_name='pages/komunitas/index.html'), name='page-komunitas'),
+    path('info/tips-sukses/', TemplateView.as_view(template_name='pages/tips-sukses/index.html'), name='page-tips-sukses'),
+]
+
 # Bantuan / Help Center (via support app page_urls)
 urlpatterns += [path('bantuan/', include('support.page_urls'))]
+
+# Alias: page-bantuan → redirect to the actual bantuan page
+from django.views.generic import RedirectView
+urlpatterns += [
+    path('info/bantuan/', RedirectView.as_view(url='/bantuan/', permanent=True), name='page-bantuan'),
+]
+
+# Extra routes for feature pages
+urlpatterns += [
+    path('buyer/followed-stores/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-buyer-followed-stores'),
+    path('buyer/recently-viewed/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-buyer-recently-viewed'),
+    path('seller/stock-alerts/', login_required(TemplateView.as_view(template_name='seller/products/index.html')), name='page-seller-stock-alerts'),
+]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

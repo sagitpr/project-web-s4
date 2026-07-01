@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorit Saya - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <style>
+        .fav-page-shell { max-width: 1000px; margin: 80px auto 40px; padding: 0 20px; }
+        .fav-header { margin-bottom: 24px; }
+        .fav-header h1 { font-size: 24px; font-weight: 800; color: var(--text); margin: 0; display: flex; align-items: center; gap: 10px; }
+        .fav-header h1 i { color: #ef4444; }
+        .fav-header p { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+        .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .fav-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all .25s; display: flex; }
+        .fav-card:hover { box-shadow: 0 8px 24px rgba(22,163,74,.08); }
+        .fav-img { width: 120px; min-height: 120px; object-fit: cover; flex-shrink: 0; }
+        .fav-body { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; }
+        .fav-store { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+        .fav-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .fav-price { font-size: 16px; font-weight: 800; color: var(--primary-dark); }
+        .fav-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .fav-actions button { padding: 6px 14px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .btn-add-cart-fav { background: var(--primary); color: white; }
+        .btn-add-cart-fav:hover { background: var(--primary-dark); }
+        .btn-remove-fav { background: #fee2e2; color: #dc2626; }
+        .btn-remove-fav:hover { background: #fecaca; }
+        .empty-fav { text-align: center; padding: 80px 20px; }
+        .empty-fav i { font-size: 64px; color: var(--gray-300); margin-bottom: 16px; display: block; }
+        .empty-fav h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .empty-fav p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+        .empty-fav a { display: inline-block; padding: 12px 28px; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; text-decoration: none; }
+        .loading-state { text-align: center; padding: 60px 20px; }
+        .loading-state i { font-size: 32px; color: var(--primary); }
+        @media (max-width: 768px) {
+            .fav-page-shell { margin-top: 72px; padding: 0 12px; }
+            .fav-card { flex-direction: column; }
+            .fav-img { width: 100%; height: 160px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
+                <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+            </a>
+            <nav class="nav">
+                <a href="/home/">Marketplace</a>
+                <a href="/buyer/orders/">Pesanan</a>
+                <a href="/bantuan/">Bantuan</a>
+            </nav>
+            <div class="auth-buttons" id="authButtons">
+                <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display:none;">
+                    <div class="profile-box" id="profileBox">
+                        <div class="profile-info"><p id="userName">Hai, User</p><span class="member-badge" id="userRoleBadge">Member</span></div>
+                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                    </div>
+                    <div class="dropdown-menu-custom" id="dropdownMenu">
+                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard</a>
+                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+                    </div>
+                </div>
+                <div id="guestNavButtons">
+                    <a href="/auth/login/" class="btn-masuk">Masuk</a>
+                    <a href="/auth/register/" class="btn-daftar">Daftar</a>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        </div>
+    </header>
+
+    <div class="fav-page-shell">
+        <div class="fav-header">
+            <h1><i class="fa-solid fa-heart"></i> Favorit Saya</h1>
+            <p>Produk yang kamu sukai, tersimpan di sini</p>
+        </div>
+
+        <div id="favGrid" class="fav-grid">
+            <div class="loading-state" id="loadingState">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p style="margin-top:12px;color:var(--muted);font-size:13px;">Memuat favorit...</p>
+            </div>
+        </div>
+
+        <div class="empty-fav" id="emptyFav" style="display:none;">
+            <i class="fa-regular fa-heart"></i>
+            <h3>Belum Ada Favorit</h3>
+            <p>Tambahkan produk favoritmu dengan menekan ikon hati pada produk.</p>
+            <a href="/home/">Mulai Belanja</a>
+        </div>
+    </div>
+
+    <footer class="footer"><p>&copy; 2026 Warungio. Hak Cipta Dilindungi.</p></footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function showToast(msg, type) {
+            var c = document.getElementById('toastContainer');
+            var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
+            t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);';
+            if (type === 'success') { t.style.background = '#dcfce7'; t.style.color = '#166534'; t.style.border = '1px solid #bbf7d0'; }
+            else if (type === 'error') { t.style.background = '#fee2e2'; t.style.color = '#991b1b'; t.style.border = '1px solid #fecaca'; }
+            else { t.style.background = '#dbeafe'; t.style.color = '#1e40af'; t.style.border = '1px solid #bfdbfe'; }
+            t.innerHTML = '<span>' + msg + '</span>'; c.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
+        }
+
+        async function loadFavorites() {
+            var grid = document.getElementById('favGrid');
+            var loading = document.getElementById('loadingState');
+            var empty = document.getElementById('emptyFav');
+
+            try {
+                if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
+                    return;
+                }
+
+                // Get favorites from API - we can use the products endpoint with favorite filter or get favorites directly
+                var data;
+                if (window.WarungioAPI) {
+                    // Try to get favorites - the API might support this via a products endpoint
+                    data = await WarungioAPI.getProducts({ is_favorite: true });
+                }
+                var favorites = data && data.results ? data.results : [];
+
+                if (loading) loading.style.display = 'none';
+
+                if (!favorites || favorites.length === 0) {
+                    if (empty) empty.style.display = 'block';
+                    if (grid) grid.innerHTML = '';
+                    return;
+                }
+
+                if (grid) {
+                    grid.innerHTML = favorites.map(function(p) {
+                        var img = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
+                        var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
+                        return '<div class="fav-card">' +
+                            '<img src="' + img + '" alt="' + p.product_name + '" class="fav-img" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
+                            '<div class="fav-body">' +
+                            (p.store_name ? '<div class="fav-store">' + p.store_name + '</div>' : '') +
+                            '<div class="fav-name">' + p.product_name + '</div>' +
+                            '<div class="fav-price">' + price + '</div>' +
+                            '<div class="fav-actions">' +
+                            '<button class="btn-add-cart-fav" onclick="addToCartFav(' + p.id + ')"><i class="fa-solid fa-cart-plus"></i> Keranjang</button>' +
+                            '<button class="btn-remove-fav" onclick="removeFav(' + p.id + ', this)"><i class="fa-solid fa-trash-can"></i> Hapus</button>' +
+                            '</div></div></div>';
+                    }).join('');
+                }
+            } catch(e) {
+                console.warn('Favorites load error:', e);
+                if (loading) loading.style.display = 'none';
+                if (empty) empty.style.display = 'block';
+            }
+        }
+
+        window.addToCartFav = async function(productId) {
+            try {
+                if (window.WarungioAPI) {
+                    await WarungioAPI.addToCart({ product: productId, qty: 1 });
+                    showToast('Ditambahkan ke keranjang!', 'success');
+                }
+            } catch(e) { showToast('Gagal menambahkan', 'error'); }
+        };
+
+        window.removeFav = async function(productId, btn) {
+            try {
+                if (window.WarungioAPI) {
+                    var result = await WarungioAPI.toggleFavorite(productId);
+                    showToast('Dihapus dari favorit', 'info');
+                    var card = btn.closest('.fav-card');
+                    if (card) card.remove();
+                    // Check if empty
+                    var grid = document.getElementById('favGrid');
+                    if (grid && grid.children.length === 0) {
+                        document.getElementById('emptyFav').style.display = 'block';
+                    }
+                }
+            } catch(e) { showToast('Gagal menghapus', 'error'); }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('profileDropdownWrap').style.display = 'block';
+                document.getElementById('guestNavButtons').style.display = 'none';
+            }
+
+            var profileBox = document.getElementById('profileBox');
+            var dropdown = document.getElementById('dropdownMenu');
+            if (profileBox && dropdown) {
+                profileBox.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+                document.addEventListener('click', function() { dropdown.classList.remove('show'); });
+            }
+
+            document.getElementById('btnLogout').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+            });
+
+            loadFavorites();
+        });
+    })();
+    </script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+</body>
+</html>

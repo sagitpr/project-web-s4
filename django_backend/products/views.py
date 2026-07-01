@@ -5,6 +5,7 @@ Products views for Warungio Marketplace.
 from rest_framework import status, generics, permissions, views, filters
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -18,6 +19,7 @@ from .serializers import (
 )
 from accounts.permissions import IsSeller, IsStoreOwner
 from .services.smart_scan import process_scan
+from .services.stock_prediction import StockPredictor, ReorderOptimizer
 from notifications.models import Notification
 
 
@@ -83,6 +85,7 @@ class ProductCreateView(generics.CreateAPIView):
     serializer_class = ProductCreateSerializer
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
+    @transaction.atomic
     def perform_create(self, serializer):
         store = self.request.user.store
         serializer.save(store=store)
@@ -98,6 +101,7 @@ class ProductManageView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Product.objects.filter(store__user=self.request.user)
 
+    @transaction.atomic
     def perform_destroy(self, instance):
         store = instance.store
         super().perform_destroy(instance)
@@ -405,6 +409,144 @@ class SearchSuggestionsView(views.APIView):
             'products': list(products),
             'stores': list(stores),
             'categories': list(categories),
+        })
+
+
+# =============================================================================
+# SMART STOCK PREDICTION
+# =============================================================================
+
+
+class StockPredictionView(views.APIView):
+    """Get stock prediction for a specific product.
+
+    Returns AI-powered demand forecast, reorder recommendations,
+    safety stock levels, and days-until-stockout analysis.
+
+    Flutter-ready JSON response with full prediction data.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        product_id = request.query_params.get('product_id')
+        days_ahead = int(request.query_params.get('days_ahead', 30))
+        history_days = int(request.query_params.get('history_days', 90))
+
+        if product_id:
+            product = Product.objects.filter(
+                id=product_id, store__user=request.user
+            ).first()
+            if not product:
+                return Response({'error': 'Produk tidak ditemukan.'},
+                              status=status.HTTP_404_NOT_FOUND)
+            predictor = StockPredictor()
+            result = predictor.predict_demand(product, days_ahead, history_days)
+            return Response(result)
+
+        # Predict for all products
+        predictor = StockPredictor(store=request.user.store)
+        result = predictor.predict_store_stock(request.user.store, days_ahead)
+        return Response(result)
+
+
+class ReorderSuggestionView(views.APIView):
+    """Get reorder suggestions for seller's store.
+
+    Uses EOQ (Economic Order Quantity) to optimize order quantities.
+    Returns prioritized list of products needing restock.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        optimizer = ReorderOptimizer(request.user.store)
+        suggestions = optimizer.get_reorder_suggestions()
+        return Response(suggestions)
+
+
+class StoreStockForecastView(views.APIView):
+    """Get comprehensive stock forecast for the entire store.
+
+    Returns:
+    - Summary metrics (total products, low stock count, etc.)
+    - Urgent reorder suggestions
+    - Demand predictions per product
+    - Trend analysis
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        days_ahead = int(request.query_params.get('days_ahead', 30))
+        predictor = StockPredictor(store=request.user.store)
+        result = predictor.predict_store_stock(request.user.store, days_ahead)
+        return Response({
+            **result,
+            'recommendations': {
+                'message': 'Gunakan endpoint /api/products/reorder-suggestions/ untuk rekomendasi pemesanan detail.',
+                'endpoint': '/api/products/reorder-suggestions/',
+            },
+            'meta': {
+                'api_version': '1.0.0',
+                'note': 'Data dummy untuk pengembangan Flutter. Gunakan produk dengan data penjualan untuk hasil akurat.',
+            },
+        })
+
+
+class MockStockPredictionView(views.APIView):
+    """Mock stock prediction data for Flutter development."""
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        from datetime import datetime, timedelta
+        today = timezone.now().date()
+        return Response({
+            'store_id': 1,
+            'store_name': 'Warung Makmur',
+            'total_products': 45,
+            'low_stock_count': 12,
+            'out_of_stock_count': 3,
+            'predictions': [
+                {
+                    'product_id': 1,
+                    'product_name': 'Beras Premium 5kg',
+                    'current_stock': 12,
+                    'unit': 'karung',
+                    'status': 'sufficient_data',
+                    'predicted_daily_demand': 3.5,
+                    'predicted_monthly_demand': 105.0,
+                    'confidence_score': 0.85,
+                    'safety_stock': 8,
+                    'reorder_point': 15,
+                    'recommended_reorder_qty': 50,
+                    'days_until_stockout': 3.4,
+                    'trend_direction': 'up',
+                    'trend_factor': 0.12,
+                    'avg_daily_sales': 3.2,
+                    'lead_time_days': 3,
+                },
+                {
+                    'product_id': 2,
+                    'product_name': 'Minyak Goreng 1L',
+                    'current_stock': 5,
+                    'unit': 'dus',
+                    'status': 'sufficient_data',
+                    'predicted_daily_demand': 8.2,
+                    'predicted_monthly_demand': 246.0,
+                    'confidence_score': 0.92,
+                    'safety_stock': 15,
+                    'reorder_point': 25,
+                    'recommended_reorder_qty': 100,
+                    'days_until_stockout': 0.6,
+                    'trend_direction': 'up',
+                    'trend_factor': 0.25,
+                    'avg_daily_sales': 7.8,
+                    'lead_time_days': 2,
+                },
+            ],
+            'generated_at': timezone.now().isoformat(),
+            'meta': {
+                'api_version': '1.0.0',
+                'source': 'mock',
+            },
         })
 
 

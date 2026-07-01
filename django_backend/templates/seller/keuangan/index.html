@@ -29,7 +29,7 @@
                 <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
                 <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
                 <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-                <a href="#"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+                <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
                 <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
                 <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
                 <a href="{% url 'page-seller-keuangan' %}" class="active"><i class="fa-solid fa-wallet"></i> Keuangan</a>
@@ -270,26 +270,26 @@
                 <div class="footer-links-grid">
                     <div>
                         <h4>Layanan</h4>
-                        <a href="#">Cara Belanja</a>
-                        <a href="#">Metode Pembayaran</a>
-                        <a href="#">Pengiriman</a>
-                        <a href="#">Promo & Diskon</a>
-                        <a href="#">Pusat Bantuan</a>
+                        <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+                        <a href="{% url 'page-metode-pembayaran' %}">Metode Pembayaran</a>
+                        <a href="{% url 'home' %}">Pengiriman</a>
+                        <a href="{% url 'page-landing' %}">Promo & Diskon</a>
+                        <a href="{% url 'page-bantuan' %}">Pusat Bantuan</a>
                     </div>
                     <div>
                         <h4>Tentang Warungio</h4>
-                        <a href="#">Tentang Kami</a>
+                        <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
                         <a href="#">Karir</a>
-                        <a href="#">Blog</a>
-                        <a href="#">Mitra Warung</a>
-                        <a href="#">Kontak Kami</a>
+                        <a href="{% url 'page-blog' %}">Blog</a>
+                        <a href="{% url 'page-landing' %}">Mitra Warung</a>
+                        <a href="{% url 'page-kontak-kami' %}">Kontak Kami</a>
                     </div>
                     <div>
                         <h4>Untuk Seller</h4>
-                        <a href="#">Panduan Seller</a>
-                        <a href="#">Tips Sukses</a>
-                        <a href="#">Komunitas Seller</a>
-                        <a href="#">Kebijakan & Ketentuan</a>
+                        <a href="{% url 'page-panduan-seller' %}">Panduan Seller</a>
+                        <a href="{% url 'page-tips-sukses' %}">Tips Sukses</a>
+                        <a href="{% url 'page-komunitas' %}">Komunitas Seller</a>
+                        <a href="{% url 'page-kebijakan' %}">Kebijakan & Ketentuan</a>
                     </div>
                     <div class="app-downloads">
                         <h4>Download Aplikasi Warungio</h4>

@@ -3,16 +3,20 @@ Accounts views for Warungio Marketplace.
 Authentication, OTP verification, profile management.
 """
 
+import logging
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 from django.conf import settings
 from django.db import transaction
 from rest_framework import status, generics, permissions, views, throttling
+
+logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, OTP, LoginAttempt
-from .services.email_service import send_otp_email
+from .services.notification_service import notification_service
+from .services.whatsapp_service import send_whatsapp_otp, _whatsapp_configured
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserUpdateSerializer, ChangePasswordSerializer,
@@ -28,34 +32,51 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
+
         # Send OTP for verification
         otp = OTP.objects.create(
             user=user,
             email=user.email,
+            phone=str(user.phone) if user.phone else None,
             purpose='registration',
             ip_address=request.META.get('REMOTE_ADDR'),
             user_agent=request.META.get('HTTP_USER_AGENT', ''),
         )
 
-        email_result = send_otp_email(
-            email=user.email,
+        # Send OTP via email (primary for email-based registration)
+        email_result = notification_service.send_otp(
+            identifier=user.email,
             otp_code=otp.otp_code,
             purpose='registration',
             user_full_name=user.full_name,
         )
 
+        # Also send OTP via WhatsApp if user provided a phone number
+        wa_result = None
+        if user.phone and _whatsapp_configured():
+            wa_result = send_whatsapp_otp(
+                phone=str(user.phone),
+                otp_code=otp.otp_code,
+                purpose='registration',
+                user_full_name=user.full_name,
+            )
+
         response_data = {
             'message': 'Registrasi berhasil. Silakan verifikasi OTP.',
+            'otp_channels': [],
         }
-        if not email_result.get('success'):
-            response_data['warning'] = email_result.get(
-                'error', 'Gagal mengirim email OTP. Silakan coba lagi nanti.'
-            )
+        if email_result.get('success'):
+            response_data['otp_channels'].append('email')
+        if wa_result and wa_result.get('success'):
+            response_data['otp_channels'].append('whatsapp')
+        
+        if not email_result.get('success') and (not wa_result or not wa_result.get('success')):
+            response_data['warning'] = 'Gagal mengirim kode verifikasi. Silakan coba lagi nanti.'
 
         if settings.DEBUG:
             response_data.update({
@@ -123,7 +144,8 @@ class LogoutView(views.APIView):
                 token.blacklist()
             logout(request)
             return Response({'message': 'Logout berhasil.'})
-        except Exception:
+        except Exception as e:
+            logger.warning('Logout error (non-blocking): %s', str(e))
             return Response({'message': 'Logout berhasil.'})
 
 
@@ -173,6 +195,7 @@ class OTPRequestView(views.APIView):
         email = serializer.validated_data.get('email')
         phone = serializer.validated_data.get('phone')
         purpose = serializer.validated_data.get('purpose')
+        user_full_name = None
         
         # Check rate limit
         recent_otps = OTP.objects.filter(
@@ -210,16 +233,28 @@ class OTPRequestView(views.APIView):
             if user:
                 user_full_name = user.full_name
 
-            email_result = send_otp_email(
-                email=email,
+            email_result = notification_service.send_otp(
+                identifier=email or phone,
                 otp_code=otp.otp_code,
                 purpose=purpose,
                 user_full_name=user_full_name,
             )
             if not email_result.get('success'):
                 response_data['warning'] = email_result.get(
-                    'error', 'Gagal mengirim email OTP. Silakan coba lagi nanti.'
+                    'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
                 )
+
+        # Send OTP via WhatsApp if phone is provided and configured
+        if phone and _whatsapp_configured():
+            wa_result = send_whatsapp_otp(
+                phone=phone,
+                otp_code=otp.otp_code,
+                purpose=purpose,
+                user_full_name=user_full_name,
+            )
+            if wa_result.get('success'):
+                response_data['otp_channels'] = ['email', 'whatsapp']
+                response_data['message'] = 'Kode OTP telah dikirim via Email dan WhatsApp.'
 
         # Return OTP in debug mode
         if settings.DEBUG:
@@ -241,14 +276,24 @@ class OTPVerifyView(views.APIView):
         otp_code = serializer.validated_data['otp_code']
         purpose = serializer.validated_data['purpose']
         
-        # Find valid OTP
-        otp = OTP.objects.filter(
-            email=email,
-            purpose=purpose,
-            is_valid=True,
-            is_used=False,
-            otp_code=otp_code,
-        ).first()
+        # Find valid OTP — support both email-based and phone-based lookup
+        otp = None
+        if email:
+            otp = OTP.objects.filter(
+                email=email,
+                purpose=purpose,
+                is_valid=True,
+                is_used=False,
+                otp_code=otp_code,
+            ).first()
+        if not otp and phone:
+            otp = OTP.objects.filter(
+                phone=phone,
+                purpose=purpose,
+                is_valid=True,
+                is_used=False,
+                otp_code=otp_code,
+            ).first()
         
         if not otp:
             return Response({
@@ -273,9 +318,12 @@ class OTPVerifyView(views.APIView):
         otp.verified_at = timezone.now()
         otp.save()
         
-        # Update user verification status
+        # Update user verification status (support both email and phone verification)
         if purpose == 'registration' or purpose == 'email_change':
-            User.objects.filter(email=email).update(is_verified=True)
+            if email:
+                User.objects.filter(email=email).update(is_verified=True)
+            elif phone:
+                User.objects.filter(phone=phone).update(is_verified=True)
         
         return Response({
             'message': 'Verifikasi OTP berhasil.',
@@ -327,16 +375,27 @@ class ResendOTPView(views.APIView):
             if user:
                 user_full_name = user.full_name
 
-            email_result = send_otp_email(
-                email=email,
+            email_result = notification_service.send_otp(
+                identifier=email,
                 otp_code=otp.otp_code,
                 purpose=purpose,
                 user_full_name=user_full_name,
             )
             if not email_result.get('success'):
                 response_data['warning'] = email_result.get(
-                    'error', 'Gagal mengirim email OTP. Silakan coba lagi nanti.'
+                    'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
                 )
+
+        # Send OTP via WhatsApp if phone is provided and configured
+        if phone and _whatsapp_configured():
+            wa_result = send_whatsapp_otp(
+                phone=phone,
+                otp_code=otp.otp_code,
+                purpose=purpose,
+            )
+            if wa_result.get('success'):
+                response_data['otp_channels'] = ['email', 'whatsapp']
+                response_data['message'] = 'Kode OTP telah dikirim ulang via Email dan WhatsApp.'
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
@@ -365,15 +424,15 @@ class ForgotPasswordView(views.APIView):
             'message': 'Kode reset password telah dikirim ke email Anda.',
         }
 
-        email_result = send_otp_email(
-            email=email,
+        email_result = notification_service.send_otp(
+            identifier=email,
             otp_code=otp.otp_code,
             purpose='password_reset',
             user_full_name=None,
         )
         if not email_result.get('success'):
             response_data['warning'] = email_result.get(
-                'error', 'Gagal mengirim email OTP. Silakan coba lagi nanti.'
+                'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
             )
 
         if settings.DEBUG:
@@ -428,14 +487,25 @@ class ResetPasswordView(views.APIView):
 
 
 class CheckAuthView(views.APIView):
-    """Check if user is authenticated and return their info."""
+    """Check if user is authenticated and return their info.
+    
+    If the user is not verified (OTP), returns needs_verification flag
+    so the frontend can redirect to the OTP verification page.
+    """
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        return Response({
+        user = request.user
+        response_data = {
             'authenticated': True,
-            'user': UserSerializer(request.user).data,
-        })
+            'user': UserSerializer(user).data,
+        }
+        
+        if not user.is_verified:
+            response_data['needs_verification'] = True
+            response_data['email'] = user.email
+        
+        return Response(response_data)
 
 
 class TokenRefreshView(views.APIView):
@@ -460,12 +530,20 @@ class TokenRefreshView(views.APIView):
 
 
 class RootView(views.APIView):
-    """Root view redirecting logged-in users based on role, rendering landing for guests."""
+    """Root view redirecting logged-in users based on role, rendering landing for guests.
+    
+    Unverified users (missing OTP) are redirected to the OTP verification page
+    instead of the dashboard, regardless of role.
+    """
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
         from django.shortcuts import redirect, render
         if request.user.is_authenticated:
+            # If user is not verified, redirect to OTP page
+            if not request.user.is_verified:
+                return redirect(f'/auth/otp/?email={request.user.email}&purpose=registration')
+            
             role = getattr(request.user, 'role', 'buyer')
             if role == 'seller':
                 return redirect('/seller/dashboard/')

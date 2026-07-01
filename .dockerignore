@@ -8,7 +8,7 @@
 .gitignore
 .gitattributes
 
-# Environment — ensure NO .env files get baked into image
+# Environment — NEVER bake .env files into the image!
 .env
 .env.*
 .env.local
@@ -19,7 +19,6 @@ django_backend/.env
 django_backend/.env.*
 .venv/
 venv/
-
 
 # Python
 __pycache__/
@@ -34,8 +33,9 @@ django_backend/db.sqlite3
 .coverage
 htmlcov/
 .pytest_cache/
+*.pyc
 
-# Node / PHP (not used in Docker)
+# Node / PHP (not used in Docker image)
 node_modules/
 vendor/
 composer.phar
@@ -44,10 +44,10 @@ package-lock.json
 yarn.lock
 
 # Large local-only directories
-mariadb-10.11.10/
-mariadb-10.11.10-winx64/
+mariadb-10.*/
+mariadb-10.*-winx64/
 
-# Static / Media (generated at runtime)
+# Static / Media (generated at runtime via collectstatic)
 django_backend/staticfiles/
 django_backend/media/
 
@@ -64,17 +64,28 @@ logs/
 Thumbs.db
 
 # Documents & backups
-analisis-spec.md
-warungio-spec.md
-CLEANUP-PLAN.md
-README.md
-nul
+*.md
+*.txt
 *.zip
 *.tar.gz
 *.rar
 *.7z
 
-# Database dumps & backups (not needed in image)
+# Database dumps (not needed in image, init.sql sourced via volume mount)
 database/backups/
 database/*.sql.gz
 database/*.sql.zip
+
+# Cloud-only configs (not needed for Docker Compose)
+cloudrun.yaml
+deploy_run.py
+deploy_output.txt
+service_describe.txt
+describe_service.py
+print_settings.py
+eval_settings.py
+
+# Tools
+tools/
+install.ps1
+powershell.bat

@@ -151,11 +151,21 @@ def send_otp_email(
 
     greeting = user_full_name or email.split('@')[0]
 
+    purpose_labels = {
+        'registration': 'pendaftaran',
+        'login': 'masuk',
+        'password_reset': 'reset password',
+        'email_change': 'ubah email',
+        'phone_change': 'ubah nomor HP',
+        'payment': 'pembayaran',
+    }
+
     # Build context for the template
     context = {
         'otp_code': otp_code,
         'expiry_minutes': expiry_minutes,
         'purpose': purpose,
+        'purpose_label': purpose_labels.get(purpose, 'verifikasi'),
         'user_full_name': user_full_name or '',
         'greeting': greeting,
         'site_name': 'Warungio',
@@ -163,8 +173,13 @@ def send_otp_email(
     }
 
     try:
-        html_message = render_to_string('email/otp_email.txt', context)
-        # The .txt template is actually HTML — strip tags for the plain-text fallback
+        # Try the .html template first, fall back to .txt for backward compat
+        try:
+            from django.template import TemplateDoesNotExist
+            html_message = render_to_string('email/otp_email.html', context)
+        except TemplateDoesNotExist:
+            html_message = render_to_string('email/otp_email.txt', context)
+        # Strip tags for the plain-text fallback
         plain_message = strip_tags(html_message)
         subject = _subject_for_purpose(purpose, otp_code)
 

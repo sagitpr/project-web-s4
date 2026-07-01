@@ -42,7 +42,13 @@ SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower()
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
 SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
 SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,.run.app,.railway.app,').split(',')
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get(
+        'DJANGO_ALLOWED_HOSTS',
+        'Warungio.web.id,www.Warungio.web.id,36.50.77.237,localhost,127.0.0.1,0.0.0.0,.run.app'
+    ).split(',')
+    if h.strip()
+]
 
 # =============================================================================
 # APPLICATION DEFINITION
@@ -80,6 +86,12 @@ LOCAL_APPS = [
     'support.apps.SupportConfig',
     'subscriptions.apps.SubscriptionsConfig',
     'refunds',
+    # NEW APPS (v2.0.0)
+    'suppliers.apps.SuppliersConfig',
+    'loyalty.apps.LoyaltyConfig',
+    'monitoring.apps.MonitoringConfig',
+    'regions.apps.RegionsConfig',
+    'inventory.apps.InventoryConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -172,7 +184,7 @@ if USE_MYSQL:
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
             'NAME': os.environ.get('DB_NAME', 'warungio_db'),
             'USER': os.environ.get('DB_USER', 'warungio'),
-            'PASSWORD': os.environ.get('DB_PASS', 'warungio_secret'),
+            'PASSWORD': os.environ.get('DB_PASS', ''),
             'HOST': '',  # Not used with Unix socket
             'PORT': '',   # Not used with Unix socket
             'OPTIONS': db_options,
@@ -189,7 +201,7 @@ if USE_MYSQL:
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
             'NAME': os.environ.get('DB_NAME', 'warungio_db'),
             'USER': os.environ.get('DB_USER', 'warungio'),
-            'PASSWORD': os.environ.get('DB_PASS', 'warungio_secret'),
+            'PASSWORD': os.environ.get('DB_PASS', ''),
             'HOST': db_host,
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': db_options,
@@ -216,57 +228,41 @@ DATABASE_IS_REQUIRED = os.environ.get('DATABASE_IS_REQUIRED', 'False').lower() =
 # =============================================================================
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
-# Check if Redis is available (with short timeout to avoid blocking tests)
-def _get_channel_layer_config():
-    try:
-        import redis as _redis
-        r = _redis.Redis.from_url(REDIS_URL, socket_timeout=2, socket_connect_timeout=2)
-        r.ping()
-        return {
-            'default': {
-                'BACKEND': 'channels_redis.core.RedisChannelLayer',
-                'CONFIG': {
-                    'hosts': [REDIS_URL],
-                    'capacity': 1500,
-                    'expiry': 60,
-                },
-            },
-        }
-    except Exception:
-        return {
-            'default': {
-                'BACKEND': 'channels.layers.InMemoryChannelLayer',
-            },
-        }
+# Force Redis Channel Layer even when Redis is not reachable at startup.
+# Set to 'true' in production to avoid InMemoryChannelLayer fallback.
+REDIS_CHANNEL_LAYER_REQUIRED = os.environ.get('REDIS_CHANNEL_LAYER_REQUIRED', 'False').lower() == 'true'
 
-CHANNEL_LAYERS = _get_channel_layer_config()
+# Channel Layer — DEFERRED init (zero import-time Redis probes).
+# Redis connectivity is checked lazily on first WebSocket access.
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# If REDIS_CHANNEL_LAYER_REQUIRED, unconditionally use Redis (no probe needed).
+# In multi-instance production, this is required for cross-instance messaging.
+if REDIS_CHANNEL_LAYER_REQUIRED:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [REDIS_URL],
+                'capacity': 1500,
+                'expiry': 60,
+            },
+        },
+    }
 
 # =============================================================================
-# CACHING
+# CACHING — DEFERRED init (zero import-time Redis probes).
 # =============================================================================
-def _get_cache_config():
-    try:
-        import redis as _redis
-        r = _redis.Redis.from_url(REDIS_URL, socket_timeout=2, socket_connect_timeout=2)
-        r.ping()
-        return {
-            'default': {
-                'BACKEND': 'django_redis.cache.RedisCache',
-                'LOCATION': REDIS_URL,
-                'OPTIONS': {
-                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                },
-            },
-        }
-    except Exception:
-        return {
-            'default': {
-                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-                'LOCATION': 'warungio-cache',
-            },
-        }
-
-CACHES = _get_cache_config()
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'warungio-cache',
+    },
+}
 
 CACHE_TTL = 60 * 15  # 15 minutes default
 
@@ -356,7 +352,8 @@ SIMPLE_JWT = {
 # =============================================================================
 # CORS
 # =============================================================================
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Never allow all origins in production — explicit CORS_ALLOWED_ORIGINS must be set.
+CORS_ALLOW_ALL_ORIGINS = DEBUG and not os.environ.get('CORS_ALLOWED_ORIGINS')
 CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:3000,http://localhost:8000,http://localhost:5000'
@@ -366,6 +363,15 @@ CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
 CORS_ALLOW_HEADERS = [
     'accept', 'authorization', 'content-type', 'x-csrftoken',
     'x-requested-with', 'x-csrf-token',
+]
+
+# CSRF Trusted Origins — must be set explicitly for production
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get(
+        'CSRF_TRUSTED_ORIGINS',
+        ''
+    ).split(',')
+    if o.strip()
 ]
 
 # =============================================================================
@@ -412,12 +418,12 @@ GOOGLE_CLIENT_ID = os.environ.get(
 )
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
-FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', 'your-facebook-app-id')
+FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '')
 FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
 
 APPLE_CLIENT_ID = os.environ.get(
     'APPLE_CLIENT_ID',
-    'com.warungio.app'
+    ''
 )
 APPLE_CLIENT_SECRET = os.environ.get('APPLE_CLIENT_SECRET', '')
 APPLE_KEY_ID = os.environ.get('APPLE_KEY_ID', '')
@@ -429,7 +435,7 @@ APPLE_PRIVATE_KEY = os.environ.get('APPLE_PRIVATE_KEY', '')
 # =============================================================================
 GOOGLE_MAPS_API_KEY = os.environ.get(
     'GOOGLE_MAPS_API_KEY',
-    'AIzaSyBXr9qOQ5DfcxG-tH288SE9tpdJ5ty7S4I'  # Default dev key
+    ''
 )
 
 # =============================================================================
@@ -450,6 +456,30 @@ OTP_EXPIRE_MINUTES = int(os.environ.get('OTP_EXPIRE_MINUTES', 15))
 OTP_COOLDOWN_SECONDS = 60  # Resend cooldown
 OTP_MAX_ATTEMPTS = 5  # Max verify attempts before lockout
 OTP_LOCKOUT_MINUTES = 60
+
+# =============================================================================
+# ACCOUNT LOCKOUT (Brute Force Protection)
+# =============================================================================
+LOGIN_MAX_ATTEMPTS = int(os.environ.get('LOGIN_MAX_ATTEMPTS', 5))
+LOGIN_LOCKOUT_MINUTES = int(os.environ.get('LOGIN_LOCKOUT_MINUTES', 15))
+
+# =============================================================================
+# WHATSAPP OTP DELIVERY
+# =============================================================================
+WHATSAPP_PROVIDER = os.environ.get('WHATSAPP_PROVIDER', '')  # fonnte, twilio, wati, direct
+WHATSAPP_API_KEY = os.environ.get('WHATSAPP_API_KEY', '')
+WHATSAPP_API_URL = os.environ.get('WHATSAPP_API_URL', '')
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get('WHATSAPP_PHONE_NUMBER_ID', '')
+WHATSAPP_BASE_URL = os.environ.get('WHATSAPP_BASE_URL', 'https://wati.com/api/v1')
+
+# Fonnte (Indonesian WhatsApp Gateway)
+# Get API key from: https://docs.fonnte.com
+# API key format: starts with 'fsk_'
+WHATSAPP_FONNTE_API_KEY = os.environ.get('WHATSAPP_FONNTE_API_KEY', '')
+
+# Twilio (for WhatsApp via Twilio)
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 
 # =============================================================================
 # MIDTRANS PAYMENT
@@ -476,13 +506,6 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-# Provide dummy credentials when running tests to bypass _email_configured() check
-import sys
-if 'test' in sys.argv:
-    if not EMAIL_HOST_USER:
-        EMAIL_HOST_USER = 'dummy@warungio.com'
-    if not EMAIL_HOST_PASSWORD:
-        EMAIL_HOST_PASSWORD = 'dummy_password'
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@warungio.com')
 
 # =============================================================================
@@ -547,7 +570,7 @@ SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
 SECURE_BROWSER_XSS_FILTER = not DEBUG
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if SESSION_COOKIE_SECURE else None
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'

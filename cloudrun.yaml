@@ -3,19 +3,12 @@ kind: Service
 metadata:
   annotations:
     run.googleapis.com/build-enable-automatic-updates: 'false'
-    run.googleapis.com/build-id: a7ba7d3e-4103-4e0a-a72d-06c1853a522e
-    run.googleapis.com/build-image-uri: asia-southeast2-docker.pkg.dev/project-010f7e8f-fc0f-46fb-8c7/cloud-run-source-deploy/warungio
-    run.googleapis.com/build-name: projects/96622149770/locations/asia-southeast2/builds/a7ba7d3e-4103-4e0a-a72d-06c1853a522e
-    run.googleapis.com/build-source-location: gs://run-sources-project-010f7e8f-fc0f-46fb-8c7-asia-southeast2/services/warungio/1780673474.342532-30b629da04bd4fb68f6e144279dd2f5d.zip#1780673696382625
-    run.googleapis.com/client-name: gcloud
-    run.googleapis.com/client-version: 572.0.0
     run.googleapis.com/ingress: all
     run.googleapis.com/ingress-status: all
     run.googleapis.com/maxScale: '3'
-    run.googleapis.com/operation-id: e860ecf5-693c-4071-8d55-2b42b8e14ddd
-    run.googleapis.com/urls: '["https://warungio-96622149770.asia-southeast2.run.app","https://warungio-7yqymxa3kq-et.a.run.app"]'
-    serving.knative.dev/creator: sagitistaratas465@gmail.com
-    serving.knative.dev/lastModifier: sagitistaratas465@gmail.com
+    run.googleapis.com/urls: '["https://warungio-96622149770.asia-southeast2.run.app"]'
+    serving.knative.dev/creator: admin@warungio.com
+    serving.knative.dev/lastModifier: admin@warungio.com
   creationTimestamp: '2026-06-05T15:37:00.388148Z'
   generation: 10
   labels:
@@ -23,137 +16,85 @@ metadata:
     run.googleapis.com/satisfiesPzs: 'true'
   name: warungio
   namespace: '96622149770'
-  resourceVersion: AAZUEKEAIio
-  selfLink: /apis/serving.knative.dev/v1/namespaces/96622149770/services/warungio
-  uid: 88043354-ab85-4bab-aa50-7117f05bb1aa
 spec:
   template:
     metadata:
       annotations:
         autoscaling.knative.dev/maxScale: '3'
-        run.googleapis.com/client-name: gcloud
-        run.googleapis.com/client-version: 572.0.0
         run.googleapis.com/startup-cpu-boost: 'true'
-      labels:
-        client.knative.dev/nonce: yhavzbcwjo
-        run.googleapis.com/startupProbeType: Default
     spec:
       containerConcurrency: 80
       containers:
       - env:
-        # ── Django Core ──
         - name: DJANGO_SETTINGS_MODULE
           value: config.settings
         - name: DJANGO_DEBUG
           value: "False"
         - name: DJANGO_ALLOWED_HOSTS
-          value: "localhost,127.0.0.1,.run.app,warungio-96622149770.asia-southeast2.run.app"
-
-        # ── SECRET KEY ──
-        # IMPORTANT: Set via Secret Manager before production deploy!
-        # gcloud run deploy --set-secrets=DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest
+          value: "localhost,127.0.0.1,.run.app"
         - name: DJANGO_SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: DJANGO_SECRET_KEY
               key: latest
-
-        # ── Database: Cloud SQL via Unix Socket ──
-        # Prerequisites:
-        #   1. Create Cloud SQL instance (MySQL 8.0)
-        #   2. Create database 'warungio_db' and user 'warungio'
-        #   3. Enable Cloud SQL Admin API
-        #   4. Attach the Cloud SQL instance to this Cloud Run service
-        #      via the Console or: gcloud run deploy --add-cloudsql-instances=PROJECT:REGION:INSTANCE
         - name: USE_MYSQL
           value: "true"
         - name: DB_HOST_TYPE
           value: "cloud_sql"
         - name: CLOUD_SQL_INSTANCE
-          value: "project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungio-db"
+          value: "your-project:asia-southeast2:your-instance"
         - name: DB_NAME
           value: "warungio_db"
         - name: DB_USER
           value: "warungio"
         - name: DB_ENGINE
           value: "django.db.backends.mysql"
-        # DB_PASS must be set via Secret Manager.
-        # gcloud secrets create DB_PASS --data-file=/dev/stdin
         - name: DB_PASS
           valueFrom:
             secretKeyRef:
               name: DB_PASS
               key: latest
-
-        # ── Email (OTP delivery) ──
         - name: EMAIL_HOST
           value: "smtp.gmail.com"
         - name: EMAIL_PORT
           value: "587"
-        - name: EMAIL_USE_TLS
-          value: "true"
         - name: DEFAULT_FROM_EMAIL
           value: "noreply@warungio.com"
         - name: EMAIL_HOST_USER
-          value: "sagitistaratas465@gmail.com"
+          value: "your-email@gmail.com"
         - name: EMAIL_HOST_PASSWORD
           valueFrom:
             secretKeyRef:
               name: EMAIL_HOST_PASSWORD
               key: latest
-
-        # ── Redis / Channels (uses InMemoryChannelLayer if no REDIS_URL) ──
-        # Set REDIS_URL via Secret Manager to enable multi-instance WebSockets.
-        # Create a Redis instance via Memorystore or Redis Cloud, then:
-        # gcloud secrets create REDIS_URL --data-file=/dev/stdin
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
               name: REDIS_URL
               key: latest
-
-        # ── Security ──
+        - name: SECURE_SSL_REDIRECT
+          value: "true"
         - name: SESSION_COOKIE_SECURE
           value: "true"
         - name: CSRF_COOKIE_SECURE
           value: "true"
-        - name: SECURE_SSL_REDIRECT
-          value: "true"
-        - name: SECURE_HSTS_SECONDS
-          value: "31536000"
-
-        # ── CORS ──
         - name: CORS_ALLOWED_ORIGINS
-          value: "https://warungio-96622149770.asia-southeast2.run.app"
-
-        # ── Google Maps API ──
+          value: "https://your-project.asia-southeast2.run.app,https://yourdomain.com"
         - name: GOOGLE_MAPS_API_KEY
           valueFrom:
             secretKeyRef:
               name: GOOGLE_MAPS_API_KEY
               key: latest
-
-        # ── OTP ──
         - name: OTP_EXPIRE_MINUTES
           value: "5"
-
-        # ── Social Auth (Google OAuth) ──
-        # Client ID is public (embedded in frontend JS).
         - name: GOOGLE_CLIENT_ID
-          value: "96622149770-hm5pvtlsaqqf83equtjjrsmf10qqt0na.apps.googleusercontent.com"
-        # IMPORTANT: GOOGLE_CLIENT_SECRET must be injected via Secret Manager.
-        # Do NOT hardcode the production secret here.
-        # Deploy with: gcloud run deploy warungio \
-        #   --set-secrets=GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest
-        # For initial testing, set via:
-        #   gcloud run services update warungio \
-        #     --set-env-vars=GOOGLE_CLIENT_SECRET=<your-secret>
+          value: "your-google-client-id.apps.googleusercontent.com"
         - name: GOOGLE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: GOOGLE_CLIENT_SECRET
               key: latest
-        image: asia-southeast2-docker.pkg.dev/project-010f7e8f-fc0f-46fb-8c7/warungio/warungio:latest
+        image: asia-southeast2-docker.pkg.dev/your-project/warungio/warungio:latest
         ports:
         - containerPort: 8080
           name: http1
@@ -171,37 +112,9 @@ spec:
             path: /health/
             port: 8080
           timeoutSeconds: 5
-      serviceAccountName: 96622149770-compute@developer.gserviceaccount.com
-      timeoutSeconds: 300
       volumes:
       - name: cloud-sql-proxy
         csi:
           driver: cloudsql.cloud.google.com
           volumeAttributes:
-            instances: "project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungio-db"
-      # To deploy with Cloud SQL attached, run:
-      #   gcloud run deploy warungio --add-cloudsql-instances=project-010f7e8f-fc0f-46fb-8c7:asia-southeast2:warungio-db
-  traffic:
-  - latestRevision: true
-    percent: 100
-status:
-  address:
-    url: https://warungio-7yqymxa3kq-et.a.run.app
-  conditions:
-  - lastTransitionTime: '2026-06-12T16:04:17.614378Z'
-    status: 'True'
-    type: Ready
-  - lastTransitionTime: '2026-06-12T16:04:15.510080Z'
-    status: 'True'
-    type: ConfigurationsReady
-  - lastTransitionTime: '2026-06-12T16:04:17.584793Z'
-    status: 'True'
-    type: RoutesReady
-  latestCreatedRevisionName: warungio-00010-k5p
-  latestReadyRevisionName: warungio-00010-k5p
-  observedGeneration: 10
-  traffic:
-  - latestRevision: true
-    percent: 100
-    revisionName: warungio-00010-k5p
-  url: https://warungio-7yqymxa3kq-et.a.run.app
+            instances: "your-project:asia-southeast2:your-instance"

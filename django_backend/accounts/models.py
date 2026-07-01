@@ -24,6 +24,14 @@ class User(AbstractUser):
         ('admin', 'Admin'),
     ]
 
+    REGISTRATION_STEP_CHOICES = [
+        ('email_phone', 'Email/Phone'),     # Step 1: Email or phone
+        ('otp', 'OTP'),                     # Step 2: Verify OTP
+        ('profile', 'Profile'),             # Step 3: Fill profile
+        ('store_setup', 'Store Setup'),     # Step 4: Store setup (seller only)
+        ('complete', 'Complete'),           # Done
+    ]
+
     id = models.BigAutoField(primary_key=True)
     email = models.EmailField(unique=True, verbose_name='Email')
     phone = PhoneNumberField(unique=True, null=True, blank=True, verbose_name='Nomor HP')
@@ -40,6 +48,35 @@ class User(AbstractUser):
         upload_to='profiles/', blank=True, null=True, verbose_name='Foto Profil'
     )
     bio = models.TextField(blank=True, null=True, verbose_name='Bio')
+    
+    # Indonesian-specific fields
+    nik = models.CharField(
+        max_length=16, unique=True, null=True, blank=True,
+        verbose_name='NIK', help_text='Nomor Induk Kependudukan (16 digit)'
+    )
+    whatsapp_phone = PhoneNumberField(
+        null=True, blank=True, verbose_name='Nomor WhatsApp',
+        help_text='Nomor WhatsApp untuk OTP dan notifikasi'
+    )
+    
+    # Multi-step registration
+    registration_step = models.CharField(
+        max_length=20, choices=REGISTRATION_STEP_CHOICES,
+        default='email_phone', verbose_name='Langkah Registrasi'
+    )
+    registration_started_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Registrasi Dimulai'
+    )
+    registration_completed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Registrasi Selesai'
+    )
+    
+    # Enhanced security
+    failed_login_attempts = models.IntegerField(default=0, verbose_name='Gagal Login')
+    locked_until = models.DateTimeField(null=True, blank=True, verbose_name='Terkunci Hingga')
+    device_fingerprint = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name='Sidik Jari Perangkat'
+    )
     
     # Metadata
     last_login_ip = models.GenericIPAddressField(blank=True, null=True)
@@ -65,6 +102,8 @@ class User(AbstractUser):
             models.Index(fields=['email']),
             models.Index(fields=['phone']),
             models.Index(fields=['role']),
+            models.Index(fields=['nik']),
+            models.Index(fields=['registration_step']),
         ]
 
     def __str__(self):
@@ -76,6 +115,34 @@ class User(AbstractUser):
         if not self.username:
             self.username = self.email.split('@')[0]
         super().save(*args, **kwargs)
+
+    def is_account_locked(self):
+        """Check if account is temporarily locked due to failed attempts."""
+        if self.locked_until and timezone.now() < self.locked_until:
+            return True
+        if self.locked_until and timezone.now() >= self.locked_until:
+            self.locked_until = None
+            self.failed_login_attempts = 0
+            self.save(update_fields=['locked_until', 'failed_login_attempts'])
+        return False
+
+    def increment_failed_login(self):
+        """Increment failed login counter and lock account if threshold reached."""
+        from django.conf import settings
+        self.failed_login_attempts += 1
+        max_attempts = getattr(settings, 'LOGIN_MAX_ATTEMPTS', 5)
+        lockout_minutes = getattr(settings, 'LOGIN_LOCKOUT_MINUTES', 15)
+        
+        if self.failed_login_attempts >= max_attempts:
+            self.locked_until = timezone.now() + timedelta(minutes=lockout_minutes)
+        
+        self.save(update_fields=['failed_login_attempts', 'locked_until'])
+
+    def reset_failed_login(self):
+        """Reset failed login counter after successful login."""
+        self.failed_login_attempts = 0
+        self.locked_until = None
+        self.save(update_fields=['failed_login_attempts', 'locked_until'])
 
 
 class OTP(models.Model):
@@ -241,3 +308,241 @@ class LoginAttempt(models.Model):
             models.Index(fields=['ip_address']),
             models.Index(fields=['attempted_at']),
         ]
+
+
+# =============================================================================
+# NEW MODELS: Indonesian Address & KYC
+# =============================================================================
+
+class IndonesianAddress(models.Model):
+    """
+    Hierarchical Indonesian address model.
+    References official Kemendagri codes for provinces, cities, districts, and villages.
+    
+    Usage:
+        address = IndonesianAddress.objects.create(
+            province='DKI Jakarta',
+            city='Jakarta Selatan',
+            district='Kebayoran Baru',
+            village='Senayan',
+            street='Jl. Asia Afrika No. 8',
+            postal_code='10270',
+        )
+    """
+    province = models.CharField(max_length=100, verbose_name='Provinsi')
+    province_code = models.CharField(max_length=2, blank=True, verbose_name='Kode Provinsi')
+    city = models.CharField(max_length=100, verbose_name='Kota/Kabupaten')
+    city_code = models.CharField(max_length=4, blank=True, verbose_name='Kode Kota')
+    district = models.CharField(max_length=100, verbose_name='Kecamatan')
+    district_code = models.CharField(max_length=6, blank=True, verbose_name='Kode Kecamatan')
+    village = models.CharField(max_length=100, blank=True, verbose_name='Kelurahan/Desa')
+    village_code = models.CharField(max_length=10, blank=True, verbose_name='Kode Desa')
+    street = models.TextField(verbose_name='Jalan / Detail Alamat')
+    postal_code = models.CharField(max_length=5, blank=True, verbose_name='Kode Pos')
+    
+    # Latitude/longitude for map display
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    
+    # Metadata
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'indonesian_addresses'
+        verbose_name = 'Alamat Indonesia'
+        verbose_name_plural = 'Alamat Indonesia'
+        indexes = [
+            models.Index(fields=['province']),
+            models.Index(fields=['city']),
+            models.Index(fields=['district']),
+            models.Index(fields=['postal_code']),
+        ]
+
+    def __str__(self):
+        parts = [self.street]
+        if self.village:
+            parts.append(self.village)
+        if self.district:
+            parts.append(f"Kec. {self.district}")
+        parts.append(f"{self.city}, {self.province}")
+        if self.postal_code:
+            parts.append(self.postal_code)
+        return ', '.join(parts)
+
+    def to_display(self):
+        """Return formatted Indonesian address string."""
+        return str(self)
+
+
+class KYCVerification(models.Model):
+    """
+    Know Your Customer verification for Indonesian users.
+    Stores NIK (KTP) verification data and status.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('verified', 'Terverifikasi'),
+        ('rejected', 'Ditolak'),
+        ('expired', 'Kadaluwarsa'),
+    ]
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='kyc'
+    )
+    nik = models.CharField(
+        max_length=16, unique=True, verbose_name='NIK',
+        help_text='Nomor Induk Kependudukan (16 digit)'
+    )
+    full_name_on_ktp = models.CharField(
+        max_length=150, verbose_name='Nama di KTP'
+    )
+    birth_place = models.CharField(
+        max_length=100, blank=True, verbose_name='Tempat Lahir'
+    )
+    birth_date = models.DateField(null=True, blank=True, verbose_name='Tanggal Lahir')
+    gender = models.CharField(
+        max_length=10, choices=[
+            ('male', 'Laki-laki'),
+            ('female', 'Perempuan'),
+        ], blank=True, verbose_name='Jenis Kelamin'
+    )
+    religion = models.CharField(
+        max_length=20, blank=True, verbose_name='Agama',
+        choices=[
+            ('islam', 'Islam'),
+            ('kristen', 'Kristen Protestan'),
+            ('katholik', 'Kristen Katolik'),
+            ('hindu', 'Hindu'),
+            ('buddha', 'Buddha'),
+            ('konghucu', 'Konghucu'),
+            ('other', 'Lainnya'),
+        ]
+    )
+    marital_status = models.CharField(
+        max_length=20, blank=True, verbose_name='Status Pernikahan',
+        choices=[
+            ('single', 'Belum Menikah'),
+            ('married', 'Menikah'),
+            ('divorced', 'Cerai'),
+            ('widowed', 'Cerai Mati'),
+        ]
+    )
+    
+    # Address from KTP
+    ktp_address = models.TextField(blank=True, verbose_name='Alamat KTP')
+    ktp_province = models.CharField(max_length=100, blank=True)
+    ktp_city = models.CharField(max_length=100, blank=True)
+    ktp_district = models.CharField(max_length=100, blank=True)
+    ktp_postal_code = models.CharField(max_length=5, blank=True)
+    
+    # Verification
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='pending'
+    )
+    verification_method = models.CharField(
+        max_length=30, blank=True,
+        choices=[
+            ('manual', 'Verifikasi Manual'),
+            ('ocr', 'OCR Otomatis'),
+            ('api', 'API Pihak Ketiga'),
+        ]
+    )
+    verified_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='kyc_verifications',
+        verbose_name='Diverifikasi Oleh'
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, verbose_name='Alasan Penolakan')
+    
+    # Document files
+    ktp_photo = models.ImageField(
+        upload_to='kyc/ktp/', blank=True, null=True,
+        verbose_name='Foto KTP'
+    )
+    selfie_photo = models.ImageField(
+        upload_to='kyc/selfie/', blank=True, null=True,
+        verbose_name='Foto Selfie dengan KTP'
+    )
+    
+    # Metadata
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # NIK validation result (from NIK validation algorithm)
+    nik_validation = models.JSONField(
+        blank=True, null=True, default=dict,
+        verbose_name='Hasil Validasi NIK'
+    )
+
+    class Meta:
+        db_table = 'kyc_verifications'
+        verbose_name = 'Verifikasi KYC'
+        verbose_name_plural = 'Verifikasi KYC'
+        indexes = [
+            models.Index(fields=['nik']),
+            models.Index(fields=['status']),
+        ]
+
+    def __str__(self):
+        return f'KYC {self.nik} - {self.get_status_display()}'
+
+
+class RegistrationEvent(models.Model):
+    """
+    Track registration funnel analytics.
+    Each step in the registration process creates an event.
+    """
+    EVENT_TYPES = [
+        ('start', 'Memulai Registrasi'),
+        ('email_phone_submit', 'Submit Email/Phone'),
+        ('otp_sent', 'OTP Terkirim'),
+        ('otp_verified', 'OTP Terverifikasi'),
+        ('profile_submit', 'Submit Profil'),
+        ('store_setup', 'Setup Toko'),
+        ('complete', 'Registrasi Selesai'),
+        ('abandon', 'Meninggalkan Registrasi'),
+    ]
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='registration_events',
+        null=True, blank=True
+    )
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    event_type = models.CharField(max_length=30, choices=EVENT_TYPES)
+    role = models.CharField(max_length=20, blank=True, help_text='buyer/seller')
+    
+    # Context data
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    referrer = models.URLField(blank=True, null=True)
+    utm_source = models.CharField(max_length=100, blank=True)
+    utm_medium = models.CharField(max_length=100, blank=True)
+    utm_campaign = models.CharField(max_length=100, blank=True)
+    
+    # Timing
+    duration_seconds = models.IntegerField(
+        null=True, blank=True,
+        help_text='Detik sejak event sebelumnya'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'registration_events'
+        verbose_name = 'Event Registrasi'
+        verbose_name_plural = 'Event Registrasi'
+        indexes = [
+            models.Index(fields=['event_type']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['email']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_event_type_display()} - {self.email or self.phone}'

@@ -25,6 +25,7 @@ from products.models import Product
 from accounts.permissions import IsSeller, IsOrderOwner
 from notifications.models import Notification
 from .services.courier_tracking import get_tracking_status
+from .services.distance import calculate_haversine_distance, estimate_shipping_fee
 
 
 # =============================================================================
@@ -59,8 +60,9 @@ def notify_order_update(user_id, order_id, order_number, status, message=''):
                     'message': message,
                 }
             )
-    except Exception:
-        pass  # WebSocket layer unavailable silently
+    except Exception as e:
+        _log = logging.getLogger('django_backend.orders')
+        _log.error('WebSocket broadcast error (order update): %s', str(e))
 
 
 # =============================================================================
@@ -98,8 +100,9 @@ def notify_delivery_update(user_id, order_id, order_number, delivery_status, tra
                     'message': message,
                 }
             )
-    except Exception:
-        pass
+    except Exception as e:
+        _log = logging.getLogger('django_backend.orders')
+        _log.error('WebSocket broadcast error (delivery update): %s', str(e))
 
 
 @extend_schema_view(
@@ -206,6 +209,9 @@ class OrderCreateView(views.APIView):
                 store_orders[store_id] = []
             store_orders[store_id].append(item)
 
+        buyer_lat = serializer.validated_data.get('latitude')
+        buyer_lng = serializer.validated_data.get('longitude')
+
         orders = []
         for store_id, items in store_orders.items():
             # Create order
@@ -217,13 +223,28 @@ class OrderCreateView(views.APIView):
                 except ShippingMethod.DoesNotExist:
                     pass
 
+            # Calculate dynamic shipping cost based on distance
+            store = Store.objects.filter(id=store_id).first()
+            distance = None
+            shipping_cost = 0.0
+            if shipping_method:
+                base_fee = shipping_method.base_fee
+                if store and store.latitude is not None and store.longitude is not None and buyer_lat is not None and buyer_lng is not None:
+                    distance = calculate_haversine_distance(
+                        store.latitude, store.longitude, buyer_lat, buyer_lng
+                    )
+                    shipping_fee_decimal = estimate_shipping_fee(base_fee, distance)
+                    shipping_cost = float(shipping_fee_decimal)
+                else:
+                    shipping_cost = float(base_fee)
+
             order = Order.objects.create(
                 user=user,
                 store_id=store_id,
                 shipping_method=shipping_method,
                 subtotal=0,
                 total_price=0,
-                shipping_cost=float(shipping_method.base_fee) if shipping_method else 0,
+                shipping_cost=shipping_cost,
                 delivery_address=serializer.validated_data['delivery_address'],
                 recipient_name=serializer.validated_data['recipient_name'],
                 recipient_phone=serializer.validated_data['recipient_phone'],
@@ -266,6 +287,9 @@ class OrderCreateView(views.APIView):
                 order=order,
                 shipping_method=shipping_method,
                 estimated_time=shipping_method.estimated_time if shipping_method else None,
+                distance=distance,
+                buyer_latitude=buyer_lat,
+                buyer_longitude=buyer_lng,
             )
 
             # Update store stats atomically
@@ -589,8 +613,9 @@ class DeliveryTrackingView(views.APIView):
                     order.order_status = 'completed'
                     order.save(update_fields=['completed_at', 'order_status'])
                 delivery.save(update_fields=['delivery_status', 'delivered_at'])
-            except Exception:
-                pass
+            except Exception as e:
+                _log = logging.getLogger('django_backend.orders')
+                _log.warning('Delivery tracking error: %s', str(e))
 
             notify_delivery_update(
                 user_id=order.user_id,
