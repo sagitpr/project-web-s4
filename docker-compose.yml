@@ -116,13 +116,15 @@ services:
     command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
+    # Celery pool: solo (single-process, no prefork memory overhead)
+    # Max tasks per child: 50 (to prevent memory leak accumulation)
     healthcheck:
       test: ["CMD-SHELL", "celery -A config inspect ping --timeout=5 2>/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 30s
-    mem_limit: 96m
+    mem_limit: 128m
     networks:
       - warungio_net
     logging:
