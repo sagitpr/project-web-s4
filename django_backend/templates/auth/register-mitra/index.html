@@ -12,11 +12,21 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{% static 'css/pages/auth/register-mitra/style.css' %}" />
+    {% if not google_maps_api_key %}
+    <style>
+      .map-field .map-widget { background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 200px; border: 1px dashed #d1d5db; border-radius: 8px; }
+      .map-field .map-placeholder { text-align: center; color: #6b7280; padding: 20px; }
+      .map-field .map-placeholder i { font-size: 32px; margin-bottom: 10px; color: #9ca3af; }
+      .map-field .map-placeholder p { margin: 4px 0; font-size: 13px; }
+    </style>
+    {% endif %}
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
+    {% if google_maps_api_key %}
     <script async
       src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initializeMap&loading=async"
       onerror="console.error('Google Maps API failed to load')">
     </script>
+    {% endif %}
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />

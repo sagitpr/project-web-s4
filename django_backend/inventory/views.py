@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from django.db.models import Q, Sum
 from django.utils import timezone
+from django.core.cache import cache
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,7 +31,10 @@ from .serializers import (
 )
 from .services.barcode_lookup import lookup_barcode, validate_barcode_checksum
 from .services.fefo_engine import stock_in, stock_out, get_batch_summary, get_expiry_summary
-from .services.expiry_service import check_and_notify_expiry
+
+# ── Cache TTLs ──
+LOW_STOCK_CACHE_TTL = 60 * 3  # 3 minutes
+EXPIRY_CACHE_TTL = 60 * 5     # 5 minutes
 
 
 # =============================================================================
@@ -596,7 +600,7 @@ class BatchListView(generics.ListAPIView):
 
 
 class ExpirySummaryView(APIView):
-    """Get expiry dashboard for the seller's store.
+    """Get expiry dashboard for the seller's store (cached 5 min).
 
     Returns:
     - expiring_this_week_count
@@ -608,40 +612,46 @@ class ExpirySummaryView(APIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get(self, request):
-        data = get_expiry_summary(request.user.store)
+        store = request.user.store
+        cache_key = f'expiry_summary_{store.id}'
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        data = get_expiry_summary(store)
         serializer = ExpirySummarySerializer(data={
-            'store_id': request.user.store.id,
+            'store_id': store.id,
             'today': timezone.now().date(),
             'expiring_this_week_count': data['expiring_this_week_count'],
             'expiring_this_month_count': data['expiring_this_month_count'],
             'already_expired_count': data['already_expired_count'],
         })
         serializer.is_valid(raise_exception=True)
-        return Response({
+        result = {
             **serializer.validated_data,
             'expiring_this_week': data.get('expiring_this_week', []),
             'already_expired': data.get('already_expired', []),
-        })
+        }
+        cache.set(cache_key, result, EXPIRY_CACHE_TTL)
+        return Response(result)
 
 
 class ExpiryCheckTriggerView(APIView):
-    """Manually trigger expiry check and notification for this store.
+    """Manually trigger expiry check and notification for this store (async via Celery).
 
     POST to this endpoint to run expiry checks immediately.
-    Returns count of notifications sent.
+    Returns task ID for status tracking.
     """
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def post(self, request):
-        result = check_and_notify_expiry(request.user.store)
+        from .tasks import run_expiry_check_task
+        task = run_expiry_check_task.delay(store_id=request.user.store.id)
         return Response({
             'success': True,
-            'notifications_sent': result,
-            'message': (
-                f"Pemeriksaan selesai. "
-                f"{result['expiring_soon']} notifikasi 'akan kadaluwarsa' "
-                f"dan {result['expired']} notifikasi 'kadaluwarsa' dikirim."
-            ),
+            'task_id': task.id,
+            'message': 'Pemeriksaan kadaluwarsa sedang diproses.',
         })
 
 
@@ -685,7 +695,7 @@ class StockAlertDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class LowStockReportView(APIView):
-    """Get low stock report for the seller's store.
+    """Get low stock report for the seller's store (cached 3 min).
 
     Compares current stock against alert thresholds.
     Returns products where current stock is below minimum.
@@ -694,6 +704,12 @@ class LowStockReportView(APIView):
 
     def get(self, request):
         store = request.user.store
+        cache_key = f'low_stock_report_{store.id}'
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
         alerts = StockAlert.objects.filter(
             store=store, is_active=True
         ).select_related('master_product')
@@ -731,9 +747,11 @@ class LowStockReportView(APIView):
                     'days_until_expiry': (nearest_batch.expiry_date - today).days if nearest_batch else None,
                 })
 
-        return Response({
+        result = {
             'store_id': store.id,
             'store_name': store.store_name,
             'total_low_stock': len(low_stock_items),
             'items': sorted(low_stock_items, key=lambda x: x['shortage'], reverse=True),
-        })
+        }
+        cache.set(cache_key, result, LOW_STOCK_CACHE_TTL)
+        return Response(result)

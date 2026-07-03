@@ -30,6 +30,8 @@ def setup_periodic_tasks(sender, **kwargs):
         poll_tracking_batch,
         poll_near_complete_tracking,
     )
+    from accounts.tasks import clean_expired_otps_task
+    from inventory.tasks import clean_expired_notifications_task
 
     # Poll tracking for shipped orders every 30 minutes
     sender.add_periodic_task(
@@ -43,6 +45,20 @@ def setup_periodic_tasks(sender, **kwargs):
         crontab(minute='*/5'),
         poll_near_complete_tracking.s(),
         name='Poll tracking for near-complete orders (every 5min)',
+    )
+
+    # Clean expired OTPs daily at 2 AM
+    sender.add_periodic_task(
+        crontab(hour=2, minute=0),
+        clean_expired_otps_task.s(),
+        name='Clean expired OTP records (daily)',
+    )
+
+    # Clean old notifications daily at 3 AM
+    sender.add_periodic_task(
+        crontab(hour=3, minute=0),
+        clean_expired_notifications_task.s(),
+        name='Clean old notifications and batches (daily)',
     )
 
 

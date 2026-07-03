@@ -8,6 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from django.core.cache import cache
 
 from .models import Category, Product, Review, Favorite, Promo, RecentlyViewed, Voucher, QualityCheck
 from stores.models import Store
@@ -253,6 +254,7 @@ class ProductQualityCheckView(generics.ListAPIView):
 class SmartScanView(views.APIView):
     """
     Process a Smart Scan AI product analysis.
+    Synchronous for interactive UX — seller waits ~3-10s for AI result.
     Accepts product ID, scan type, and optional parameters.
     Returns analyzed quality data and persists to QualityCheck.
     """
@@ -272,7 +274,7 @@ class SmartScanView(views.APIView):
             return Response({'error': 'Produk tidak ditemukan.'},
                           status=status.HTTP_404_NOT_FOUND)
 
-        # Process scan via service layer
+        # Process scan via service layer (sync — interactive flow)
         result = process_scan(product, scan_type, options)
 
         # Create QualityCheck record if result is actionable
@@ -418,7 +420,7 @@ class SearchSuggestionsView(views.APIView):
 
 
 class StockPredictionView(views.APIView):
-    """Get stock prediction for a specific product.
+    """Get stock prediction for a specific product (cached 15 min + sync fallback).
 
     Returns AI-powered demand forecast, reorder recommendations,
     safety stock levels, and days-until-stockout analysis.
@@ -432,6 +434,21 @@ class StockPredictionView(views.APIView):
         days_ahead = int(request.query_params.get('days_ahead', 30))
         history_days = int(request.query_params.get('history_days', 90))
 
+        store = request.user.store
+
+        # Check cache first
+        if product_id:
+            cache_key = f'stock_prediction_{store.id}_{product_id}_{days_ahead}'
+        else:
+            cache_key = f'stock_prediction_all_{store.id}_{days_ahead}'
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        # Cache miss — compute sync, then cache for next time
+        predictor = StockPredictor(store=store)
+
         if product_id:
             product = Product.objects.filter(
                 id=product_id, store__user=request.user
@@ -439,18 +456,16 @@ class StockPredictionView(views.APIView):
             if not product:
                 return Response({'error': 'Produk tidak ditemukan.'},
                               status=status.HTTP_404_NOT_FOUND)
-            predictor = StockPredictor()
             result = predictor.predict_demand(product, days_ahead, history_days)
-            return Response(result)
+        else:
+            result = predictor.predict_store_stock(store, days_ahead)
 
-        # Predict for all products
-        predictor = StockPredictor(store=request.user.store)
-        result = predictor.predict_store_stock(request.user.store, days_ahead)
+        cache.set(cache_key, result, 60 * 15)  # 15 min cache
         return Response(result)
 
 
 class ReorderSuggestionView(views.APIView):
-    """Get reorder suggestions for seller's store.
+    """Get reorder suggestions for seller's store (cached 10 min + sync fallback).
 
     Uses EOQ (Economic Order Quantity) to optimize order quantities.
     Returns prioritized list of products needing restock.
@@ -458,13 +473,23 @@ class ReorderSuggestionView(views.APIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get(self, request):
-        optimizer = ReorderOptimizer(request.user.store)
+        store = request.user.store
+        cache_key = f'reorder_suggestions_{store.id}'
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        # Cache miss — compute sync
+        optimizer = ReorderOptimizer(store)
         suggestions = optimizer.get_reorder_suggestions()
+
+        cache.set(cache_key, suggestions, 60 * 10)  # 10 min cache
         return Response(suggestions)
 
 
 class StoreStockForecastView(views.APIView):
-    """Get comprehensive stock forecast for the entire store.
+    """Get comprehensive stock forecast for the entire store (cached 15 min + sync fallback).
 
     Returns:
     - Summary metrics (total products, low stock count, etc.)
@@ -475,18 +500,24 @@ class StoreStockForecastView(views.APIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get(self, request):
+        store = request.user.store
         days_ahead = int(request.query_params.get('days_ahead', 30))
-        predictor = StockPredictor(store=request.user.store)
-        result = predictor.predict_store_stock(request.user.store, days_ahead)
+        cache_key = f'stock_forecast_{store.id}_{days_ahead}'
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        # Cache miss — compute sync
+        predictor = StockPredictor(store=store)
+        result = predictor.predict_store_stock(store, days_ahead)
+
+        cache.set(cache_key, result, 60 * 15)  # 15 min cache
         return Response({
             **result,
             'recommendations': {
                 'message': 'Gunakan endpoint /api/products/reorder-suggestions/ untuk rekomendasi pemesanan detail.',
                 'endpoint': '/api/products/reorder-suggestions/',
-            },
-            'meta': {
-                'api_version': '1.0.0',
-                'note': 'Data dummy untuk pengembangan Flutter. Gunakan produk dengan data penjualan untuk hasil akurat.',
             },
         })
 

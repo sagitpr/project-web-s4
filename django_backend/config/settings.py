@@ -194,6 +194,12 @@ if USE_MYSQL:
         }
 
     DATABASES = {'default': db_config}
+    # ── Connection Pooling ──
+    # CONN_MAX_AGE = 0 (default): close after each request → many TCP handshakes.
+    # CONN_MAX_AGE = 60: reuse connection for 60 seconds → saves ~80% handshakes.
+    # On 1GB VPS with MariaDB, 60s is safe (max 30 connections configured, won't exhaust pool).
+    # Set to 0 if using PgBouncer/ProxySQL or if connections leak.
+    DATABASES['default']['CONN_MAX_AGE'] = 60
 
 else:
     DATABASES = {

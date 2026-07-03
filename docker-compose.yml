@@ -31,8 +31,8 @@ services:
       retries: 3
       start_period: 60s
     # Limit resources for 1GB VPS
-    mem_limit: 300m
-    mem_reservation: 200m
+    mem_limit: 256m
+    mem_reservation: 160m
     cpus: 1.0
     networks:
       - warungio_net
@@ -51,9 +51,11 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
-    mem_limit: 96m
-    mem_reservation: 64m
-    cpus: 0.5
+    mem_limit: 64m
+    mem_reservation: 48m
+    cpus: 0.3
+    # Redis 7 with 64MB maxmemory uses ~10MB RSS idle
+    # Increase only if cache misses cause performance issues
     networks:
       - warungio_net
 
@@ -80,9 +82,63 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/django_backend/media
       - ./logs:/app/logs
-    mem_limit: 400m
-    mem_reservation: 256m
+    mem_limit: 320m
+    mem_reservation: 200m
     cpus: 1.0
+    networks:
+      - warungio_net
+
+  # ---- Celery Worker (Async Tasks) ----
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warungio-celery
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      CELERY_ENABLED: "true"
+    command: ["celery", "-A", "config", "worker", "-l", "info", "-c", "1", "--max-tasks-per-child", "100"]
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/django_backend/media
+      - ./logs:/app/logs
+    mem_limit: 192m
+    mem_reservation: 96m
+    cpus: 0.5
+    networks:
+      - warungio_net
+
+  # ---- Celery Beat (Periodic Tasks Scheduler) ----
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warungio-beat
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      CELERY_ENABLED: "true"
+    command: ["celery", "-A", "config", "beat", "-l", "info", "--scheduler", "celery.beat.PersistentScheduler"]
+    volumes:
+      - ./logs:/app/logs
+    mem_limit: 64m
+    mem_reservation: 32m
+    cpus: 0.2
     networks:
       - warungio_net
 
@@ -112,9 +168,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 64m
-    mem_reservation: 32m
-    cpus: 0.5
+    mem_limit: 48m
+    mem_reservation: 24m
+    cpus: 0.3
     networks:
       - warungio_net
 

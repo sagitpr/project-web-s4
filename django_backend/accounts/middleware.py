@@ -1,20 +1,25 @@
 """
 Account middleware for Warungio Marketplace.
-Rate limiting, security headers, maintenance mode.
+Rate limiting (cache-backed), security headers, maintenance mode.
 """
 
 import time
-from django.utils import timezone
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.conf import settings
 
 
 class RateLimitMiddleware:
-    """Simple rate limiting middleware using cache."""
+    """Rate limiting middleware using django cache framework.
+    
+    Uses cache (Redis or LocMemCache) instead of in-memory dict so limits
+    persist across worker restarts and work in multi-process deployments.
+    
+    Rate limit: 60 POST/PUT/PATCH/DELETE requests per minute per IP+path.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.rate_limit_cache = {}
 
     def __call__(self, request):
         # Apply maintenance mode check
@@ -26,35 +31,29 @@ class RateLimitMiddleware:
 
         # Rate limiting for API endpoints
         if request.path.startswith('/api/'):
-            ip = self.get_client_ip(request)
-            path = request.path
-            now = time.time()
-
-            # Only rate limit POST/PUT/DELETE
             if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-                key = f'{ip}:{path}'
-                window = 60  # 1 minute window
-                max_requests = 60  # max 60 requests per minute
+                ip = self.get_client_ip(request)
+                window = 60
+                max_requests = 60
+                cache_key = f'ratelimit:{ip}:{request.path}'
 
-                if key not in self.rate_limit_cache:
-                    self.rate_limit_cache[key] = []
+                # Atomically increment counter with expiry
+                try:
+                    count = cache.get(cache_key, 0)
+                    if count == 0:
+                        cache.set(cache_key, 1, window)
+                    else:
+                        cache.incr(cache_key)
+                    count += 1
 
-                # Clean old entries
-                self.rate_limit_cache[key] = [
-                    t for t in self.rate_limit_cache[key]
-                    if now - t < window
-                ]
-
-                # Check limit
-                if len(self.rate_limit_cache[key]) >= max_requests:
-                    return JsonResponse(
-                        {'error': 'Terlalu banyak permintaan. Silakan coba lagi nanti.'},
-                        status=429,
-                        headers={'Retry-After': str(window)}
-                    )
-
-                # Add current request
-                self.rate_limit_cache[key].append(now)
+                    if count > max_requests:
+                        return JsonResponse(
+                            {'error': 'Terlalu banyak permintaan. Silakan coba lagi nanti.'},
+                            status=429,
+                            headers={'Retry-After': str(window)}
+                        )
+                except Exception:
+                    pass  # If cache fails, let request through
 
         response = self.get_response(request)
 

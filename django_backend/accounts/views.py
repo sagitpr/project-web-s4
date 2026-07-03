@@ -15,8 +15,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, OTP, LoginAttempt
-from .services.notification_service import notification_service
-from .services.whatsapp_service import send_whatsapp_otp, _whatsapp_configured
+from .services.whatsapp_service import _whatsapp_configured
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserUpdateSerializer, ChangePasswordSerializer,
@@ -24,6 +23,34 @@ from .serializers import (
     ForgotPasswordSerializer, ResetPasswordSerializer,
     TokenSerializer
 )
+
+
+def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
+    """Dispatch OTP delivery to Celery worker (non-blocking)."""
+    from .tasks import send_otp_task, send_whatsapp_only_otp_task
+    
+    channels = []
+    
+    if email:
+        send_otp_task.delay(
+            identifier=email,
+            otp_code=otp_code,
+            purpose=purpose,
+            user_full_name=user_full_name,
+        )
+        channels.append('email')
+    
+    if phone and _whatsapp_configured():
+        send_whatsapp_only_otp_task.delay(
+            phone=phone,
+            otp_code=otp_code,
+            purpose=purpose,
+            user_full_name=user_full_name,
+        )
+        if 'whatsapp' not in channels:
+            channels.append('whatsapp')
+    
+    return channels
 
 
 class RegisterView(generics.CreateAPIView):
@@ -48,35 +75,19 @@ class RegisterView(generics.CreateAPIView):
             user_agent=request.META.get('HTTP_USER_AGENT', ''),
         )
 
-        # Send OTP via email (primary for email-based registration)
-        email_result = notification_service.send_otp(
-            identifier=user.email,
+        # Dispatch OTP delivery to Celery worker (non-blocking)
+        channels = _dispatch_otp_async(
+            email=user.email,
+            phone=str(user.phone) if user.phone else None,
             otp_code=otp.otp_code,
             purpose='registration',
             user_full_name=user.full_name,
         )
 
-        # Also send OTP via WhatsApp if user provided a phone number
-        wa_result = None
-        if user.phone and _whatsapp_configured():
-            wa_result = send_whatsapp_otp(
-                phone=str(user.phone),
-                otp_code=otp.otp_code,
-                purpose='registration',
-                user_full_name=user.full_name,
-            )
-
         response_data = {
             'message': 'Registrasi berhasil. Silakan verifikasi OTP.',
-            'otp_channels': [],
+            'otp_channels': list(set(channels)),
         }
-        if email_result.get('success'):
-            response_data['otp_channels'].append('email')
-        if wa_result and wa_result.get('success'):
-            response_data['otp_channels'].append('whatsapp')
-        
-        if not email_result.get('success') and (not wa_result or not wa_result.get('success')):
-            response_data['warning'] = 'Gagal mengirim kode verifikasi. Silakan coba lagi nanti.'
 
         if settings.DEBUG:
             response_data.update({
@@ -228,33 +239,21 @@ class OTPRequestView(views.APIView):
         }
 
         if email:
-            user_full_name = None
             user = User.objects.filter(email=email).first()
-            if user:
-                user_full_name = user.full_name
+            user_full_name = user.full_name if user else None
 
-            email_result = notification_service.send_otp(
-                identifier=email or phone,
-                otp_code=otp.otp_code,
-                purpose=purpose,
-                user_full_name=user_full_name,
-            )
-            if not email_result.get('success'):
-                response_data['warning'] = email_result.get(
-                    'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
-                )
-
-        # Send OTP via WhatsApp if phone is provided and configured
-        if phone and _whatsapp_configured():
-            wa_result = send_whatsapp_otp(
+            # Dispatch OTP delivery to Celery worker (non-blocking)
+            channels = _dispatch_otp_async(
+                email=email,
                 phone=phone,
                 otp_code=otp.otp_code,
                 purpose=purpose,
                 user_full_name=user_full_name,
             )
-            if wa_result.get('success'):
-                response_data['otp_channels'] = ['email', 'whatsapp']
-                response_data['message'] = 'Kode OTP telah dikirim via Email dan WhatsApp.'
+            if channels:
+                response_data['otp_channels'] = channels
+                if 'whatsapp' in channels:
+                    response_data['message'] = 'Kode OTP telah dikirim via Email dan WhatsApp.'
 
         # Return OTP in debug mode
         if settings.DEBUG:
@@ -341,6 +340,7 @@ class ResendOTPView(views.APIView):
         serializer.is_valid(raise_exception=True)
         
         email = serializer.validated_data.get('email')
+        phone = serializer.validated_data.get('phone')
         purpose = serializer.validated_data.get('purpose')
         
         # Check cooldown
@@ -360,6 +360,7 @@ class ResendOTPView(views.APIView):
         # Create new OTP
         otp = OTP.objects.create(
             email=email,
+            phone=phone,
             purpose=purpose,
             ip_address=request.META.get('REMOTE_ADDR'),
         )
@@ -370,32 +371,19 @@ class ResendOTPView(views.APIView):
         }
 
         if email:
-            user_full_name = None
             user = User.objects.filter(email=email).first()
-            if user:
-                user_full_name = user.full_name
+            user_full_name = user.full_name if user else None
 
-            email_result = notification_service.send_otp(
-                identifier=email,
+            # Dispatch OTP delivery to Celery worker (non-blocking)
+            channels = _dispatch_otp_async(
+                email=email,
+                phone=phone,
                 otp_code=otp.otp_code,
                 purpose=purpose,
                 user_full_name=user_full_name,
             )
-            if not email_result.get('success'):
-                response_data['warning'] = email_result.get(
-                    'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
-                )
-
-        # Send OTP via WhatsApp if phone is provided and configured
-        if phone and _whatsapp_configured():
-            wa_result = send_whatsapp_otp(
-                phone=phone,
-                otp_code=otp.otp_code,
-                purpose=purpose,
-            )
-            if wa_result.get('success'):
-                response_data['otp_channels'] = ['email', 'whatsapp']
-                response_data['message'] = 'Kode OTP telah dikirim ulang via Email dan WhatsApp.'
+            if channels:
+                response_data['otp_channels'] = channels
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
@@ -424,16 +412,14 @@ class ForgotPasswordView(views.APIView):
             'message': 'Kode reset password telah dikirim ke email Anda.',
         }
 
-        email_result = notification_service.send_otp(
-            identifier=email,
+        # Dispatch OTP delivery to Celery worker (non-blocking)
+        _dispatch_otp_async(
+            email=email,
+            phone=None,
             otp_code=otp.otp_code,
             purpose='password_reset',
             user_full_name=None,
         )
-        if not email_result.get('success'):
-            response_data['warning'] = email_result.get(
-                'error', 'Gagal mengirim kode verifikasi OTP. Silakan coba lagi nanti.'
-            )
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code

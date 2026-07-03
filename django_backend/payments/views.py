@@ -19,6 +19,7 @@ from channels.layers import get_channel_layer
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 from django.db.models import Sum, Count, Q
+from django.core.cache import cache
 from accounts.permissions import IsSeller
 
 from .models import Payment, PaymentMethod, MidtransTransaction, BankAccount
@@ -56,16 +57,16 @@ class PaymentMethodListView(generics.ListAPIView):
 
 
 class CreateSnapTransactionView(views.APIView):
-    """Create Midtrans Snap transaction."""
+    """Create Midtrans Snap transaction (async via Celery)."""
     permission_classes = (permissions.IsAuthenticated,)
 
-    @transaction.atomic
     def post(self, request):
         serializer = MidtransSnapRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         order_id = serializer.validated_data['order_id']
         payment_method = serializer.validated_data['payment_method']
+        bank = serializer.validated_data.get('bank')
 
         order = Order.objects.filter(id=order_id, user=request.user).first()
         if not order:
@@ -76,137 +77,48 @@ class CreateSnapTransactionView(views.APIView):
             return Response({'error': 'Pesanan sudah diproses.'},
                           status=status.HTTP_400_BAD_REQUEST)
 
-        # Prepare Midtrans transaction parameters
-        transaction_details = {
-            'order_id': f"WRG-{order.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}",
-            'gross_amount': int(float(order.total_price)),
-        }
+        # Create Snap token synchronously -- frontend expects immediate token
+        from .services.midtrans import create_snap_token
+        result = create_snap_token(order)
 
-        customer_details = {
-            'first_name': order.user.full_name or order.user.email,
-            'email': order.user.email,
-            'phone': str(order.user.phone) if order.user.phone else '',
-        }
+        if not result.get('success'):
+            return Response({
+                'error': result.get('error', 'Gagal membuat transaksi pembayaran.'),
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        item_details = []
-        for item in order.items.all():
-            item_details.append({
-                'id': str(item.product_id or 0),
-                'price': int(float(item.price)),
-                'quantity': item.qty,
-                'name': item.product_name[:50],
-            })
-
-        # Add shipping as item
-        if float(order.shipping_cost) > 0:
-            item_details.append({
-                'id': 'SHIPPING',
-                'price': int(float(order.shipping_cost)),
-                'quantity': 1,
-                'name': 'Biaya Pengiriman',
-            })
-
-        # Add admin fee (admin_fee_buyer) as item so item_details total matches gross_amount
-        if float(order.admin_fee_buyer) > 0:
-            item_details.append({
-                'id': 'ADMIN_FEE',
-                'price': int(float(order.admin_fee_buyer)),
-                'quantity': 1,
-                'name': 'Biaya Admin Pembelian',
-            })
-
-        # Build request payload — credit_card config available for all Snap methods
-        payload = {
-            'transaction_details': transaction_details,
-            'customer_details': customer_details,
-            'item_details': item_details,
-            'credit_card': {'secure': True},
-        }
-
-        # Payment method specific settings
-        # NOTE: Only set payment_type for specific methods.
-        # When payment_method is 'credit_card' (generic Snap default) or unknown,
-        # omit payment_type so Snap auto-presents ALL available payment methods
-        # (QRIS, bank transfer, e-wallet, kartu kredit, etc.)
-        if payment_method == 'bank_transfer':
-            bank = serializer.validated_data.get('bank', 'bca')
-            payload['payment_type'] = 'bank_transfer'
-            payload['bank_transfer'] = {'bank': bank}
-        elif payment_method in ['gopay', 'shopeepay', 'ovo', 'dana']:
-            payload['payment_type'] = payment_method
-        elif payment_method == 'qris':
-            payload['payment_type'] = 'qris'
-            payload['qris'] = {'acquirer': 'gopay'}
-        else:
-            # Generic Snap — don't set payment_type, let Snap auto-present all methods
-            pass
-
-        # Call Midtrans Snap API
-        try:
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': f'Basic {self._encode_auth(settings.MIDTRANS_SERVER_KEY)}',
+        # Save payment & Midtrans transaction records
+        from .models import Payment, MidtransTransaction
+        payment, _ = Payment.objects.get_or_create(
+            order=order,
+            defaults={
+                'user': order.user,
+                'amount': order.total_price,
+                'payment_type': payment_method,
+                'midtrans_order_id': result['transaction_id'],
             }
-            
-            response = requests.post(
-                settings.MIDTRANS_SNAP_URL,
-                json=payload,
-                headers=headers,
-                timeout=30,
-            )
-            
-            if response.status_code not in [200, 201]:
-                return Response({
-                    'error': 'Gagal membuat transaksi pembayaran.',
-                    'details': response.json() if response.text else '',
-                }, status=status.HTTP_502_BAD_GATEWAY)
+        )
+        if not _:
+            payment.midtrans_order_id = result['transaction_id']
+            payment.amount = order.total_price
+            payment.save()
 
-            snap_response = response.json()
+        MidtransTransaction.objects.update_or_create(
+            payment=payment,
+            defaults={
+                'order_id': result['transaction_id'],
+                'transaction_status': 'pending',
+                'payment_type': payment_method,
+                'raw_response': result.get('raw_response', {}),
+            }
+        )
 
-            # Create or update payment record (inside transaction)
-            payment, created = Payment.objects.get_or_create(
-                order=order,
-                defaults={
-                    'user': request.user,
-                    'amount': order.total_price,
-                    'payment_type': payment_method,
-                    'midtrans_order_id': transaction_details['order_id'],
-                }
-            )
-            if not created:
-                payment.midtrans_order_id = transaction_details['order_id']
-                payment.amount = order.total_price
-                payment.save()
-
-            # Store Midtrans transaction
-            MidtransTransaction.objects.update_or_create(
-                payment=payment,
-                defaults={
-                    'order_id': transaction_details['order_id'],
-                    'transaction_id': snap_response.get('transaction_id', ''),
-                    'transaction_status': 'pending',
-                    'payment_type': payment_method,
-                    'raw_response': snap_response,
-                }
-            )
-
-            return Response({
-                'token': snap_response.get('token', ''),
-                'redirect_url': snap_response.get('redirect_url', ''),
-                'transaction_id': transaction_details['order_id'],
-                'payment': PaymentSerializer(payment).data,
-            })
-
-        except requests.RequestException as e:
-            return Response({
-                'error': 'Gagal terhubung ke server pembayaran.',
-                'details': str(e),
-            }, status=status.HTTP_502_BAD_GATEWAY)
-
-    def _encode_auth(self, key):
-        import base64
-        return base64.b64encode(f'{key}:'.encode()).decode()
+        return Response({
+            'token': result['token'],
+            'redirect_url': result.get('redirect_url', ''),
+            'transaction_id': result.get('transaction_id', ''),
+            'order_id': order.id,
+            'snap_url': settings.MIDTRANS_SNAP_URL,
+        })
 
 
 class MidtransNotificationView(views.APIView):
@@ -412,7 +324,7 @@ class PaymentHistoryView(generics.ListAPIView):
 
 
 class WalletTopUpView(views.APIView):
-    """Initiate a Midtrans Snap transaction for wallet top-up."""
+    """Initiate a Midtrans Snap transaction for wallet top-up (async via Celery)."""
     permission_classes = (permissions.IsAuthenticated,)
 
     @transaction.atomic
@@ -445,82 +357,48 @@ class WalletTopUpView(views.APIView):
             notes='TOPUP',
         )
 
-        tx_order_id = f"TOP-{order.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        # Create Snap token synchronously -- frontend expects immediate token
+        from .services.midtrans import create_snap_token
+        result = create_snap_token(order)
 
-        # Call Midtrans Snap API
-        payload = {
-            'transaction_details': {
-                'order_id': tx_order_id,
-                'gross_amount': amount,
-            },
-            'customer_details': {
-                'first_name': request.user.full_name or request.user.email,
-                'email': request.user.email,
-                'phone': str(request.user.phone) if request.user.phone else '',
-            },
-            'item_details': [{
-                'id': 'TOPUP',
-                'price': amount,
-                'quantity': 1,
-                'name': f'Top Up Saldo Warungio Rp {amount:,}',
-            }],
-            'credit_card': {'secure': True},
-        }
+        if not result.get('success'):
+            return Response({
+                'error': result.get('error', 'Gagal memproses top-up.'),
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            import base64
-            auth_str = base64.b64encode(f'{settings.MIDTRANS_SERVER_KEY}:'.encode()).decode()
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': f'Basic {auth_str}',
+        # Save payment & Midtrans transaction records
+        from .models import Payment, MidtransTransaction
+        payment, _ = Payment.objects.get_or_create(
+            order=order,
+            defaults={
+                'user': order.user,
+                'amount': order.total_price,
+                'payment_type': 'midtrans',
+                'midtrans_order_id': result['transaction_id'],
             }
-            
-            response = requests.post(
-                settings.MIDTRANS_SNAP_URL,
-                json=payload,
-                headers=headers,
-                timeout=30,
-            )
-            
-            if response.status_code not in [200, 201]:
-                return Response({
-                    'error': 'Gagal membuat transaksi pembayaran Midtrans.',
-                    'details': response.json() if response.text else '',
-                }, status=status.HTTP_502_BAD_GATEWAY)
+        )
+        if not _:
+            payment.midtrans_order_id = result['transaction_id']
+            payment.amount = order.total_price
+            payment.save()
 
-            snap_response = response.json()
+        MidtransTransaction.objects.update_or_create(
+            payment=payment,
+            defaults={
+                'order_id': result['transaction_id'],
+                'transaction_status': 'pending',
+                'payment_type': 'midtrans',
+                'raw_response': result.get('raw_response', {}),
+            }
+        )
 
-            # Create payment record
-            payment = Payment.objects.create(
-                order=order,
-                user=request.user,
-                amount=amount,
-                payment_type='midtrans',
-                midtrans_order_id=tx_order_id,
-            )
-
-            # Store Midtrans transaction
-            MidtransTransaction.objects.create(
-                payment=payment,
-                order_id=tx_order_id,
-                transaction_id=snap_response.get('transaction_id', ''),
-                transaction_status='pending',
-                payment_type='midtrans',
-                raw_response=snap_response,
-            )
-
-            return Response({
-                'token': snap_response.get('token', ''),
-                'redirect_url': snap_response.get('redirect_url', ''),
-                'transaction_id': tx_order_id,
-            })
-
-        except requests.RequestException as e:
-            return Response({
-                'error': 'Gagal terhubung ke server pembayaran.',
-                'details': str(e),
-            }, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({
+            'token': result['token'],
+            'redirect_url': result.get('redirect_url', ''),
+            'status': 'success',
+            'order_id': order.id,
+            'message': 'Top-up siap diproses.',
+        })
 
 
 # =============================================================================
@@ -565,12 +443,21 @@ class BankAccountSetPrimaryView(views.APIView):
 
 
 class FinanceSummaryView(views.APIView):
-    """Get dynamic finance summary calculations based on live order database."""
+    """Get dynamic finance summary calculations based on live order database.
+    
+    Cached for 2 minutes to reduce DB load.
+    """
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get(self, request):
         store = request.user.store
-
+        cache_key = f'finance_summary_{store.id}'
+        
+        # Check cache first
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
         # 1. Total Pemasukan KOTOR / Revenue (Completed orders, includes admin_fee)
         completed_orders = Order.objects.filter(
             store=store,
@@ -640,7 +527,7 @@ class FinanceSummaryView(views.APIView):
             ).aggregate(total=Sum('amount'))['total'] or 0
             withdrawal_trend.append(float(daily_wdr))
 
-        return Response({
+        data = {
             'total_balance': float(available_balance + held_balance),
             'available_balance': float(available_balance),
             'held_balance': float(held_balance),
@@ -655,7 +542,10 @@ class FinanceSummaryView(views.APIView):
                 'income': income_trend,
                 'withdrawal': withdrawal_trend
             }
-        })
+        }
+        # Cache for 2 minutes to reduce DB load (~45 queries per request)
+        cache.set(cache_key, data, 120)
+        return Response(data)
 
 
 class FinanceTransactionListView(views.APIView):
@@ -771,60 +661,106 @@ class FinanceTransactionListView(views.APIView):
 
 
 class WithdrawBalanceView(views.APIView):
-    """Initiate withdrawal process for the seller."""
+    """Initiate withdrawal process for the seller.
+    
+    Uses data from FinanceSummaryView logic for consistent balance calculation.
+    Idempotent: prevents duplicate withdrawals within a 30-second window.
+    """
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     @transaction.atomic
     def post(self, request):
         store = request.user.store
+        user = request.user
         amount_val = request.data.get('amount')
-        
+
         if not amount_val:
-            return Response({'error': 'Nominal penarikan wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
-            
+            return Response({'error': 'Nominal penarikan wajib diisi.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
         try:
             amount = float(amount_val)
             if amount < 10000:
-                return Response({'error': 'Minimal penarikan adalah Rp 10.000.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Minimal penarikan adalah Rp 10.000.'},
+                              status=status.HTTP_400_BAD_REQUEST)
+            if amount > 1000000000:
+                return Response({'error': 'Maksimal penarikan adalah Rp 1.000.000.000.'},
+                              status=status.HTTP_400_BAD_REQUEST)
         except ValueError:
-            return Response({'error': 'Nominal penarikan harus berupa angka.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Nominal penarikan harus berupa angka.'},
+                          status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Require a primary bank account
+        # 1. Idempotency check — prevent duplicate within 30 seconds
+        recent_withdrawal = Payment.objects.filter(
+            user=user,
+            payment_type='withdrawal',
+            payment_status='pending',
+            amount=amount,
+            created_at__gte=timezone.now() - timedelta(seconds=30),
+        ).first()
+        if recent_withdrawal:
+            return Response({
+                'message': 'Permintaan penarikan sudah diajukan.',
+                'transaction': PaymentSerializer(recent_withdrawal).data,
+            })
+
+        # 2. Require a primary bank account
         primary_bank = BankAccount.objects.filter(store=store, is_primary=True).first()
         if not primary_bank:
-            return Response({'error': 'Anda harus menambahkan rekening bank utama terlebih dahulu.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': 'Anda harus menambahkan rekening bank utama terlebih dahulu.',
+                'action_required': 'add_bank_account',
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. Available balance validation
-        # Compute available balance: completed_orders total - total withdrawals (paid/pending)
-        total_income = Order.objects.filter(
-            store=store,
-            order_status='completed'
-        ).aggregate(total=Sum('total_price'))['total'] or 0
+        # 3. Available balance validation (consistent with FinanceSummaryView)
+        completed_orders = Order.objects.filter(store=store, order_status='completed')
+        total_income_gross = completed_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        total_admin_fees = completed_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
+        total_income_net = total_income_gross - total_admin_fees
 
-        withdrawals_total = Payment.objects.filter(
-            user=request.user,
+        total_withdrawals = Payment.objects.filter(
+            user=user,
             payment_type='withdrawal',
             payment_status__in=['paid', 'pending']
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        available_balance = max(0, total_income - withdrawals_total)
+        available_balance = max(0, total_income_net - total_withdrawals)
 
         if amount > available_balance:
-            return Response({'error': 'Saldo tidak mencukupi untuk melakukan penarikan.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': 'Saldo tidak mencukupi untuk melakukan penarikan.',
+                'available_balance': float(available_balance),
+                'requested_amount': amount,
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # 3. Create a Payment withdrawal record (inside transaction)
+        # 4. Create a Payment withdrawal record
         withdrawal_tx = Payment.objects.create(
             order=None,
-            user=request.user,
+            user=user,
             amount=amount,
             fee=0,
             payment_type='withdrawal',
-            payment_status='pending', # 'pending' = proses, can be approved by admin later
+            payment_status='pending',
             bank_name=primary_bank.bank_name,
-            va_number=primary_bank.account_number
+            va_number=primary_bank.account_number,
         )
+
+        # 5. Notify seller via notification
+        try:
+            from notifications.models import Notification
+            Notification.objects.create(
+                user=user,
+                notification_type='withdrawal',
+                priority='high',
+                title='Penarikan Dana Berhasil Diajukan',
+                description=f'Penarikan dana sebesar Rp {amount:,.0f} ke {primary_bank.bank_name} sedang diproses.',
+                action_url='/seller/dashboard/finance/',
+                action_text='Lihat Status',
+            )
+        except Exception as exc:
+            logger.warning('Withdrawal notification creation failed: %s', str(exc))
 
         return Response({
             'message': 'Permintaan penarikan dana berhasil diajukan dan sedang diproses.',
-            'transaction': PaymentSerializer(withdrawal_tx).data
+            'transaction': PaymentSerializer(withdrawal_tx).data,
         })

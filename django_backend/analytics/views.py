@@ -10,6 +10,7 @@ from datetime import timedelta, date, datetime
 from decimal import Decimal
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
+from django.core.cache import cache
 
 from .models import SalesAnalytics, DeviceAnalytics, UserActivity, DailyReport
 from .serializers import (
@@ -25,13 +26,19 @@ from .services.ai_insight import AISellerInsightService
 
 
 class DashboardSummaryView(views.APIView):
-    """Get seller dashboard summary statistics."""
+    """Get seller dashboard summary statistics (cached 2 min)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get(self, request):
         store = request.user.store
         period = request.query_params.get('period', 'month')  # week, month, year
-        
+
+        # Cache key includes store + period
+        cache_key = f'dashboard_summary_{store.id}_{period}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         # Calculate date range
         today = timezone.now().date()
         if period == 'week':
@@ -110,7 +117,9 @@ class DashboardSummaryView(views.APIView):
             'recent_orders': recent_orders,
             'top_products': top_products,
         }
-        
+
+        # Cache for 2 minutes
+        cache.set(cache_key, data, 120)
         return Response(data)
 
     def _get_sales_trend(self, store, start_date, end_date):
