@@ -84,7 +84,7 @@
     }
   };
 
-  /** Map initialization — called either by &callback=initializeMap or manually on step 0 */
+  /** Map initialization — called by &callback=initializeMap or manually */
   window.initializeMap = function() {
     if (window.partnerFormMapInitialized) return;
     var mapEl = document.getElementById('googleMap');
@@ -496,7 +496,7 @@
       if (submitBtn) submitBtn.classList.toggle('hidden', currentStep !== 3);
       if (currentStep === 0 && !window.partnerFormMapInitialized) {
         setTimeout(function() {
-          if (typeof window.initializeMap === 'function') {
+          if (window.google && window.google.maps && typeof window.initializeMap === 'function') {
             window.initializeMap();
           } else if (typeof window.loadMapsAPI === 'function') {
             window.loadMapsAPI();
@@ -666,6 +666,15 @@
         }
       });
     }
+
+    // Initialize map on first load (step 0 is visible by default via CSS class)
+    setTimeout(function() {
+      if (window.google && window.google.maps && typeof window.initializeMap === 'function') {
+        window.initializeMap();
+      } else if (typeof window.loadMapsAPI === 'function') {
+        window.loadMapsAPI();
+      }
+    }, 500);
 
     // Restore draft
     restoreDraft();

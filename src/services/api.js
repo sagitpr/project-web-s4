@@ -132,7 +132,7 @@
     },
 
     async createStore(data) {
-      return auth.api('/stores/', {
+      return auth.api('/stores/create/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -149,8 +149,9 @@
       return auth.api(`/stores/${id}/follow/`, { method: 'POST' });
     },
 
+    // Follow/unfollow toggle: POST once to follow, POST again to unfollow (backend toggle)
     async unfollowStore(id) {
-      return auth.api(`/stores/${id}/unfollow/`, { method: 'POST' });
+      return auth.api(`/stores/${id}/follow/`, { method: 'POST' });
     },
 
     // =========================================================================
@@ -166,21 +167,21 @@
     },
 
     async createProduct(data) {
-      return auth.api('/products/', {
+      return auth.api('/products/create/', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
     async updateProduct(id, data) {
-      return auth.api(`/products/${id}/`, {
+      return auth.api(`/products/${id}/manage/`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
     },
 
     async deleteProduct(id) {
-      return auth.api(`/products/${id}/`, { method: 'DELETE' });
+      return auth.api(`/products/${id}/manage/`, { method: 'DELETE' });
     },
 
     async getProductReviews(productId) {

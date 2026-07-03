@@ -835,11 +835,12 @@ class OTPTests(BaseTestCase):
         self.assertIn('Kode OTP Reset Password Warungio', mail.outbox[0].subject)
 
     def test_forgot_password_nonexistent(self):
-        """Test forgot password with unregistered email."""
+        """Test forgot password with unregistered email — returns 200 to prevent user enumeration."""
         response = self.client.post(self.forgot_password_url, {
             'email': 'nonexistent@test.com',
         }, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Returns 200 with same message as registered email to prevent user enumeration
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_reset_password_success(self):
         """Test complete password reset flow."""

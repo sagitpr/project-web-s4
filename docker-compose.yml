@@ -41,7 +41,7 @@ services:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
-    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "allkeys-lru"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -84,7 +84,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 120s
+      start_period: 240s
     mem_limit: 320m
     networks:
       - warungio_net
@@ -108,6 +108,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      django:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -116,14 +118,13 @@ services:
     command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
-    # Celery pool: solo (single-process, no prefork memory overhead)
-    # Max tasks per child: 50 (to prevent memory leak accumulation)
+    # Healthcheck: lightweight process check instead of heavy app-loading `celery inspect ping`
     healthcheck:
-      test: ["CMD-SHELL", "celery -A config inspect ping --timeout=5 2>/dev/null || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'celery.*worker' || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     mem_limit: 128m
     networks:
       - warungio_net
@@ -154,8 +155,8 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./assets:/app/assets:ro
     healthcheck:
-      test: ["CMD", "sh", "-c", "nginx -t 2>/dev/null && [ -f /var/run/nginx.pid ]"]
-      interval: 60s
+      test: ["CMD-SHELL", "pgrep nginx || exit 1"]
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s

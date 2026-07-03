@@ -37,12 +37,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         captcha_token = attrs.pop('captcha_token', None)
-        request = self.context.get('request')
-        ip_address = request.META.get('REMOTE_ADDR') if request else None
-        if not verify_captcha_token(captcha_token, ip_address):
-            raise serializers.ValidationError({
-                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
-            })
+        # Only verify captcha when a token is actually provided.
+        # If no token is sent, skip verification (frontend may not have captcha widget).
+        if captcha_token:
+            request = self.context.get('request')
+            ip_address = request.META.get('REMOTE_ADDR') if request else None
+            if not verify_captcha_token(captcha_token, ip_address):
+                raise serializers.ValidationError({
+                    "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+                })
         if attrs['password'] != attrs.pop('password2'):
             raise serializers.ValidationError({
                 "password": "Password tidak cocok."
@@ -227,12 +230,14 @@ class OTPRequestSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         captcha_token = attrs.pop('captcha_token', None)
-        request = self.context.get('request')
-        ip_address = request.META.get('REMOTE_ADDR') if request else None
-        if not verify_captcha_token(captcha_token, ip_address):
-            raise serializers.ValidationError({
-                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
-            })
+        # Only verify captcha when a token is actually provided.
+        if captcha_token:
+            request = self.context.get('request')
+            ip_address = request.META.get('REMOTE_ADDR') if request else None
+            if not verify_captcha_token(captcha_token, ip_address):
+                raise serializers.ValidationError({
+                    "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+                })
         if not attrs.get('email') and not attrs.get('phone'):
             raise serializers.ValidationError(
                 "Email atau nomor HP harus diisi."
@@ -267,21 +272,16 @@ class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     captcha_token = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "Email tidak ditemukan dalam sistem."
-            )
-        return value
-
     def validate(self, attrs):
         captcha_token = attrs.pop('captcha_token', None)
-        request = self.context.get('request')
-        ip_address = request.META.get('REMOTE_ADDR') if request else None
-        if not verify_captcha_token(captcha_token, ip_address):
-            raise serializers.ValidationError({
-                "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
-            })
+        # Only verify captcha when a token is actually provided.
+        if captcha_token:
+            request = self.context.get('request')
+            ip_address = request.META.get('REMOTE_ADDR') if request else None
+            if not verify_captcha_token(captcha_token, ip_address):
+                raise serializers.ValidationError({
+                    "captcha_token": "Verifikasi CAPTCHA gagal. Silakan coba lagi."
+                })
         return attrs
 
 

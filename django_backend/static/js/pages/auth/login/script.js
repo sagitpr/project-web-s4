@@ -88,13 +88,19 @@
     }
   });
 
+  /** Validate redirect URL — only allow relative paths to prevent open redirect */
+  function isValidRedirect(url) {
+    if (!url || typeof url !== 'string') return false;
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+  }
+
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
     const role = data.user.role;
     
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    if (nextUrl) {
+    if (nextUrl && isValidRedirect(nextUrl)) {
       window.location.href = nextUrl;
       return;
     }

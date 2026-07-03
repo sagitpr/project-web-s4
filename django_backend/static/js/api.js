@@ -289,9 +289,12 @@
   RealAPI.getStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/'); };
   RealAPI.createStore = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/create/', { method: 'POST', body: JSON.stringify(data) }); };
   RealAPI.getMyStore = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/'); };
-  RealAPI.updateStore = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) }); };
+  // updateStore uses /stores/my-store/ (MyStoreView handles PATCH).
+  // StoreDetailView is RetrieveAPIView (GET-only) — PATCH to /stores/{id}/ would 405.
+  RealAPI.updateStore = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/', { method: 'PATCH', body: JSON.stringify(data) }); };
   RealAPI.followStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
-  RealAPI.unfollowStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/unfollow/', { method: 'POST' }); };
+  // Follow/unfollow toggle: POST once to follow, POST again to unfollow (backend toggle)
+  RealAPI.unfollowStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
 
   // Products
   RealAPI.getProducts = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/products/' + (qs ? '?' + qs : '')); };
@@ -403,8 +406,8 @@
 
   // Notifications
   RealAPI.getNotifications = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/notifications/' + (qs ? '?' + qs : '')); };
-  RealAPI.markNotificationRead = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/' + id + '/read/', { method: 'POST' }); };
-  RealAPI.markAllNotificationsRead = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/read-all/', { method: 'POST' }); };
+  RealAPI.markNotificationRead = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ notification_ids: [id] }) }); };
+  RealAPI.markAllNotificationsRead = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ mark_all: true }) }); };
 
   // Favorite Stores (followed stores)
   RealAPI.getFollowedStores = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-followed/'); };
@@ -468,6 +471,7 @@
   RealAPI.getConversations = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/'); };
   RealAPI.getConversationMessages = function (conversationId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/' + conversationId + '/messages/'); };
   RealAPI.sendMessage = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/messages/send/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.startConversation = function (receiverId, message) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/start/', { method: 'POST', body: JSON.stringify({ receiver_id: receiverId, message: message || '' }) }); };
   RealAPI.getUnreadChatCount = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/unread-count/'); };
 
   // ──────────────────────────────────────────────────────────────────────────

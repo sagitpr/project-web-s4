@@ -312,6 +312,23 @@ class PaymentConfigView(views.APIView):
         })
 
 
+class PublicApiConfigView(views.APIView):
+    """
+    Public API configuration endpoint.
+    Returns safe-to-expose frontend keys (no secrets).
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        # Only expose client-safe keys (no server-side secrets)
+        return Response({
+            'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+            'midtrans_client_key': settings.MIDTRANS_CLIENT_KEY,
+            'midtrans_snap_url': settings.MIDTRANS_SNAP_URL,
+            'midtrans_is_production': settings.MIDTRANS_IS_PRODUCTION,
+        })
+
+
 class PaymentHistoryView(generics.ListAPIView):
     """User payment history."""
     serializer_class = PaymentHistorySerializer

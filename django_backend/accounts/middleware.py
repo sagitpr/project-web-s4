@@ -37,14 +37,14 @@ class RateLimitMiddleware:
                 max_requests = 60
                 cache_key = f'ratelimit:{ip}:{request.path}'
 
-                # Atomically increment counter with expiry
+                # Atomic rate limit counter with expiry
                 try:
-                    count = cache.get(cache_key, 0)
-                    if count == 0:
-                        cache.set(cache_key, 1, window)
+                    # cache.add() is atomic: returns True if key was created, False if exists
+                    added = cache.add(cache_key, 1, window)
+                    if added:
+                        count = 1
                     else:
-                        cache.incr(cache_key)
-                    count += 1
+                        count = cache.incr(cache_key)
 
                     if count > max_requests:
                         return JsonResponse(

@@ -148,6 +148,12 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        /** Validate redirect URL — only allow relative paths to prevent open redirect */
+        function isValidRedirect(url) {
+          if (!url || typeof url !== 'string') return false;
+          return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+        }
+
         setTimeout(() => {
           // If authenticated, check role and redirect
           if (window.WarungioAuth.isAuthenticated()) {
@@ -155,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const role = user ? user.role : null;
              if (role === 'buyer') {
               const nextUrl = params.get('next');
-              window.location.href = nextUrl ? nextUrl : '/buyer/home/';
+              window.location.href = (nextUrl && isValidRedirect(nextUrl)) ? nextUrl : '/buyer/home/';
             } else if (role === 'seller') {
               window.location.href = '/seller/dashboard/';
             } else if (role === 'admin') {

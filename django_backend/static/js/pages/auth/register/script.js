@@ -102,6 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  /** Validate redirect URL — only allow relative paths to prevent open redirect */
+  function isValidRedirect(url) {
+    if (!url || typeof url !== 'string') return false;
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+  }
+
   // ── Helper: handle auth response and redirect ──
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
@@ -109,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    if (nextUrl) {
+    if (nextUrl && isValidRedirect(nextUrl)) {
       window.location.href = nextUrl;
       return;
     }

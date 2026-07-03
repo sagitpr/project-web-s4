@@ -21,4 +21,6 @@ urlpatterns = [
     path('finance/bank-accounts/<int:pk>/', views.BankAccountDetailView.as_view(), name='finance-bank-account-detail'),
     path('finance/bank-accounts/<int:pk>/set-primary/', views.BankAccountSetPrimaryView.as_view(), name='finance-bank-account-set-primary'),
     path('finance/withdraw/', views.WithdrawBalanceView.as_view(), name='finance-withdraw'),
+    # Public API Configuration (safe frontend keys)
+    path('config/public/', views.PublicApiConfigView.as_view(), name='public-api-config'),
 ]

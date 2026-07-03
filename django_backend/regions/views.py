@@ -3,13 +3,18 @@ API views for Indonesian region selector.
 Cascading: Province → Regency → District → Village
 With prefix search across all levels. Flutter-ready JSON responses.
 
-All list views are cached 1 hour since region data is static
-(explicitly updated via management commands only).
+Data sources (priority):
+  1. Local database (seeded via management commands)
+  2. Binderbyte Wilayah API (fallback when local data empty AND BINDERBYTE_API_KEY is set)
+
+All list views are cached 1 hour since region data is static.
 """
 
+import logging
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.conf import settings
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
@@ -26,17 +31,109 @@ from .serializers import (
     RegionPathSerializer,
 )
 
+logger = logging.getLogger(__name__)
+
+
+def _fetch_from_binderbyte(level, parent_code=''):
+    """Fetch region data from Binderbyte Wilayah API if available."""
+    if not settings.BINDERBYTE_API_KEY:
+        return None
+    try:
+        from orders.services.binderbyte import (
+            fetch_provinces, fetch_regencies, fetch_districts, fetch_villages
+        )
+        fetchers = {
+            'province': lambda: fetch_provinces(),
+            'regency': lambda: fetch_regencies(parent_code),
+            'district': lambda: fetch_districts(parent_code),
+            'village': lambda: fetch_villages(parent_code),
+        }
+        fetcher_fn = fetchers.get(level)
+        if fetcher_fn:
+            return fetcher_fn()
+    except Exception as e:
+        logger.warning('Binderbyte fetch failed for %s: %s', level, str(e))
+    return None
+
+
+def _normalize_binderbyte_result(level, data, parent_code=''):
+    """
+    Transform raw Binderbyte Wilayah API result to match our serializer format.
+    
+    Binderbyte returns {code, name} items. We add parent codes and defaults
+    so the DRF serializers can process them correctly.
+    """
+    if not data:
+        return None
+    result = []
+    for item in data:
+        entry = {
+            'code': item.get('code', ''),
+            'name': item.get('name', ''),
+            'is_active': True,
+        }
+        if level == 'regency':
+            entry['province_code'] = parent_code
+            entry['type'] = 'kabupaten'
+        elif level == 'district':
+            entry['regency_code'] = parent_code
+        elif level == 'village':
+            entry['district_code'] = parent_code
+            entry['type'] = 'desa'
+            entry['postal_code'] = item.get('postal_code', '')
+        result.append(entry)
+    return result
+
+
+class BinderbyteFallbackMixin:
+    """
+    Mixin for region list views.
+    Falls back to Binderbyte Wilayah API when local DB is empty
+    and BINDERBYTE_API_KEY is configured.
+    
+    Usage: subclass must implement _fetch_binderbyte(self, request)
+    which returns serialized data list or None.
+    """
+    
+    def list(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        
+        # If local DB has data, use standard DRF list
+        if qs.exists():
+            serializer = self.get_serializer(qs, many=True)
+            return Response(serializer.data)
+        
+        # No local data — try Binderbyte (if configured)
+        if not settings.BINDERBYTE_API_KEY:
+            return Response({'count': 0, 'results': []})
+        
+        binderbyte_data = self._fetch_binderbyte(request)
+        if binderbyte_data:
+            return Response({'count': len(binderbyte_data), 'results': binderbyte_data})
+        
+        return Response({'count': 0, 'results': []})
+
 # Cache for 1 hour — region data is read-only, only changes via seed commands
 CACHE_TIME = 60 * 60
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
-class ProvinceListView(generics.ListAPIView):
-    """List all active provinces (no pagination — needed for cascading selector)."""
+class ProvinceListView(BinderbyteFallbackMixin, generics.ListAPIView):
+    """
+    List all active provinces.
+    Falls back to Binderbyte Wilayah API when local data is empty.
+    """
     queryset = Province.objects.filter(is_active=True)
     serializer_class = ProvinceSerializer
     permission_classes = (permissions.AllowAny,)
-    pagination_class = None  # Full list needed for cascading dropdown
+    pagination_class = None
+
+    def _fetch_binderbyte(self, request):
+        raw = _fetch_from_binderbyte('province')
+        normalized = _normalize_binderbyte_result('province', raw)
+        if normalized:
+            return ProvinceSerializer(normalized, many=True).data
+        return None
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
@@ -49,11 +146,11 @@ class ProvinceDetailView(generics.RetrieveAPIView):
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
-class RegencyListView(generics.ListAPIView):
+class RegencyListView(BinderbyteFallbackMixin, generics.ListAPIView):
     """
     List regencies/cities for a province.
     Use ?province=31 to get regencies in DKI Jakarta.
-    No pagination — full list needed for cascading selector.
+    Falls back to Binderbyte Wilayah API when local data is empty.
     """
     serializer_class = RegencySerializer
     permission_classes = (permissions.AllowAny,)
@@ -66,6 +163,14 @@ class RegencyListView(generics.ListAPIView):
             qs = qs.filter(province__code=province_code)
         return qs.select_related('province')
 
+    def _fetch_binderbyte(self, request):
+        province_code = request.query_params.get('province', '')
+        raw = _fetch_from_binderbyte('regency', province_code)
+        normalized = _normalize_binderbyte_result('regency', raw, parent_code=province_code)
+        if normalized:
+            return RegencySerializer(normalized, many=True).data
+        return None
+
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class RegencyDetailView(generics.RetrieveAPIView):
@@ -77,11 +182,11 @@ class RegencyDetailView(generics.RetrieveAPIView):
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
-class DistrictListView(generics.ListAPIView):
+class DistrictListView(BinderbyteFallbackMixin, generics.ListAPIView):
     """
     List districts for a regency.
     Use ?regency=3171 to get districts in Jakarta Pusat.
-    No pagination — full list needed for cascading selector.
+    Falls back to Binderbyte Wilayah API when local data is empty.
     """
     serializer_class = DistrictSerializer
     permission_classes = (permissions.AllowAny,)
@@ -94,6 +199,14 @@ class DistrictListView(generics.ListAPIView):
             qs = qs.filter(regency__code=regency_code)
         return qs.select_related('regency', 'province')
 
+    def _fetch_binderbyte(self, request):
+        regency_code = request.query_params.get('regency', '')
+        raw = _fetch_from_binderbyte('district', regency_code)
+        normalized = _normalize_binderbyte_result('district', raw, parent_code=regency_code)
+        if normalized:
+            return DistrictSerializer(normalized, many=True).data
+        return None
+
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class DistrictDetailView(generics.RetrieveAPIView):
@@ -105,11 +218,11 @@ class DistrictDetailView(generics.RetrieveAPIView):
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
-class VillageListView(generics.ListAPIView):
+class VillageListView(BinderbyteFallbackMixin, generics.ListAPIView):
     """
     List villages for a district.
     Use ?district=317101 to get villages in Gambir, Jakarta Pusat.
-    No pagination — full list needed for cascading selector.
+    Falls back to Binderbyte Wilayah API when local data is empty.
     """
     serializer_class = VillageSerializer
     permission_classes = (permissions.AllowAny,)
@@ -121,6 +234,14 @@ class VillageListView(generics.ListAPIView):
         if district_code:
             qs = qs.filter(district__code=district_code)
         return qs.select_related('district', 'regency', 'province')
+
+    def _fetch_binderbyte(self, request):
+        district_code = request.query_params.get('district', '')
+        raw = _fetch_from_binderbyte('village', district_code)
+        normalized = _normalize_binderbyte_result('village', raw, parent_code=district_code)
+        if normalized:
+            return VillageSerializer(normalized, many=True).data
+        return None
 
 
 class RegionSearchView(views.APIView):

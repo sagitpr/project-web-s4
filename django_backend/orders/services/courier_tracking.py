@@ -31,6 +31,11 @@ from datetime import datetime, timedelta
 
 from django.core.cache import cache
 
+from .binderbyte import (
+    is_binderbyte_available, is_national_courier,
+    track_shipment as binderbyte_track
+)
+
 logger = logging.getLogger(__name__)
 
 TRACKING_CACHE_PREFIX = 'tracking'
@@ -238,7 +243,13 @@ def clear_tracking_cache(delivery_id=None):
 
 def get_tracking_status(delivery):
     """
-    Main entry point: get hyperlocal tracking status for a delivery.
+    Main entry point: get tracking status for a delivery.
+
+    Supports:
+      - Hyperlocal couriers (GoSend, GrabExpress, Maxim, Antar Sendiri)
+        → Uses delivery model status directly
+      - National couriers (JNE, J&T, Pos Indonesia, SiCepat, etc.)
+        → Uses Binderbyte API if configured, falls back to mock
 
     Results are cached for TRACKING_CACHE_TTL seconds.
     Skips cache if delivery status is terminal (delivered / cancelled)
@@ -253,6 +264,28 @@ def get_tracking_status(delivery):
     if not delivery:
         return None
 
+    # ── Check if this is a national courier (Binderbyte-supported) ──
+    courier_code = ''
+    if delivery.shipping_method:
+        courier_code = delivery.shipping_method.slug
+    elif delivery.courier_name:
+        courier_code = delivery.courier_name.lower()
+
+    tracking_number = delivery.tracking_number or ''
+
+    if (is_binderbyte_available() and is_national_courier(courier_code)
+            and tracking_number):
+        # Try Binderbyte tracking
+        binderbyte_result = binderbyte_track(tracking_number, courier_code)
+        if binderbyte_result:
+            return binderbyte_result
+        # Fall through to hyperlocal mock if Binderbyte fails
+        logger.warning(
+            'Binderbyte tracking failed for %s/%s, falling back to mock',
+            courier_code, tracking_number
+        )
+
+    # ── Hyperlocal delivery (GoSend, GrabExpress, Maxim, Antar Sendiri) ──
     status = delivery.delivery_status or 'menunggu_konfirmasi'
     cache_key = _make_cache_key(delivery.id, status)
 
