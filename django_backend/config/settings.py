@@ -275,8 +275,9 @@ CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 minutes
 CELERY_TASK_TIME_LIMIT = 300       # 5 minutes
 
 # ── Result Backend ──
-# Auto-expire task results after 24 hours to prevent Redis memory growth
-CELERY_RESULT_EXPIRES = 86400
+# Auto-expire task results after 1 hour to prevent Redis memory growth.
+# 24h (86400s) terlalu lama untuk 1GB RAM — result task tidak perlu disimpan >1 jam.
+CELERY_RESULT_EXPIRES = 3600
 
 # ── Task Acknowledgment ──
 # If True, task is only removed from broker after it completes (not when received).
@@ -340,6 +341,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'MAX_PAGE_SIZE': 100,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
@@ -358,8 +360,8 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    # BrowsableAPIRenderer disabled in production to save bandwidth & memory
     'EXCEPTION_HANDLER': 'accounts.exceptions.custom_exception_handler',
 }
 
@@ -548,52 +550,88 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@warungio.com'
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
+# ── Production Logging ──
+# File handler hanya aktif jika DJANGO_DEBUG=True.
+# Production: console-only (Docker logs) untuk hemat I/O dan disk.
 
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
+# ── PRODUCTION: console-only, WARNING+ level (hemat I/O dan disk) ──
+# ── DEVELOPMENT: console DEBUG+INFO + file WARNING+INFO ──
+# File handler mati di production untuk mencegah disk penuh (1GB RAM VPS).
 
-    'handlers': {
-        'console': {
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+if not DEBUG:
+    # Production: console-only, WARNING+ level
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
         },
-
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_DIR / 'django.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
+        'handlers': {
+            'console': {
+                'level': 'WARNING',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
         },
-    },
-
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+                'propagate': True,
+            },
+            'django_backend': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+                'propagate': True,
+            },
         },
-
-        'django_backend': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
+    }
+else:
+    # Development: console + file handler
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
         },
-    },
-}
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+            'file': {
+                'level': 'WARNING',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': LOG_DIR / 'django.log',
+                'maxBytes': 10 * 1024 * 1024,
+                'backupCount': 3,
+                'formatter': 'verbose',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+            'django_backend': {
+                'handlers': ['console', 'file'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+        },
+    }
 
 # =============================================================================
 # SECURITY SETTINGS (Production)

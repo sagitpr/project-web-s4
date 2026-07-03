@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 
+from django.db.models import Prefetch
+
 from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale, PackingSession, PackedItem
 from .serializers import (
     CartSerializer, OrderListSerializer, OrderDetailSerializer,
@@ -823,7 +825,7 @@ class PackingStartView(views.APIView):
     def post(self, request, order_id):
         order = Order.objects.filter(
             id=order_id, store__user=request.user, order_status='paid'
-        ).first()
+        ).prefetch_related('items').first()
 
         if not order:
             return Response(
@@ -836,6 +838,7 @@ class PackingStartView(views.APIView):
             order=order, status='packing'
         ).update(status='cancelled')
 
+        # Items already prefetched — no N+1
         total_items = sum(item.qty for item in order.items.all())
 
         session = PackingSession.objects.create(
@@ -1040,7 +1043,9 @@ class PackingStatusView(views.APIView):
     def get(self, request, order_id):
         session = PackingSession.objects.filter(
             order_id=order_id, store=request.user.store
-        ).order_by('-started_at').first()
+        ).order_by('-started_at').prefetch_related(
+            Prefetch('packed_items', queryset=PackedItem.objects.select_related('product', 'batch'))
+        ).first()
 
         if not session:
             return Response({'active': False, 'message': 'Belum ada sesi packing.'})
