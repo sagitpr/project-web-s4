@@ -65,7 +65,7 @@ RUN mkdir -p /app/staticfiles /app/django_backend/media /app/logs && \
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-    CMD python -c "import os, urllib.request; req = urllib.request.Request(f'http://localhost:{os.getenv(\"PORT\",\"8000\")}/health/'); req.add_header('X-Forwarded-Proto', 'https'); urllib.request.urlopen(req)"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
+    CMD curl -sf http://localhost:8000/health/ || exit 1
 
 ENTRYPOINT ["/bin/bash", "/app/docker-entrypoint.sh"]

@@ -79,6 +79,12 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/django_backend/media
       - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health/ > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     mem_limit: 320m
     networks:
       - warungio_net
