@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import status, generics, permissions, views, throttling
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,16 @@ from .serializers import (
     ForgotPasswordSerializer, ResetPasswordSerializer,
     TokenSerializer
 )
+
+
+def get_client_ip(request):
+    """Extract client IP from request."""
+    if not request:
+        return None
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', None)
 
 
 def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
@@ -101,7 +112,7 @@ class RegisterView(generics.CreateAPIView):
 class LoginView(views.APIView):
     """User login with JWT token response."""
     permission_classes = (permissions.AllowAny,)
-    throttle_classes = [throttling.UserRateThrottle]
+    throttle_classes = [throttling.AnonRateThrottle]
     throttle_scope = 'login'
 
     def post(self, request):
@@ -122,6 +133,12 @@ class LoginView(views.APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         
+        # Reset failed login counters + update IP (single save)
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        user.last_login_ip = get_client_ip(request)
+        user.save(update_fields=['failed_login_attempts', 'locked_until', 'last_login_ip'])
+        
         # Track login
         LoginAttempt.objects.create(
             email=user.email,
@@ -129,11 +146,6 @@ class LoginView(views.APIView):
             user_agent=request.META.get('HTTP_USER_AGENT', ''),
             was_successful=True,
         )
-        
-        # Update device info
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-        user.last_login_ip = request.META.get('REMOTE_ADDR')
-        user.save(update_fields=['last_login_ip'])
         
         return Response({
             'message': 'Login berhasil.',
@@ -276,22 +288,25 @@ class OTPVerifyView(views.APIView):
         purpose = serializer.validated_data['purpose']
         
         # Find valid OTP — support both email-based and phone-based lookup
+        # Compare against hashed OTP for security, with plaintext fallback for legacy records
+        otp_code_hash = OTP.hash_otp(otp_code)
+        q_filter = Q(
+            purpose=purpose,
+            is_valid=True,
+            is_used=False,
+        )
+        # Prefer hash match, fallback to plaintext for legacy records
+        hash_q = Q(otp_code_hash=otp_code_hash)
+        plain_q = Q(otp_code=otp_code)
+        
         otp = None
         if email:
             otp = OTP.objects.filter(
-                email=email,
-                purpose=purpose,
-                is_valid=True,
-                is_used=False,
-                otp_code=otp_code,
+                Q(email=email) & q_filter & (hash_q | plain_q)
             ).first()
         if not otp and phone:
             otp = OTP.objects.filter(
-                phone=phone,
-                purpose=purpose,
-                is_valid=True,
-                is_used=False,
-                otp_code=otp_code,
+                Q(phone=phone) & q_filter & (hash_q | plain_q)
             ).first()
         
         if not otp:
@@ -401,27 +416,32 @@ class ForgotPasswordView(views.APIView):
         
         email = serializer.validated_data['email']
         
-        # Create reset OTP
-        otp = OTP.objects.create(
-            email=email,
-            purpose='password_reset',
-            ip_address=request.META.get('REMOTE_ADDR'),
-        )
+        # Cegah user enumeration: selalu return response yang sama
+        # baik email terdaftar maupun tidak
+        user_exists = User.objects.filter(email=email).exists()
+        
+        if user_exists:
+            # Create reset OTP
+            otp = OTP.objects.create(
+                email=email,
+                purpose='password_reset',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+
+            # Dispatch OTP delivery to Celery worker (non-blocking)
+            _dispatch_otp_async(
+                email=email,
+                phone=None,
+                otp_code=otp.otp_code,
+                purpose='password_reset',
+                user_full_name=None,
+            )
 
         response_data = {
-            'message': 'Kode reset password telah dikirim ke email Anda.',
+            'message': 'Jika email terdaftar, kode reset password telah dikirim.',
         }
 
-        # Dispatch OTP delivery to Celery worker (non-blocking)
-        _dispatch_otp_async(
-            email=email,
-            phone=None,
-            otp_code=otp.otp_code,
-            purpose='password_reset',
-            user_full_name=None,
-        )
-
-        if settings.DEBUG:
+        if settings.DEBUG and user_exists:
             response_data['otp_code'] = otp.otp_code
 
         return Response(response_data)

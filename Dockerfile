@@ -46,6 +46,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     mariadb-client \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
@@ -55,13 +56,7 @@ COPY . /app/
 
 ENV PYTHONPATH=/app/django_backend
 
-RUN mkdir -p /app/staticfiles /app/django_backend/media /app/logs
-
-# Normalize line endings and make entrypoint executable
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    dos2unix && \
+RUN mkdir -p /app/staticfiles /app/django_backend/media /app/logs && \
     dos2unix /app/docker-entrypoint.sh && \
     chmod +x /app/docker-entrypoint.sh && \
     apt-get purge -y dos2unix && \

@@ -12,7 +12,7 @@
 # ── InnoDB ───────────────────────────────────────────────────────────────────
 # Rule of thumb: 50-70% of available RAM for InnoDB on a dedicated DB server.
 # On a 1GB shared VPS, 128M is conservative and leaves room for OS + others.
-innodb_buffer_pool_size        = 128M
+innodb_buffer_pool_size        = 96M
 
 # Keep log small to reduce I/O and memory
 innodb_log_file_size           = 32M
@@ -36,8 +36,8 @@ query_cache_size               = 0
 
 # ── Temp Tables ──────────────────────────────────────────────────────────────
 # Sufficient for most Django ORM queries
-tmp_table_size                 = 16M
-max_heap_table_size            = 16M
+tmp_table_size                 = 8M
+max_heap_table_size            = 8M
 
 # ── Table Cache ──────────────────────────────────────────────────────────────
 # Warungio has ~30 tables; 200 is generous

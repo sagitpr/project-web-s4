@@ -24,10 +24,16 @@ class Store(models.Model):
     category = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kategori')
     description = models.TextField(blank=True, null=True, verbose_name='Deskripsi')
     
-    # Location
+    # Location — with full Indonesian administrative hierarchy
     address = models.TextField(blank=True, null=True, verbose_name='Alamat')
-    city = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kota')
     province = models.CharField(max_length=100, blank=True, null=True, verbose_name='Provinsi')
+    province_code = models.CharField(max_length=2, blank=True, null=True, verbose_name='Kode Provinsi')
+    city = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kota/Kabupaten')
+    city_code = models.CharField(max_length=4, blank=True, null=True, verbose_name='Kode Kota/Kabupaten')
+    district = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kecamatan')
+    district_code = models.CharField(max_length=6, blank=True, null=True, verbose_name='Kode Kecamatan')
+    village = models.CharField(max_length=100, blank=True, null=True, verbose_name='Desa/Kelurahan')
+    village_code = models.CharField(max_length=10, blank=True, null=True, verbose_name='Kode Desa/Kelurahan')
     postal_code = models.CharField(max_length=10, blank=True, null=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)

@@ -2,9 +2,14 @@
 API views for Indonesian region selector.
 Cascading: Province → Regency → District → Village
 With prefix search across all levels. Flutter-ready JSON responses.
+
+All list views are cached 1 hour since region data is static
+(explicitly updated via management commands only).
 """
 
 from django.db.models import Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
@@ -21,7 +26,11 @@ from .serializers import (
     RegionPathSerializer,
 )
 
+# Cache for 1 hour — region data is read-only, only changes via seed commands
+CACHE_TIME = 60 * 60
 
+
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class ProvinceListView(generics.ListAPIView):
     """List all active provinces (no pagination — needed for cascading selector)."""
     queryset = Province.objects.filter(is_active=True)
@@ -30,6 +39,7 @@ class ProvinceListView(generics.ListAPIView):
     pagination_class = None  # Full list needed for cascading dropdown
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class ProvinceDetailView(generics.RetrieveAPIView):
     """Get province details with regency list."""
     queryset = Province.objects.filter(is_active=True)
@@ -38,6 +48,7 @@ class ProvinceDetailView(generics.RetrieveAPIView):
     lookup_field = 'code'
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class RegencyListView(generics.ListAPIView):
     """
     List regencies/cities for a province.
@@ -56,6 +67,7 @@ class RegencyListView(generics.ListAPIView):
         return qs.select_related('province')
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class RegencyDetailView(generics.RetrieveAPIView):
     """Get regency details with district list."""
     queryset = Regency.objects.filter(is_active=True)
@@ -64,6 +76,7 @@ class RegencyDetailView(generics.RetrieveAPIView):
     lookup_field = 'code'
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class DistrictListView(generics.ListAPIView):
     """
     List districts for a regency.
@@ -82,6 +95,7 @@ class DistrictListView(generics.ListAPIView):
         return qs.select_related('regency', 'province')
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class DistrictDetailView(generics.RetrieveAPIView):
     """Get district details with village list."""
     queryset = District.objects.filter(is_active=True)
@@ -90,6 +104,7 @@ class DistrictDetailView(generics.RetrieveAPIView):
     lookup_field = 'code'
 
 
+@method_decorator(cache_page(CACHE_TIME), name='dispatch')
 class VillageListView(generics.ListAPIView):
     """
     List villages for a district.

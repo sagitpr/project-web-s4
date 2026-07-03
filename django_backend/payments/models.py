@@ -117,12 +117,12 @@ class Payment(models.Model):
         self.order.order_status = 'paid'
         self.order.save(update_fields=['payment_status', 'order_status'])
         # Record admin fee seller for platform owner payout (Rp 1.000 per transaksi)
-        if self.order.store_id and float(self.order.admin_fee_seller) > 0:
+        if self.order.store_id and float(self.order.admin_fee) > 0:
             AdminFeeTransaction.objects.get_or_create(
                 order=self.order,
                 defaults={
                     'store': self.order.store,
-                    'amount': self.order.admin_fee_seller,
+                    'amount': self.order.admin_fee,
                     'owner_phone': '089667850425',
                 }
             )

@@ -160,53 +160,105 @@
     });
   }
 
-  // ── Social Login: Google ──
+  // ══════════════════════════════════════════════════════════════════════════
+  //  GOOGLE SIGN-IN (GSI) — initialized ONCE, not on every click
+  // ══════════════════════════════════════════════════════════════════════════
+
+  let gsiReady = false;          // true after google.accounts.id.initialize() called
+  let gsiClientId = '';         // cached Google Client ID
+  let gsiInitializing = false;   // guard against concurrent init attempts
+
+  /**
+   * Poll for GSI library readiness, then fetch config + initialize once.
+   * Called immediately on page load.
+   */
+  function initGSI() {
+    if (gsiReady || gsiInitializing) return;
+    gsiInitializing = true;
+
+    // Wrap in IIFE so we can use async/await
+    (async function setup() {
+      // 1. Wait for google.accounts to be available
+      var maxAttempts = 50;       // ~5 seconds (50 × 100ms)
+      var attempts = 0;
+      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
+        await new Promise(function (r) { return setTimeout(r, 100); });
+        attempts++;
+      }
+
+      if (typeof google === 'undefined' || !google.accounts) {
+        console.warn('Google Identity Services library not loaded after 5s — Google login unavailable');
+        gsiInitializing = false;
+        return;
+      }
+
+      // 2. Fetch Google Client ID from backend (only once)
+      try {
+        if (typeof WarungioAPI !== 'undefined' && WarungioAPI.getSocialAuthConfig) {
+          var config = await WarungioAPI.getSocialAuthConfig('google');
+          if (config && config.google_client_id && !config.google_client_id.includes('your-google')) {
+            gsiClientId = config.google_client_id;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch Google config:', e);
+      }
+
+      if (!gsiClientId) {
+        console.error('Google Client ID not configured — Google login unavailable');
+        gsiInitializing = false;
+        return;
+      }
+
+      // 3. Initialize GSI once
+      google.accounts.id.initialize({
+        client_id: gsiClientId,
+        callback: handleGSICredential,
+        cancel_on_tap_outside: true,
+      });
+
+      gsiReady = true;
+      gsiInitializing = false;
+      console.info('Google Sign-In initialized');
+    })();
+  }
+
+  /** Shared credential callback for Google One Tap / popup */
+  function handleGSICredential(response) {
+    if (!response || !response.credential) return;
+
+    var btn = document.querySelector('.btn-social.google');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Memproses...';
+
+    WarungioAPI.socialLogin('google', { credential: response.credential })
+      .then(function (data) { handleAuthResponse(data); })
+      .catch(function (err) {
+        setMessage(err.message);
+        btn.disabled = false;
+        var img = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img)
+          ? WarungioAssets.img('google-logo.png')
+          : '/static/images/google-logo.png';
+        btn.innerHTML = '<img src="' + img + '" alt="Google" /><span>Google</span>';
+      });
+  }
+
+  // Kick off GSI initialization immediately
+  initGSI();
+
+  // ── Google button click: only prompt() — initialize already done ──
   const googleBtn = document.querySelector('.btn-social.google');
   if (googleBtn) {
-    googleBtn.addEventListener('click', async function googleLogin() {
-      // Check if Google Identity Services is loaded
+    googleBtn.addEventListener('click', function googleLogin() {
       if (typeof google === 'undefined' || !google.accounts) {
         setMessage('Memuat layanan Google... Silakan coba lagi.');
         return;
       }
 
-      // Fetch Google Client ID from backend
-      let clientId = '';
-      try {
-        const config = await WarungioAPI.getSocialAuthConfig('google');
-        if (config.google_client_id) clientId = config.google_client_id;
-      } catch (e) {
-        console.warn('Failed to fetch Google config:', e);
-      }
-
-      // Guard: block login if client ID is missing or still placeholder
-      if (!clientId || clientId.includes('your-google')) {
-        setMessage('Konfigurasi Google Login belum siap. Silakan coba lagi nanti.');
-        console.error('Google Client ID not configured:', clientId);
+      if (!gsiReady) {
+        setMessage('Memuat layanan Google... Silakan coba lagi.');
         return;
       }
-
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response) => {
-          if (response.credential) {
-            googleBtn.disabled = true;
-            googleBtn.innerHTML = '<span class="spinner"></span> Memproses...';
-            try {
-              const data = await WarungioAPI.socialLogin('google', {
-                credential: response.credential
-              });
-              handleAuthResponse(data);
-            } catch (err) {
-              setMessage(err.message);
-              googleBtn.disabled = false;
-              var googleImg = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img) ? WarungioAssets.img('google-logo.png') : '/static/images/google-logo.png';
-              googleBtn.innerHTML = '<img src="' + googleImg + '" alt="Google" /><span>Google</span>';
-            }
-          }
-        },
-        cancel_on_tap_outside: true,
-      });
 
       google.accounts.id.prompt(); // Show One Tap or popup
     });

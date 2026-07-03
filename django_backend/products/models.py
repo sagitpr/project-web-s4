@@ -137,7 +137,6 @@ class Product(models.Model):
         return self.store.store_name if self.store else ''
 
     @property
-    @property
     def available_stock(self):
         """Stok yang benar-benar tersedia untuk dijual (total - reserved)."""
         return max(0, self.stock - self.reserved_stock)

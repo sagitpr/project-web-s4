@@ -507,11 +507,9 @@ REGENCIES = [
     ("8208", "82", "Pulau Taliabu", "kabupaten", -1.8, 124.8),
     ("8271", "82", "Ternate", "kota", 0.8, 127.4),
     ("8272", "82", "Tidore Kepulauan", "kota", 0.7, 127.4),
-    # ── Papua (91) ──
-    ("9101", "91", "Merauke", "kabupaten", -7.5, 140.4),
-    ("9102", "91", "Jayawijaya", "kabupaten", -4.1, 139.0),
+    # ── Papua (91) — after 2022 split: Merauke → Papua Selatan, Jayawijaya → Papua Pegunungan, Nabire → Papua Tengah ──
     ("9103", "91", "Jayapura", "kabupaten", -2.7, 140.7),
-    ("9104", "91", "Nabire", "kabupaten", -3.5, 135.5),
+    # Nabire removed from Papua (91) — now under Papua Tengah (9401)
     ("9105", "91", "Kepulauan Yapen", "kabupaten", -1.8, 136.2),
     ("9106", "91", "Biak Numfor", "kabupaten", -1.0, 136.0),
     ("9107", "91", "Paniai", "kabupaten", -3.8, 136.4),
@@ -537,8 +535,7 @@ REGENCIES = [
     ("9127", "91", "Intan Jaya", "kabupaten", -3.5, 136.7),
     ("9128", "91", "Deiyai", "kabupaten", -3.9, 136.4),
     ("9171", "91", "Jayapura", "kota", -2.5, 140.7),
-    # ── Papua Barat (92) ──
-    ("9201", "92", "Sorong", "kabupaten", -1.1, 131.5),
+    # ── Papua Barat (92) — Sorong removed → now under Papua Barat Daya (9601) ──
     ("9202", "92", "Manokwari", "kabupaten", -0.9, 134.1),
     ("9203", "92", "Fakfak", "kabupaten", -2.9, 132.3),
     ("9204", "92", "Sorong Selatan", "kabupaten", -1.5, 132.0),

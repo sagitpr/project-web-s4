@@ -58,11 +58,15 @@ class StoreDetailSerializer(serializers.ModelSerializer):
 
 
 class StoreCreateSerializer(serializers.ModelSerializer):
-    """Store registration serializer."""
+    """Store registration serializer with full region hierarchy."""
     class Meta:
         model = Store
-        fields = ('store_name', 'category', 'description', 'address', 'city',
-                  'province', 'postal_code', 'latitude', 'longitude',
+        fields = ('store_name', 'category', 'description', 'address',
+                  'province', 'province_code',
+                  'city', 'city_code',
+                  'district', 'district_code',
+                  'village', 'village_code',
+                  'postal_code', 'latitude', 'longitude',
                   'open_time', 'close_time', 'delivery_type', 'service_area',
                   'bank_name', 'bank_account', 'bank_owner', 'store_logo',
                   'store_banner')
@@ -74,11 +78,15 @@ class StoreCreateSerializer(serializers.ModelSerializer):
 
 
 class StoreUpdateSerializer(serializers.ModelSerializer):
-    """Store update serializer."""
+    """Store update serializer with full region hierarchy."""
     class Meta:
         model = Store
-        fields = ('store_name', 'category', 'description', 'address', 'city',
-                  'province', 'postal_code', 'latitude', 'longitude',
+        fields = ('store_name', 'category', 'description', 'address',
+                  'province', 'province_code',
+                  'city', 'city_code',
+                  'district', 'district_code',
+                  'village', 'village_code',
+                  'postal_code', 'latitude', 'longitude',
                   'open_time', 'close_time', 'delivery_type', 'service_area',
                   'bank_name', 'bank_account', 'bank_owner', 'store_logo',
                   'store_banner', 'is_open')

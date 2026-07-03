@@ -1,25 +1,20 @@
 #!/bin/bash
 # =============================================================================
-# Warungio Marketplace — Docker Entrypoint (SINGLE STARTUP FLOW)
+# Warungio Marketplace — Docker Entrypoint (SPLIT BY CONTAINER ROLE)
 #
-# THIS IS THE SINGLE ENTRYPOINT. No CMD or command: override in docker-compose.
-# Order:
-#   1) Wait for DB (real auth check)
-#   2) Sync migrations (backup → per-op validation → fake existing → migrate missing)
-#   3) Run migrate (safety net for any genuinely missing migrations)
-#   4) Collect static files
-#   5) Superuser (optional)
-#   6) Celery (background, nonaktif default)
-#   7) Daphne (foreground)
+# BEHAVIOR:
+#   No args ($# -eq 0)  → DJANGO mode: wait DB → sync_migrations → migrate
+#                          → collectstatic → superuser → daphne (foreground)
+#   With args ($# -gt 0) → CELERY/BEAT mode: wait DB → exec "$@" (skip startup)
+#
+# Docker Compose passes `command:` as args to the entrypoint, so:
+#   django: no command            → full startup + daphne
+#   celery: command: [celery ...] → wait DB + celery worker
+#   beat:   command: [celery ...] → wait DB + celery beat
 # =============================================================================
 
 set -o pipefail
-set -e  # Exit immediately on any unhandled error
-
-# ─── Celery Enablement ───────────────────────────────────────────────────────
-# Set CELERY_ENABLED=true in .env to reactivate Celery workers.
-# For 1GB VPS, Celery is DISABLED by default to save ~100MB RAM.
-CELERY_ENABLED=${CELERY_ENABLED:-false}
+set -e
 
 cd /app/django_backend
 
@@ -33,10 +28,10 @@ RETRY_DELAY=${DB_RETRY_DELAY:-2}
 PORT="${PORT:-8000}"
 
 # ------------------------------------------------------------------
-# STEP 0: Wait for MariaDB with REAL AUTHENTICATION CHECK
+# WAIT FOR DATABASE — needed by ALL container types
 # ------------------------------------------------------------------
 if [ "${USE_MYSQL}" = "true" ] || [ "${USE_MYSQL}" = "1" ]; then
-    echo "[1/6] Waiting for MariaDB (real auth check)..."
+    echo "[WAIT] Waiting for MariaDB (real auth check)..."
 
     db_host="${DB_HOST:-127.0.0.1}"
     db_port="${DB_PORT:-3306}"
@@ -45,7 +40,6 @@ if [ "${USE_MYSQL}" = "true" ] || [ "${USE_MYSQL}" = "1" ]; then
     db_retries=0
 
     while [ ${db_retries} -lt ${MAX_RETRIES} ]; do
-        # Use mysqladmin with actual credentials for a real auth check
         if mysqladmin ping \
             -h "${db_host}" \
             -P "${db_port}" \
@@ -69,35 +63,47 @@ if [ "${USE_MYSQL}" = "true" ] || [ "${USE_MYSQL}" = "1" ]; then
         exit 1
     fi
 else
-    echo "[1/6] Using SQLite — no database wait needed."
+    echo "[WAIT] Using SQLite — no database wait needed."
 fi
 
+
 # ------------------------------------------------------------------
-# STEP 1: Sync migrations (Permanent solution for pre-existing DB)
+# CELERY / BEAT MODE  — skip startup tasks, run the passed command
 # ------------------------------------------------------------------
-# sync_migrations:
-#   1. Backup django_migrations table
-#   2. Detect migrations already reflected in the database (per-operation)
-#   3. Fake those migrations as applied
-#   4. Run 'migrate' for genuinely missing migrations (e.g. token_blacklist)
-#
-#   This is safe to run repeatedly — fully idempotent.
+# docker-compose passes `command:` as $@ to the entrypoint.
+# celery service:    command: ["celery", "-A", "config", "worker", ...]
+# beat service:      command: ["celery", "-A", "config", "beat", ...]
+if [ $# -gt 0 ]; then
+    echo "[MODE] Container role detected from command arguments."
+    echo "  -> Skipping migrations, collectstatic, and superuser."
+    echo "  -> Starting: $@"
+    exec "$@"
+fi
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DJANGO MODE — Full startup (migrations + collectstatic + superuser + daphne)
+# ══════════════════════════════════════════════════════════════════════════════
+echo "[MODE] Django web container — running full startup."
+
 # ------------------------------------------------------------------
-echo "[2/6] Syncing migrations with existing database..."
+# STEP 1: Sync migrations
+# ------------------------------------------------------------------
+echo "[1/3] Syncing migrations with existing database..."
 python manage.py sync_migrations --no-backup
 echo "  -> Migration sync complete."
 
 # ------------------------------------------------------------------
 # STEP 2: Run database migrations (safety net for any remaining)
 # ------------------------------------------------------------------
-echo "[3/6] Applying any remaining migrations..."
+echo "[2/3] Applying any remaining migrations..."
 python manage.py migrate --noinput
 echo "  -> Migrations complete."
 
 # ------------------------------------------------------------------
 # STEP 3: Collect static files (non-fatal on warnings)
 # ------------------------------------------------------------------
-echo "[4/6] Collecting static files..."
+echo "[3/3] Collecting static files..."
 set +e
 python manage.py collectstatic --noinput 2>&1
 COLLECTSTATUS=$?
@@ -109,7 +115,7 @@ else
 fi
 
 # ------------------------------------------------------------------
-# STEP 4: Create superuser (optional, non-fatal)
+# Superuser (optional, non-fatal)
 # ------------------------------------------------------------------
 if [ -n "${DJANGO_SUPERUSER_EMAIL}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" ]; then
     echo "  -> Creating superuser..."
@@ -134,52 +140,11 @@ if email and password:
 fi
 
 # ------------------------------------------------------------------
-# STEP 5: Celery — NONAKTIF (hemat ~100MB RAM untuk VPS 1GB)
-# ------------------------------------------------------------------
-# Celery dinonaktifkan secara default. Untuk mengaktifkan:
-#   Set CELERY_ENABLED=true di .env
-#
-# Saat diaktifkan, Celery hanya jalan jika REDIS_URL terkonfigurasi
-# dan bukan localhost (broker Redis harus reachable).
-# ------------------------------------------------------------------
-echo "[5/6] Celery — SKIP (nonaktif, hemat memori)"
-
-if [ "${CELERY_ENABLED}" = "true" ] || [ "${CELERY_ENABLED}" = "1" ]; then
-    # Kill any stale Celery beat PID files before starting
-    rm -f /app/logs/celerybeat.pid /app/logs/celerybeat-schedule.db 2>/dev/null || true
-
-    REDIS_CHECK=$(python3 -c "
-import os
-url = os.environ.get('REDIS_URL', '')
-if url and not url.startswith('redis://localhost') and not url.startswith('redis://127.0.0.1'):
-    print('ready')
-else:
-    print('skip')
-" 2>/dev/null || echo "skip")
-
-    if [ "${REDIS_CHECK}" = "ready" ]; then
-        echo "  -> Celery ENABLED — Starting worker..."
-        mkdir -p /app/logs
-        celery -A config worker --loglevel=INFO --concurrency=1 \
-            --detach --logfile=/app/logs/celery.log 2>&1 || \
-            echo "  -> WARNING: Celery worker failed to start."
-        celery -A config beat --loglevel=INFO \
-            --detach --logfile=/app/logs/celery_beat.log 2>&1 || \
-            echo "  -> WARNING: Celery beat failed to start."
-        echo "  -> Celery worker & beat started (concurrency=1)."
-    else
-        echo "  -> Redis not configured — skipping Celery."
-    fi
-fi
-
-# ------------------------------------------------------------------
 # START Daphne ASGI server (foreground — container stays alive)
 # ------------------------------------------------------------------
-echo "[6/6] Starting Daphne on 0.0.0.0:${PORT}..."
+echo "Starting Daphne on 0.0.0.0:${PORT}..."
 echo "================================================"
 echo "  Warungio running on 0.0.0.0:${PORT}"
 echo "================================================"
 
-# Daphne dengan 1 worker process untuk hemat memori
-# Gunakan -w 2 atau -w 4 jika RAM > 2GB
-exec daphne -b 0.0.0.0 -p ${PORT} config.asgi:application
+exec daphne -b 0.0.0.0 -p ${PORT} -w 1 config.asgi:application

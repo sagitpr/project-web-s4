@@ -22,10 +22,7 @@
     {% endif %}
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
     {% if google_maps_api_key %}
-    <script async
-      src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initializeMap&loading=async"
-      onerror="console.error('Google Maps API failed to load')">
-    </script>
+    <meta name="google-maps-api-key" content="{{ google_maps_api_key }}" />
     {% endif %}
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
@@ -192,38 +189,33 @@
                   required
               /></label>
               <label class="field"
-                >Kecamatan <b>*</b
-                ><select name="district" required>
-                  <option value="">Pilih kecamatan</option>
-                  <option>Cengkareng</option>
-                  <option>Kebayoran Baru</option>
-                  <option>Sukajadi</option>
-                  <option>Depok</option>
-                  <option>Bekasi Selatan</option>
-                </select></label
-              >
+                >Provinsi <b>*</b
+                ><select name="province" id="regionProvince" required>
+                  <option value="">— Pilih Provinsi —</option>
+                </select>
+                <input type="hidden" name="province_code" />
+              </label>
               <label class="field"
                 >Kota / Kabupaten <b>*</b
-                ><select name="city" required>
-                  <option value="">Pilih kota / kabupaten</option>
-                  <option>Jakarta Barat</option>
-                  <option>Jakarta Selatan</option>
-                  <option>Bandung</option>
-                  <option>Depok</option>
-                  <option>Bekasi</option>
-                </select></label
-              >
+                ><select name="city" id="regionCity" required disabled>
+                  <option value="">— Pilih Provinsi dulu —</option>
+                </select>
+                <input type="hidden" name="city_code" />
+              </label>
               <label class="field"
-                >Provinsi <b>*</b
-                ><select name="province" required>
-                  <option value="">Pilih provinsi</option>
-                  <option>DKI Jakarta</option>
-                  <option>Jawa Barat</option>
-                  <option>Banten</option>
-                  <option>Jawa Tengah</option>
-                  <option>Jawa Timur</option>
-                </select></label
-              >
+                >Kecamatan <b>*</b
+                ><select name="district" id="regionDistrict" required disabled>
+                  <option value="">— Pilih Kota dulu —</option>
+                </select>
+                <input type="hidden" name="district_code" />
+              </label>
+              <label class="field"
+                >Desa / Kelurahan <b>*</b
+                ><select name="village" id="regionVillage" required disabled>
+                  <option value="">— Pilih Kecamatan dulu —</option>
+                </select>
+                <input type="hidden" name="village_code" />
+              </label>
               <label class="field"
                 >Kode Pos <b>*</b
                 ><input

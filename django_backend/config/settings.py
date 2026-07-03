@@ -268,6 +268,47 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Jakarta'
 
+# ── Task Execution Time Limits ──
+# Soft time limit: task gets a SoftTimeLimitExceeded exception (can catch & cleanup)
+# Hard time limit: worker kills the task process (prevents hung tasks from blocking)
+CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 minutes
+CELERY_TASK_TIME_LIMIT = 300       # 5 minutes
+
+# ── Result Backend ──
+# Auto-expire task results after 24 hours to prevent Redis memory growth
+CELERY_RESULT_EXPIRES = 86400
+
+# ── Task Acknowledgment ──
+# If True, task is only removed from broker after it completes (not when received).
+# If the worker crashes mid-task, the task is re-delivered to another worker.
+CELERY_TASK_ACKS_LATE = True
+
+# ── Worker Behavior ──
+# Prefetch multiplier = 1 ensures fair distribution (one task at a time per worker).
+# Default is 4, which can cause uneven load across workers.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# ── Task Memory Management ──
+# Restart worker process after 100 tasks to prevent memory leaks.
+# Can also be set via --max-tasks-per-child CLI flag.
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 100
+
+# ── Task Serialization ──
+# Only allow JSON for security (prevents pickle-based exploits)
+CELERY_TASK_ACCEPT_CONTENT = ['json']
+
+# ── Default Queue ──
+# Explicit queue name for observability. Celery worker will listen here by default.
+CELERY_TASK_DEFAULT_QUEUE = 'warungio_default'
+CELERY_TASK_DEFAULT_EXCHANGE = 'warungio_default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'warungio_default'
+
+# ── Beat Schedule Storage ──
+# Store schedule in DB so it persists across container restarts.
+# Requires django-celery-beat to be installed.
+# Fallback to file-based PersistentScheduler if not available.
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 # =============================================================================
 # AUTHENTICATION
 # =============================================================================

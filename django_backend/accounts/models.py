@@ -168,6 +168,9 @@ class OTP(models.Model):
     email = models.EmailField(null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     otp_code = models.CharField(max_length=6)
+    otp_code_hash = models.CharField(max_length=64, blank=True, null=True,
+                                     verbose_name='Hash OTP',
+                                     help_text='SHA256 hash of OTP for secure storage')
     otp_type = models.CharField(max_length=20, choices=OTP_TYPES, default='email')
     purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES, default='registration')
     is_used = models.BooleanField(default=False)
@@ -230,6 +233,7 @@ class OTP(models.Model):
             )
         if not self.otp_code:
             self.otp_code = self.generate_otp()
+            self.otp_code_hash = self.hash_otp(self.otp_code)
         super().save(*args, **kwargs)
 
 
