@@ -58,29 +58,42 @@ def _fetch_from_binderbyte(level, parent_code=''):
 
 def _normalize_binderbyte_result(level, data, parent_code=''):
     """
-    Transform raw Binderbyte Wilayah API result to match our serializer format.
+    Transform raw Binderbyte Wilayah API result to match frontend expectations.
     
-    Binderbyte returns {code, name} items. We add parent codes and defaults
-    so the DRF serializers can process them correctly.
+    Binderbyte returns {code, name} items. We add parent codes, display_name,
+    and defaults so the frontend can render dropdown options correctly.
+    
+    Returns a flat list of dicts (NOT serialized through DRF ModelSerializers,
+    because ModelSerializers with SerializerMethodField crash on plain dicts).
     """
     if not data:
         return None
     result = []
     for item in data:
+        raw_name = item.get('name', '')
         entry = {
             'code': item.get('code', ''),
-            'name': item.get('name', ''),
+            'name': raw_name,
+            'display_name': raw_name,
             'is_active': True,
         }
         if level == 'regency':
             entry['province_code'] = parent_code
-            entry['type'] = 'kabupaten'
+            # Detect type from name: "Kota ..." → 'kota', otherwise 'kabupaten'
+            if raw_name.upper().startswith('KOTA'):
+                entry['type'] = 'kota'
+                entry['display_name'] = f"Kota {raw_name[4:].strip()}"
+            else:
+                entry['type'] = 'kabupaten'
+                entry['display_name'] = f"Kab. {raw_name}"
         elif level == 'district':
             entry['regency_code'] = parent_code
+            entry['display_name'] = f"Kec. {raw_name}"
         elif level == 'village':
             entry['district_code'] = parent_code
             entry['type'] = 'desa'
             entry['postal_code'] = item.get('postal_code', '')
+            entry['display_name'] = f"Desa {raw_name}"
         result.append(entry)
     return result
 
@@ -91,27 +104,30 @@ class BinderbyteFallbackMixin:
     Falls back to Binderbyte Wilayah API when local DB is empty
     and BINDERBYTE_API_KEY is configured.
     
+    CRITICAL: Always returns a flat JSON array (NOT {count, results}) so the
+    frontend can iterate it directly with forEach/populateSelect.
+    
     Usage: subclass must implement _fetch_binderbyte(self, request)
-    which returns serialized data list or None.
+    which returns a list of dicts with at minimum {'code', 'name'} or None.
     """
     
     def list(self, request, *args, **kwargs):
         qs = self.get_queryset()
         
-        # If local DB has data, use standard DRF list
+        # If local DB has data, use standard DRF list (returns flat array)
         if qs.exists():
             serializer = self.get_serializer(qs, many=True)
             return Response(serializer.data)
         
         # No local data — try Binderbyte (if configured)
         if not settings.BINDERBYTE_API_KEY:
-            return Response({'count': 0, 'results': []})
+            return Response([])
         
         binderbyte_data = self._fetch_binderbyte(request)
         if binderbyte_data:
-            return Response({'count': len(binderbyte_data), 'results': binderbyte_data})
+            return Response(binderbyte_data)
         
-        return Response({'count': 0, 'results': []})
+        return Response([])
 
 # Cache for 1 hour — region data is read-only, only changes via seed commands
 CACHE_TIME = 60 * 60
@@ -131,9 +147,9 @@ class ProvinceListView(BinderbyteFallbackMixin, generics.ListAPIView):
     def _fetch_binderbyte(self, request):
         raw = _fetch_from_binderbyte('province')
         normalized = _normalize_binderbyte_result('province', raw)
-        if normalized:
-            return ProvinceSerializer(normalized, many=True).data
-        return None
+        # Return raw dict data directly — ModelSerializer would crash on
+        # SerializerMethodField (get_regency_count) which calls obj.regencies.filter()
+        return normalized
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
@@ -167,9 +183,7 @@ class RegencyListView(BinderbyteFallbackMixin, generics.ListAPIView):
         province_code = request.query_params.get('province', '')
         raw = _fetch_from_binderbyte('regency', province_code)
         normalized = _normalize_binderbyte_result('regency', raw, parent_code=province_code)
-        if normalized:
-            return RegencySerializer(normalized, many=True).data
-        return None
+        return normalized
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
@@ -203,9 +217,7 @@ class DistrictListView(BinderbyteFallbackMixin, generics.ListAPIView):
         regency_code = request.query_params.get('regency', '')
         raw = _fetch_from_binderbyte('district', regency_code)
         normalized = _normalize_binderbyte_result('district', raw, parent_code=regency_code)
-        if normalized:
-            return DistrictSerializer(normalized, many=True).data
-        return None
+        return normalized
 
 
 @method_decorator(cache_page(CACHE_TIME), name='dispatch')
@@ -239,9 +251,7 @@ class VillageListView(BinderbyteFallbackMixin, generics.ListAPIView):
         district_code = request.query_params.get('district', '')
         raw = _fetch_from_binderbyte('village', district_code)
         normalized = _normalize_binderbyte_result('village', raw, parent_code=district_code)
-        if normalized:
-            return VillageSerializer(normalized, many=True).data
-        return None
+        return normalized
 
 
 class RegionSearchView(views.APIView):

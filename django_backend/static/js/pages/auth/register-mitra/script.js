@@ -227,8 +227,13 @@
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
     const data = await resp.json();
-    cacheSet(url, data);
-    return data;
+    // Defensive: unwrap {count, results} format if returned
+    // Some API paths return flat array directly, others may return wrapped
+    const unwrapped = (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.results))
+      ? data.results
+      : data;
+    cacheSet(url, unwrapped);
+    return unwrapped;
   }
 
   async function loadProvinces() {
@@ -450,11 +455,30 @@
         provSelect.innerHTML = '<option value="">Memuat data provinsi...</option>';
         try {
           var provinces = await loadProvinces();
-          populateSelect(provSelect, provinces, 'name', 'code', '— Pilih Provinsi —');
+          if (Array.isArray(provinces) && provinces.length > 0) {
+            populateSelect(provSelect, provinces, 'name', 'code', '— Pilih Provinsi —');
+          } else {
+            provSelect.innerHTML = '<option value="">Data provinsi tidak tersedia</option>';
+            console.warn('Provinces API returned empty or non-array:', provinces);
+          }
           provSelect.disabled = false;
         } catch (e) {
           provSelect.innerHTML = '<option value="">Gagal memuat provinsi</option>';
+          provSelect.title = e.message || 'Koneksi gagal';
           console.error('Load provinces error:', e);
+          // Retry once after 3 seconds
+          setTimeout(async function() {
+            try {
+              var provinces = await loadProvinces();
+              if (Array.isArray(provinces) && provinces.length > 0) {
+                populateSelect(provSelect, provinces, 'name', 'code', '— Pilih Provinsi —');
+                provSelect.disabled = false;
+                provSelect.title = '';
+              }
+            } catch (e2) {
+              console.warn('Province retry also failed:', e2);
+            }
+          }, 3000);
         }
       })();
     }

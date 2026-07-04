@@ -387,29 +387,63 @@
     if (pwdInput) pwdInput.focus();
   }
 
-  // ── Auto-redirect if already authenticated via JWT ──
-  // Prevents redirect loop: user with valid JWT in localStorage but expired
-  // Django session gets redirected to /auth/login/ by login_required decorator.
-  // Detect valid JWT → redirect to role-appropriate dashboard immediately.
-  (function checkExistingAuth() {
-    if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-      const user = window.WarungioAuth.getUser();
-      if (user && user.role) {
-        const role = user.role;
-        // Use the next parameter if present and matches role, otherwise use default
-        const nextUrl = params.get('next');
-        if (nextUrl && isValidRedirect(nextUrl) && role === 'buyer' && nextUrl.startsWith('/buyer/')) {
-          window.location.href = nextUrl;
-        } else if (nextUrl && isValidRedirect(nextUrl) && role === 'seller' && nextUrl.startsWith('/seller/')) {
-          window.location.href = nextUrl;
-        } else if (role === 'seller') {
-          window.location.href = '/seller/dashboard/';
-        } else if (role === 'admin') {
-          window.location.href = '/admin/';
-        } else {
-          window.location.href = '/buyer/home/';
-        }
+  // ── Auto-redirect if already authenticated via SESSION (not JWT) ──
+  // 
+  // CRITICAL: We verify the Django SESSION exists, NOT just the JWT in localStorage.
+  // 
+  // Why: JWT expires in 2 hours (access) / 30 days (refresh). 
+  //      Django session expires in 14 days (default SESSION_COOKIE_AGE).
+  //      If the session cookie expires but JWT is still valid, the old code
+  //      would redirect to a login_required page → 302 redirect back to login → LOOP!
+  //
+  // Fix: Make a fetch to /api/auth/check/ WITHOUT JWT Authorization header.
+  //      - SessionAuthentication checks the session cookie.
+  //      - If session valid → 200 → redirect to dashboard.
+  //      - If session invalid → 401 → stay on login page (no loop!).
+  //
+  (async function checkExistingSession() {
+    if (!window.WarungioAuth) return;
+    
+    // Quick check: no JWT in localStorage → definitely not logged in
+    if (!window.WarungioAuth.getAccessToken()) return;
+    
+    // JWT exists — but does the Django session cookie exist and validate?
+    // Call /api/auth/check/ WITHOUT JWT header (only session cookie via credentials).
+    // If session exists → SessionAuthentication returns user → 200.
+    // If no session → 401/403 → stay on login page (don't redirect!).
+    try {
+      const resp = await fetch('/api/auth/check/', {
+        method: 'GET',
+        credentials: 'same-origin',  // Send session cookie, no JWT header!
+        headers: { 'Accept': 'application/json' },
+      });
+      
+      if (!resp.ok) {
+        // Session is invalid/expired — stay on login page
+        return;
       }
+      
+      // Session exists! Redirect to role-appropriate dashboard
+      const data = await resp.json();
+      if (!data || !data.authenticated || !data.user) {
+        return;  // Safety check
+      }
+      
+      const role = data.user.role;
+      const nextUrl = params.get('next');
+      
+      if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+        window.location.href = nextUrl;
+      } else if (role === 'seller') {
+        window.location.href = '/seller/dashboard/';
+      } else if (role === 'admin' || role === 'superadmin') {
+        window.location.href = '/admin/';
+      } else {
+        window.location.href = '/buyer/home/';
+      }
+    } catch (e) {
+      // Network error — stay on login page, don't redirect
+      console.warn('Session check failed (non-blocking):', e);
     }
   })();
 })();
