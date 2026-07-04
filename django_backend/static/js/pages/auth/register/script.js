@@ -108,6 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
   }
 
+  /**
+   * Validate that the next URL matches the user's role.
+   * A buyer → /buyer/*, seller → /seller/*, admin → /admin/*
+   */
+  function isRoleAllowedRedirect(nextUrl, role) {
+    if (!nextUrl || !role) return false;
+    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
+    if (role === 'seller') return nextUrl.startsWith('/seller/');
+    if (role === 'admin') return nextUrl.startsWith('/admin/');
+    return false;
+  }
+
   // ── Helper: handle auth response and redirect ──
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
@@ -115,7 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    if (nextUrl && isValidRedirect(nextUrl)) {
+    // Only allow next parameter if it matches the user's role
+    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
       window.location.href = nextUrl;
       return;
     }

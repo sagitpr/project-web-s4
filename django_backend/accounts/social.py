@@ -23,8 +23,13 @@ logger = logging.getLogger('django_backend')
 class SocialLoginBase:
     """Base class for social authentication providers."""
 
-    def get_or_create_user(self, email, full_name, provider, provider_id, extra_data=None):
-        """Find existing user by email or create a new one."""
+    def get_or_create_user(self, email, full_name, provider, provider_id, extra_data=None, role='buyer'):
+        """Find existing user by email or create a new one.
+        
+        Args:
+            role: Role to assign for NEW users ('buyer' or 'seller').
+                  Existing users keep their current role regardless.
+        """
         if not email:
             raise ValueError("Email is required from the social provider.")
 
@@ -65,7 +70,7 @@ class SocialLoginBase:
                 full_name=full_name or email.split('@')[0],
                 is_verified=True,
                 is_active=True,
-                role='buyer',
+                role=role if role in ('buyer', 'seller') else 'buyer',
             )
             user.set_unusable_password()
             user.save()
@@ -119,6 +124,7 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
     """
     Google Sign-In authentication.
     Accepts a Google ID token (credential) from the client-side Google Sign-In button.
+    Accepts optional role parameter ('buyer' or 'seller') for new user registration.
     """
     permission_classes = (permissions.AllowAny,)
 
@@ -153,6 +159,8 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
 
             full_name = id_info.get('name', '')
             provider_id = id_info.get('sub', '')
+            # Optional: allow role override for new users (seller signup via social)
+            role = request.data.get('role', 'buyer')
 
             user, is_new = self.get_or_create_user(
                 email=email,
@@ -162,7 +170,8 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
                 extra_data={
                     'picture': id_info.get('picture', ''),
                     'locale': id_info.get('locale', ''),
-                }
+                },
+                role=role,
             )
 
             result = self.generate_jwt_tokens(user, request)
@@ -245,6 +254,9 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Optional: allow role override for new users (seller signup via social)
+            role = request.data.get('role', 'buyer')
+
             user, is_new = self.get_or_create_user(
                 email=email,
                 full_name=full_name,
@@ -252,7 +264,8 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
                 provider_id=provider_id,
                 extra_data={
                     'picture': user_data.get('picture', {}).get('data', {}).get('url', ''),
-                }
+                },
+                role=role,
             )
 
             result = self.generate_jwt_tokens(user, request)
@@ -367,7 +380,8 @@ class AppleLoginView(views.APIView, SocialLoginBase):
                 provider_id=apple_sub,
                 extra_data={
                     'has_email': bool(email),
-                }
+                },
+                role=request.data.get('role', 'buyer'),
             )
 
             result = self.generate_jwt_tokens(user, request)

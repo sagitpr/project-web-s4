@@ -95,16 +95,27 @@ class RegisterView(generics.CreateAPIView):
             user_full_name=user.full_name,
         )
 
+        # Issue JWT tokens so auto-login works immediately after registration.
+        # Required by register-mitra flow which creates store right after register.
+        refresh = RefreshToken.for_user(user)
+
+        # ── Set Django session cookie ──
+        # Ensures login_required-protected pages (register-mitra creates store
+        # then redirects to /seller/dashboard/) recognize the authenticated user.
+        # Without this, the browser would get a 302 redirect loop to /auth/login/.
+        # login() is already imported at top of file.
+        login(request, user)
+
         response_data = {
             'message': 'Registrasi berhasil. Silakan verifikasi OTP.',
             'otp_channels': list(set(channels)),
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
         }
 
         if settings.DEBUG:
-            response_data.update({
-                'user': UserSerializer(user).data,
-                'otp_code': otp.otp_code,
-            })
+            response_data['otp_code'] = otp.otp_code
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -132,6 +143,12 @@ class LoginView(views.APIView):
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
+        
+        # ── Set Django session cookie ──
+        # Required for login_protected template pages (/buyer/, /seller/, etc.)
+        # to recognize the user. Without this, login_required decorator would
+        # redirect back to /auth/login/ creating a redirect loop.
+        login(request, user)
         
         # Reset failed login counters + update IP (single save)
         user.failed_login_attempts = 0

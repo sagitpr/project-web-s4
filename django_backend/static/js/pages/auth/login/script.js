@@ -94,13 +94,29 @@
     return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
   }
 
+  /**
+   * Validate that the next URL matches the user's role.
+   * A buyer can only be redirected to /buyer/* paths.
+   * A seller can only be redirected to /seller/* paths.
+   * An admin can only be redirected to /admin/* paths.
+   * If no role-specific prefix matches, fall back to role-based redirect.
+   */
+  function isRoleAllowedRedirect(nextUrl, role) {
+    if (!nextUrl || !role) return false;
+    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
+    if (role === 'seller') return nextUrl.startsWith('/seller/');
+    if (role === 'admin') return nextUrl.startsWith('/admin/');
+    return false;
+  }
+
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
     const role = data.user.role;
     
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    if (nextUrl && isValidRedirect(nextUrl)) {
+    // Only allow next parameter if it matches the user's role — prevents role mismatch
+    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
       window.location.href = nextUrl;
       return;
     }
@@ -370,4 +386,30 @@
     emailInput.value = registeredEmail;
     if (pwdInput) pwdInput.focus();
   }
+
+  // ── Auto-redirect if already authenticated via JWT ──
+  // Prevents redirect loop: user with valid JWT in localStorage but expired
+  // Django session gets redirected to /auth/login/ by login_required decorator.
+  // Detect valid JWT → redirect to role-appropriate dashboard immediately.
+  (function checkExistingAuth() {
+    if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+      const user = window.WarungioAuth.getUser();
+      if (user && user.role) {
+        const role = user.role;
+        // Use the next parameter if present and matches role, otherwise use default
+        const nextUrl = params.get('next');
+        if (nextUrl && isValidRedirect(nextUrl) && role === 'buyer' && nextUrl.startsWith('/buyer/')) {
+          window.location.href = nextUrl;
+        } else if (nextUrl && isValidRedirect(nextUrl) && role === 'seller' && nextUrl.startsWith('/seller/')) {
+          window.location.href = nextUrl;
+        } else if (role === 'seller') {
+          window.location.href = '/seller/dashboard/';
+        } else if (role === 'admin') {
+          window.location.href = '/admin/';
+        } else {
+          window.location.href = '/buyer/home/';
+        }
+      }
+    }
+  })();
 })();
