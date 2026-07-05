@@ -58,6 +58,22 @@ services:
         max-file: "3"
 
   # ---- Django Backend (Daphne ASGI — 1 Worker) ----
+  # ═══════════════════════════════════════════════════════════════════════
+  # NOTE BuildKit: Dockerfile menggunakan --mount=type=cache (BuildKit).
+  # Pastikan environment variable berikut diset sebelum build:
+  #   export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
+  # ═══════════════════════════════════════════════════════════════════════
+  # ═══════════════════════════════════════════════════════════════════════
+  # NOTE Static files: collectstatic dijalankan SAAT BUILD (bukan startup).
+  # Static files tersimpan di image pada /app/staticfiles/.
+  #
+  # Saat container pertama kali jalan, Docker akan menginisialisasi
+  # static_volume (named volume) dengan isi dari image.
+  #
+  # PADA REDEPLOY: jika static files berubah, volume TIDAK otomatis
+  # terupdate. Jalankan perintah ini setelah deploy:
+  #   docker-compose run --rm django python manage.py collectstatic --noinput
+  # ═══════════════════════════════════════════════════════════════════════
   django:
     build:
       context: .

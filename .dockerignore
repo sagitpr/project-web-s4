@@ -1,22 +1,27 @@
 # =============================================================================
-# Warungio Marketplace — Docker Build Context Ignore
-# Optimasi: exclude semua file yang tidak diperlukan di production image
+# Warungio Marketplace — Docker Build Context Ignore (OPTIMIZED)
+# Mengurangi build context dari ~700MB menjadi <50MB untuk VPS 1GB RAM
 # =============================================================================
 
-# Version control
+# ── Version Control ──────────────────────────────────────────────────────────
 .git/
 .gitignore
 .gitattributes
+.gitmodules
+.gitkeep
 
-# Environment
+# ── Environment Files ────────────────────────────────────────────────────────
 .env
 .env.*
-*.env
 .env.local
+.env.production
+.env.development
+*.env
 
-# Python
+# ── Python — Bytecode & Cache ────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*.pyo
 *$py.class
 *.so
 *.egg-info/
@@ -26,20 +31,47 @@ build/
 .eggs/
 *.whl
 .python-version
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Django
+# ── Python — Virtual Environment (LOCAL — jangan ikut ke image) ──────────────
+venv/
+.venv/
+django_backend/venv/
+django_backend/.venv/
+
+# ── Django — Generated / Static / Media ──────────────────────────────────────
 django_backend/db.sqlite3
+*.sqlite3
+django_backend/staticfiles/
 django_backend/media/
+staticfiles/
+media/
+static/
+django_backend/static/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
 logs/
 *.log
+/var/log/
 
-# Node / Frontend (jika ada)
+# ── Node.js / Frontend Dependencies ──────────────────────────────────────────
 node_modules/
 package-lock.json
 yarn.lock
+yarn-debug.log*
+yarn-error.log*
 .pnpm-store/
+bun.lockb
+bun.lock
+npm-debug.log*
 
-# IDE
+# ── PHP / Composer (tidak dipakai di Docker) ─────────────────────────────────
+vendor/
+composer.phar
+composer.lock
+
+# ── IDE & Editor ─────────────────────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
@@ -47,29 +79,88 @@ yarn.lock
 *~
 .DS_Store
 Thumbs.db
+Desktop.ini
+ehthumbs.db
+*.sublime-project
+*.sublime-workspace
 
-# Docker
+# ── Docker ───────────────────────────────────────────────────────────────────
 .docker/
 docker-compose*.yml
 Dockerfile
 Dockerfile.*
+.dockerignore
 
-# CI/CD
+# ── CI/CD ────────────────────────────────────────────────────────────────────
 .github/
 .gitlab-ci.yml
+.gitlab-ci.yaml
 Jenkinsfile
 cloudbuild.yaml
 cloudrun.yaml
+*.tf
+*.tfstate
+*.tfstate.*
 
-# Documentation & Assets
+# ── Test & Coverage ──────────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+*coverage/
+
+# ── Archives & Backups ───────────────────────────────────────────────────────
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.bak
+*.orig
+*.old
+*.save
+# Note: tidak gunakan *.gz broad karena bisa mengganggu pattern matching
+# Archive SQL backup (pattern spesifik):
+database/backups/
+database/*.sql.gz
+database/*.sql.zip
+
+# ── Documentation (tidak dibutuhkan di runtime) ──────────────────────────────
 README.md
 PROJECT_STRUCTURE.md
+docs/
+CONTEXT.md
+# Note: *.md tidak digunakan broad — file .md spesifik saja yang di-exclude
+# karena selective COPY sudah memastikan file .md tidak masuk ke image.
+
+# ── Assets & Reports (tidak dibutuhkan di image production) ─────────────────
 stitch_assets/
 stitch_assets_download.py
+reports/
+
+# ── Tools & Scripts (hanya untuk development/deployment) ─────────────────────
+tools/
+scripts/
 install.ps1
 powershell.bat
 eval_settings.py
 print_settings.py
+package.json
+skills-lock.json
 
-# Tools
-tools/
+# ── Frontend / Marketing Pages (dilayani oleh nginx, bukan Django) ──────────
+home/
+seller/
+shared/
+
+# ── Database & Infra Configs (dipakai oleh container lain via volume mount) ──
+mariadb/
+nginx/
+
+# ── Agent & Meta Files ──────────────────────────────────────────────────────
+.agent/
+.agents/
+.hintrc

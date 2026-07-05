@@ -4,8 +4,12 @@
 #
 # BEHAVIOR:
 #   No args ($# -eq 0)  → DJANGO mode: wait DB → sync_migrations → migrate
-#                          → collectstatic → superuser → daphne (foreground)
+#                          → superuser → daphne (foreground)
 #   With args ($# -gt 0) → CELERY/BEAT mode: wait DB → exec "$@" (skip startup)
+#
+# NOTE: collectstatic sudah dijalankan saat Docker build (stage build-static),
+# tidak perlu dijalankan ulang saat container start. Ini mempercepat startup
+# dan memastikan staticfiles selalu fresh dari source.
 #
 # Docker Compose passes `command:` as args to the entrypoint, so:
 #   django: no command            → full startup + daphne
@@ -75,44 +79,34 @@ fi
 # beat service:      command: ["celery", "-A", "config", "beat", ...]
 if [ $# -gt 0 ]; then
     echo "[MODE] Container role detected from command arguments."
-    echo "  -> Skipping migrations, collectstatic, and superuser."
+    echo "  -> Skipping migrations and superuser (not needed for workers)."
     echo "  -> Starting: $@"
     exec "$@"
 fi
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DJANGO MODE — Full startup (migrations + collectstatic + superuser + daphne)
+# DJANGO MODE — Full startup (migrations + superuser + daphne)
+# ══════════════════════════════════════════════════════════════════════════════
+# NOTE: collectstatic TIDAK dijalankan di sini karena sudah dilakukan
+#       saat Docker build di stage build-static. Ini mempercepat startup
+#       container dan mengurangi I/O disk pada VPS 1GB RAM.
 # ══════════════════════════════════════════════════════════════════════════════
 echo "[MODE] Django web container — running full startup."
 
 # ------------------------------------------------------------------
 # STEP 1: Sync migrations
 # ------------------------------------------------------------------
-echo "[1/3] Syncing migrations with existing database..."
+echo "[1/2] Syncing migrations with existing database..."
 python manage.py sync_migrations --no-backup
 echo "  -> Migration sync complete."
 
 # ------------------------------------------------------------------
 # STEP 2: Run database migrations (safety net for any remaining)
 # ------------------------------------------------------------------
-echo "[2/3] Applying any remaining migrations..."
+echo "[2/2] Applying any remaining migrations..."
 python manage.py migrate --noinput
 echo "  -> Migrations complete."
-
-# ------------------------------------------------------------------
-# STEP 3: Collect static files (non-fatal on warnings)
-# ------------------------------------------------------------------
-echo "[3/3] Collecting static files..."
-set +e
-python manage.py collectstatic --noinput 2>&1
-COLLECTSTATUS=$?
-set -e
-if [ ${COLLECTSTATUS} -ne 0 ]; then
-    echo "  -> WARNING: collectstatic encountered issues (non-fatal, continuing)."
-else
-    echo "  -> Static files collected."
-fi
 
 # ------------------------------------------------------------------
 # Superuser (optional, non-fatal)
