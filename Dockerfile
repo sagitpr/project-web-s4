@@ -112,9 +112,23 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 #   assets/ (60MB)   → TIDAK DIKOPI — hanya ada di stage build-static
 #   shared/ (12KB)   → TIDAK DIKOPI — hanya dibutuhkan collectstatic
 #
+# ── Template dirs: langsung dari build context (bukan dari build-static) ─
+#   home/   → TEMPLATES.DIRS: BASE_DIR / 'home' (TemplateView di urls.py)
+#   seller/ → TEMPLATES.DIRS: BASE_DIR / 'seller' (TemplateView di urls.py)
+#   auth/   → TEMPLATES.DIRS: BASE_DIR / 'auth' (TemplateView di urls.py)
+#   buyer/  → TEMPLATES.DIRS: BASE_DIR / 'buyer' (TemplateView di urls.py)
+#
+# Ini adalah partial HTML files (SPA shell), bukan Django templates .html.
+# Django's filesystem.Loader akan mencari di sini saat render template.
+# Tanpa direktori ini, semua halaman buyer/auth/seller return 404.
+#
 # Bandingkan dengan COPY . /app/: menghemat ~90% ruang image.
 COPY --from=build-static /app/django_backend/ /app/django_backend/
 COPY --from=build-static /app/staticfiles/ /app/staticfiles/
+COPY home/ /app/home/
+COPY seller/ /app/seller/
+COPY auth/ /app/auth/
+COPY buyer/ /app/buyer/
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 ENV PYTHONPATH=/app/django_backend

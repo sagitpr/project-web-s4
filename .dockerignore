@@ -151,10 +151,13 @@ print_settings.py
 package.json
 skills-lock.json
 
-# ── Frontend / Marketing Pages (dilayani oleh nginx, bukan Django) ──────────
-home/
-seller/
-shared/
+# ── Frontend Template Dir (tidak masuk image — dikopi selektif via Dockerfile) ─
+# home/ dan seller/ adalah Django template directories, bukan static frontend.
+# Mereka DIKOPI secara selektif oleh Dockerfile (runtime stage) untuk
+# TemplateView di urls.py. Tidak perlu di-exclude dari build context.
+#
+# shared/ (12KB) juga tidak di-exclude karena diperlukan sebagai sumber
+# file statis (STATICFILES_DIRS) untuk collectstatic di stage build-static.
 
 # ── Database & Infra Configs (dipakai oleh container lain via volume mount) ──
 mariadb/
