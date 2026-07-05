@@ -252,33 +252,42 @@ if REDIS_CHANNEL_LAYER_REQUIRED:
 # =============================================================================
 _redis_available = bool(REDIS_URL and 'localhost' not in REDIS_URL) or REDIS_CHANNEL_LAYER_REQUIRED
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache' if (_redis_available or not DEBUG) else 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': REDIS_URL if (_redis_available or not DEBUG) else 'warungio-cache',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PARSER_CLASS': 'redis.connection.HiredisParser',
-            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
-            'CONNECTION_POOL_CLASS_KWARGS': {
-                'max_connections': 8,
-                'timeout': 3,
+if _redis_available:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                # PARSER_CLASS removed — redis-py 7.x auto-detects hiredis via DefaultParser
+                'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+                'CONNECTION_POOL_CLASS_KWARGS': {
+                    'max_connections': 8,
+                    'timeout': 3,
+                },
+                'SOCKET_CONNECT_TIMEOUT': 3,
+                'SOCKET_TIMEOUT': 3,
+                'IGNORE_EXCEPTIONS': True,
             },
-            'SOCKET_CONNECT_TIMEOUT': 3,
-            'SOCKET_TIMEOUT': 3,
-            'IGNORE_EXCEPTIONS': True,
-        } if (_redis_available or not DEBUG) else {},
-        'KEY_PREFIX': 'warungio',
-    },
-}
+            'KEY_PREFIX': 'warungio',
+        },
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'warungio-cache',
+            'KEY_PREFIX': 'warungio',
+        },
+    }
 
 # Production-only: use Redis for session storage (saves database writes)
-if not DEBUG or REDIS_CHANNEL_LAYER_REQUIRED:
+if _redis_available:
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
     SESSION_COOKIE_AGE = 86400 * 7  # 7 days (reduced from default 2 weeks)
 
-# Jika Redis tidak tersedia di dev, session tetap pakai database default Django
+# Jika Redis tidak tersedia, session tetap pakai database default Django
 
 CACHE_TTL = 60 * 15  # 15 minutes default
 

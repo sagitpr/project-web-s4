@@ -23,3 +23,4 @@ mysqlclient>=2.2       # Only if using MySQL/MariaDB
 whitenoise>=6.6
 # uvicorn>=0.24        # Alternative ASGI server
 requests>=2.32.0
+hiredis>=3.0  # C-based Redis parser (optional but recommended for performance)
