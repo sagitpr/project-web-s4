@@ -95,18 +95,21 @@ fi
 echo "[MODE] Django web container — running full startup."
 
 # ------------------------------------------------------------------
-# STEP 1: Sync migrations
+# STEP 1: Sync migrations (non-fatal — Daphne tetap jalan walau gagal)
 # ------------------------------------------------------------------
 echo "[1/2] Syncing migrations with existing database..."
-python manage.py sync_migrations --no-backup
-echo "  -> Migration sync complete."
+python manage.py sync_migrations --no-backup \
+    && echo "  -> Migration sync complete." \
+    || echo "  -> WARNING: sync_migrations gagal (non-fatal). Lanjut startup..."
 
 # ------------------------------------------------------------------
 # STEP 2: Run database migrations (safety net for any remaining)
 # ------------------------------------------------------------------
 echo "[2/2] Applying any remaining migrations..."
-python manage.py migrate --noinput
-echo "  -> Migrations complete."
+python manage.py migrate --noinput \
+    && echo "  -> Migration apply complete." \
+    || echo "  -> WARNING: migrate gagal (non-fatal). Lanjut startup..."
+echo "  -> Migrations step selesai (Daphne akan tetap jalan)."
 
 # ------------------------------------------------------------------
 # Superuser (optional, non-fatal)

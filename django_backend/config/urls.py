@@ -24,23 +24,24 @@ from accounts import views as accounts_views
 @require_GET
 def health_check(request):
     """
-    Liveness check for Cloud Run startup probe.
-    Reports DB connectivity when DATABASE_IS_REQUIRED=True.
+    Liveness check untuk Docker HEALTHCHECK & Cloud Run startup probe.
+    SELALU return HTTP 200 agar container tidak jadi unhealthy.
     """
-    from django.db import connections
-
     result = {"status": "ok", "service": "warungio"}
 
+    # Report DB status di body (bukan HTTP status) — liveness probe harus
+    # selalu 200 agar container tidak restart akibat DB blip sesaat.
     if getattr(settings, 'DATABASE_IS_REQUIRED', False):
-        db_conn = connections['default']
+        from django.db import connections
         try:
-            c = db_conn.cursor()
+            c = connections['default'].cursor()
             c.close()
             result['database'] = 'connected'
         except Exception as e:
-            result['status'] = 'degraded'
             result['database'] = f'unavailable: {e}'
-            return JsonResponse(result, status=503)
+            result['status'] = 'degraded'
+            # Tetap return 200 — jangan pernah set status 503 di liveness probe.
+            # Docker HEALTHCHECK akan mark container unhealthy jika HTTP != 200.
 
     return JsonResponse(result)
 

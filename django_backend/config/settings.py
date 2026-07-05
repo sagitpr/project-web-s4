@@ -451,9 +451,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    BASE_DIR / 'django_backend' / 'static',
-    BASE_DIR / 'assets',
-    BASE_DIR / 'shared',
+    # Semua direktori static sudah dipindah/dihapus.
+    # Static files di-serve dari STATIC_ROOT (staticfiles/).
+    # collectstatic dijalankan saat Docker build, bukan saat runtime.
 ]
 
 MEDIA_URL = '/media/'

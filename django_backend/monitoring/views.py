@@ -50,7 +50,7 @@ class HealthCheckView(views.APIView):
         except Exception as e:
             checks['cache'] = {'status': 'degraded', 'message': str(e)}
 
-        # Disk space check
+        # Disk space check (os.statvfs is Unix-only; fallback on unsupported platforms)
         try:
             stat = os.statvfs(settings.BASE_DIR)
             free_gb = (stat.f_frsize * stat.f_bavail) / (1024 ** 3)
@@ -62,7 +62,7 @@ class HealthCheckView(views.APIView):
             if free_gb < 0.5:
                 overall_status = 'degraded'
         except Exception:
-            checks['disk'] = {'status': 'unknown', 'message': 'Cannot check disk'}
+            checks['disk'] = {'status': 'unknown', 'message': 'Cannot check disk (statvfs unavailable)'}
 
         # Memory check
         try:
