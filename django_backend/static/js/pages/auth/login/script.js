@@ -412,10 +412,19 @@
     // If session exists → SessionAuthentication returns user → 200.
     // If no session → 401/403 → stay on login page (don't redirect!).
     try {
-      const resp = await fetch('/api/auth/check/', {
+      var checkHeaders = { 'Accept': 'application/json' };
+      // Reuse centralized getCSRFToken from auth.js
+      if (window.WarungioAuth && typeof window.WarungioAuth.getCSRFToken === 'function') {
+        var csrfToken = window.WarungioAuth.getCSRFToken();
+        if (csrfToken) {
+          checkHeaders['X-CSRFToken'] = csrfToken;
+        }
+      }
+
+      const resp = await fetch('/api/auth/check-auth/', {
         method: 'GET',
-        credentials: 'same-origin',  // Send session cookie, no JWT header!
-        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        headers: checkHeaders,
       });
       
       if (!resp.ok) {

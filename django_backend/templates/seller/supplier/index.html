@@ -260,7 +260,7 @@
                     </div>
                 </div>
                 <div style="font-size:13px; color:var(--color-text-secondary);"><i class="fa-solid fa-location-dot"></i> ${s.city}</div>
-                <button class="btn btn-outline" style="width:100%; border-radius:var(--radius-lg);" onclick="alert('Membuka katalog grosir...')">Lihat Katalog Grosir</button>
+                <button class="btn btn-outline" style="width:100%; border-radius:var(--radius-lg);" onclick="window.location.href='{% url 'page-seller-stock-prediction' %}'">Lihat Katalog Grosir</button>
             </div>
         `).join('');
     }

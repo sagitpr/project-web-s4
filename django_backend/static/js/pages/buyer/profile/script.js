@@ -310,7 +310,7 @@
         e.preventDefault();
         if (window.WarungioAuth) {
           window.WarungioAuth.logout();
-          window.location.href = '/home/';
+          window.location.href = '/';
         }
       });
     }

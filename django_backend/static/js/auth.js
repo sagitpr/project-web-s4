@@ -12,6 +12,19 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
   const REFRESH_KEY = 'warungio_refresh_token';
   const USER_KEY = 'warungio_user';
 
+  /**
+   * Read CSRF token from the 'csrftoken' cookie.
+   * Requires CSRF_COOKIE_HTTPONLY = False in Django settings.
+   * @returns {string|null} The CSRF token value, or null if not found.
+   */
+  function getCSRFToken() {
+    var name = 'csrftoken';
+    var cookie = document.cookie.split('; ').find(function (row) {
+      return row.startsWith(name + '=');
+    });
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+  }
+
   const WarungioAuth = {
     /** Store tokens and user data */
     login(accessToken, refreshToken, user) {
@@ -28,11 +41,18 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       localStorage.removeItem(USER_KEY);
       // Try to blacklist refresh token on server
       if (refresh) {
+        var headers = {
+          'Content-Type': 'application/json',
+        };
+        var csrfToken = getCSRFToken();
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
         fetch(API_BASE + '/token/blacklist/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify({ refresh }),
-        }).catch(() => {});
+        }).catch(function () {});
       }
       window.location.href = '/auth/login/';
     },
@@ -109,6 +129,15 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Add CSRF token for unsafe methods (POST, PUT, PATCH, DELETE)
+      var method = (options.method || 'GET').toUpperCase();
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) !== -1) {
+        var csrfToken = getCSRFToken();
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+      }
+
       let res = await fetch(API_BASE + endpoint, {
         ...options,
         headers,
@@ -153,6 +182,14 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Add CSRF token for unsafe methods
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method.toUpperCase()) !== -1) {
+        var csrfToken = getCSRFToken();
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+      }
+
       let res = await fetch(API_BASE + endpoint, {
         method: method,
         headers,
@@ -183,4 +220,6 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
 
   // Expose globally
   window.WarungioAuth = WarungioAuth;
+  // Also expose getCSRFToken for page scripts to reuse
+  window.WarungioAuth.getCSRFToken = getCSRFToken;
 })();

@@ -30,7 +30,7 @@ def setup_periodic_tasks(sender, **kwargs):
         poll_tracking_batch,
         poll_near_complete_tracking,
     )
-    from accounts.tasks import clean_expired_otps_task
+    from accounts.tasks import clean_expired_otps_task, clean_expired_blacklisted_tokens_task
     from inventory.tasks import clean_expired_notifications_task
 
     # Poll tracking for shipped orders every 30 minutes
@@ -59,6 +59,13 @@ def setup_periodic_tasks(sender, **kwargs):
         crontab(hour=3, minute=0),
         clean_expired_notifications_task.s(),
         name='Clean old notifications and batches (daily)',
+    )
+
+    # Clean expired JWT blacklist tokens daily at 4 AM
+    sender.add_periodic_task(
+        crontab(hour=4, minute=0),
+        clean_expired_blacklisted_tokens_task.s(),
+        name='Clean expired blacklisted JWT tokens (daily)',
     )
 
 

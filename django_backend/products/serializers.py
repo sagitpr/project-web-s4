@@ -88,6 +88,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Stok tidak boleh negatif.")
         return value
 
+    def validate_product_photo(self, value):
+        from .validators import validate_image_file
+        return validate_image_file(value)
+
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
     """Product update serializer."""
@@ -96,6 +100,10 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         fields = ('category', 'product_name', 'description', 'product_photo',
                   'price', 'stock', 'unit', 'product_status', 'is_active',
                   'is_featured')
+
+    def validate_product_photo(self, value):
+        from .validators import validate_image_file
+        return validate_image_file(value)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

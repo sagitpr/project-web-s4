@@ -117,9 +117,14 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'is_verified', 'created_at', 'wallet_balance')
 
     def get_wallet_balance(self, obj):
-        if not obj.device_info:
-            return 2350000.0
-        return float(obj.device_info.get('wallet_balance', 2350000.0))
+        """
+        Read wallet balance from Wallet table (database-driven).
+        Fallback ke 0 jika belum punya Wallet (user lama).
+        """
+        try:
+            return float(obj.wallet.balance)
+        except Exception:
+            return 0.0
 
     def get_gender(self, obj):
         return obj.device_info.get('gender', '') if obj.device_info else ''
@@ -180,6 +185,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if User.objects.filter(phone=normalized).exclude(pk=user.pk if user else None).exists():
             raise serializers.ValidationError("Nomor HP sudah terdaftar.")
         return normalized
+
+    def validate_profile_photo(self, value):
+        from products.validators import validate_image_file
+        return validate_image_file(value)
 
     def update(self, instance, validated_data):
         virtual_fields = [

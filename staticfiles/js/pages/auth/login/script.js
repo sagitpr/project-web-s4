@@ -88,11 +88,41 @@
     }
   });
 
+  /** Validate redirect URL — only allow relative paths to prevent open redirect */
+  function isValidRedirect(url) {
+    if (!url || typeof url !== 'string') return false;
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+  }
+
+  /**
+   * Validate that the next URL matches the user's role.
+   * A buyer can only be redirected to /buyer/* paths.
+   * A seller can only be redirected to /seller/* paths.
+   * An admin can only be redirected to /admin/* paths.
+   * If no role-specific prefix matches, fall back to role-based redirect.
+   */
+  function isRoleAllowedRedirect(nextUrl, role) {
+    if (!nextUrl || !role) return false;
+    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
+    if (role === 'seller') return nextUrl.startsWith('/seller/');
+    if (role === 'admin') return nextUrl.startsWith('/admin/');
+    return false;
+  }
+
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
     const role = data.user.role;
+    
+    const params = new URLSearchParams(window.location.search);
+    const nextUrl = params.get('next');
+    // Only allow next parameter if it matches the user's role — prevents role mismatch
+    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+      window.location.href = nextUrl;
+      return;
+    }
+
     if (role === 'buyer') {
-      window.location.href = '/buyer/dashboard/';
+      window.location.href = '/buyer/home/';
     } else if (role === 'seller') {
       window.location.href = '/seller/dashboard/';
     } else if (role === 'admin') {
@@ -127,10 +157,23 @@
       }
 
       try {
+        if (typeof WarungioAPI === 'undefined' || typeof WarungioAPI.login !== 'function') {
+          setMessage('Gagal memuat API. Periksa koneksi internet atau coba refresh halaman.');
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Masuk';
+          }
+          return;
+        }
         const data = await WarungioAPI.login(email, password);
         handleAuthResponse(data);
       } catch (err) {
-        setMessage(err.message);
+        // Network errors (server down) show "Failed to fetch" — replace with friendlier message
+        var msg = err.message;
+        if (!msg || msg === 'Failed to fetch' || msg === 'NetworkError' || msg.indexOf('NetworkError') !== -1 || msg.indexOf('Failed to fetch') !== -1) {
+          msg = 'Gagal terhubung ke server. Pastikan server Warungio berjalan.';
+        }
+        setMessage(msg);
         if (loginBtn) {
           loginBtn.disabled = false;
           loginBtn.textContent = 'Masuk';
@@ -139,52 +182,105 @@
     });
   }
 
-  // ── Social Login: Google ──
+  // ══════════════════════════════════════════════════════════════════════════
+  //  GOOGLE SIGN-IN (GSI) — initialized ONCE, not on every click
+  // ══════════════════════════════════════════════════════════════════════════
+
+  let gsiReady = false;          // true after google.accounts.id.initialize() called
+  let gsiClientId = '';         // cached Google Client ID
+  let gsiInitializing = false;   // guard against concurrent init attempts
+
+  /**
+   * Poll for GSI library readiness, then fetch config + initialize once.
+   * Called immediately on page load.
+   */
+  function initGSI() {
+    if (gsiReady || gsiInitializing) return;
+    gsiInitializing = true;
+
+    // Wrap in IIFE so we can use async/await
+    (async function setup() {
+      // 1. Wait for google.accounts to be available
+      var maxAttempts = 50;       // ~5 seconds (50 × 100ms)
+      var attempts = 0;
+      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
+        await new Promise(function (r) { return setTimeout(r, 100); });
+        attempts++;
+      }
+
+      if (typeof google === 'undefined' || !google.accounts) {
+        console.warn('Google Identity Services library not loaded after 5s — Google login unavailable');
+        gsiInitializing = false;
+        return;
+      }
+
+      // 2. Fetch Google Client ID from backend (only once)
+      try {
+        if (typeof WarungioAPI !== 'undefined' && WarungioAPI.getSocialAuthConfig) {
+          var config = await WarungioAPI.getSocialAuthConfig('google');
+          if (config && config.google_client_id && !config.google_client_id.includes('your-google')) {
+            gsiClientId = config.google_client_id;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch Google config:', e);
+      }
+
+      if (!gsiClientId) {
+        console.error('Google Client ID not configured — Google login unavailable');
+        gsiInitializing = false;
+        return;
+      }
+
+      // 3. Initialize GSI once
+      google.accounts.id.initialize({
+        client_id: gsiClientId,
+        callback: handleGSICredential,
+        cancel_on_tap_outside: true,
+      });
+
+      gsiReady = true;
+      gsiInitializing = false;
+      console.info('Google Sign-In initialized');
+    })();
+  }
+
+  /** Shared credential callback for Google One Tap / popup */
+  function handleGSICredential(response) {
+    if (!response || !response.credential) return;
+
+    var btn = document.querySelector('.btn-social.google');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Memproses...';
+
+    WarungioAPI.socialLogin('google', { credential: response.credential })
+      .then(function (data) { handleAuthResponse(data); })
+      .catch(function (err) {
+        setMessage(err.message);
+        btn.disabled = false;
+        var img = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img)
+          ? WarungioAssets.img('google-logo.png')
+          : '/static/images/google-logo.png';
+        btn.innerHTML = '<img src="' + img + '" alt="Google" /><span>Google</span>';
+      });
+  }
+
+  // Kick off GSI initialization immediately
+  initGSI();
+
+  // ── Google button click: only prompt() — initialize already done ──
   const googleBtn = document.querySelector('.btn-social.google');
   if (googleBtn) {
-    googleBtn.addEventListener('click', async function googleLogin() {
-      // Check if Google Identity Services is loaded
+    googleBtn.addEventListener('click', function googleLogin() {
       if (typeof google === 'undefined' || !google.accounts) {
         setMessage('Memuat layanan Google... Silakan coba lagi.');
         return;
       }
 
-      // Fetch Google Client ID from backend
-      let clientId = '';
-      try {
-        const config = await WarungioAPI.getSocialAuthConfig('google');
-        if (config.google_client_id) clientId = config.google_client_id;
-      } catch (e) {
-        console.warn('Failed to fetch Google config:', e);
-      }
-
-      // Guard: block login if client ID is missing or still placeholder
-      if (!clientId || clientId.includes('your-google')) {
-        setMessage('Konfigurasi Google Login belum siap. Silakan coba lagi nanti.');
-        console.error('Google Client ID not configured:', clientId);
+      if (!gsiReady) {
+        setMessage('Memuat layanan Google... Silakan coba lagi.');
         return;
       }
-
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response) => {
-          if (response.credential) {
-            googleBtn.disabled = true;
-            googleBtn.innerHTML = '<span class="spinner"></span> Memproses...';
-            try {
-              const data = await WarungioAPI.socialLogin('google', {
-                credential: response.credential
-              });
-              handleAuthResponse(data);
-            } catch (err) {
-              setMessage(err.message);
-              googleBtn.disabled = false;
-              googleBtn.innerHTML = `<img src="${WarungioAssets.img('google-logo.png')}" alt="Google" /><span>Google</span>`;
-            }
-          }
-        },
-        cancel_on_tap_outside: true,
-      });
 
       google.accounts.id.prompt(); // Show One Tap or popup
     });
@@ -212,7 +308,8 @@
           } catch (err) {
             setMessage(err.message);
             fbBtn.disabled = false;
-            fbBtn.innerHTML = `<img src="${WarungioAssets.img('facebook-1.png')}" alt="Facebook" /><span>Facebook</span>`;
+            var fbImg = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img) ? WarungioAssets.img('facebook-1.png') : '/static/images/facebook-1.png';
+            fbBtn.innerHTML = '<img src="' + fbImg + '" alt="Facebook" /><span>Facebook</span>';
           }
         } else {
           setMessage('Login Facebook dibatalkan.');
@@ -289,4 +386,73 @@
     emailInput.value = registeredEmail;
     if (pwdInput) pwdInput.focus();
   }
+
+  // ── Auto-redirect if already authenticated via SESSION (not JWT) ──
+  // 
+  // CRITICAL: We verify the Django SESSION exists, NOT just the JWT in localStorage.
+  // 
+  // Why: JWT expires in 2 hours (access) / 30 days (refresh). 
+  //      Django session expires in 14 days (default SESSION_COOKIE_AGE).
+  //      If the session cookie expires but JWT is still valid, the old code
+  //      would redirect to a login_required page → 302 redirect back to login → LOOP!
+  //
+  // Fix: Make a fetch to /api/auth/check/ WITHOUT JWT Authorization header.
+  //      - SessionAuthentication checks the session cookie.
+  //      - If session valid → 200 → redirect to dashboard.
+  //      - If session invalid → 401 → stay on login page (no loop!).
+  //
+  (async function checkExistingSession() {
+    if (!window.WarungioAuth) return;
+    
+    // Quick check: no JWT in localStorage → definitely not logged in
+    if (!window.WarungioAuth.getAccessToken()) return;
+    
+    // JWT exists — but does the Django session cookie exist and validate?
+    // Call /api/auth/check/ WITHOUT JWT header (only session cookie via credentials).
+    // If session exists → SessionAuthentication returns user → 200.
+    // If no session → 401/403 → stay on login page (don't redirect!).
+    try {
+      var checkHeaders = { 'Accept': 'application/json' };
+      // Reuse centralized getCSRFToken from auth.js
+      if (window.WarungioAuth && typeof window.WarungioAuth.getCSRFToken === 'function') {
+        var csrfToken = window.WarungioAuth.getCSRFToken();
+        if (csrfToken) {
+          checkHeaders['X-CSRFToken'] = csrfToken;
+        }
+      }
+
+      const resp = await fetch('/api/auth/check-auth/', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: checkHeaders,
+      });
+      
+      if (!resp.ok) {
+        // Session is invalid/expired — stay on login page
+        return;
+      }
+      
+      // Session exists! Redirect to role-appropriate dashboard
+      const data = await resp.json();
+      if (!data || !data.authenticated || !data.user) {
+        return;  // Safety check
+      }
+      
+      const role = data.user.role;
+      const nextUrl = params.get('next');
+      
+      if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+        window.location.href = nextUrl;
+      } else if (role === 'seller') {
+        window.location.href = '/seller/dashboard/';
+      } else if (role === 'admin' || role === 'superadmin') {
+        window.location.href = '/admin/';
+      } else {
+        window.location.href = '/buyer/home/';
+      }
+    } catch (e) {
+      // Network error — stay on login page, don't redirect
+      console.warn('Session check failed (non-blocking):', e);
+    }
+  })();
 })();

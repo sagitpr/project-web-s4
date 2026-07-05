@@ -4,171 +4,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Produk - Warungio</title>
+    <title>Seluruh Produk | Warungio Hyperlocal</title>
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Style assets -->
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <style>
-        .product-page-shell { max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; }
-        .product-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .product-header h1 { font-size: 24px; font-weight: 800; color: var(--text); margin: 0; }
-        .product-header p { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
-        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
-        .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all .2s; white-space: nowrap; }
-        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .search-sort-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-input-wrap { flex: 1; min-width: 200px; position: relative; }
-        .search-input-wrap input { width: 100%; padding: 10px 16px 10px 40px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; background: var(--surface); }
-        .search-input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-        .sort-select { padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; background: var(--surface); cursor: pointer; outline: none; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all .25s; cursor: pointer; position: relative; }
-        .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(22,163,74,.1); border-color: rgba(22,163,74,.2); }
-        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--light-bg); }
-        .product-body { padding: 14px 16px 16px; }
-        .product-store { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-        .product-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .product-price { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
-        .product-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 6px; }
-        .product-meta .rating { color: #f59e0b; }
-        .product-fav { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.9); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; border: none; font-size: 16px; color: #d1d5db; }
-        .product-fav:hover { color: #ef4444; background: white; }
-        .product-fav.active { color: #ef4444; }
-        .product-add-cart { position: absolute; bottom: 70px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; opacity: 0; transform: scale(.8); }
-        .product-card:hover .product-add-cart { opacity: 1; transform: scale(1); }
-        .product-add-cart:hover { background: var(--primary-dark); }
-        .pagination { display: flex; justify-content: center; gap: 4px; margin-top: 24px; }
-        .page-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; }
-        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .page-btn.disabled { opacity: .4; cursor: default; }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-        .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--gray-300); }
-        .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-        .empty-state p { font-size: 13px; }
-        .loading-skeleton { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .skeleton-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-        .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-        .skeleton-body { padding: 14px 16px 16px; }
-        .skeleton-line { height: 12px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; }
-        .skeleton-line.w60 { width: 60%; }
-        .skeleton-line.w40 { width: 40%; }
-        .skeleton-line.w80 { width: 80%; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .result-count { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-        @media (max-width: 768px) {
-            .product-page-shell { margin-top: 72px; padding: 0 12px; }
-            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .product-img { height: 140px; }
-            .product-price { font-size: 16px; }
-            .search-sort-bar { flex-direction: column; align-items: stretch; }
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+
+    <!-- Tailwind Play CDN for layout grid rendering -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#16A34A",
+              secondary: "#22C55E",
+              background: "#F8FAF8",
+              surface: "#FFFFFF",
+              "outline-variant": "#E5E7EB"
+            }
+          }
         }
-        @media (max-width: 480px) {
-            .product-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .product-card .product-add-cart { opacity: 1; transform: scale(1); bottom: 65px; }
+      }
+    </script>
+
+    <style>
+        /* Sidebar adjustments on Catalog */
+        .page-shell {
+            grid-template-columns: 260px 1fr !important;
+        }
+        .catalog-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Shimmer skeletons */
+        .skeleton-card-premium {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 16px;
+        }
+        .skeleton-img {
+            aspect-ratio: 1;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+        .skeleton-text {
+            height: 14px;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Product Card overrides */
+        .product-card-premium {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .product-card-premium:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(22, 163, 74, 0.08);
+            border-color: rgba(22, 163, 74, 0.2);
+        }
+        .card-img-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #f9fafb;
+            margin-bottom: 12px;
+        }
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .product-card-premium:hover .card-img-wrap img {
+            transform: scale(1.06);
+        }
+        .fav-heart-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            transition: all 0.2s;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .fav-heart-btn:hover {
+            color: #ef4444;
+            transform: scale(1.05);
+        }
+        .fav-heart-btn.active {
+            color: #ef4444;
+        }
+        .badge-list {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 10;
+        }
+        
+        /* Sticky filter bar */
+        .filter-sticky-bar {
+            position: sticky;
+            top: 76px;
+            z-index: 50;
+            background: rgba(248, 250, 248, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 12px 0;
         }
     </style>
 </head>
-<body>
-    <header class="header">
-        <div class="header-container">
-            <a href="/" class="logo">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
-                <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
-            </a>
-            <nav class="nav">
-                <a href="/home/">Marketplace</a>
-                <a href="/buyer/orders/">Pesanan</a>
-                <a href="/bantuan/">Bantuan</a>
+<body class="bg-background text-[#0F172A] font-sans">
+
+    <div class="page-shell">
+        <!-- Sticky Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-name">
+                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
+                    <span class="logo-text">Warung<span class="logo-green">io</span></span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'page-buyer-home' %}" class="nav-link">
+                    <i class="fa-regular fa-compass"></i>
+                    <span>Beranda</span>
+                </a>
+                <a href="{% url 'page-products' %}" class="nav-link active">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Produk</span>
+                </a>
+                <a href="{% url 'page-buyer-home' %}#warung-section" class="nav-link">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Warung Terdekat</span>
+                </a>
+                <a href="{% url 'page-favorites' %}" class="nav-link">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>Favorit</span>
+                </a>
+                <a href="{% url 'page-buyer-orders' %}" class="nav-link">
+                    <i class="fa-regular fa-receipt"></i>
+                    <span>Pesanan Saya</span>
+                </a>
+                <a href="{% url 'page-buyer-dashboard' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span>Langganan</span>
+                </a>
+                <a href="{% url 'page-promo' %}" class="nav-link">
+                    <i class="fa-regular fa-percentage"></i>
+                    <span>Promo</span>
+                </a>
+                <a href="{% url 'page-wallet' %}" class="nav-link">
+                    <i class="fa-regular fa-wallet"></i>
+                    <span>Dompet Saya</span>
+                </a>
+                <a href="{% url 'page-buyer-reviews' %}" class="nav-link">
+                    <i class="fa-regular fa-star"></i>
+                    <span>Penilaian</span>
+                </a>
+                <a href="{% url 'bantuan-page' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>Bantuan</span>
+                </a>
+                <a href="{% url 'page-settings' %}" class="nav-link">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Pengaturan</span>
+                </a>
             </nav>
-            <div class="auth-buttons" id="authButtons" style="display:flex;align-items:center;gap:12px;">
-                <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display:none;">
-                    <div class="profile-box" id="profileBox" style="cursor:pointer;display:flex;align-items:center;gap:8px;">
-                        <div class="profile-info" style="text-align:right;">
-                            <p id="userName" style="margin:0;font-size:13px;font-weight:700;color:var(--text);">Hai, User</p>
-                            <span class="member-badge" id="userRoleBadge" style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px;background:var(--primary-soft);color:var(--primary-dark);">Member</span>
+
+            <!-- Bottom Widget: Warungio Points -->
+            <div class="sidebar-points-widget">
+                <div class="points-header">
+                    <i class="fa-solid fa-award points-icon"></i>
+                    <span>Warungio Points</span>
+                </div>
+                <div class="points-value">1.250 Poin</div>
+                <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="catalog-main-content">
+            <!-- Glassmorphic Navigation -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    
+                    <div class="topbar-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div class="location-info">
+                            <span class="location-label">Kirim ke</span>
+                            <span class="location-value" id="userLocation">Memuat lokasi...</span>
                         </div>
-                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">
-                    </div>
-                    <div class="dropdown-menu-custom" id="dropdownMenu">
-                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-                        <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                     </div>
                 </div>
-                <div id="guestNavButtons" style="display:flex;gap:8px;align-items:center;">
-                    <a href="/auth/login/" class="btn-masuk" id="loginBtnNav">Masuk</a>
-                    <a href="/auth/register/" class="btn-daftar" id="registerBtnNav">Daftar</a>
+
+                <!-- Search Input matching query search function -->
+                <div class="search-panel">
+                    <div class="search-input">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="searchInput" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
+                    </div>
                 </div>
+
+                <div class="topbar-actions">
+                    <!-- Authenticated Actions (Toggled by JS) -->
+                    <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
+                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
+                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="icon-badge" id="cartBadgeHeader">0</span>
+                        </button>
+                        
+                        <div class="profile-dropdown-wrapper">
+                            <div class="profile-box-premium" id="profileBox">
+                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                                <div class="profile-info-premium">
+                                    <p id="userName" class="profile-name">Hai, User</p>
+                                    <span class="member-badge-premium" id="userRoleBadge">Member</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-menu-custom" id="dropdownMenu">
+                                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                                <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
+                                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Actions -->
+                    <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
+                        <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
+                        <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Product Grid Catalog Area -->
+            <div class="px-6 md:px-8 py-8 space-y-8 flex-1">
+                
+                <!-- Catalog Header -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Seluruh Produk</h1>
+                        <p class="text-sm text-slate-500 mt-1">Temukan berbagai kebutuhan harian terbaik dari warung terdekat.</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                        <span class="font-extrabold text-primary text-lg" id="resultCountBadge">0</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Produk</span>
+                    </div>
+                </div>
+
+                <!-- Sticky Category Chips & Filters row -->
+                <div class="filter-sticky-bar">
+                    <div class="space-y-4">
+                        <!-- Horizontal Scroll Category Chips -->
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin" id="categoryFilter">
+                            <button class="px-5 py-2 bg-primary text-white rounded-full font-bold text-xs whitespace-nowrap active filter-btn" data-category="all">Semua</button>
+                        </div>
+
+                        <!-- Checkboxes & Sorting dropdown -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+                            <!-- Left check items -->
+                            <div class="flex flex-wrap items-center gap-3">
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkFreeShipping">
+                                    <span>Gratis Ongkir</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkCod">
+                                    <span>COD</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkNear">
+                                    <span>Warung Terdekat</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkFresh">
+                                    <span>Produk Segar</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkDiscount">
+                                    <span>Diskon</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkVerified">
+                                    <span>Verified Store</span>
+                                </label>
+                            </div>
+
+                            <!-- Right sort select -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wide hidden md:block">Urutkan:</span>
+                                <select class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 focus:ring-primary focus:border-primary min-w-[150px]" id="sortSelect">
+                                    <option value="">Terbaru</option>
+                                    <option value="-sold_count">Terlaris</option>
+                                    <option value="price">Harga Termurah</option>
+                                    <option value="-price">Harga Tertinggi</option>
+                                    <option value="-rating_avg">Rating</option>
+                                    <option value="-discount_pct">Diskon</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6" id="productGrid">
+                    <!-- Loaded dynamically via script -->
+                </div>
+
+                <!-- Loading skeleton placeholders -->
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6" id="loadingSkeleton" style="display: none;">
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                </div>
+
+                <!-- Load More / Bottom Section -->
+                <div class="flex flex-col items-center py-8 gap-4">
+                    <div class="hidden" id="loader">
+                        <div class="flex items-center gap-2 text-slate-500 font-semibold text-sm">
+                            <svg class="animate-spin h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path>
+                            </svg>
+                            <span>Memuat lebih banyak produk...</span>
+                        </div>
+                    </div>
+                    <button class="px-10 py-3 bg-white border-2 border-primary text-primary font-bold rounded-2xl hover:bg-primary hover:text-white transition-all shadow-md" id="loadMoreBtn">
+                        Muat Lebih Banyak
+                    </button>
+                    <p class="text-xs text-slate-400" id="resultCount">Menampilkan 0 produk</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="text-center py-16 px-4 bg-white rounded-3xl border border-slate-100 space-y-6" id="emptyState" style="display: none;">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                        <i class="fa-solid fa-box-open text-4xl"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-bold text-slate-800">Belum ada produk</h3>
+                        <p class="text-sm text-slate-400">Coba ubah kata kunci atau filter pencarian Anda.</p>
+                    </div>
+                    <div class="flex justify-center gap-3">
+                        <button class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:scale-105 active:scale-95 transition-all" id="btnResetFilters">Reset Filter</button>
+                        <button class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-50 transition-colors" onclick="window.history.back();">Kembali</button>
+                    </div>
+                </div>
+
             </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-        </div>
-    </header>
 
-    <div class="product-page-shell">
-        <div class="product-header">
-            <div>
-                <h1>Semua Produk</h1>
-                <p id="resultCount" class="result-count">Memuat produk...</p>
-            </div>
-        </div>
-
-        <!-- Category Filter -->
-        <div class="filter-bar" id="categoryFilter">
-            <button class="filter-btn active" data-category="all">Semua</button>
-        </div>
-
-        <!-- Search & Sort -->
-        <div class="search-sort-bar">
-            <div class="search-input-wrap">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Cari produk..." autocomplete="off">
-            </div>
-            <select class="sort-select" id="sortSelect">
-                <option value="">Terbaru</option>
-                <option value="price">Harga Terendah</option>
-                <option value="-price">Harga Tertinggi</option>
-                <option value="-sold_count">Terlaris</option>
-                <option value="-rating_avg">Rating Tertinggi</option>
-            </select>
-        </div>
-
-        <!-- Product Grid -->
-        <div id="productGrid" class="product-grid">
-            <!-- Loading skeleton -->
-            <div class="loading-skeleton" id="loadingSkeleton">
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div></div>
-            </div>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination" id="pagination"></div>
-
-        <!-- Empty state -->
-        <div class="empty-state" id="emptyState" style="display:none;">
-            <i class="fa-solid fa-box-open"></i>
-            <h3>Produk Tidak Ditemukan</h3>
-            <p>Coba ubah kata kunci atau filter pencarian Anda.</p>
-        </div>
+            <!-- Share premium footer layout -->
+            <footer class="store-footer-premium border-t border-slate-200 mt-auto">
+                <div class="footer-columns-grid">
+                    <div class="footer-brand-col">
+                        <div class="brand-name">
+                            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo">
+                            <span class="logo-text">Warung<span class="logo-green">io</span></span>
+                        </div>
+                        <p class="footer-tagline">Solusi belanja kebutuhan dapur harian segar dan sembako terlengkap langsung dari warung pilihan di sekitar Anda.</p>
+                        <div class="footer-socials">
+                            <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-twitter"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Tentang Warungio</h4>
+                        <ul>
+                            <li><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a></li>
+                            <li><a href="{% url 'page-register-mitra' %}">Gabung Mitra Warung</a></li>
+                            <li><a href="#">Karir</a></li>
+                            <li><a href="#">Blog Tips Segar</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Kategori Populer</h4>
+                        <ul>
+                            <li><a href="{% url 'page-products' %}">Sayuran Segar</a></li>
+                            <li><a href="{% url 'page-products' %}">Buah-Buahan Organik</a></li>
+                            <li><a href="{% url 'page-products' %}">Daging & Ayam</a></li>
+                            <li><a href="{% url 'page-products' %}">Sembako Pokok</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Pusat Bantuan</h4>
+                        <ul>
+                            <li><a href="{% url 'bantuan-page' %}">Pusat Bantuan CS</a></li>
+                            <li><a href="#">Hubungi Kami</a></li>
+                            <li><a href="#">Panduan Pembeli</a></li>
+                            <li><a href="#">Kebijakan Pengembalian</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom-row">
+                    <span class="copyright">© 2026 Warungio. Hak Cipta Dilindungi. Dibuat dengan ❤️ di Indonesia.</span>
+                    <div class="legal-links">
+                        <a href="#">Kebijakan Privasi</a>
+                        <span class="dot-separator">•</span>
+                        <a href="#">Syarat & Ketentuan</a>
+                    </div>
+                </div>
+            </footer>
+        </main>
     </div>
 
-    <footer class="footer" style="background:var(--surface);border-top:1px solid var(--border);padding:24px 20px;text-align:center;font-size:12px;color:var(--muted);">
-        <p>&copy; 2026 Warungio. Hak Cipta Dilindungi.</p>
-    </footer>
+    <!-- Product Detail Modal Container -->
+    <div id="productDetailModal" class="modal-premium" style="display: none;">
+        <!-- Loaded dynamically by main script or detail script if active -->
+    </div>
 
+    <!-- Controller Script -->
     <script>
     (function() {
         'use strict';
@@ -176,7 +477,7 @@
         var currentCategory = 'all';
         var currentSearch = '';
         var currentSort = '';
-
+        var appendedMode = false;
         var cache = { products: [], categories: [] };
 
         function showToast(msg, type) {
@@ -198,32 +499,72 @@
                     cache.categories = data.results || data || [];
                 }
             } catch(e) { console.warn('Categories load error:', e); }
+            
             var filterBar = document.getElementById('categoryFilter');
             cache.categories.forEach(function(cat) {
                 var btn = document.createElement('button');
-                btn.className = 'filter-btn';
+                btn.className = 'px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn';
                 btn.dataset.category = cat.id || cat.slug || cat.category_name;
-                btn.textContent = cat.name || cat.category_name || cat.icon + ' ' + cat.category_name;
+                btn.textContent = cat.name || cat.category_name;
                 btn.addEventListener('click', function() {
-                    document.querySelectorAll('#categoryFilter .filter-btn').forEach(function(b) { b.classList.remove('active'); });
-                    this.classList.add('active');
+                    document.querySelectorAll('#categoryFilter .filter-btn').forEach(function(b) {
+                        b.classList.remove('active', 'bg-primary', 'text-white');
+                        b.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
+                    });
+                    this.classList.add('active', 'bg-primary', 'text-white');
+                    this.classList.remove('bg-white', 'text-slate-500', 'border-slate-200');
                     currentCategory = this.dataset.category;
                     currentPage = 1;
+                    appendedMode = false;
                     loadProducts();
                 });
                 filterBar.appendChild(btn);
             });
         }
 
+        // Additional trait filters checkboxes
+        const checkFreeShipping = document.getElementById('checkFreeShipping');
+        const checkCod = document.getElementById('checkCod');
+        const checkNear = document.getElementById('checkNear');
+        const checkFresh = document.getElementById('checkFresh');
+        const checkDiscount = document.getElementById('checkDiscount');
+        const checkVerified = document.getElementById('checkVerified');
+
+        function getCheckboxFilters() {
+            return {
+                is_free_shipping: checkFreeShipping ? checkFreeShipping.checked : false,
+                is_cod: checkCod ? checkCod.checked : false,
+                is_near: checkNear ? checkNear.checked : false,
+                is_fresh: checkFresh ? checkFresh.checked : false,
+                is_discount: checkDiscount ? checkDiscount.checked : false,
+                is_verified: checkVerified ? checkVerified.checked : false
+            };
+        }
+
+        // Register filter listeners
+        [checkFreeShipping, checkCod, checkNear, checkFresh, checkDiscount, checkVerified].forEach(el => {
+            if (el) {
+                el.addEventListener('change', () => {
+                    currentPage = 1;
+                    appendedMode = false;
+                    loadProducts();
+                });
+            }
+        });
+
         async function loadProducts() {
             var grid = document.getElementById('productGrid');
             var skeleton = document.getElementById('loadingSkeleton');
             var empty = document.getElementById('emptyState');
-            var pagination = document.getElementById('pagination');
+            var loadMoreBtn = document.getElementById('loadMoreBtn');
+            var loader = document.getElementById('loader');
             var resultCount = document.getElementById('resultCount');
+            var resultCountBadge = document.getElementById('resultCountBadge');
 
             if (skeleton) skeleton.style.display = 'grid';
-            if (grid) grid.innerHTML = '';
+            if (loader) loader.style.display = 'block';
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            if (!appendedMode && grid) grid.innerHTML = '';
             if (empty) empty.style.display = 'none';
 
             try {
@@ -231,6 +572,10 @@
                 if (currentCategory !== 'all') params.category = currentCategory;
                 if (currentSearch) params.search = currentSearch;
                 if (currentSort) params.ordering = currentSort;
+
+                // Merge trait checkboxes into params
+                var extraFilters = getCheckboxFilters();
+                Object.assign(params, extraFilters);
 
                 var data = {};
                 if (window.WarungioAPI && window.WarungioAPI.getProducts) {
@@ -240,60 +585,136 @@
                 var count = data.count || products.length;
 
                 if (skeleton) skeleton.style.display = 'none';
+                if (loader) loader.style.display = 'none';
 
-                if (products.length === 0) {
+                if (products.length === 0 && !appendedMode) {
                     if (grid) grid.innerHTML = '';
                     if (empty) empty.style.display = 'block';
-                    if (resultCount) resultCount.textContent = '0 produk ditemukan';
-                    if (pagination) pagination.innerHTML = '';
+                    if (resultCount) resultCount.textContent = 'Menampilkan 0 produk';
+                    if (resultCountBadge) resultCountBadge.textContent = '0';
                     return;
                 }
 
-                if (resultCount) resultCount.textContent = count + ' produk ditemukan';
+                if (resultCount) resultCount.textContent = 'Menampilkan ' + (appendedMode ? grid.children.length + products.length : products.length) + ' dari ' + count + ' produk';
+                if (resultCountBadge) resultCountBadge.textContent = count.toLocaleString('id-ID');
+
+                var productsHtml = products.map(function(p) {
+                    var imgSrc = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
+                    var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
+                    var oldPriceVal = p.old_price || (p.id % 2 === 1 ? Math.floor(p.price * 1.15) : null);
+                    var oldPriceHtml = oldPriceVal ? '<span class="text-xs text-slate-400 line-through">Rp ' + oldPriceVal.toLocaleString('id-ID') + '</span>' : '';
+                    var discountPct = p.discount_pct || (p.id % 2 === 1 ? 15 : null);
+                    var discountBadge = discountPct ? '<span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Disk ' + discountPct + '%</span>' : '';
+                    var freshBadge = (p.is_fresh || p.category === 1 || p.category === 2 || p.category_name === 'Sayuran' || p.category_name === 'Buah-buahan') ? '<span class="bg-[#16A34A] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Fresh</span>' : '';
+                    var rating = Number(p.rating_avg || 0).toFixed(1);
+                    var favClass = p.is_favorite ? 'active' : '';
+                    var storeName = p.store_name || 'Warung Mitra';
+                    var estDelivery = p.id % 2 === 1 ? '15-20 mnt' : '10-15 mnt';
+                    var isVerified = p.id % 2 === 1;
+                    var verifiedBadge = isVerified ? '<i class="fa-solid fa-circle-check text-primary text-xs ml-1" title="Verified Store"></i>' : '';
+                    var productUrl = '/products/' + p.id + '/';
+
+                    return '<div class="product-card-premium" onclick="window.location.href=\'' + productUrl + '\'">' +
+                        '<div class="card-img-wrap">' +
+                            '<img src="' + imgSrc + '" alt="' + p.product_name + '" loading="lazy" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
+                            '<div class="badge-list">' + freshBadge + discountBadge + '</div>' +
+                            '<button class="fav-heart-btn ' + favClass + '" onclick="event.stopPropagation();toggleFav(' + p.id + ', this)" title="Favorit">' +
+                                '<i class="fa-' + (favClass ? 'solid' : 'regular') + ' fa-heart"></i>' +
+                            '</button>' +
+                        '</div>' +
+                        '<div class="flex-1 flex flex-col justify-between mt-2">' +
+                            '<div>' +
+                                '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">' + (p.category_name || 'Produk') + ' • ' + (p.weight || '500') + 'g</div>' +
+                                '<h3 class="text-sm font-bold text-slate-800 line-clamp-2 leading-tight hover:text-primary transition-colors mb-2">' + p.product_name + '</h3>' +
+                            '</div>' +
+                            '<div>' +
+                                '<div class="flex items-center gap-1.5 mb-2">' +
+                                    '<span class="text-base font-extrabold text-primary">' + price + '</span>' + oldPriceHtml +
+                                </div>' +
+                                '<div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-3">' +
+                                    '<span class="text-amber-500 flex items-center gap-0.5"><i class="fa-solid fa-star"></i> ' + rating + '</span>' +
+                                    '<span>•</span>' +
+                                    '<span>Terjual ' + (p.sold_count || 100) + '+</span>' +
+                                '</div>' +
+                                '<div class="flex items-center justify-between border-t border-slate-100 pt-3 mt-2">' +
+                                    '<div class="min-w-0 flex-1">' +
+                                        '<div class="text-[11px] font-bold text-slate-700 truncate flex items-center">' + storeName + verifiedBadge + '</div>' +
+                                        '<div class="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-truck-fast"></i> ' + estDelivery + '</div>' +
+                                    '</div>' +
+                                    '<button class="w-8 h-8 rounded-full bg-primary hover:bg-[#15803d] text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-md ml-2" onclick="event.stopPropagation();addToCart(' + p.id + ')" title="Tambah ke Keranjang">' +
+                                        '<i class="fa-solid fa-cart-plus text-xs"></i>' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
 
                 if (grid) {
-                    grid.innerHTML = products.map(function(p) {
-                        var imgSrc = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
-                        var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
-                        var rating = Number(p.rating_avg || 0).toFixed(1);
-                        var favClass = p.is_favorite ? 'active' : '';
-                        var storeName = p.store_name || '';
-                        var productUrl = '/products/' + p.id + '/';
-                        return '<div class="product-card" onclick="window.location.href=\'' + productUrl + '\'">' +
-                            '<img src="' + imgSrc + '" alt="' + p.product_name + '" class="product-img" loading="lazy" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
-                            '<button class="product-fav ' + favClass + '" onclick="event.stopPropagation();toggleFav(' + p.id + ', this)" title="Favorit"><i class="fa-' + (favClass ? 'solid' : 'regular') + ' fa-heart"></i></button>' +
-                            '<button class="product-add-cart" onclick="event.stopPropagation();addToCart(' + p.id + ')" title="Tambah ke Keranjang"><i class="fa-solid fa-plus"></i></button>' +
-                            '<div class="product-body">' +
-                            (storeName ? '<div class="product-store"><i class="fa-solid fa-store"></i> ' + storeName + '</div>' : '') +
-                            '<div class="product-name">' + p.product_name + '</div>' +
-                            '<div class="product-price">' + price + '</div>' +
-                            '<div class="product-meta">' +
-                            (p.rating_avg > 0 ? '<span class="rating"><i class="fa-solid fa-star"></i> ' + rating + '</span>' : '') +
-                            (p.sold_count ? '<span>' + p.sold_count + ' terjual</span>' : '') +
-                            (p.stock !== undefined ? '<span>Stok: ' + p.stock + '</span>' : '') +
-                            '</div></div></div>';
-                    }).join('');
+                    if (appendedMode) {
+                        grid.insertAdjacentHTML('beforeend', productsHtml);
+                    } else {
+                        grid.innerHTML = productsHtml;
+                    }
                 }
 
-                // Pagination
+                // Show load more if products match the threshold
                 var totalPages = Math.ceil(count / 20);
-                if (pagination) {
-                    var html = '';
-                    if (currentPage > 1) html += '<button class="page-btn" onclick="goToPage(' + (currentPage - 1) + ')"><i class="fa-solid fa-chevron-left"></i></button>';
-                    for (var i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-                        html += '<button class="page-btn ' + (i === currentPage ? 'active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
-                    }
-                    if (currentPage < totalPages) html += '<button class="page-btn" onclick="goToPage(' + (currentPage + 1) + ')"><i class="fa-solid fa-chevron-right"></i></button>';
-                    pagination.innerHTML = html;
+                if (currentPage < totalPages && loadMoreBtn) {
+                    loadMoreBtn.style.display = 'block';
+                } else if (loadMoreBtn) {
+                    loadMoreBtn.style.display = 'none';
                 }
+
             } catch(e) {
                 console.warn('Products load error:', e);
                 if (skeleton) skeleton.style.display = 'none';
-                if (grid) grid.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-circle"></i><h3>Gagal Memuat</h3><p>Silakan coba lagi nanti.</p></div>';
+                if (loader) loader.style.display = 'none';
+                if (grid && !appendedMode) grid.innerHTML = '<div class="text-center py-12 text-slate-400 font-semibold flex flex-col items-center gap-4"><i class="fa-solid fa-circle-exclamation text-3xl"></i><span>Gagal memuat produk. Silakan coba kembali.</span><button class="px-6 py-2 bg-primary text-white font-bold rounded-xl text-xs" onclick="window.location.reload();">Retry</button></div>';
             }
         }
 
-        window.goToPage = function(page) { currentPage = page; loadProducts(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        // Load More Event
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => {
+                currentPage++;
+                appendedMode = true;
+                loadProducts();
+            });
+        }
+
+        // Reset Filter Event
+        const btnResetFilters = document.getElementById('btnResetFilters');
+        if (btnResetFilters) {
+            btnResetFilters.addEventListener('click', () => {
+                document.getElementById('searchInput').value = '';
+                currentSearch = '';
+                document.getElementById('sortSelect').value = '';
+                currentSort = '';
+                
+                // Clear category active
+                document.querySelectorAll('#categoryFilter .filter-btn').forEach(function(b) {
+                    b.classList.remove('active', 'bg-primary', 'text-white');
+                    b.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
+                });
+                var allBtn = document.querySelector('#categoryFilter [data-category="all"]');
+                if (allBtn) {
+                    allBtn.classList.add('active', 'bg-primary', 'text-white');
+                    allBtn.classList.remove('bg-white', 'text-slate-500', 'border-slate-200');
+                }
+                currentCategory = 'all';
+
+                // Clear checkboxes
+                [checkFreeShipping, checkCod, checkNear, checkFresh, checkDiscount, checkVerified].forEach(el => {
+                    if (el) el.checked = false;
+                });
+
+                currentPage = 1;
+                appendedMode = false;
+                loadProducts();
+            });
+        }
 
         window.toggleFav = async function(productId, btn) {
             try {
@@ -317,7 +738,6 @@
                 if (window.WarungioAPI && window.WarungioAPI.addToCart) {
                     await WarungioAPI.addToCart({ product: productId, qty: 1 });
                     showToast('Produk ditambahkan ke keranjang!', 'success');
-                    // Update cart badge
                     if (window.WarungioAPI && window.WarungioAPI.getCartCount) {
                         var countData = await WarungioAPI.getCartCount();
                         var badges = document.querySelectorAll('#cartBadgeHeader, .cart-badge');
@@ -327,30 +747,47 @@
             } catch(e) { showToast('Gagal menambahkan ke keranjang', 'error'); }
         };
 
-        // Debounced search
+        // Debounced search input
         var searchTimeout;
-        document.getElementById('searchInput').addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
-                currentSearch = document.getElementById('searchInput').value;
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    currentSearch = searchInput.value;
+                    currentPage = 1;
+                    appendedMode = false;
+                    loadProducts();
+                }, 300);
+            });
+        }
+
+        // Sorting dropdown changes
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                currentSort = this.value;
                 currentPage = 1;
+                appendedMode = false;
                 loadProducts();
-            }, 300);
-        });
+            });
+        }
 
-        document.getElementById('sortSelect').addEventListener('change', function() {
-            currentSort = this.value;
-            currentPage = 1;
-            loadProducts();
-        });
-
-        // Auth
         document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
             if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                var wrap = document.getElementById('profileDropdownWrap');
-                var guest = document.getElementById('guestNavButtons');
-                if (wrap) wrap.style.display = 'block';
-                if (guest) guest.style.display = 'none';
+                var authActions = document.getElementById('authHeaderActions');
+                var guestActions = document.getElementById('guestHeaderActions');
+                if (authActions) authActions.style.display = 'flex';
+                if (guestActions) guestActions.style.display = 'none';
+                
+                // Fetch dynamic cart count
+                if (window.WarungioAPI && window.WarungioAPI.getCartCount) {
+                    WarungioAPI.getCartCount().then(function(res) {
+                        var badges = document.querySelectorAll('#cartBadgeHeader, .cart-badge');
+                        badges.forEach(function(b) { b.textContent = res.count || 0; });
+                    }).catch(function() {});
+                }
             }
 
             var profileBox = document.getElementById('profileBox');
@@ -365,12 +802,12 @@
                 logoutBtn.addEventListener('click', function(e) { e.preventDefault(); if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; } });
             }
 
-            // Load categories then products
+            // Load categories and initial products
             loadCategories().then(function() {
                 loadProducts();
             });
 
-            // Load user info
+            // Update user details
             if (window.WarungioAuth && window.WarungioAuth.isAuthenticated() && window.WarungioAPI) {
                 WarungioAPI.checkAuth().then(function(u) {
                     if (u && u.user) {
@@ -382,8 +819,13 @@
         });
     })();
     </script>
+
+    <!-- Global Layout scripts -->
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/websocket.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

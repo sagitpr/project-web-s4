@@ -131,7 +131,9 @@ urlpatterns += [
     path('seller/supplier/', login_required(TemplateView.as_view(template_name='seller/supplier/index.html')), name='page-seller-supplier'),
     path('seller/stock-prediction/', login_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html')), name='page-seller-stock-prediction'),
     # Home / Landing
-    path('home/', TemplateView.as_view(template_name='home/index.html'), name='page-landing'),
+    # Landing page (public) is served at root (/) by RootView.
+    # This /home/ route is the MARKETPLACE HOME — requires login.
+    path('home/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-landing'),
     path('products/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-products'),
     path('orders/', login_required(TemplateView.as_view(template_name='buyer/orders/index.html')), name='page-orders'),
     path('promo/', login_required(TemplateView.as_view(template_name='buyer/promo/index.html')), name='page-promo'),

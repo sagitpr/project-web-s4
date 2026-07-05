@@ -4,217 +4,905 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Favorit Saya - Warungio</title>
+    <title>Favorit Saya | Warungio Hyperlocal</title>
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Style assets -->
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <style>
-        .fav-page-shell { max-width: 1000px; margin: 80px auto 40px; padding: 0 20px; }
-        .fav-header { margin-bottom: 24px; }
-        .fav-header h1 { font-size: 24px; font-weight: 800; color: var(--text); margin: 0; display: flex; align-items: center; gap: 10px; }
-        .fav-header h1 i { color: #ef4444; }
-        .fav-header p { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
-        .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .fav-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all .25s; display: flex; }
-        .fav-card:hover { box-shadow: 0 8px 24px rgba(22,163,74,.08); }
-        .fav-img { width: 120px; min-height: 120px; object-fit: cover; flex-shrink: 0; }
-        .fav-body { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; }
-        .fav-store { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-        .fav-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-        .fav-price { font-size: 16px; font-weight: 800; color: var(--primary-dark); }
-        .fav-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .fav-actions button { padding: 6px 14px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-        .btn-add-cart-fav { background: var(--primary); color: white; }
-        .btn-add-cart-fav:hover { background: var(--primary-dark); }
-        .btn-remove-fav { background: #fee2e2; color: #dc2626; }
-        .btn-remove-fav:hover { background: #fecaca; }
-        .empty-fav { text-align: center; padding: 80px 20px; }
-        .empty-fav i { font-size: 64px; color: var(--gray-300); margin-bottom: 16px; display: block; }
-        .empty-fav h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-        .empty-fav p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
-        .empty-fav a { display: inline-block; padding: 12px 28px; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; text-decoration: none; }
-        .loading-state { text-align: center; padding: 60px 20px; }
-        .loading-state i { font-size: 32px; color: var(--primary); }
-        @media (max-width: 768px) {
-            .fav-page-shell { margin-top: 72px; padding: 0 12px; }
-            .fav-card { flex-direction: column; }
-            .fav-img { width: 100%; height: 160px; }
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+
+    <!-- Tailwind Play CDN for layout grid rendering -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#16A34A",
+              secondary: "#22C55E",
+              background: "#F8FAF8",
+              surface: "#FFFFFF",
+              "outline-variant": "#E5E7EB"
+            }
+          }
         }
+      }
+    </script>
+
+    <style>
+        .page-shell {
+            grid-template-columns: 260px 1fr !important;
+        }
+        .favorites-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Shimmer skeletons */
+        .skeleton-card-premium {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 16px;
+        }
+        .skeleton-img {
+            aspect-ratio: 1;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+        .skeleton-text {
+            height: 14px;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Product Card overrides */
+        .product-card-premium {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .product-card-premium:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.05);
+            border-color: rgba(22, 163, 74, 0.2);
+        }
+        .product-card-premium .img-zoom-parent {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #F8FAF8;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-card-premium .img-zoom-parent img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.5s ease;
+        }
+        .product-card-premium:hover .img-zoom-parent img {
+            transform: scale(1.08);
+        }
+        .favorite-btn-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #EF4444;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .favorite-btn-badge:hover {
+            transform: scale(1.1);
+        }
+
+        .filter-sticky-bar {
+            background: rgba(248, 250, 248, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 20;
+            padding: 8px 0;
+        }
+        .filter-btn-chip {
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-btn-chip.active {
+            background: #16A34A !important;
+            color: #FFFFFF !important;
+            border-color: #16A34A !important;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-container">
-            <a href="/" class="logo">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
-                <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
-            </a>
-            <nav class="nav">
-                <a href="/home/">Marketplace</a>
-                <a href="/buyer/orders/">Pesanan</a>
-                <a href="/bantuan/">Bantuan</a>
+    <div class="page-shell">
+        <!-- Sticky Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-name">
+                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
+                    <span class="logo-text">Warung<span class="logo-green">io</span></span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'home' %}" class="nav-link">
+                    <i class="fa-regular fa-compass"></i>
+                    <span>Beranda</span>
+                </a>
+                <a href="{% url 'page-products' %}" class="nav-link">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Produk</span>
+                </a>
+                <a href="{% url 'home' %}#warung-section" class="nav-link">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Warung Terdekat</span>
+                </a>
+                <a href="{% url 'page-favorites' %}" class="nav-link active">
+                    <i class="fa-solid fa-heart" style="color: #16A34A;"></i>
+                    <span>Favorit</span>
+                </a>
+                <a href="{% url 'page-buyer-orders' %}" class="nav-link">
+                    <i class="fa-regular fa-receipt"></i>
+                    <span>Pesanan Saya</span>
+                    <span class="nav-badge">2</span>
+                </a>
+                <a href="{% url 'page-buyer-dashboard' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span>Langganan</span>
+                    <span class="nav-badge new-badge">Baru</span>
+                </a>
+                <a href="{% url 'page-promo' %}" class="nav-link">
+                    <i class="fa-regular fa-percentage"></i>
+                    <span>Promo</span>
+                </a>
+                <a href="{% url 'page-wallet' %}" class="nav-link">
+                    <i class="fa-regular fa-wallet"></i>
+                    <span>Dompet Saya</span>
+                </a>
+                <a href="{% url 'page-buyer-reviews' %}" class="nav-link">
+                    <i class="fa-regular fa-star"></i>
+                    <span>Penilaian</span>
+                </a>
+                <a href="{% url 'bantuan-page' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>Bantuan</span>
+                </a>
+                <a href="{% url 'page-settings' %}" class="nav-link">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Pengaturan</span>
+                </a>
             </nav>
-            <div class="auth-buttons" id="authButtons">
-                <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display:none;">
-                    <div class="profile-box" id="profileBox">
-                        <div class="profile-info"><p id="userName">Hai, User</p><span class="member-badge" id="userRoleBadge">Member</span></div>
-                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+
+            <!-- Bottom Widget: Warungio Points -->
+            <div class="sidebar-points-widget">
+                <div class="points-header">
+                    <i class="fa-solid fa-award points-icon"></i>
+                    <span>Warungio Points</span>
+                </div>
+                <div class="points-value">1.250 Poin</div>
+                <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="favorites-main-content">
+            <!-- Sticky Glassmorphism Top Navigation -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     </div>
-                    <div class="dropdown-menu-custom" id="dropdownMenu">
-                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard</a>
-                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+                    
+                    <!-- Location Selector -->
+                    <div class="topbar-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div class="location-info">
+                            <span class="location-label">Kirim ke</span>
+                            <span class="location-value" id="userLocation">Memuat lokasi...</span>
+                        </div>
                     </div>
                 </div>
-                <div id="guestNavButtons">
-                    <a href="/auth/login/" class="btn-masuk">Masuk</a>
-                    <a href="/auth/register/" class="btn-daftar">Daftar</a>
+
+                <!-- Search Bar -->
+                <div class="search-panel">
+                    <div class="search-input">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" placeholder="Cari produk, warung, atau kategori..." id="searchInput" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="topbar-actions">
+                    <!-- Authenticated Actions -->
+                    <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
+                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
+                        <button class="icon-btn-premium"><i class="fa-regular fa-comment-dots"></i></button>
+                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="icon-badge" id="cartBadgeHeader">0</span>
+                        </button>
+                        
+                        <div class="profile-dropdown-wrapper">
+                            <div class="profile-box-premium" id="profileBox">
+                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                                <div class="profile-info-premium">
+                                    <p id="userName" class="profile-name">Hai, User</p>
+                                    <span class="member-badge-premium" id="userRoleBadge">Member</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-menu-custom" id="dropdownMenu">
+                                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                                <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
+                                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Actions -->
+                    <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
+                        <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
+                        <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
+                        <a href="{% url 'page-register-mitra' %}" class="btn-mitra-premium">Gabung Mitra</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="px-6 md:px-8 py-8 space-y-8 flex-1">
+                <!-- Header Title Section -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Favorit Saya</h1>
+                        <p class="text-sm text-slate-500 mt-1">Semua produk dan warung yang telah Anda simpan akan muncul di sini untuk memudahkan pembelian kembali.</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                        <span class="text-primary text-2xl font-extrabold" id="favProductCountBadge">0</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide leading-tight">Produk<br/>Favorit</span>
+                    </div>
+                </div>
+
+                <!-- Sticky Category Chips & Filters row -->
+                <div class="filter-sticky-bar">
+                    <div class="space-y-4">
+                        <!-- Horizontal Scroll Category Chips -->
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin hide-scrollbar" id="favCategoryFilter">
+                            <button class="px-5 py-2 bg-primary text-white rounded-full font-bold text-xs whitespace-nowrap active filter-btn-chip" data-category="all">Semua</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="1">Sayuran</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="2">Buah</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="3">Daging</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="4">Sembako</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="5">Minuman</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="6">Frozen Food</button>
+                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="others">Lainnya</button>
+                        </div>
+
+                        <!-- Checkboxes & Sorting dropdown -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+                            <!-- Left check items -->
+                            <div class="flex flex-wrap items-center gap-3">
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkProduk" checked>
+                                    <span>Produk</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkWarung" checked>
+                                    <span>Warung</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkDiskon">
+                                    <span>Diskon</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="checkFreeShipping">
+                                    <span>Gratis Ongkir</span>
+                                </label>
+                            </div>
+
+                            <!-- Right sort select -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wide hidden md:block">Urutkan:</span>
+                                <select class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 focus:ring-primary focus:border-primary min-w-[150px]" id="favSortSelect">
+                                    <option value="-created_at">Terbaru Disimpan</option>
+                                    <option value="product_name">Nama A-Z</option>
+                                    <option value="price">Harga Termurah</option>
+                                    <option value="-price">Harga Tertinggi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Grid Section -->
+                <div class="space-y-6" id="favProductsSection">
+                    <h2 class="text-xl font-extrabold text-slate-800">Produk Favorit</h2>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6" id="favProductGrid">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                    <!-- Products Load More Button -->
+                    <div class="flex justify-center mt-6" id="loadMoreFavProductsWrapper" style="display: none;">
+                        <button class="px-8 py-3 bg-white border border-slate-200 rounded-full font-bold text-xs text-slate-500 flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm" id="loadMoreFavProductsBtn">
+                            <span>Muat Lebih Banyak Produk</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stores Grid Section -->
+                <div class="space-y-6" id="favStoresSection">
+                    <h2 class="text-xl font-extrabold text-slate-800">Warung Favorit</h2>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6" id="favStoreGrid">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                    <!-- Stores Load More Button -->
+                    <div class="flex justify-center mt-6" id="loadMoreFavStoresWrapper" style="display: none;">
+                        <button class="px-8 py-3 bg-white border border-slate-200 rounded-full font-bold text-xs text-slate-500 flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm" id="loadMoreFavStoresBtn">
+                            <span>Muat Lebih Banyak Warung</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Shimmer skeleton placeholders -->
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6" id="loadingSkeletons" style="display: none;">
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                </div>
+
+                <!-- Global Clean Empty State (When both lists are empty) -->
+                <div class="text-center py-16 px-4 bg-white rounded-3xl border border-slate-100 space-y-6" id="favoritesEmptyState" style="display: none;">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                        <i class="fa-regular fa-heart text-4xl"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-bold text-slate-800">Belum Ada Favorit</h3>
+                        <p class="text-sm text-slate-400">Tambahkan produk atau warung favorit Anda untuk mempermudah pemesanan kembali.</p>
+                    </div>
+                    <div class="flex justify-center">
+                        <a href="{% url 'home' %}" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:scale-105 active:scale-95 transition-all">Mulai Belanja</a>
+                    </div>
                 </div>
             </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        </div>
-    </header>
-
-    <div class="fav-page-shell">
-        <div class="fav-header">
-            <h1><i class="fa-solid fa-heart"></i> Favorit Saya</h1>
-            <p>Produk yang kamu sukai, tersimpan di sini</p>
-        </div>
-
-        <div id="favGrid" class="fav-grid">
-            <div class="loading-state" id="loadingState">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                <p style="margin-top:12px;color:var(--muted);font-size:13px;">Memuat favorit...</p>
-            </div>
-        </div>
-
-        <div class="empty-fav" id="emptyFav" style="display:none;">
-            <i class="fa-regular fa-heart"></i>
-            <h3>Belum Ada Favorit</h3>
-            <p>Tambahkan produk favoritmu dengan menekan ikon hati pada produk.</p>
-            <a href="/home/">Mulai Belanja</a>
-        </div>
+        </main>
     </div>
 
-    <footer class="footer"><p>&copy; 2026 Warungio. Hak Cipta Dilindungi.</p></footer>
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;"></div>
 
-    <div id="toastContainer" class="toast-container"></div>
-
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
     <script>
     (function() {
         'use strict';
 
+        // State managers
+        let productState = {
+            list: [],
+            filtered: [],
+            page: 1,
+            pageSize: 8,
+            category: 'all',
+            searchQuery: '',
+            discountOnly: false,
+            freeShippingOnly: false,
+            sort: '-created_at'
+        };
+
+        let storeState = {
+            list: [],
+            filtered: [],
+            page: 1,
+            pageSize: 8,
+            discountOnly: false,
+            freeShippingOnly: false,
+            sort: '-created_at'
+        };
+
+        // DOM elements
+        const favProductGrid = document.getElementById('favProductGrid');
+        const favStoreGrid = document.getElementById('favStoreGrid');
+        const loadingSkeletons = document.getElementById('loadingSkeletons');
+        const favoritesEmptyState = document.getElementById('favoritesEmptyState');
+        const favProductCountBadge = document.getElementById('favProductCountBadge');
+        
+        const favProductsSection = document.getElementById('favProductsSection');
+        const favStoresSection = document.getElementById('favStoresSection');
+        
+        const checkProduk = document.getElementById('checkProduk');
+        const checkWarung = document.getElementById('checkWarung');
+        const checkDiskon = document.getElementById('checkDiskon');
+        const checkFreeShipping = document.getElementById('checkFreeShipping');
+        const favSortSelect = document.getElementById('favSortSelect');
+        const searchInput = document.getElementById('searchInput');
+
+        const loadMoreProductsWrapper = document.getElementById('loadMoreFavProductsWrapper');
+        const loadMoreStoresWrapper = document.getElementById('loadMoreFavStoresWrapper');
+
         function showToast(msg, type) {
-            var c = document.getElementById('toastContainer');
-            var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
-            t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);';
-            if (type === 'success') { t.style.background = '#dcfce7'; t.style.color = '#166534'; t.style.border = '1px solid #bbf7d0'; }
-            else if (type === 'error') { t.style.background = '#fee2e2'; t.style.color = '#991b1b'; t.style.border = '1px solid #fecaca'; }
-            else { t.style.background = '#dbeafe'; t.style.color = '#1e40af'; t.style.border = '1px solid #bfdbfe'; }
-            t.innerHTML = '<span>' + msg + '</span>'; c.appendChild(t);
-            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type || 'info'} flex items-center gap-2 p-4 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300`;
+            
+            if (type === 'success') {
+                toast.style.background = '#dcfce7';
+                toast.style.color = '#166534';
+                toast.style.borderColor = '#bbf7d0';
+            } else if (type === 'error') {
+                toast.style.background = '#fee2e2';
+                toast.style.color = '#991b1b';
+                toast.style.borderColor = '#fecaca';
+            } else {
+                toast.style.background = '#dbeafe';
+                toast.style.color = '#1e40af';
+                toast.style.borderColor = '#bfdbfe';
+            }
+
+            toast.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         async function loadFavorites() {
-            var grid = document.getElementById('favGrid');
-            var loading = document.getElementById('loadingState');
-            var empty = document.getElementById('emptyFav');
+            loadingSkeletons.style.display = 'grid';
+            favProductsSection.style.display = 'none';
+            favStoresSection.style.display = 'none';
+            favoritesEmptyState.style.display = 'none';
 
             try {
-                if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
-                    return;
-                }
+                // Fetch Products
+                const prodParams = { is_favorite: true };
+                const prodRes = await WarungioAPI.getProducts(prodParams);
+                productState.list = Array.isArray(prodRes) ? prodRes : (prodRes.results || []);
 
-                // Get favorites from API - we can use the products endpoint with favorite filter or get favorites directly
-                var data;
-                if (window.WarungioAPI) {
-                    // Try to get favorites - the API might support this via a products endpoint
-                    data = await WarungioAPI.getProducts({ is_favorite: true });
-                }
-                var favorites = data && data.results ? data.results : [];
+                // Fetch Followed Stores
+                const storeRes = await WarungioAPI.getFollowedStores();
+                storeState.list = Array.isArray(storeRes) ? storeRes : (storeRes.results || []);
 
-                if (loading) loading.style.display = 'none';
+                loadingSkeletons.style.display = 'none';
+                
+                // Initialize grids
+                applyFilters();
 
-                if (!favorites || favorites.length === 0) {
-                    if (empty) empty.style.display = 'block';
-                    if (grid) grid.innerHTML = '';
-                    return;
-                }
-
-                if (grid) {
-                    grid.innerHTML = favorites.map(function(p) {
-                        var img = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
-                        var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
-                        return '<div class="fav-card">' +
-                            '<img src="' + img + '" alt="' + p.product_name + '" class="fav-img" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
-                            '<div class="fav-body">' +
-                            (p.store_name ? '<div class="fav-store">' + p.store_name + '</div>' : '') +
-                            '<div class="fav-name">' + p.product_name + '</div>' +
-                            '<div class="fav-price">' + price + '</div>' +
-                            '<div class="fav-actions">' +
-                            '<button class="btn-add-cart-fav" onclick="addToCartFav(' + p.id + ')"><i class="fa-solid fa-cart-plus"></i> Keranjang</button>' +
-                            '<button class="btn-remove-fav" onclick="removeFav(' + p.id + ', this)"><i class="fa-solid fa-trash-can"></i> Hapus</button>' +
-                            '</div></div></div>';
-                    }).join('');
-                }
-            } catch(e) {
-                console.warn('Favorites load error:', e);
-                if (loading) loading.style.display = 'none';
-                if (empty) empty.style.display = 'block';
+            } catch (err) {
+                console.warn('Failed to load favorites data:', err);
+                loadingSkeletons.style.display = 'none';
+                favoritesEmptyState.style.display = 'block';
             }
         }
 
-        window.addToCartFav = async function(productId) {
-            try {
-                if (window.WarungioAPI) {
-                    await WarungioAPI.addToCart({ product: productId, qty: 1 });
-                    showToast('Ditambahkan ke keranjang!', 'success');
+        function applyFilters() {
+            // Apply Filters to Products
+            productState.filtered = productState.list.filter(p => {
+                if (productState.category !== 'all' && p.category != productState.category) return false;
+                if (productState.discountOnly && !p.discount_pct) return false;
+                if (productState.freeShippingOnly && !p.free_shipping) return false;
+                if (productState.searchQuery) {
+                    const q = productState.searchQuery.toLowerCase();
+                    const name = p.product_name.toLowerCase();
+                    const store = (p.store_name || '').toLowerCase();
+                    if (!name.includes(q) && !store.includes(q)) return false;
                 }
-            } catch(e) { showToast('Gagal menambahkan', 'error'); }
-        };
-
-        window.removeFav = async function(productId, btn) {
-            try {
-                if (window.WarungioAPI) {
-                    var result = await WarungioAPI.toggleFavorite(productId);
-                    showToast('Dihapus dari favorit', 'info');
-                    var card = btn.closest('.fav-card');
-                    if (card) card.remove();
-                    // Check if empty
-                    var grid = document.getElementById('favGrid');
-                    if (grid && grid.children.length === 0) {
-                        document.getElementById('emptyFav').style.display = 'block';
-                    }
-                }
-            } catch(e) { showToast('Gagal menghapus', 'error'); }
-        };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('profileDropdownWrap').style.display = 'block';
-                document.getElementById('guestNavButtons').style.display = 'none';
-            }
-
-            var profileBox = document.getElementById('profileBox');
-            var dropdown = document.getElementById('dropdownMenu');
-            if (profileBox && dropdown) {
-                profileBox.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
-                document.addEventListener('click', function() { dropdown.classList.remove('show'); });
-            }
-
-            document.getElementById('btnLogout').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+                return true;
             });
 
-            loadFavorites();
+            // Sort products
+            if (productState.sort === 'price') {
+                productState.filtered.sort((a, b) => a.price - b.price);
+            } else if (productState.sort === '-price') {
+                productState.filtered.sort((a, b) => b.price - a.price);
+            } else if (productState.sort === 'product_name') {
+                productState.filtered.sort((a, b) => a.product_name.localeCompare(b.product_name));
+            } else {
+                // terbaru default order
+                productState.filtered.sort((a, b) => b.id - a.id);
+            }
+
+            // Apply Filters to Stores
+            storeState.filtered = storeState.list.filter(s => {
+                if (storeState.freeShippingOnly && !s.is_open) return false;
+                if (productState.searchQuery) {
+                    const q = productState.searchQuery.toLowerCase();
+                    const name = s.store_name.toLowerCase();
+                    if (!name.includes(q)) return false;
+                }
+                return true;
+            });
+
+            // Update product counts
+            favProductCountBadge.textContent = productState.list.length;
+
+            renderGrids();
+        }
+
+        function renderGrids() {
+            // Show/Hide Sections based on checkbox state
+            const showProd = checkProduk.checked;
+            const showStore = checkWarung.checked;
+
+            favProductsSection.style.display = showProd && productState.filtered.length > 0 ? 'block' : 'none';
+            favStoresSection.style.display = showStore && storeState.filtered.length > 0 ? 'block' : 'none';
+
+            // Overall empty state
+            const totalVisible = (showProd ? productState.filtered.length : 0) + (showStore ? storeState.filtered.length : 0);
+            if (totalVisible === 0) {
+                favoritesEmptyState.style.display = 'block';
+            } else {
+                favoritesEmptyState.style.display = 'none';
+            }
+
+            // Render Products
+            if (showProd) {
+                const limit = productState.page * productState.pageSize;
+                const items = productState.filtered.slice(0, limit);
+                
+                favProductGrid.innerHTML = items.map(p => {
+                    const img = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
+                    const rating = Number(p.rating_avg || 4.8).toFixed(1);
+                    const isFresh = p.is_fresh ? `<span class="px-2 py-0.5 bg-green-100 text-[#16A34A] text-[9px] font-extrabold rounded-md uppercase tracking-wider">Segar</span>` : '';
+                    const discountBadge = p.discount_pct ? `<span class="px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-extrabold rounded-md">-${p.discount_pct}%</span>` : '';
+                    const oldPrice = p.discount_pct ? `<p class="text-[10px] text-slate-400 line-through">Rp ${Number(p.price + (p.price * p.discount_pct / 100)).toLocaleString('id-ID')}</p>` : '';
+                    
+                    return `
+                        <div class="product-card-premium" data-product-id="${p.id}">
+                            <div class="img-zoom-parent">
+                                <img src="${img}" alt="${p.product_name}" loading="lazy" onerror="this.src='/static/images/paket-sayur.png'">
+                                <div class="absolute top-2 left-2 flex flex-col gap-1">
+                                    ${isFresh}
+                                    ${discountBadge}
+                                </div>
+                                <button class="favorite-btn-badge" data-action="toggle-fav" data-id="${p.id}">
+                                    <i class="fa-solid fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 flex flex-col mt-2">
+                                <span class="text-[10px] font-semibold text-slate-400 mb-0.5">${p.store_name || 'Mitra Warungio'}</span>
+                                <h3 class="font-bold text-slate-800 text-xs line-clamp-2 h-8 leading-tight">${p.product_name}</h3>
+                                <div class="flex items-center gap-1 my-2">
+                                    <i class="fa-solid fa-star text-yellow-400 text-[10px]"></i>
+                                    <span class="text-[10px] font-bold text-slate-700">${rating}</span>
+                                    <span class="text-[9px] text-slate-400">| Terjual ${p.sold_count || 120}+</span>
+                                </div>
+                                <div class="mt-auto">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="text-sm font-extrabold text-slate-800">Rp ${Number(p.price).toLocaleString('id-ID')}</span>
+                                        ${oldPrice}
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 mt-2">
+                                        <span class="px-1.5 py-0.5 bg-green-50 text-[#16A34A] rounded font-bold">Gratis Ongkir</span>
+                                        <span>• Tiba 20-30 min</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-1.5 mt-3 pt-3 border-t border-slate-100">
+                                        <button class="w-full bg-[#16A34A] text-white py-1.5 rounded-lg text-[11px] font-bold hover:bg-[#15803d] transition-colors btn-add-to-cart-action" data-id="${p.id}">Tambah ke Keranjang</button>
+                                        <button class="w-full bg-white border border-slate-200 text-slate-500 py-1.5 rounded-lg text-[11px] font-bold hover:bg-slate-50 transition-colors btn-detail-action" data-id="${p.id}">Lihat Detail</button>
+                                        <button class="w-full text-red-500 py-1 rounded-lg text-[10px] font-bold hover:bg-red-50 transition-colors flex items-center justify-center gap-1 btn-delete-fav-action" data-id="${p.id}">
+                                            <i class="fa-solid fa-trash-can"></i> Hapus dari Favorit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (productState.filtered.length > limit) {
+                    loadMoreProductsWrapper.style.display = 'flex';
+                } else {
+                    loadMoreProductsWrapper.style.display = 'none';
+                }
+            }
+
+            // Render Stores
+            if (showStore) {
+                const limit = storeState.page * storeState.pageSize;
+                const items = storeState.filtered.slice(0, limit);
+
+                favStoreGrid.innerHTML = items.map(s => {
+                    const logo = s.logo || '/static/images/store-icon-T.png';
+                    const banner = s.banner || '/static/images/promosi-toko.png';
+                    const rating = Number(s.rating_avg || 4.7).toFixed(1);
+                    const category = s.category_name || (s.id === 1 ? 'Sembako' : 'Sayuran');
+                    
+                    return `
+                        <div class="bg-white rounded-xxl overflow-hidden border border-slate-100 flex flex-col relative group cursor-pointer shadow-sm hover-lift" data-store-id="${s.id}">
+                            <div class="relative h-28 overflow-hidden">
+                                <img src="${banner}" alt="${s.store_name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='/static/images/promosi-toko.png'">
+                                <button class="absolute top-2.5 right-2.5 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-red-500 border-none shadow-sm btn-delete-store-fav-action" data-id="${s.id}">
+                                    <i class="fa-solid fa-heart"></i>
+                                </button>
+                                <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-full border-2 border-white bg-white shadow-md overflow-hidden">
+                                    <img src="${logo}" alt="${s.store_name} Logo" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                            <div class="pt-8 px-4 pb-4 flex flex-col flex-1">
+                                <div class="flex items-center gap-1 mb-1">
+                                    <h3 class="font-bold text-slate-800 text-xs truncate flex-1">${s.store_name}</h3>
+                                    <i class="fa-solid fa-circle-check text-primary text-[10px]" title="Verified Store"></i>
+                                </div>
+                                <span class="inline-block self-start px-2 py-0.5 bg-slate-50 text-[9px] font-bold text-[#16A34A] rounded mb-2">${category}</span>
+                                <div class="flex items-center gap-2 text-[9px] text-slate-500 mb-3">
+                                    <div class="flex items-center text-amber-500 font-bold">
+                                        <i class="fa-solid fa-star mr-1"></i> ${rating}
+                                    </div>
+                                    <span>•</span>
+                                    <span>0.3 km</span>
+                                </div>
+                                <div class="flex items-center justify-between text-[9px] text-slate-400 mb-4">
+                                    <span>30-45 min</span>
+                                    <span class="text-primary font-bold">Gratis Ongkir</span>
+                                </div>
+                                <button class="w-full bg-[#16A34A] text-white py-2 rounded-xl text-xs font-bold hover:bg-[#15803d] transition-colors btn-visit-store-action" data-id="${s.id}">Kunjungi Warung</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (storeState.filtered.length > limit) {
+                    loadMoreStoresWrapper.style.display = 'flex';
+                } else {
+                    loadMoreStoresWrapper.style.display = 'none';
+                }
+            }
+
+            // Bind inline action handlers
+            bindCardActions();
+        }
+
+        function bindCardActions() {
+            // Add to cart click
+            document.querySelectorAll('.btn-add-to-cart-action').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    try {
+                        const res = await WarungioAPI.addToCart({ product: id, qty: 1 });
+                        showToast('Produk ditambahkan ke keranjang!', 'success');
+                        
+                        // Sync cart counts
+                        const countRes = await WarungioAPI.getCartCount();
+                        const cartBadgeHeader = document.getElementById('cartBadgeHeader');
+                        if (countRes && countRes.count !== undefined) {
+                            if (cartBadgeHeader) cartBadgeHeader.textContent = countRes.count;
+                        }
+                    } catch (err) {
+                        showToast('Gagal menambahkan ke keranjang', 'error');
+                    }
+                });
+            });
+
+            // Detail click
+            document.querySelectorAll('.btn-detail-action').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    window.location.href = `/products/${id}/`;
+                });
+            });
+
+            // Delete product favorite click
+            document.querySelectorAll('.btn-delete-fav-action, .favorite-btn-badge').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    try {
+                        await WarungioAPI.toggleFavorite(id);
+                        showToast('Produk dihapus dari favorit', 'info');
+                        
+                        // Remove from local list and update
+                        productState.list = productState.list.filter(p => p.id != id);
+                        applyFilters();
+                    } catch (err) {
+                        showToast('Gagal menghapus favorit', 'error');
+                    }
+                });
+            });
+
+            // Delete store follow click
+            document.querySelectorAll('.btn-delete-store-fav-action').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    try {
+                        await WarungioAPI.unfollowStore(id);
+                        showToast('Toko dihapus dari favorit', 'info');
+
+                        storeState.list = storeState.list.filter(s => s.id != id);
+                        applyFilters();
+                    } catch (err) {
+                        showToast('Gagal menghapus favorit', 'error');
+                    }
+                });
+            });
+
+            // Visit store click
+            document.querySelectorAll('.btn-visit-store-action, [data-store-id]').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.btn-delete-store-fav-action');
+                    if (btn) return; // Ignore click on unfollow button
+                    
+                    e.stopPropagation();
+                    const id = el.getAttribute('data-store-id') || el.getAttribute('data-id');
+                    window.location.href = `/stores/${id}/`;
+                });
+            });
+        }
+
+        // Setup filter handlers
+        function setupFilters() {
+            // Category chips
+            const chips = document.querySelectorAll('#favCategoryFilter .filter-btn-chip');
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    chips.forEach(c => c.classList.remove('active', 'bg-primary', 'text-white'));
+                    chips.forEach(c => c.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-500'));
+                    
+                    chip.classList.add('active', 'bg-primary', 'text-white');
+                    chip.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-500');
+
+                    productState.category = chip.getAttribute('data-category');
+                    productState.page = 1;
+                    applyFilters();
+                });
+            });
+
+            // Checkboxes
+            checkProduk.addEventListener('change', () => {
+                renderGrids();
+            });
+            checkWarung.addEventListener('change', () => {
+                renderGrids();
+            });
+            checkDiskon.addEventListener('change', (e) => {
+                productState.discountOnly = e.target.checked;
+                productState.page = 1;
+                applyFilters();
+            });
+            checkFreeShipping.addEventListener('change', (e) => {
+                productState.freeShippingOnly = e.target.checked;
+                productState.page = 1;
+                applyFilters();
+            });
+
+            // Sort dropdown
+            favSortSelect.addEventListener('change', (e) => {
+                productState.sort = e.target.value;
+                productState.page = 1;
+                applyFilters();
+            });
+
+            // Search bar input (with debounce)
+            let searchTimeout = null;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    productState.searchQuery = e.target.value.trim();
+                    productState.page = 1;
+                    storeState.page = 1;
+                    applyFilters();
+                }, 300);
+            });
+
+            // Load more pagination click
+            document.getElementById('loadMoreFavProductsBtn').addEventListener('click', () => {
+                productState.page += 1;
+                renderGrids();
+            });
+            document.getElementById('loadMoreFavStoresBtn').addEventListener('click', () => {
+                storeState.page += 1;
+                renderGrids();
+            });
+        }
+
+        // Initialize components
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Geolocation fallback
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const userLocationEl = document.getElementById('userLocation');
+                    if (userLocationEl) userLocationEl.textContent = 'Samping Anda';
+                });
+            }
+
+            // Bind Top Nav profile toggles
+            const profileBox = document.getElementById('profileBox');
+            const dropdown = document.getElementById('dropdownMenu');
+            if (profileBox && dropdown) {
+                profileBox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+                document.addEventListener('click', () => dropdown.classList.remove('show'));
+            }
+
+            // Sync user authentication states
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                
+                // Set username
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = `Hai, ${u.full_name.split(' ')[0]}`;
+                }
+                
+                // Get wallet balance
+                try {
+                    const balanceData = await WarungioAPI.getWalletBalance();
+                    if (balanceData && balanceData.balance !== undefined) {
+                        const label = document.getElementById('userBalanceDropdown');
+                        if (label) label.textContent = `Rp ${Number(balanceData.balance).toLocaleString('id-ID')}`;
+                    }
+                } catch(e) {}
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+
+            // Logout click
+            document.getElementById('btnLogout')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.WarungioAuth) {
+                    window.WarungioAuth.logout();
+                    window.location.href = '/';
+                }
+            });
+
+            // Initialize filters & data
+            setupFilters();
+            await loadFavorites();
         });
     })();
     </script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
 </body>
 </html>

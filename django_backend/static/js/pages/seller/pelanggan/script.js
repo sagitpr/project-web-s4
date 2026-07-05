@@ -100,11 +100,17 @@
         var ordersData = res && res.results ? res.results : (Array.isArray(res) ? res : []);
         processOrders(ordersData);
       }).catch(function (err) {
-        console.warn('Seller orders fetch failed, using mock:', err);
-        loadMockData();
+        console.warn('Seller orders fetch failed:', err);
+        allCustomers = [];
+        renderStats();
+        renderTable();
+        renderPagination();
       });
     } else {
-      loadMockData();
+      allCustomers = [];
+      renderStats();
+      renderTable();
+      renderPagination();
     }
   }
 
@@ -146,25 +152,6 @@
     allCustomers = Object.keys(customerMap).map(function (key) { return customerMap[key]; });
     allCustomers.sort(function (a, b) { return b.totalSpent - a.totalSpent; });
 
-    renderStats();
-    renderTable();
-    renderPagination();
-  }
-
-  /* ── Mock Data ── */
-  function loadMockData() {
-    var mockCustomers = [
-      { id: 'c1', name: 'Siti Rahmawati', email: 'siti@example.com', phone: '081234567890', avatar: '', totalOrders: 12, totalSpent: 1850000, lastOrderDate: new Date(Date.now() - 86400000 * 2), firstOrderDate: new Date(Date.now() - 86400000 * 90) },
-      { id: 'c2', name: 'Ahmad Fauzi', email: 'ahmad@example.com', phone: '081298765432', avatar: '', totalOrders: 8, totalSpent: 920000, lastOrderDate: new Date(Date.now() - 86400000 * 5), firstOrderDate: new Date(Date.now() - 86400000 * 60) },
-      { id: 'c3', name: 'Dewi Lestari', email: 'dewi@example.com', phone: '081278945612', avatar: '', totalOrders: 5, totalSpent: 640000, lastOrderDate: new Date(Date.now() - 86400000 * 1), firstOrderDate: new Date(Date.now() - 86400000 * 30) },
-      { id: 'c4', name: 'Bambang Susilo', email: 'bambang@example.com', phone: '081256341278', avatar: '', totalOrders: 3, totalSpent: 380000, lastOrderDate: new Date(Date.now() - 86400000 * 7), firstOrderDate: new Date(Date.now() - 86400000 * 20) },
-      { id: 'c5', name: 'Rina Marlina', email: 'rina@example.com', phone: '081234589012', avatar: '', totalOrders: 1, totalSpent: 125000, lastOrderDate: new Date(Date.now() - 86400000 * 3), firstOrderDate: new Date(Date.now() - 86400000 * 3) },
-      { id: 'c6', name: 'Hendra Gunawan', email: 'hendra@example.com', phone: '081278943210', avatar: '', totalOrders: 15, totalSpent: 2400000, lastOrderDate: new Date(Date.now() - 86400000 * 0), firstOrderDate: new Date(Date.now() - 86400000 * 120) },
-      { id: 'c7', name: 'Fitriani', email: 'fitri@example.com', phone: '081290123456', avatar: '', totalOrders: 2, totalSpent: 210000, lastOrderDate: new Date(Date.now() - 86400000 * 14), firstOrderDate: new Date(Date.now() - 86400000 * 45) },
-    ];
-
-    allCustomers = mockCustomers;
-    allCustomers.sort(function (a, b) { return b.totalSpent - a.totalSpent; });
     renderStats();
     renderTable();
     renderPagination();

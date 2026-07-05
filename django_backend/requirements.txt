@@ -20,5 +20,6 @@ drf-spectacular-sidecar>=0.27
 django-redis>=5.4
 psycopg2-binary>=2.9  # Only if using PostgreSQL
 mysqlclient>=2.2       # Only if using MySQL/MariaDB
+whitenoise>=6.6
 # uvicorn>=0.24        # Alternative ASGI server
 requests>=2.32.0

@@ -23,14 +23,14 @@
 <div class="card"><div class="card-header"><i class="fa-solid fa-clock-rotate-left" style="color:var(--color-brand);margin-right:8px"></i> Riwayat Poin</div>
 <div class="card-body"><div class="tx-list" id="txList"><p style="font-size:13px;color:var(--color-text-tertiary)">Memuat riwayat...</p></div></div></div>
 </main></div>
+<script src="{% static 'js/utils/toast.js' %}"></script>
 <script src="{% static 'js/device-detector.js' %}"></script>
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/api.js' %}"></script>
 <script>
 async function loadLoyalty(){
-    const api=WarungioAPI||{get:()=>Promise.resolve({})};
     try{
-        const account=await api.get('/api/loyalty/account/');
+        const account=await window.WarungioAuth.api('/api/loyalty/account/');
         const pts=account.points_balance||0;document.getElementById('pointsBalance').textContent=pts.toLocaleString('id-ID')+' pts';
         const tier=account.tier?.name||'Bronze';document.getElementById('userTier').textContent=tier;
         const tiers=['Bronze','Silver','Gold','Platinum','Diamond'];const tierIdx=tiers.indexOf(tier);
@@ -38,22 +38,21 @@ async function loadLoyalty(){
         else{document.getElementById('nextTierLabel').textContent='MAX';document.getElementById('tierProgressFill').style.width='100%'}
     }catch(e){document.getElementById('pointsBalance').textContent='0 pts';}
     try{
-        const rewards=await api.get('/api/loyalty/rewards/');
+        const rewards=await window.WarungioAuth.api('/api/loyalty/rewards/');
         const items=rewards.results||rewards||[];
         if(items.length){document.getElementById('rewardGrid').innerHTML=items.map(r=>
             '<div class="reward-item"><div class="name">'+r.name+'</div><div class="cost">'+r.points_required+' pts</div><div class="desc">'+(r.description||'')+'</div><button class="btn-redeem" onclick="redeem('+r.id+')">Tukar</button></div>'
         ).join('')}
     }catch(e){}
     try{
-        const txs=await api.get('/api/loyalty/transactions/recent/');
+        const txs=await window.WarungioAuth.api('/api/loyalty/transactions/recent/');
         const list=txs.results||txs||[];
         if(list.length){document.getElementById('txList').innerHTML=list.map(t=>
             '<div class="tx-item"><div class="tx-icon '+(t.transaction_type==='earn'||t.transaction_type==='bonus'||t.transaction_type==='referral'?'tx-earn':'tx-redeem')+'"><i class="fa-solid '+(t.transaction_type==='earn'?'fa-plus':t.transaction_type==='bonus'?'fa-gift':t.transaction_type==='referral'?'fa-user-plus':'fa-minus')+'"></i></div><div><div>'+(t.description||'Transaksi')+'</div><small style="color:var(--color-text-tertiary)">'+(t.created_at?new Date(t.created_at).toLocaleDateString('id-ID'):'')+'</small></div><div class="tx-pts" style="color:'+(t.points>0?'#16a34a':'#dc2626')+'">'+(t.points>0?'+':'')+t.points+' pts</div></div>'
         ).join('')}
     }catch(e){}}
-function redeem(id){alert('Fitur redeem reward akan segera tersedia. Reward ID: '+id)}
+async function redeem(id){if(!confirm('Tukarkan poin Anda untuk reward ini?'))return;try{const result=await window.WarungioAuth.api('/api/loyalty/rewards/'+id+'/redeem/',{method:'POST',body:'{}'});if(result.message||result.success){if(window.WarungioToast){window.WarungioToast.show('Reward berhasil ditukar!','success')}loadLoyalty()}else{if(window.WarungioToast){window.WarungioToast.show('Gagal menukar reward.','error')}}}catch(e){if(window.WarungioToast){window.WarungioToast.show(e.message||'Gagal menukar reward.','error')}}}
 document.addEventListener('DOMContentLoaded',loadLoyalty);
-document.addEventListener('warungio:auth_ready',loadLoyalty);
 </script>
 </body>
 </html>

@@ -85,3 +85,48 @@ def clean_expired_otps_task():
     deleted, _ = OTP.objects.filter(created_at__lt=cutoff).delete()
     logger.info('Cleaned %s expired OTP records', deleted)
     return {'deleted': deleted}
+
+
+@shared_task
+def clean_expired_blacklisted_tokens_task():
+    """
+    Periodically clean expired blacklisted JWT tokens from the database.
+    
+    rest_framework_simplejwt stores all blacklisted tokens in the
+    token_blacklist_blacklistedtoken table. Over time, this table grows
+    and can slow down queries. This task removes tokens whose associated
+    OutstandingToken has expired.
+    
+    Runs daily via Celery Beat at 4 AM.
+    """
+    from django.utils import timezone
+    from rest_framework_simplejwt.token_blacklist.models import (
+        BlacklistedToken, OutstandingToken
+    )
+
+    now = timezone.now()
+    
+    # Find all expired outstanding tokens and their blacklisted counterparts
+    expired_outstanding = OutstandingToken.objects.filter(expires_at__lt=now)
+    expired_count = expired_outstanding.count()
+    
+    if expired_count > 0:
+        # Delete blacklisted tokens first (FK to outstanding)
+        deleted_blacklisted = BlacklistedToken.objects.filter(
+            token__in=expired_outstanding.values_list('id', flat=True)
+        ).delete()[0]
+        
+        # Then delete expired outstanding tokens
+        expired_outstanding.delete()
+        
+        logger.info(
+            'Cleaned %d expired outstanding tokens and %d blacklisted tokens',
+            expired_count, deleted_blacklisted
+        )
+        return {
+            'deleted_outstanding': expired_count,
+            'deleted_blacklisted': deleted_blacklisted,
+        }
+    
+    logger.info('No expired tokens to clean')
+    return {'deleted_outstanding': 0, 'deleted_blacklisted': 0}

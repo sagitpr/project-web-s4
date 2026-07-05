@@ -186,16 +186,27 @@ class MidtransNotificationView(views.APIView):
             if fraud_status == 'accept':
                 payment.mark_as_paid()
 
-                is_topup = order_id.startswith('TOP-') or (order and order.notes == 'TOPUP')
+                # Deteksi top-up: order.notes == 'TOPUP' (WalletTopUpView), 
+                # atau midtrans_order_id mengandung 'TOP-'
+                is_topup = (order and order.notes == 'TOPUP') or (order_id and 'TOP-' in order_id)
                 if is_topup:
                     user = payment.user
                     if user:
-                        if not user.device_info:
-                            user.device_info = {}
-                        current_balance = float(user.device_info.get('wallet_balance', 2350000.0))
-                        amount_to_add = float(gross_amount)
-                        user.device_info['wallet_balance'] = current_balance + amount_to_add
-                        user.save(update_fields=['device_info'])
+                        # Gunakan wallet service atomik — bukan lagi device_info
+                        from .services.wallet import credit_wallet
+                        try:
+                            result = credit_wallet(
+                                user=user,
+                                amount=float(gross_amount),
+                                tx_type='topup',
+                                description=f'Top Up saldo Warungio sebesar Rp {float(gross_amount):,}',
+                                reference_type='midtrans',
+                                reference_id=order_id,
+                            )
+                            new_balance = result['balance_after']
+                        except Exception as e:
+                            logger.error('Wallet credit failed for top-up %s: %s', order_id, str(e))
+                            new_balance = None
 
                     notify_payment_update(
                         user_id=payment.user_id,
@@ -346,6 +357,9 @@ class WalletTopUpView(views.APIView):
 
     @transaction.atomic
     def post(self, request):
+        # Ensure wallet exists before proceeding
+        from .services.wallet import get_wallet
+        get_wallet(request.user, lock=False)
         amount = request.data.get('amount')
         if not amount:
             return Response({'error': 'Nominal top-up wajib diisi.'},
@@ -781,3 +795,55 @@ class WithdrawBalanceView(views.APIView):
             'message': 'Permintaan penarikan dana berhasil diajukan dan sedang diproses.',
             'transaction': PaymentSerializer(withdrawal_tx).data,
         })
+
+
+# =============================================================================
+# WALLET ENDPOINTS (Database-driven, not device_info)
+# =============================================================================
+
+class WalletBalanceView(views.APIView):
+    """
+    Get real-time wallet balance for the authenticated user.
+    
+    GET /api/payments/wallet/balance/
+    
+    Returns balance directly from the Wallet table (database-driven).
+    Saldo TIDAK pernah disimpan di frontend atau localStorage.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        from .services.wallet import get_balance, get_wallet
+        wallet = get_wallet(request.user, lock=False)
+        return Response({
+            'balance': float(wallet.balance),
+            'balance_formatted': f'Rp {wallet.balance:,.0f}',
+            'last_updated': wallet.updated_at.isoformat() if wallet.updated_at else None,
+        })
+
+
+class WalletTransactionListView(views.APIView):
+    """
+    Get paginated wallet transaction history.
+    
+    GET /api/payments/wallet/transactions/?page=1&page_size=10&type=all
+    
+    Returns history langsung dari WalletTransaction table.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        from .services.wallet import get_transactions_paginated
+        
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
+        tx_type = request.query_params.get('type', 'all')
+        
+        result = get_transactions_paginated(
+            user=request.user,
+            page=page,
+            page_size=page_size,
+            tx_type=tx_type,
+        )
+        
+        return Response(result)

@@ -139,8 +139,6 @@ function showToast(message, type) {
 </script>
 
 <script src="{% static 'js/utils/toast.js' %}"></script>
-<script src="{% static 'js/utils/websocket.js' %}"></script>
-<script src="{% static 'js/utils/notifications.js' %}"></script>
 <script src="{% static 'js/utils/asset-loader.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -157,15 +155,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile menu
+    // Mobile menu — create overlay + drawer if not present, then toggle
     var menuBtn = document.getElementById('mobileMenuBtn');
     if (menuBtn) {
+        var overlay = document.getElementById('mobileOverlay');
+        var drawer = document.getElementById('mobileDrawer');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mobileOverlay';
+            overlay.className = 'mobile-drawer-overlay';
+            document.body.appendChild(overlay);
+        }
+        if (!drawer) {
+            drawer = document.createElement('aside');
+            drawer.id = 'mobileDrawer';
+            drawer.className = 'mobile-drawer';
+            var sidebar = document.querySelector('.sidebar') || document.querySelector('.nav-menu');
+            if (sidebar) drawer.innerHTML = sidebar.innerHTML;
+            document.body.appendChild(drawer);
+        }
+        function openMobile() {
+            overlay.classList.add('open');
+            drawer.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobile() {
+            overlay.classList.remove('open');
+            drawer.classList.remove('open');
+            document.body.style.overflow = '';
+        }
         menuBtn.addEventListener('click', function() {
-            var overlay = document.getElementById('mobileOverlay');
-            var drawer = document.getElementById('mobileDrawer');
-            if (overlay && drawer) {
-                overlay.classList.toggle('open');
-                drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) {
+                closeMobile();
+            } else {
+                openMobile();
+            }
+        });
+        overlay.addEventListener('click', closeMobile);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && drawer.classList.contains('open')) {
+                closeMobile();
             }
         });
     }

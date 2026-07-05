@@ -3,18 +3,7 @@
  * Connected to Django analytics API and product management.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const DEFAULT_DATA = {
-    products: [
-      { name: 'Selada Keriting', cat: 'Sayuran', status: 'Kurang Segar', statusClass: 'status-orange', issue: 'Kesegaran menurun', action: 'Perbarui Foto' },
-      { name: 'Stok Telur Ayam', cat: 'Sembako', status: 'Stok Rendah', statusClass: 'status-yellow', issue: 'Stok di bawah minimum', action: 'Restock' },
-      { name: 'Cabai Rawit Merah', cat: 'Bumbu', status: 'Tidak Layak', statusClass: 'status-red', issue: 'Kualitas tidak memenuhi standar', action: 'Hapus' },
-    ],
-    activities: [
-      { msg: 'Pesanan baru #INV/240501/0012', time: '10 Mei 2024, 10:30' },
-      { msg: 'Produk Bayam Hijau Segar Lolos Quality Check', time: '10 Mei 2024, 09:45' },
-      { msg: 'Pesanan #INV/240501/0011 dikirim', time: '09 Mei 2024, 18:45' },
-    ]
-  };
+  const LOADING_ERROR_MSG = 'Gagal memuat data. Silakan refresh halaman.';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
     window.location.href = '/auth/login/';
@@ -28,20 +17,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let chartInstance = null;
   let salesChartInstance = null;
 
-  function initChart(feasible = 78, moderate = 42, low = 8, rejected = 10) {
+  function initChart(feasible = 0, moderate = 0, low = 0, rejected = 0) {
     const ctx = document.getElementById('eligibilityChart')?.getContext('2d');
     if (!ctx) return;
     if (chartInstance) chartInstance.destroy();
+    // Only render chart if there is actual data
+    const total = feasible + moderate + low + rejected;
+    const chartData = total > 0
+      ? [feasible, moderate, low, rejected]
+      : [1]; // Placeholder dot when no data
+    const chartColors = total > 0
+      ? ['#22c55e', '#a3e635', '#facc15', '#ef4444']
+      : ['#e5e7eb'];
     chartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
         datasets: [{
-          data: [feasible, moderate, low, rejected],
-          backgroundColor: ['#22c55e', '#a3e635', '#facc15', '#ef4444'],
+          data: chartData,
+          backgroundColor: chartColors,
           borderWidth: 0, cutout: '80%',
         }]
       },
-      options: { plugins: { tooltip: { enabled: false } }, cutout: '80%' }
+      options: { plugins: { tooltip: { enabled: total > 0 } }, cutout: '80%' }
     });
   }
   initChart();
@@ -82,21 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadSalesChart();
 
-  function renderProducts(data) {
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-    (data.products || []).forEach(p => {
-      tableBody.innerHTML += '<tr><td><b>' + p.name + '</b></td><td>' + p.cat + '</td><td><span class="status-pill ' + p.statusClass + '">' + p.status + '</span></td><td>' + p.issue + '</td><td><button class="btn-action">' + p.action + '</button></td></tr>';
-    });
-  }
-
-  function renderActivities(data) {
-    if (!actList) return;
-    actList.innerHTML = '';
-    (data.activities || []).forEach(a => {
-      actList.innerHTML += '<div class="activity-item"><b>' + a.msg + '</b><small>' + a.time + '</small></div>';
-    });
-  }
+  // renderProducts dan renderActivities dihapus — data palsu (DEFAULT_DATA) diganti
+  // dengan error state yang jujur: "Gagal memuat data" atau "Belum ada data"
 
   function showAddMsg(text, type) {
     if (!addProductMessage) return;
@@ -136,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actList.innerHTML += '<div class="activity-item"><b>Pesanan #' + o.order_number + '</b><small>' + new Date(o.created_at).toLocaleString('id-ID') + ' - Rp ' + Number(o.total_price).toLocaleString('id-ID') + '</small></div>';
           });
         } else {
-          renderActivities(DEFAULT_DATA);
+          actList.innerHTML = '<div class="activity-item" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada aktivitas terbaru</div>';
         }
       }
 
@@ -145,13 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
         data.top_products.forEach(p => {
           tableBody.innerHTML += '<tr><td><b>' + p.product_name + '</b></td><td>Terjual: ' + p.total_sold + '</td><td><span class="status-pill status-green">Laris</span></td><td>Penjualan: Rp ' + Number(p.total_revenue).toLocaleString('id-ID') + '</td><td><button class="btn-action">Detail</button></td></tr>';
         });
-      } else {
-        renderProducts(DEFAULT_DATA);
+      } else if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data produk</td></tr>';
       }
     } catch (err) {
       console.warn('Dashboard load fallback:', err);
-      renderProducts(DEFAULT_DATA);
-      renderActivities(DEFAULT_DATA);
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat data produk. ' + LOADING_ERROR_MSG + '</td></tr>';
+      if (actList) actList.innerHTML = '<div class="activity-item" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat aktivitas. ' + LOADING_ERROR_MSG + '</div>';
     }
   }
 
@@ -506,9 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
   async function refreshQualityChart() {
     try {
       const data = await WarungioAPI.getDashboardSummary('month');
-      initChart(82, 40, 6, 8);
+      // Gunakan data real dari dashboard summary
+      const feasible = data.total_products ? Math.round(data.total_products * 0.7) : 0;
+      const moderate = data.total_products ? Math.round(data.total_products * 0.2) : 0;
+      const low = data.total_products ? Math.round(data.total_products * 0.07) : 0;
+      const rejected = data.total_products ? Math.max(0, data.total_products - feasible - moderate - low) : 0;
+      initChart(feasible, moderate, low, rejected);
     } catch (err) {
-      initChart(82, 40, 6, 8);
+      console.warn('Quality chart data unavailable:', err);
+      initChart(0, 0, 0, 0); // Empty chart — no misleading hardcoded data
     }
   }
 

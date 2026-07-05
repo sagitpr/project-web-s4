@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
+  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+    window.location.href = '/auth/login/';
     return;
   }
 
@@ -125,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (salesEl) salesEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
       if (ordersEl) ordersEl.textContent = data.total_orders || 0;
       if (productsEl) productsEl.textContent = data.total_products || 0;
-      if (ratingEl) ratingEl.textContent = (data.average_rating || 0).toFixed(1);
+      if (ratingEl) ratingEl.textContent = Number(data.average_rating || 0).toFixed(1);
       if (balanceEl) balanceEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
 
       if (actList) {
@@ -279,15 +280,16 @@ document.addEventListener('DOMContentLoaded', () => {
         barcode: confirmBarcodeInp?.value || '8991234567890',
         expiration_date: confirmExpDateInp?.value || '2027-12-31',
         bpom_number: confirmBpomInp?.value || 'MD 231456789012'
-      });
+      });      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
 
-      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
+      playScanSound(); // 🔊 Tit_kasir! Manual confirm success sound
 
       // Show result overlay
       if (scanResultsOverlay) {
         scanResultsOverlay.style.display = 'flex';
-        
-        const resBadge = document.getElementById('res-badge');
+          playScanSound(); // 🔊 Tit_kasir! Scan success sound
+
+          const resBadge = document.getElementById('res-badge');
         const resFreshness = document.getElementById('res-freshness');
         const resStatus = document.getElementById('res-status');
         const resDesc = document.getElementById('res-desc');
@@ -366,6 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        playScanSound(); // 🔊 Tit_kasir! Scan success sound
+
         // Show result overlay
         if (scanResultsOverlay) {
           scanResultsOverlay.style.display = 'flex';
@@ -425,6 +429,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 1500);
   });
+
+  // Play scan sound on successful scan result
+  function playScanSound() {
+    if (window.WarungioScanSound) {
+      window.WarungioScanSound.play(true); // true = with haptic
+    }
+  }
 
   btnCloseResults?.addEventListener('click', () => {
     if (scanResultsOverlay) scanResultsOverlay.style.display = 'none';

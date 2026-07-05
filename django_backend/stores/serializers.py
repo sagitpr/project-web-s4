@@ -76,6 +76,14 @@ class StoreCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Nama toko sudah digunakan.")
         return value
 
+    def validate_store_logo(self, value):
+        from products.validators import validate_image_file
+        return validate_image_file(value)
+
+    def validate_store_banner(self, value):
+        from products.validators import validate_image_file
+        return validate_image_file(value)
+
 
 class StoreUpdateSerializer(serializers.ModelSerializer):
     """Store update serializer with full region hierarchy."""
@@ -90,6 +98,14 @@ class StoreUpdateSerializer(serializers.ModelSerializer):
                   'open_time', 'close_time', 'delivery_type', 'service_area',
                   'bank_name', 'bank_account', 'bank_owner', 'store_logo',
                   'store_banner', 'is_open')
+
+    def validate_store_logo(self, value):
+        from products.validators import validate_image_file
+        return validate_image_file(value)
+
+    def validate_store_banner(self, value):
+        from products.validators import validate_image_file
+        return validate_image_file(value)
 
 
 class StoreFollowerSerializer(serializers.ModelSerializer):

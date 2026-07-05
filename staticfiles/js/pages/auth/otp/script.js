@@ -148,13 +148,30 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        /** Validate redirect URL — only allow relative paths to prevent open redirect */
+        function isValidRedirect(url) {
+          if (!url || typeof url !== 'string') return false;
+          return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+        }
+
+        /** Validate that next URL matches user role — prevents role mismatch */
+        function isRoleAllowedRedirect(nextUrl, role) {
+          if (!nextUrl || !role) return false;
+          if (role === 'buyer') return nextUrl.startsWith('/buyer/');
+          if (role === 'seller') return nextUrl.startsWith('/seller/');
+          if (role === 'admin') return nextUrl.startsWith('/admin/');
+          return false;
+        }
+
         setTimeout(() => {
           // If authenticated, check role and redirect
           if (window.WarungioAuth.isAuthenticated()) {
             const user = window.WarungioAuth.getUser();
             const role = user ? user.role : null;
+            const nextUrl = params.get('next');
+
             if (role === 'buyer') {
-              window.location.href = '/home/';
+              window.location.href = (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) ? nextUrl : '/buyer/home/';
             } else if (role === 'seller') {
               window.location.href = '/seller/dashboard/';
             } else if (role === 'admin') {

@@ -28,14 +28,14 @@
 </div>
 <div id="reviewList"><div class="empty-state"><i class="fa-solid fa-star"></i><p>Belum ada ulasan. Belanja sekarang dan berikan penilaian!</p></div></div>
 </main></div>
+<script src="{% static 'js/utils/toast.js' %}"></script>
 <script src="{% static 'js/device-detector.js' %}"></script>
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/api.js' %}"></script>
 <script>
 let allReviews=[];let currentFilter='all';
 async function loadReviews(){try{
-    const api=WarungioAPI||{get:()=>Promise.resolve({results:[]})};
-    const data=await api.get('/api/products/reviews/mine/');
+    const data=await window.WarungioAuth.api('/api/products/reviews/mine/');
     allReviews=data.results||data||[];
     renderReviews();
 }catch(e){document.getElementById('reviewList').innerHTML='<div class=\"empty-state\"><i class=\"fa-solid fa-star\"></i><p>Gagal memuat ulasan.</p></div>'}}
@@ -52,7 +52,7 @@ function renderReviews(){
         const empty=Array(5-(r.rating||0)).fill(0).map((_,i)=>'&#9734;').join('');
         return '<div class=\"review-card\"><img class=\"product-img\" src=\"'+(r.product?.product_photo_url||'{% static "images/placeholder.png" %}')+'\" alt=\"\" onerror=\"this.src=\\'{% static \"images/placeholder.png\" %}\\'\"><div class=\"review-body\"><p class=\"product-name\">'+(r.product?.name||'Produk')+'</p><div class=\"stars\">'+filled+empty+'</div><p class=\"review-date\">'+(r.created_at?new Date(r.created_at).toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'}):'')+'</p>'+(r.comment?'<p class=\"review-text\">'+r.comment+'</p>':'')+'<div class=\"review-actions\"><a href=\"#\" onclick=\"deleteReview('+r.id+',this)\">Hapus</a></div></div></div>'
     }).join('')}
-function deleteReview(id,el){if(confirm('Hapus ulasan ini?')){el.closest('.review-card').remove();allReviews=allReviews.filter(r=>r.id!==id);renderReviews();showToast('Ulasan dihapus','success')}}
+async function deleteReview(id,el){if(!confirm('Hapus ulasan ini?'))return;try{await window.WarungioAuth.api('/api/products/reviews/'+id+'/',{method:'DELETE'});el.closest('.review-card').remove();allReviews=allReviews.filter(r=>r.id!==id);renderReviews();if(window.WarungioToast){window.WarungioToast.show('Ulasan berhasil dihapus','success')}}catch(e){if(window.WarungioToast){window.WarungioToast.show('Gagal menghapus ulasan: '+(e.message||'Terjadi kesalahan'),'error')}}}
 document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');currentFilter=this.dataset.filter;renderReviews()})});
 document.addEventListener('DOMContentLoaded',loadReviews);
 </script>

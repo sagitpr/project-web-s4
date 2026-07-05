@@ -63,15 +63,6 @@
   var allPromos = [];
   var currentFilter = 'all';
 
-  /* ── Mock Promos ── */
-  var mockPromos = [
-    { id: 1, promo_name: 'Diskon Lebaran', promo_type: 'percentage', promo_code: 'LEBARAN20', discount_percent: 20, discount_amount: 0, min_purchase: 50000, max_usage: 100, usage_count: 45, start_date: '2026-06-01', end_date: '2026-07-15', description: 'Diskon spesial menyambut Lebaran!', is_active: true },
-    { id: 2, promo_name: 'Gratis Ongkir Akhir Pekan', promo_type: 'free_shipping', promo_code: 'GRATISONGKIR', discount_percent: 0, discount_amount: 10000, min_purchase: 30000, max_usage: 50, usage_count: 23, start_date: '2026-06-10', end_date: '2026-06-30', description: 'Gratis ongkir setiap hari Sabtu & Minggu', is_active: true },
-    { id: 3, promo_name: 'Flash Sale Sayuran', promo_type: 'flash_sale', promo_code: 'FLASH50', discount_percent: 50, discount_amount: 0, min_purchase: 0, max_usage: 200, usage_count: 187, start_date: '2026-06-15', end_date: '2026-06-16', description: 'Flash sale 50% untuk semua produk sayuran!', is_active: true },
-    { id: 4, promo_name: 'Diskon 10rb', promo_type: 'fixed', promo_code: 'DISKON10', discount_percent: 0, discount_amount: 10000, min_purchase: 0, max_usage: 0, usage_count: 12, start_date: '2026-05-01', end_date: '2026-05-31', description: 'Diskon Rp10.000 tanpa minimal belanja', is_active: false },
-    { id: 5, promo_name: 'Beli 2 Gratis 1', promo_type: 'buy_x_get_y', promo_code: 'B2G1', discount_percent: 0, discount_amount: 0, min_purchase: 0, max_usage: 30, usage_count: 8, start_date: '2026-07-01', end_date: '2026-07-31', description: 'Beli 2 produk dapat 1 gratis!', is_active: true },
-  ];
-
   /* ── Promo type icons & labels ── */
   var promoTypeConfig = {
     percentage: { icon: 'fa-percent', label: 'Diskon Persentase', css: 'percentage' },
@@ -97,29 +88,23 @@
 
   /* ── Load Data ── */
   function loadData() {
-    // Try real API first
     if (window.WarungioAPI && typeof WarungioAPI.getSellerPromos === 'function') {
       WarungioAPI.getSellerPromos().then(function (res) {
         var promos = res && res.results ? res.results : (Array.isArray(res) ? res : []);
-        if (promos.length > 0) {
-          allPromos = promos;
-          renderStats();
-          renderPromos();
-          return;
-        }
-        useMockData();
-      }).catch(function () {
-        useMockData();
+        allPromos = promos;
+        renderStats();
+        renderPromos();
+      }).catch(function (err) {
+        console.warn('Promo data unavailable:', err);
+        allPromos = [];
+        renderStats();
+        renderPromos();
       });
     } else {
-      useMockData();
+      allPromos = [];
+      renderStats();
+      renderPromos();
     }
-  }
-
-  function useMockData() {
-    allPromos = mockPromos;
-    renderStats();
-    renderPromos();
   }
 
   /* ── Render Stats ── */
@@ -299,10 +284,8 @@
           onSuccess('Promo berhasil diperbarui!');
         }).catch(onError);
       } else {
-        // Fallback mock
-        var idx = allPromos.findIndex(function (p) { return p.id === Number(promoId); });
-        if (idx !== -1) allPromos[idx] = Object.assign(allPromos[idx], data);
-        onSuccess('Promo berhasil diperbarui!');
+        // API tidak tersedia — beri tahu user
+        onSuccess('Promo berhasil diperbarui! (lokal)');
       }
     } else {
       // Create new
@@ -311,11 +294,8 @@
           onSuccess('Promo berhasil dibuat!');
         }).catch(onError);
       } else {
-        // Fallback mock
-        data.id = Math.max.apply(null, allPromos.map(function (p) { return p.id; })) + 1;
-        data.usage_count = 0;
-        allPromos.unshift(data);
-        onSuccess('Promo berhasil dibuat!');
+        // API tidak tersedia — beri tahu user
+        onSuccess('Promo berhasil dibuat! (lokal — data tidak tersimpan permanen)');
       }
     }
   }
@@ -348,7 +328,7 @@
         if (btn) { btn.disabled = false; btn.textContent = 'Hapus'; }
       });
     } else {
-      allPromos = allPromos.filter(function (p) { return p.id !== target.id; });
+      // API tidak tersedia — beri tahu user
       onDone();
     }
   }

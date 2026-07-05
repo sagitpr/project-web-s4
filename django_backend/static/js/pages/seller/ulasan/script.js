@@ -54,18 +54,6 @@
   var currentFilter = 'all';
   var searchQuery = '';
 
-  /* ── Mock Reviews ── */
-  var mockReviews = [
-    { id: 1, product_name: 'Bayam Segar', rating: 5, comment: 'Bayamnya segar banget! Besar-besar daunnya. Langsung masak pagi ini.', user: { full_name: 'Siti Rahmawati', profile_photo: '' }, created_at: '2026-06-25T10:30:00Z', seller_reply: 'Terima kasih Kak Siti! Senang bayamnya cocok.', seller_reply_at: '2026-06-25T14:00:00Z' },
-    { id: 2, product_name: 'Apel Fuji', rating: 4, comment: 'Apelnya manis dan renyah. Harga sedikit mahal tapi kualitas oke.', user: { full_name: 'Ahmad Fauzi', profile_photo: '' }, created_at: '2026-06-24T08:15:00Z', seller_reply: null, seller_reply_at: null },
-    { id: 3, product_name: 'Daging Sapi Giling', rating: 5, comment: 'Dagingnya fresh, tidak bau. Cocok untuk bakso buatan sendiri.', user: { full_name: 'Dewi Lestari', profile_photo: '' }, created_at: '2026-06-23T16:45:00Z', seller_reply: 'Alhamdulillah, terima kasih Kak Dewi! Daging selalu fresh ya.', seller_reply_at: '2026-06-23T19:30:00Z' },
-    { id: 4, product_name: 'Bawang Merah 250g', rating: 3, comment: 'Bawangnya sedang aja, ada beberapa yang agak lembek.', user: { full_name: 'Bambang Susilo', profile_photo: '' }, created_at: '2026-06-22T11:20:00Z', seller_reply: null, seller_reply_at: null },
-    { id: 5, product_name: 'Pisang Cavendish', rating: 5, comment: 'Pisang manis sekali! Suka banget. Beli lagi nanti.', user: { full_name: 'Rina Marlina', profile_photo: '' }, created_at: '2026-06-21T09:00:00Z', seller_reply: 'Terima kasih Kak Rina! Pisang selalu ready ya.', seller_reply_at: '2026-06-21T12:15:00Z' },
-    { id: 6, product_name: 'Kangkung', rating: 2, comment: 'Kangkung agak layu, kurang segar. Sayang sekali.', user: { full_name: 'Hendra Gunawan', profile_photo: '' }, created_at: '2026-06-20T07:30:00Z', seller_reply: null, seller_reply_at: null },
-    { id: 7, product_name: 'Jeruk Sunkist', rating: 5, comment: 'Jeruknya besar dan manis banget. Recommended!', user: { full_name: 'Fitriani', profile_photo: '' }, created_at: '2026-06-19T13:45:00Z', seller_reply: 'Makasih Kak Fitri! Sunkist import langsung ya.', seller_reply_at: '2026-06-19T16:00:00Z' },
-    { id: 8, product_name: 'Wortel Impor', rating: 4, comment: 'Wortel bagus, besar-besar. Cocok untuk jus.', user: { full_name: 'Siti Rahmawati', profile_photo: '' }, created_at: '2026-06-18T10:00:00Z', seller_reply: null, seller_reply_at: null },
-  ];
-
   /* ── Helpers ── */
   function getInitials(name) {
     if (!name) return '?';
@@ -94,27 +82,20 @@
 
   /* ── Load Data ── */
   function loadData() {
-    // Use new store-level reviews API endpoint
     if (window.WarungioAPI && typeof WarungioAPI.getStoreReviews === 'function') {
       WarungioAPI.getStoreReviews().then(function (res) {
         var reviews = res && res.results ? res.results : (Array.isArray(res) ? res : []);
-        if (reviews.length > 0) {
-          allReviews = reviews;
-        } else {
-          useMockData();
-        }
+        allReviews = reviews;
         renderAll();
-      }).catch(function () {
-        useMockData();
+      }).catch(function (err) {
+        console.warn('Reviews data unavailable:', err);
+        allReviews = [];
+        renderAll();
       });
     } else {
-      useMockData();
+      allReviews = [];
+      renderAll();
     }
-  }
-
-  function useMockData() {
-    allReviews = mockReviews;
-    renderAll();
   }
 
   /* ── Render All ── */
@@ -306,20 +287,33 @@
     btn.disabled = true;
     btn.textContent = 'Mengirim...';
 
-    // Update local data
-    var review = allReviews.find(function (r) { return r.id === Number(reviewId); });
-    if (review) {
-      review.seller_reply = replyText;
-      review.seller_reply_at = new Date().toISOString();
+    // Coba kirim ke backend API
+    function onSuccess() {
+      closeModal('replyModal');
+      renderReviews();
+      renderStats();
+      showToast('Balasan berhasil dikirim!', 'success');
+      btn.disabled = false;
+      btn.textContent = 'Kirim Balasan';
     }
 
-    closeModal('replyModal');
-    renderReviews();
-    renderStats();
-    showToast('Balasan berhasil dikirim!', 'success');
+    function onError(err) {
+      showToast('Gagal mengirim balasan: ' + (err.message || err), 'error');
+      btn.disabled = false;
+      btn.textContent = 'Kirim Balasan';
+    }
 
-    btn.disabled = false;
-    btn.textContent = 'Kirim Balasan';
+    if (window.WarungioAPI && typeof WarungioAPI.replyToReview === 'function') {
+      WarungioAPI.replyToReview(reviewId, { reply: replyText }).then(onSuccess).catch(onError);
+    } else {
+      // Fallback lokal
+      var review = allReviews.find(function (r) { return r.id === Number(reviewId); });
+      if (review) {
+        review.seller_reply = replyText;
+        review.seller_reply_at = new Date().toISOString();
+      }
+      onSuccess();
+    }
   }
 
   function initReplyModal() {

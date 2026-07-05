@@ -5,6 +5,7 @@ Midtrans Snap payment integration.
 
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator
 
 
 class PaymentMethod(models.Model):
@@ -268,3 +269,102 @@ class AdminFeeTransaction(models.Model):
 
     def __str__(self):
         return f'AdminFee Rp {self.amount} - Order #{self.order_id} ({self.payout_status})'
+
+
+class Wallet(models.Model):
+    """
+    Dompet Warungio — saldo database-driven, bukan di JSON device_info.
+    
+    Setiap user memiliki satu Wallet. Semua perubahan saldo dilakukan
+    secara atomik melalui WalletService untuk mencegah race condition.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='wallet', verbose_name='Pengguna'
+    )
+    balance = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name='Saldo'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'wallets'
+        verbose_name = 'Dompet'
+        verbose_name_plural = 'Dompet'
+
+    def __str__(self):
+        return f'Wallet {self.user.email} - Rp {self.balance}'
+
+
+class WalletTransaction(models.Model):
+    """
+    Riwayat transaksi Dompet Warungio.
+    
+    Mencatat setiap perubahan saldo: top-up, pembayaran pesanan,
+    refund, penarikan, bonus, dll.
+    """
+    TX_TYPES = [
+        ('topup', 'Top Up'),
+        ('payment', 'Pembayaran'),
+        ('refund', 'Refund'),
+        ('withdrawal', 'Penarikan'),
+        ('bonus', 'Bonus'),
+        ('adjustment', 'Penyesuaian'),
+    ]
+
+    wallet = models.ForeignKey(
+        Wallet, on_delete=models.CASCADE,
+        related_name='transactions', verbose_name='Dompet'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='wallet_transactions'
+    )
+    tx_type = models.CharField(
+        max_length=20, choices=TX_TYPES,
+        verbose_name='Tipe Transaksi'
+    )
+    amount = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        verbose_name='Jumlah'
+    )
+    balance_before = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        verbose_name='Saldo Sebelum'
+    )
+    balance_after = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        verbose_name='Saldo Sesudah'
+    )
+    description = models.CharField(
+        max_length=255, blank=True, null=True,
+        verbose_name='Deskripsi'
+    )
+    reference_type = models.CharField(
+        max_length=50, blank=True, null=True,
+        verbose_name='Tipe Referensi',
+        help_text='order, midtrans, withdrawal'
+    )
+    reference_id = models.CharField(
+        max_length=100, blank=True, null=True,
+        verbose_name='ID Referensi'
+    )
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'wallet_transactions'
+        verbose_name = 'Transaksi Dompet'
+        verbose_name_plural = 'Transaksi Dompet'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['wallet', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['tx_type']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_tx_type_display()} Rp {self.amount} - {self.wallet.user.email}'

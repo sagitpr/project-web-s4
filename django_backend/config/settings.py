@@ -87,6 +87,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # =============================================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -247,14 +248,37 @@ if REDIS_CHANNEL_LAYER_REQUIRED:
     }
 
 # =============================================================================
-# CACHING — DEFERRED init (zero import-time Redis probes).
+# CACHING — Redis in production, LocMemCache in development
 # =============================================================================
+_redis_available = bool(REDIS_URL and 'localhost' not in REDIS_URL) or REDIS_CHANNEL_LAYER_REQUIRED
+
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'warungio-cache',
+        'BACKEND': 'django_redis.cache.RedisCache' if (_redis_available or not DEBUG) else 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': REDIS_URL if (_redis_available or not DEBUG) else 'warungio-cache',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'PARSER_CLASS': 'redis.connection.HiredisParser',
+            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+            'CONNECTION_POOL_CLASS_KWARGS': {
+                'max_connections': 8,
+                'timeout': 3,
+            },
+            'SOCKET_CONNECT_TIMEOUT': 3,
+            'SOCKET_TIMEOUT': 3,
+            'IGNORE_EXCEPTIONS': True,
+        } if (_redis_available or not DEBUG) else {},
+        'KEY_PREFIX': 'warungio',
     },
 }
+
+# Production-only: use Redis for session storage (saves database writes)
+if not DEBUG or REDIS_CHANNEL_LAYER_REQUIRED:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+    SESSION_COOKIE_AGE = 86400 * 7  # 7 days (reduced from default 2 weeks)
+
+# Jika Redis tidak tersedia di dev, session tetap pakai database default Django
 
 CACHE_TTL = 60 * 15  # 15 minutes default
 
@@ -290,9 +314,13 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # ── Task Memory Management ──
-# Restart worker process after 100 tasks to prevent memory leaks.
-# Can also be set via --max-tasks-per-child CLI flag.
-CELERY_WORKER_MAX_TASKS_PER_CHILD = 100
+# Restart worker process after 500 tasks to prevent memory leaks.
+# 500 tasks x ~2MB leak per task = max 1GB over worker lifetime
+# Combined with concurrency=1, this effectively manages memory.
+# Worker Concurrency: single worker for 1GB RAM VPS
+CELERY_WORKER_CONCURRENCY = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 500
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 
 # ── Task Serialization ──
 # Only allow JSON for security (prevents pickle-based exploits)
@@ -645,7 +673,14 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_HTTPONLY = False
+# Safety note: CSRF_COOKIE_HTTPONLY is intentionally False to allow JavaScript
+# to read the CSRF token cookie and send it as X-CSRFToken header.
+# This is the standard Django+DRF pattern for SPAs with dual auth (JWT + session).
+# The primary auth is JWT Bearer token, so CSRF exposure risk is minimal.
+# Browser SameSite=Lax provides additional CSRF protection.
+# If the app transitions to 100% JWT-only, CSRF middleware can be exempted for API paths.
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # =============================================================================

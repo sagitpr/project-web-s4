@@ -31,7 +31,7 @@ FROM base AS deps
 COPY django_backend/requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r /app/requirements.txt && \
-    pip install daphne channels-redis
+    pip install daphne channels-redis django-redis hiredis
 
 # ---- Runtime Stage (CLEAN — no build-essential, no pkg-config) ----
 FROM python:3.12-slim AS runtime

@@ -1,69 +1,698 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="id">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Dompet Saya - Warungio</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-<style>.app-shell{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-width);background:var(--color-surface);border-right:1px solid var(--color-border);position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}.brand-panel{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--color-border)}.brand-logo{height:28px}.brand-panel h1{font-size:16px;font-weight:800;margin:0}.brand-panel p{font-size:10px;color:var(--color-text-tertiary);margin:0;text-transform:uppercase}.nav-menu{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}.nav-menu a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:600;color:var(--color-text-secondary);text-decoration:none}.nav-menu a:hover{background:var(--color-gray-100)}.nav-menu a.active{background:var(--color-brand);color:white}.content-area{flex:1;margin-left:var(--sidebar-width);padding:24px}.balance-card{background:linear-gradient(135deg,#059669,#10b981);border-radius:var(--radius-xl);padding:32px;color:white;margin-bottom:24px}.balance-card .label{font-size:13px;opacity:.9;margin-bottom:4px}.balance-card .amount{font-size:36px;font-weight:800;margin-bottom:8px}.balance-card .sub{font-size:13px;opacity:.8}.action-btns{display:flex;gap:12px;margin-top:16px}.action-btns a{padding:10px 20px;border-radius:var(--radius-lg);background:rgba(255,255,255,0.2);color:white;text-decoration:none;font-size:13px;font-weight:600;backdrop-filter:blur(10px)}.action-btns a:hover{background:rgba(255,255,255,0.3)}.transactions{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border)}.tx-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-weight:700;font-size:15px}.tx-item{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--color-border);font-size:13px}.tx-item:last-child{border-bottom:none}.tx-amount{font-weight:700}.tx-amount.positive{color:#16a34a}.tx-amount.negative{color:#dc2626}.tx-date{font-size:11px;color:var(--color-text-tertiary)}.topup-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}.topup-modal.show{display:flex}.topup-card{background:var(--color-surface);border-radius:var(--radius-xl);padding:24px;width:90%;max-width:400px}.topup-card h2{font-size:18px;font-weight:700;margin:0 0 16px}.topup-card input{width:100%;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-lg);font-size:15px;margin-bottom:12px;box-sizing:border-box}.topup-card .btn{width:100%;padding:12px;border:none;border-radius:var(--radius-lg);background:var(--color-brand);color:white;font-weight:700;font-size:14px;cursor:pointer}.topup-card .btn-secondary{background:var(--color-gray-100);color:var(--color-text-primary);margin-top:8px}.topup-card .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.topup-card .preset-btn{padding:8px;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface);font-size:12px;font-weight:600;cursor:pointer;text-align:center}.topup-card .preset-btn:hover{border-color:var(--color-brand);color:var(--color-brand)}@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.content-area{margin-left:0;padding:16px}.balance-card .amount{font-size:28px}}</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dompet Saya | Warungio Hyperlocal</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Style assets -->
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+
+    <!-- Tailwind Play CDN for layout grid rendering -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#16A34A",
+              secondary: "#22C55E",
+              background: "#F8FAF8",
+              surface: "#FFFFFF",
+              "outline-variant": "#E5E7EB"
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        .page-shell {
+            grid-template-columns: 260px 1fr !important;
+        }
+        .wallet-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Drawer Transitions */
+        .drawer-container {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .drawer-hidden {
+            transform: translateX(100%);
+        }
+        .overlay-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Shimmer skeletons */
+        .skeleton-card-premium {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            padding: 16px;
+        }
+        .skeleton-img {
+            aspect-ratio: 1;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+        .skeleton-text {
+            height: 14px;
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Spinner for loading state */
+        .load-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-<div class="app-shell">
-<aside class="sidebar"><div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo"><div><h1>Warungio</h1><p>Pembeli</p></div></div>
-<nav class="nav-menu"><a href="{% url 'page-buyer-dashboard' %}"><i class="fa-solid fa-house"></i> Beranda</a><a href="{% url 'page-buyer-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a><a href="{% url 'page-buyer-cart' %}"><i class="fa-solid fa-cart-shopping"></i> Keranjang</a><a href="{% url 'page-buyer-loyalty' %}"><i class="fa-solid fa-gem"></i> Poin Saya</a><a href="{% url 'page-wallet' %}" class="active"><i class="fa-solid fa-wallet"></i> Dompet</a><a href="{% url 'page-favorites' %}"><i class="fa-solid fa-heart"></i> Favorit</a><a href="{% url 'page-buyer-profile' %}"><i class="fa-solid fa-user"></i> Profil</a></nav></aside>
-<main class="content-area">
-<div class="balance-card">
-<div class="label">Saldo Dompet</div>
-<div class="amount" id="walletBalance">Rp 0</div>
-<div class="sub">Gunakan saldo untuk pembayaran cepat</div>
-<div class="action-btns">
-<a href="#" onclick="showTopup()"><i class="fa-solid fa-plus"></i> Top Up</a>
-<a href="{% url 'page-buyer-orders' %}"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a>
-</div></div>
-<div class="transactions">
-<div class="tx-header"><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px"></i> Riwayat Transaksi</div>
-<div id="transactionList">
-<div style="padding:40px;text-align:center;color:var(--color-text-tertiary);font-size:13px" id="txEmpty">Belum ada transaksi.</div>
-</div></div></main></div>
-<div class="topup-modal" id="topupModal">
-<div class="topup-card">
-<h2><i class="fa-solid fa-plus-circle" style="color:var(--color-brand);margin-right:8px"></i> Top Up Saldo</h2>
-<div class="presets">
-<div class="preset-btn" onclick="setAmount(50000)">Rp 50.000</div>
-<div class="preset-btn" onclick="setAmount(100000)">Rp 100.000</div>
-<div class="preset-btn" onclick="setAmount(200000)">Rp 200.000</div>
-<div class="preset-btn" onclick="setAmount(500000)">Rp 500.000</div>
-<div class="preset-btn" onclick="setAmount(1000000)">Rp 1.000.000</div>
-<div class="preset-btn" onclick="setAmount(2000000)">Rp 2.000.000</div>
-</div>
-<input type="number" id="topupAmount" placeholder="Masukkan nominal..." min="10000">
-<button class="btn" onclick="processTopup()">Top Up Sekarang</button>
-<button class="btn btn-secondary" onclick="hideTopup()">Batal</button>
-</div></div>
-<script src="{% static 'js/device-detector.js' %}"></script>
-<script src="{% static 'js/auth.js' %}"></script>
-<script src="{% static 'js/api.js' %}"></script>
-<script>
-let selectedAmount=0;
-function setAmount(val){selectedAmount=val;document.getElementById('topupAmount').value=val}
-function showTopup(){document.getElementById('topupModal').classList.add('show')}
-function hideTopup(){document.getElementById('topupModal').classList.remove('show')}
-async function processTopup(){
-    const amount=parseInt(document.getElementById('topupAmount').value)||selectedAmount;
-    if(amount<10000){alert('Minimal top up Rp 10.000');return}
-    hideTopup();alert('Fitur top up akan diarahkan ke Midtrans Snap. Jumlah: Rp '+amount.toLocaleString('id-ID'))
-}
-async function loadWallet(){try{
-    const data=await WarungioAPI?.get?.('/api/payments/history/')||{results:[]};
-    const txns=data.results||data||[];
-    if(txns.length){document.getElementById('txEmpty').style.display='none';
-    document.getElementById('transactionList').innerHTML=txns.map(t=>
-        '<div class="tx-item"><div><div>'+(t.payment_type||'Transaksi')+'</div><div class="tx-date">'+(t.created_at?new Date(t.created_at).toLocaleDateString('id-ID'):'')+'</div></div><div class="tx-amount '+(t.payment_status==='paid'?'positive':'')+'">'+(t.payment_status==='paid'?'+':'')+'Rp '+(t.amount||0).toLocaleString('id-ID')+'</div></div>'
-    ).join('')}
-    document.getElementById('walletBalance').textContent='Rp '+(txns.reduce((s,t)=>s+parseFloat(t.amount||0),0)).toLocaleString('id-ID')
-}catch(e){}}
-document.addEventListener('DOMContentLoaded',loadWallet);
-document.addEventListener('warungio:auth_ready',loadWallet);
-</script>
+    <div class="page-shell">
+        <!-- Sticky Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-name">
+                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
+                    <span class="logo-text">Warung<span class="logo-green">io</span></span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'home' %}" class="nav-link">
+                    <i class="fa-regular fa-compass"></i>
+                    <span>Beranda</span>
+                </a>
+                <a href="{% url 'page-products' %}" class="nav-link">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Produk</span>
+                </a>
+                <a href="{% url 'home' %}#warung-section" class="nav-link">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Warung Terdekat</span>
+                </a>
+                <a href="{% url 'page-favorites' %}" class="nav-link">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>Favorit</span>
+                </a>
+                <a href="{% url 'page-buyer-orders' %}" class="nav-link">
+                    <i class="fa-regular fa-receipt"></i>
+                    <span>Pesanan Saya</span>
+                    <span class="nav-badge">2</span>
+                </a>
+                <a href="{% url 'page-buyer-dashboard' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span>Langganan</span>
+                    <span class="nav-badge new-badge">Baru</span>
+                </a>
+                <a href="{% url 'page-promo' %}" class="nav-link">
+                    <i class="fa-regular fa-percentage"></i>
+                    <span>Promo</span>
+                </a>
+                <a href="{% url 'page-wallet' %}" class="nav-link active">
+                    <i class="fa-solid fa-wallet" style="color: #16A34A;"></i>
+                    <span>Dompet Saya</span>
+                </a>
+                <a href="{% url 'page-buyer-reviews' %}" class="nav-link">
+                    <i class="fa-regular fa-star"></i>
+                    <span>Penilaian</span>
+                </a>
+                <a href="{% url 'bantuan-page' %}" class="nav-link">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>Bantuan</span>
+                </a>
+                <a href="{% url 'page-settings' %}" class="nav-link">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <!-- Bottom Widget: Warungio Points -->
+            <div class="sidebar-points-widget">
+                <div class="points-header">
+                    <i class="fa-solid fa-award points-icon"></i>
+                    <span>Warungio Points</span>
+                </div>
+                <div class="points-value">1.250 Poin</div>
+                <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="wallet-main-content">
+            <!-- Sticky Glassmorphism Top Navigation -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="menu-toggle" id="menuToggle">
+                        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    
+                    <!-- Location Selector -->
+                    <div class="topbar-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div class="location-info">
+                            <span class="location-label">Kirim ke</span>
+                            <span class="location-value" id="userLocation">Memuat lokasi...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-panel">
+                    <div class="search-input">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" placeholder="Cari produk, warung, atau kategori..." id="searchInput" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="topbar-actions">
+                    <!-- Authenticated Actions -->
+                    <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
+                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
+                        <button class="icon-btn-premium"><i class="fa-regular fa-comment-dots"></i></button>
+                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="icon-badge" id="cartBadgeHeader">0</span>
+                        </button>
+                        
+                        <div class="profile-dropdown-wrapper">
+                            <div class="profile-box-premium" id="profileBox">
+                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                                <div class="profile-info-premium">
+                                    <p id="userName" class="profile-name">Hai, User</p>
+                                    <span class="member-badge-premium" id="userRoleBadge">Member</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-menu-custom" id="dropdownMenu">
+                                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                                <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
+                                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Actions -->
+                    <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
+                        <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
+                        <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
+                        <a href="{% url 'page-register-mitra' %}" class="btn-mitra-premium">Gabung Mitra</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="px-6 md:px-8 py-8 space-y-8 flex-1">
+                <!-- Header Title Section -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Dompet Saya</h1>
+                        <p class="text-sm text-slate-500 mt-1">Kelola saldo dan riwayat transaksi dompet digital Anda dengan mudah.</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-4 py-2 bg-[#16A34A]/10 border border-[#16A34A]/20 rounded-full">
+                        <span class="w-1.5 h-1.5 bg-[#16A34A] rounded-full animate-pulse"></span>
+                        <span class="text-xs font-bold text-[#16A34A]">Saldo Aktif</span>
+                    </div>
+                </div>
+
+                <!-- Wallet Card -->
+                <div class="bg-[#16A34A] rounded-3xl p-8 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm border border-[#16A34A]/10 animate-fade-in">
+                    <div class="w-full md:w-auto">
+                        <div class="text-xs font-bold opacity-80 flex items-center gap-2 uppercase tracking-widest mb-2">
+                            <i class="fa-regular fa-wallet text-sm"></i>
+                            <span>Saldo Dompet</span>
+                        </div>
+                        <div class="text-4xl font-extrabold tracking-tight" id="walletBalance">Memuat...</div>
+                    </div>
+                    <div class="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
+                        <button class="flex-1 md:flex-none bg-white text-primary px-8 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm text-xs" onclick="toggleDrawer(true)">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <span>Top Up</span>
+                        </button>
+                        <button class="flex-1 md:flex-none bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-2 text-xs" id="btnScrollToTx">
+                            <i class="fa-solid fa-history"></i>
+                            <span>Riwayat</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="space-y-6" id="txHistorySection">
+                    <div class="flex justify-between items-center flex-wrap gap-4">
+                        <h2 class="text-xl font-extrabold text-slate-800">Riwayat Transaksi</h2>
+                        <div class="relative">
+                            <select class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 focus:ring-primary focus:border-primary appearance-none cursor-pointer pr-10 min-w-[150px]" id="txFilterSelect">
+                                <option value="Semua">Semua</option>
+                                <option value="Top Up">Top Up</option>
+                                <option value="Pembayaran">Pembayaran</option>
+                                <option value="Refund">Refund</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[10px]"></i>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div class="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-100 overflow-hidden shadow-sm" id="transactionListContainer">
+                        <div id="transactionList">
+                            <!-- Transactions loaded dynamically -->
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center py-16 px-4 space-y-4" id="txEmpty" style="display: block;">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                                <i class="fa-regular fa-receipt text-2xl"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-slate-800">Belum ada transaksi</h3>
+                                <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">Riwayat transaksi akan muncul di sini setelah Anda melakukan aktivitas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading skeleton placeholders -->
+                <div class="space-y-4" id="loadingSkeletons" style="display: none;">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 flex items-center justify-between">
+                        <div class="space-y-2 w-1/3">
+                            <div class="skeleton-text w-full"></div>
+                            <div class="skeleton-text w-2/3"></div>
+                        </div>
+                        <div class="skeleton-text w-20"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 flex items-center justify-between">
+                        <div class="space-y-2 w-1/3">
+                            <div class="skeleton-text w-full"></div>
+                            <div class="skeleton-text w-2/3"></div>
+                        </div>
+                        <div class="skeleton-text w-20"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[60] overlay-hidden transition-opacity duration-300" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
+
+    <!-- Top Up Slide Drawer -->
+    <div class="fixed top-0 right-0 h-full w-full sm:w-[380px] md:w-[440px] bg-white z-[70] drawer-hidden md:rounded-l-3xl flex flex-col shadow-2xl drawer-container" id="topUpDrawer">
+        <!-- Header -->
+        <div class="p-6 flex justify-between items-center border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-credit-card text-primary text-sm"></i>
+                </div>
+                <h2 class="text-lg font-extrabold text-slate-800">Top Up Saldo</h2>
+            </div>
+            <button class="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-all" onclick="toggleDrawer(false)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Nominal Chips -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pilih Nominal Cepat</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '50000')">Rp 50.000</button>
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '100000')">Rp 100.000</button>
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '200000')">Rp 200.000</button>
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '500000')">Rp 500.000</button>
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '1000000')">Rp 1.000.000</button>
+                    <button class="nominal-chip p-4 border border-slate-200 rounded-xl text-slate-700 font-bold hover:border-primary hover:bg-primary/5 transition-all text-xs text-left" onclick="selectNominal(this, '2000000')">Rp 2.000.000</button>
+                </div>
+            </div>
+
+            <!-- Custom input -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atau Masukkan Nominal</label>
+                <div class="relative group">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-base text-slate-400 transition-colors">Rp</span>
+                    <input class="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-primary focus:border-primary font-extrabold text-lg placeholder:font-normal placeholder:text-slate-300" id="topupAmount" placeholder="Masukkan nominal top up" type="number" min="10000">
+                </div>
+                <p class="text-[10px] font-semibold text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-slate-300 text-xs"></i>
+                    <span>Minimal top up Rp10.000</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Sticky Bottom Drawer Button -->
+        <div class="p-6 border-t border-slate-100 bg-white">
+            <button class="w-full bg-primary text-white py-4 rounded-xl font-bold hover:brightness-110 active:scale-[0.98] transition-all shadow-sm text-xs uppercase tracking-wider" id="btnProcessTopup" onclick="processTopup()">
+                Lanjutkan
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;"></div>
+
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        let selectedAmount = 0;
+        let allTransactions = [];
+
+        const walletBalanceEl = document.getElementById('walletBalance');
+        const userBalanceDropdown = document.getElementById('userBalanceDropdown');
+        const transactionList = document.getElementById('transactionList');
+        const txEmpty = document.getElementById('txEmpty');
+        const loadingSkeletons = document.getElementById('loadingSkeletons');
+        const txFilterSelect = document.getElementById('txFilterSelect');
+
+        function showToast(msg, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type || 'info'} flex items-center gap-2 p-4 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300`;
+            
+            if (type === 'success') {
+                toast.style.background = '#dcfce7';
+                toast.style.color = '#166534';
+                toast.style.borderColor = '#bbf7d0';
+            } else if (type === 'error') {
+                toast.style.background = '#fee2e2';
+                toast.style.color = '#991b1b';
+                toast.style.borderColor = '#fecaca';
+            } else {
+                toast.style.background = '#dbeafe';
+                toast.style.color = '#1e40af';
+                toast.style.borderColor = '#bfdbfe';
+            }
+
+            toast.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.toggleDrawer = function(isOpen) {
+            const drawer = document.getElementById('topUpDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            
+            if (isOpen) {
+                drawer.classList.remove('drawer-hidden');
+                overlay.classList.remove('overlay-hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                drawer.classList.add('drawer-hidden');
+                overlay.classList.add('overlay-hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.selectNominal = function(element, value) {
+            document.querySelectorAll('.nominal-chip').forEach(chip => {
+                chip.classList.remove('border-primary', 'text-primary', 'bg-primary/5');
+            });
+            element.classList.add('border-primary', 'text-primary', 'bg-primary/5');
+            document.getElementById('topupAmount').value = value;
+            selectedAmount = parseInt(value);
+        };
+
+        document.getElementById('topupAmount').addEventListener('input', (e) => {
+            document.querySelectorAll('.nominal-chip').forEach(chip => {
+                chip.classList.remove('border-primary', 'text-primary', 'bg-primary/5');
+            });
+            selectedAmount = parseInt(e.target.value) || 0;
+        });
+
+        async function refreshBalance() {
+            walletBalanceEl.textContent = 'Memuat...';
+            try {
+                const data = await WarungioAPI.getWalletBalance();
+                if (data && data.balance !== undefined) {
+                    const formatted = 'Rp ' + Number(data.balance).toLocaleString('id-ID');
+                    walletBalanceEl.textContent = formatted;
+                    if (userBalanceDropdown) userBalanceDropdown.textContent = formatted;
+                }
+            } catch (err) {
+                walletBalanceEl.textContent = 'Gagal memuat';
+                console.warn('Balance fetch error:', err);
+            }
+        }
+
+        async function loadTransactions() {
+            loadingSkeletons.style.display = 'block';
+            transactionList.innerHTML = '';
+            txEmpty.style.display = 'none';
+
+            try {
+                const data = await WarungioAPI.getWalletTransactions({ page: 1, page_size: 50 });
+                allTransactions = data.results || [];
+                loadingSkeletons.style.display = 'none';
+
+                applyTxFilters();
+
+            } catch (err) {
+                console.warn('Transactions load error:', err);
+                loadingSkeletons.style.display = 'none';
+                txEmpty.style.display = 'block';
+                txEmpty.querySelector('h3').textContent = 'Gagal memuat riwayat';
+            }
+        }
+
+        function applyTxFilters() {
+            const filterValue = txFilterSelect.value;
+            let filtered = allTransactions;
+
+            if (filterValue === 'Top Up') {
+                filtered = allTransactions.filter(t => t.amount > 0 || (t.tx_type && t.tx_type.toLowerCase() === 'topup') || (t.description && t.description.toLowerCase().includes('top up')));
+            } else if (filterValue === 'Pembayaran') {
+                filtered = allTransactions.filter(t => t.amount < 0 || (t.tx_type && t.tx_type.toLowerCase() === 'payment') || (t.description && t.description.toLowerCase().includes('pembayaran')));
+            } else if (filterValue === 'Refund') {
+                filtered = allTransactions.filter(t => (t.tx_type && t.tx_type.toLowerCase() === 'refund') || (t.description && t.description.toLowerCase().includes('refund')));
+            }
+
+            if (filtered.length === 0) {
+                txEmpty.style.display = 'block';
+                transactionList.innerHTML = '';
+                return;
+            }
+
+            txEmpty.style.display = 'none';
+            transactionList.innerHTML = filtered.map(t => {
+                const isPositive = t.amount > 0;
+                const sign = isPositive ? '+' : '-';
+                const colorCls = isPositive ? 'text-emerald-600' : 'text-red-500';
+                const desc = t.description || t.tx_type_label || 'Transaksi';
+                const dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+                const txId = t.transaction_id || `TXN-${t.id}`;
+                
+                return `
+                    <div class="flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
+                        <div class="space-y-1">
+                            <p class="text-xs text-slate-400 font-medium">${txId} • ${dateStr}</p>
+                            <h4 class="font-bold text-slate-800 text-xs">${desc}</h4>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-extrabold text-xs ${colorCls}">${sign}Rp ${Number(Math.abs(t.amount)).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.processTopup = async function() {
+            const amount = parseInt(document.getElementById('topupAmount').value) || selectedAmount;
+            if (!amount || amount < 10000) {
+                showToast('Minimal top up Rp 10.000', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnProcessTopup');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="load-spinner"></span> Memproses...';
+
+            try {
+                // 1. Dapatkan client key dari server
+                const config = await WarungioAPI.getPaymentConfig();
+                if (!config || !config.client_key) { throw new Error('Gagal memuat konfigurasi pembayaran.'); }
+
+                // 2. Load Midtrans Snap JS
+                if (!window.snap || !window.snap.pay) {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        const baseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
+                        s.src = baseUrl + '/snap/snap.js';
+                        s.setAttribute('data-client-key', config.client_key);
+                        s.onload = resolve;
+                        s.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));
+                        document.head.appendChild(s);
+                    });
+                }
+
+                // 3. Request Snap token dari server
+                const snapData = await WarungioAPI.topUpWallet(amount);
+                if (!snapData || !snapData.token) { throw new Error('Gagal mendapatkan token pembayaran.'); }
+
+                toggleDrawer(false);
+
+                // 4. Buka Snap popup
+                window.snap.pay(snapData.token, {
+                    onSuccess: function() {
+                        showToast('Top-up berhasil! Saldo diperbarui.', 'success');
+                        setTimeout(refreshBalance, 1500);
+                        setTimeout(loadTransactions, 2000);
+                    },
+                    onPending: function() {
+                        showToast('Pembayaran pending. Selesaikan pembayaran Anda.', 'info');
+                    },
+                    onError: function(result) {
+                        showToast('Pembayaran gagal: ' + (result.status_message || 'Terjadi kesalahan.'), 'error');
+                    },
+                    onClose: function() {
+                        setTimeout(refreshBalance, 1000);
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Gagal memulai top-up.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Lanjutkan';
+            }
+        };
+
+        // Websocket state update notifications
+        function listenBalanceUpdates() {
+            if (!window.WarungioSocket || !window.WarungioSocket.on) return;
+            window.WarungioSocket.on('wallet_update', (data) => {
+                if (data && data.balance !== undefined) {
+                    const formatted = 'Rp ' + Number(data.balance).toLocaleString('id-ID');
+                    walletBalanceEl.textContent = formatted;
+                    if (userBalanceDropdown) userBalanceDropdown.textContent = formatted;
+                }
+            });
+            window.WarungioSocket.on('payment_update', (data) => {
+                if (data && data.status === 'paid') {
+                    setTimeout(refreshBalance, 500);
+                    setTimeout(loadTransactions, 1000);
+                }
+            });
+        }
+
+        // Initialize component events
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Geolocation fallback
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const userLocationEl = document.getElementById('userLocation');
+                    if (userLocationEl) userLocationEl.textContent = 'Samping Anda';
+                });
+            }
+
+            // Topbar profile actions toggle
+            const profileBox = document.getElementById('profileBox');
+            const dropdown = document.getElementById('dropdownMenu');
+            if (profileBox && dropdown) {
+                profileBox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+                document.addEventListener('click', () => dropdown.classList.remove('show'));
+            }
+
+            // Sync user authentication states
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = `Hai, ${u.full_name.split(' ')[0]}`;
+                }
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+
+            // Logout handler click
+            document.getElementById('btnLogout')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.WarungioAuth) {
+                    window.WarungioAuth.logout();
+                    window.location.href = '/';
+                }
+            });
+
+            // Search input redirects
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const q = e.target.value.trim();
+                    window.location.href = `/buyer/products/?search=${encodeURIComponent(q)}`;
+                }
+            });
+
+            // Scroll to history list click
+            document.getElementById('btnScrollToTx').addEventListener('click', () => {
+                document.getElementById('txHistorySection').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Filter actions
+            txFilterSelect.addEventListener('change', () => {
+                applyTxFilters();
+            });
+
+            // Initialize data loading & listening
+            await refreshBalance();
+            await loadTransactions();
+            listenBalanceUpdates();
+        });
+
+        // Trigger updates when auth event drops
+        document.addEventListener('warungio:auth_ready', async () => {
+            await refreshBalance();
+            await loadTransactions();
+        });
+    })();
+    </script>
 </body>
 </html>

@@ -276,8 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       btnDetailCancel.disabled = true;
       btnDetailCancel.textContent = 'Membatalkan...';
-      
-      await WarungioAPI.updateOrderStatus(selectedOrderId, 'cancelled', '', '', 'Seller requested cancel', detailNotes.value);
+
+      await WarungioAPI.updateOrderStatus(
+        selectedOrderId,
+        'cancelled',
+        '',                   // courier
+        '',                   // tracking number
+        'other',              // cancel_reason (enum: out_of_stock, seller_unavailable, wrong_price, address_invalid, product_damaged, other)
+        detailNotes?.value || 'Dibatalkan oleh penjual',  // cancel_reason_text
+        {}                    // extraFields
+      );
       
       window.WarungioToast?.show('Pesanan berhasil dibatalkan.', 'success');
       if (detailPanel) detailPanel.style.display = 'none';
@@ -295,8 +303,19 @@ document.addEventListener('DOMContentLoaded', () => {
   btnDetailProcess?.addEventListener('click', async () => {
     if (!selectedOrderId) return;
     const nextStatus = btnDetailProcess.getAttribute('data-target-status');
-    const shipMethod = detailShippingSelect?.value || 'antar_sendiri';
-    const notesVal = detailNotes?.value || '';
+    let shipMethod = detailShippingSelect?.value || '';
+    let extraFields = {};
+
+    // Set appropriate fields based on next status
+    if (nextStatus === 'on_delivery') {
+      extraFields.tracking_number = `TRK-${selectedOrderId}`;
+      extraFields.estimated_time = '30-60 menit';
+    }
+    if (nextStatus === 'courier_pickup') {
+      extraFields.courier = shipMethod;
+      extraFields.driver_name = document.getElementById('detail-driver-name')?.value || '';
+      extraFields.driver_phone = document.getElementById('detail-driver-phone')?.value || '';
+    }
 
     try {
       btnDetailProcess.disabled = true;
@@ -304,13 +323,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Call API status transition
       await WarungioAPI.updateOrderStatus(
-        selectedOrderId, 
-        nextStatus, 
-        shipMethod, 
-        `TRK-${selectedOrderId}`, // tracking number fallback
-        '', 
-        '', 
-        { notes: notesVal }
+        selectedOrderId,
+        nextStatus,
+        shipMethod,
+        nextStatus === 'on_delivery' ? `TRK-${selectedOrderId}` : '',
+        '',
+        '',
+        extraFields
       );
 
       window.WarungioToast?.show(`Status pesanan diperbarui ke "${STATUS_LABELS[nextStatus]}".`, 'success');

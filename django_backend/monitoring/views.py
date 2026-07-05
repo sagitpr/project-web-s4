@@ -9,7 +9,7 @@ import platform
 from datetime import timedelta, date
 from decimal import Decimal
 
-from django.db.models import Avg, Count, Sum, Max, Min
+from django.db.models import Avg, Count, Sum, Max, Min, Q
 from django.db import connection, connections
 from django.utils import timezone
 from django.conf import settings
@@ -500,9 +500,95 @@ class FullStatusView(views.APIView):
         })
 
 
+class AdminDashboardStatsView(views.APIView):
+    """
+    Admin dashboard statistics — real data from database.
+    Returns aggregated counts for Users, Stores, Orders, Revenue.
+    Replaces the previous hardcoded HTML template.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsAdmin)
+
+    def get(self, request):
+        from django.contrib.auth import get_user_model
+        from stores.models import Store
+        from orders.models import Order
+
+        User = get_user_model()
+        today = timezone.now().date()
+        thirty_days_ago = today - timedelta(days=30)
+
+        # Total Users
+        total_users = User.objects.count()
+        new_users_30d = User.objects.filter(date_joined__date__gte=thirty_days_ago).count()
+        user_growth = round((new_users_30d / max(total_users - new_users_30d, 1)) * 100, 1) if total_users > 0 else 0
+
+        # Active Stores
+        active_stores = Store.objects.filter(status='active').count()
+        new_stores_30d = Store.objects.filter(created_at__date__gte=thirty_days_ago).count()
+        store_growth = round((new_stores_30d / max(active_stores - new_stores_30d, 1)) * 100, 1) if active_stores > 0 else 0
+
+        # Total Orders
+        total_orders = Order.objects.count()
+        orders_30d = Order.objects.filter(created_at__date__gte=thirty_days_ago).count()
+        order_growth = round((orders_30d / max(total_orders - orders_30d, 1)) * 100, 1) if total_orders > 0 else 0
+
+        # Revenue (30d) — completed orders only
+        revenue_30d = Order.objects.filter(
+            created_at__date__gte=thirty_days_ago,
+            order_status='completed'
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        
+        # Sellers
+        total_sellers = User.objects.filter(role='seller').count()
+        
+        # Buyers
+        total_buyers = User.objects.filter(role='buyer').count()
+
+        # Pending verifications (stores pending)
+        pending_stores = Store.objects.filter(status='pending').count()
+
+        # Top stores by order count (30d)
+        from django.db.models import Count
+        top_stores = Store.objects.filter(
+            status='active',
+            orders__created_at__date__gte=thirty_days_ago
+        ).annotate(
+            order_count=Count('orders'),
+            store_revenue=Sum('orders__total_price',
+                filter=Q(orders__order_status='completed', orders__created_at__date__gte=thirty_days_ago))
+        ).order_by('-order_count')[:5]
+
+        data = {
+            'total_users': total_users,
+            'new_users_30d': new_users_30d,
+            'user_growth': user_growth,
+            'active_stores': active_stores,
+            'new_stores_30d': new_stores_30d,
+            'store_growth': store_growth,
+            'total_orders': total_orders,
+            'orders_30d': orders_30d,
+            'order_growth': order_growth,
+            'revenue_30d': float(revenue_30d),
+            'revenue_30d_formatted': f'Rp {float(revenue_30d):,.0f}',
+            'total_sellers': total_sellers,
+            'total_buyers': total_buyers,
+            'pending_stores': pending_stores,
+            'top_stores': [
+                {
+                    'store_name': s.store_name,
+                    'order_count': s.order_count,
+                    'revenue': float(s.store_revenue or 0),
+                }
+                for s in top_stores
+            ],
+            'timestamp': timezone.now().isoformat(),
+        }
+        return Response(data)
+
+
 class MockMonitoringDashboardView(views.APIView):
     """Mock monitoring data for Flutter development."""
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         return Response({

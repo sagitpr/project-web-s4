@@ -364,6 +364,10 @@
   RealAPI.getPaymentStatus = function (orderId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/status/' + orderId + '/'); };
   RealAPI.topUpWallet = function (amount) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/wallet/topup/', { method: 'POST', body: JSON.stringify({ amount: amount }) }); };
 
+  // Wallet (database-driven, not device_info)
+  RealAPI.getWalletBalance = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/wallet/balance/'); };
+  RealAPI.getWalletTransactions = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/payments/wallet/transactions/' + (qs ? '?' + qs : '')); };
+
   // Analytics
   RealAPI.getDashboardSummary = function (period) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/dashboard/?period=' + (period || 'month')); };
   RealAPI.getSalesTrend = function (period) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/sales/trend/?period=' + (period || '30')); };

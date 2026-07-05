@@ -430,7 +430,7 @@ class AdminAIBusinessOverviewView(views.APIView):
 
 class MockAIBusinessInsightView(views.APIView):
     """Mock AI insight data for Flutter development."""
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         return Response({

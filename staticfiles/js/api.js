@@ -188,6 +188,14 @@
     { device_type: 'tablet', visits: 210, percentage: 9.8 },
   ];
 
+  var mockPromos = [
+    { id: 1, store: 1, promo_name: 'Diskon Lebaran', promo_type: 'percentage', promo_code: 'LEBARAN20', discount_percent: 20, discount_amount: 0, min_purchase: 50000, max_usage: 100, usage_count: 45, start_date: '2026-06-01', end_date: '2026-07-15', description: 'Diskon spesial menyambut Lebaran!', is_active: true, created_at: '2026-05-15T08:00:00Z', updated_at: '2026-06-01T08:00:00Z' },
+    { id: 2, store: 1, promo_name: 'Gratis Ongkir Akhir Pekan', promo_type: 'free_shipping', promo_code: 'GRATISONGKIR', discount_percent: 0, discount_amount: 10000, min_purchase: 30000, max_usage: 50, usage_count: 23, start_date: '2026-06-10', end_date: '2026-06-30', description: 'Gratis ongkir setiap hari Sabtu & Minggu', is_active: true, created_at: '2026-06-01T08:00:00Z', updated_at: '2026-06-10T08:00:00Z' },
+    { id: 3, store: 1, promo_name: 'Flash Sale Sayuran', promo_type: 'flash_sale', promo_code: 'FLASH50', discount_percent: 50, discount_amount: 0, min_purchase: 0, max_usage: 200, usage_count: 187, start_date: '2026-06-15', end_date: '2026-06-16', description: 'Flash sale 50% untuk semua produk sayuran!', is_active: true, created_at: '2026-06-10T08:00:00Z', updated_at: '2026-06-15T08:00:00Z' },
+    { id: 4, store: 1, promo_name: 'Diskon 10rb', promo_type: 'fixed', promo_code: 'DISKON10', discount_percent: 0, discount_amount: 10000, min_purchase: 0, max_usage: 0, usage_count: 12, start_date: '2026-05-01', end_date: '2026-05-31', description: 'Diskon Rp10.000 tanpa minimal belanja', is_active: false, created_at: '2026-04-20T08:00:00Z', updated_at: '2026-05-01T08:00:00Z' },
+    { id: 5, store: 1, promo_name: 'Beli 2 Gratis 1', promo_type: 'buy_x_get_y', promo_code: 'B2G1', discount_percent: 0, discount_amount: 0, min_purchase: 0, max_usage: 30, usage_count: 8, start_date: '2026-07-01', end_date: '2026-07-31', description: 'Beli 2 produk dapat 1 gratis!', is_active: true, created_at: '2026-06-20T08:00:00Z', updated_at: '2026-07-01T08:00:00Z' },
+  ];
+
   var userActivities = [
     { id: 1, activity_type: 'product_added', description: 'Menambahkan produk baru: Wortel Impor', created_at: daysAgo(0) },
     { id: 2, activity_type: 'order_processed', description: 'Memproses pesanan WRG-20260606-003', created_at: daysAgo(0) },
@@ -280,9 +288,13 @@
   RealAPI.getStores = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/stores/' + (qs ? '?' + qs : '')); };
   RealAPI.getStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/'); };
   RealAPI.createStore = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/create/', { method: 'POST', body: JSON.stringify(data) }); };
-  RealAPI.updateStore = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) }); };
+  RealAPI.getMyStore = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/'); };
+  // updateStore uses /stores/my-store/ (MyStoreView handles PATCH).
+  // StoreDetailView is RetrieveAPIView (GET-only) — PATCH to /stores/{id}/ would 405.
+  RealAPI.updateStore = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/', { method: 'PATCH', body: JSON.stringify(data) }); };
   RealAPI.followStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
-  RealAPI.unfollowStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/unfollow/', { method: 'POST' }); };
+  // Follow/unfollow toggle: POST once to follow, POST again to unfollow (backend toggle)
+  RealAPI.unfollowStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
 
   // Products
   RealAPI.getProducts = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/products/' + (qs ? '?' + qs : '')); };
@@ -293,6 +305,17 @@
   RealAPI.updateProduct = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + id + '/manage/', { method: 'PATCH', body: JSON.stringify(data) }); };
   RealAPI.deleteProduct = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + id + '/manage/', { method: 'DELETE' }); };
   RealAPI.getProductReviews = function (productId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + productId + '/reviews/'); };
+  RealAPI.getProductFavorite = function (productId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + productId + '/favorite/'); };
+  RealAPI.toggleFavorite = function (productId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + productId + '/favorite/', { method: 'POST' }); };
+
+  // Seller Store Reviews
+  RealAPI.getStoreReviews = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/products/store-reviews/' + (qs ? '?' + qs : '')); };
+
+  // Seller Promos
+  RealAPI.getSellerPromos = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/seller-promos/'); };
+  RealAPI.createSellerPromo = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/seller-promos/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.updateSellerPromo = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/seller-promos/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) }); };
+  RealAPI.deleteSellerPromo = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/seller-promos/' + id + '/', { method: 'DELETE' }); };
 
   // Cart
   RealAPI.getCart = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/orders/cart/'); };
@@ -341,10 +364,15 @@
   RealAPI.getPaymentStatus = function (orderId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/status/' + orderId + '/'); };
   RealAPI.topUpWallet = function (amount) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/wallet/topup/', { method: 'POST', body: JSON.stringify({ amount: amount }) }); };
 
+  // Wallet (database-driven, not device_info)
+  RealAPI.getWalletBalance = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/payments/wallet/balance/'); };
+  RealAPI.getWalletTransactions = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/payments/wallet/transactions/' + (qs ? '?' + qs : '')); };
+
   // Analytics
   RealAPI.getDashboardSummary = function (period) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/dashboard/?period=' + (period || 'month')); };
   RealAPI.getSalesTrend = function (period) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/sales/trend/?period=' + (period || '30')); };
   RealAPI.getDeviceAnalytics = function (period) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/devices/?period=' + (period || '30')); };
+  RealAPI.getSellerReport = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/analytics/seller-report/' + (qs ? '?' + qs : '')); };
   RealAPI.getRealtimeAnalytics = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/realtime/'); };
   RealAPI.getSalesAnalytics = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/sales/'); };
   RealAPI.getDailyReports = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/analytics/reports/'); };
@@ -356,84 +384,98 @@
   RealAPI.processSmartScan = function (imageData, productId, scanType, options) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     options = options || {};
-    var quality_status = 'fresh';
-    var freshness_score = 95;
-    var ai_result = '';
-
-    if (scanType === 'computer_vision') {
-      freshness_score = options.freshness_score || 95;
-      quality_status = options.quality_status || 'fresh';
-      ai_result = 'Produk terdeteksi dengan tingkat kesegaran ' + freshness_score + '%. ';
-      if (quality_status === 'fresh') {
-        ai_result += 'Produk layak dijual dan disarankan diprioritaskan untuk promosi.';
-      } else if (quality_status === 'warning') {
-        ai_result += 'Tingkat kesegaran menurun. Disarankan mempercepat penjualan atau memberikan diskon.';
-      } else if (quality_status === 'rejected') {
-        ai_result += 'Kualitas buruk dan tidak layak dijual. Disarankan evaluasi pemasok.';
-      }
-    } else if (scanType === 'barcode') {
-      freshness_score = 100;
-      quality_status = 'fresh';
-      ai_result = 'Produk kemasan terverifikasi Barcode: ' + (options.barcode || '8991234567890') + '.';
-    } else if (scanType === 'ocr') {
-      freshness_score = 100;
-      quality_status = 'fresh';
-      ai_result = 'Produk kemasan terdeteksi OCR. Barcode: ' + (options.barcode || '8991234567890') + ', BPOM: ' + (options.bpom_number || 'MD 231456789012') + ', Exp: ' + (options.expiration_date || '2027-12-31') + '.';
-    } else if (scanType === 'manual') {
-      freshness_score = 100;
-      quality_status = 'fresh';
-      ai_result = 'Konfirmasi Manual: Barcode: ' + (options.barcode || '8991234567890') + ', BPOM: ' + (options.bpom_number || 'MD 231456789012') + ', Exp: ' + (options.expiration_date || '2027-12-31') + '.';
-    }
-
-    var confidence = options.confidence !== undefined ? options.confidence : (scanType === 'ocr' ? 0.65 : (scanType === 'computer_vision' ? 0.94 : (scanType === 'barcode' ? 0.98 : 1.0)));
-    var confidence_uncertain = scanType === 'ocr' && confidence < 0.8;
-
-    // OCR uncertain confidence must NOT be persisted immediately.
-    // Return early to let the frontend show the manual confirmation dialog.
-    if (scanType === 'ocr' && confidence_uncertain) {
-      return Promise.resolve({
-        mode: 'ocr',
-        product: { id: Number(productId) },
-        barcode: options.barcode || '8991234567890',
-        expiration_date: options.expiration_date || '2027-12-31',
-        bpom_number: options.bpom_number || 'MD 231456789012',
-        confidence: confidence,
-        confidence_uncertain: true,
-        ai_result: 'Produk kemasan terdeteksi OCR dengan tingkat kepercayaan rendah (' + confidence + '). Butuh konfirmasi seller.'
-      });
-    }
-
-    var data = {
-      product: Number(productId),
-      freshness_score: freshness_score,
-      quality_status: quality_status,
-      stock_status: 'sufficient',
-      ai_result: ai_result
-    };
-    return auth.api('/products/quality-checks/', {
+    // Delegate to server-side Smart Scan endpoint
+    return auth.api('/products/smart-scan/', {
       method: 'POST',
-      body: JSON.stringify(data)
-    }).then(function (dbCheck) {
-      // Extend DB check with runtime metadata so frontend logic works perfectly
-      dbCheck.mode = scanType;
-      dbCheck.confidence = confidence;
-      dbCheck.confidence_uncertain = confidence_uncertain;
-      dbCheck.eligible_for_sale = quality_status !== 'rejected';
-      dbCheck.product_type = dbCheck.product_name || 'Produk';
-      return dbCheck;
+      body: JSON.stringify({
+        product_id: Number(productId),
+        scan_type: scanType,
+        options: {
+          barcode: options.barcode,
+          bpom_number: options.bpom_number,
+          expiration_date: options.expiration_date,
+        },
+      }),
+    }).then(function (result) {
+      // Ensure frontend-compatible fields
+      result.mode = result.mode || scanType;
+      result.confidence = result.confidence || 0.94;
+      result.confidence_uncertain = result.confidence_uncertain || false;
+      result.eligible_for_sale = result.eligible_for_sale !== false;
+      result.product_type = result.product?.product_name || 'Produk';
+      return result;
     });
   };
   RealAPI.getQualityChecks = function (productId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/' + productId + '/quality-checks/'); };
 
   // Notifications
   RealAPI.getNotifications = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/notifications/' + (qs ? '?' + qs : '')); };
-  RealAPI.markNotificationRead = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/' + id + '/read/', { method: 'POST' }); };
-  RealAPI.markAllNotificationsRead = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/read-all/', { method: 'POST' }); };
+  RealAPI.markNotificationRead = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ notification_ids: [id] }) }); };
+  RealAPI.markAllNotificationsRead = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ mark_all: true }) }); };
+
+  // Favorite Stores (followed stores)
+  RealAPI.getFollowedStores = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-followed/'); };
+  RealAPI.checkFollowStatus = function (storeId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + storeId + '/follow/'); };
+
+  // Recently Viewed
+  RealAPI.recordProductView = function (productId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/recently-viewed/', { method: 'POST', body: JSON.stringify({ product_id: productId }) }); };
+  RealAPI.getRecentlyViewed = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/recently-viewed/'); };
+
+  // Smart Search (autocomplete)
+  RealAPI.searchSuggestions = function (q) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/search-suggestions/?q=' + encodeURIComponent(q || '')); };
+
+  // Search History (client-side localStorage)
+  RealAPI.getSearchHistory = function () {
+    try {
+      var history = JSON.parse(localStorage.getItem('warungio_search_history') || '[]');
+      return Promise.resolve({ count: history.length, results: history });
+    } catch (e) {
+      return Promise.resolve({ count: 0, results: [] });
+    }
+  };
+  RealAPI.saveSearchHistory = function (query) {
+    try {
+      var history = JSON.parse(localStorage.getItem('warungio_search_history') || '[]');
+      // Remove duplicate if exists
+      history = history.filter(function (h) { return h.query.toLowerCase() !== query.toLowerCase(); });
+      // Add to front
+      history.unshift({ query: query, timestamp: new Date().toISOString() });
+      // Keep max 10
+      if (history.length > 10) history = history.slice(0, 10);
+      localStorage.setItem('warungio_search_history', JSON.stringify(history));
+      return Promise.resolve({ message: 'Tersimpan.', count: history.length });
+    } catch (e) {
+      return Promise.resolve({ message: 'Gagal menyimpan.', count: 0 });
+    }
+  };
+  RealAPI.clearSearchHistory = function () {
+    try {
+      localStorage.removeItem('warungio_search_history');
+      return Promise.resolve({ message: 'Riwayat pencarian dihapus.' });
+    } catch (e) {
+      return Promise.resolve({ message: 'Gagal menghapus.' });
+    }
+  };
+
+  // Refunds
+  RealAPI.getMyRefunds = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/refunds/my-refunds/' + (qs ? '?' + qs : '')); };
+  RealAPI.getRefund = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/' + id + '/'); };
+  RealAPI.createRefund = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/create/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.cancelRefund = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/' + id + '/cancel/', { method: 'POST' }); };
+  RealAPI.getStoreRefunds = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/refunds/store-refunds/' + (qs ? '?' + qs : '')); };
+  RealAPI.sellerRefundAction = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/' + id + '/seller-action/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.getAdminRefunds = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/refunds/admin/all/' + (qs ? '?' + qs : '')); };
+  RealAPI.adminRefundAction = function (id, data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/' + id + '/admin-action/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.getRefundStats = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/refunds/stats/'); };
+
+  // Stock Alerts
+  RealAPI.getLowStockProducts = function (threshold) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/products/low-stock/?threshold=' + (threshold || 5)); };
 
   // Chat
   RealAPI.getConversations = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/'); };
   RealAPI.getConversationMessages = function (conversationId) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/' + conversationId + '/messages/'); };
   RealAPI.sendMessage = function (data) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/messages/send/', { method: 'POST', body: JSON.stringify(data) }); };
+  RealAPI.startConversation = function (receiverId, message) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/conversations/start/', { method: 'POST', body: JSON.stringify({ receiver_id: receiverId, message: message || '' }) }); };
   RealAPI.getUnreadChatCount = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/chat/unread-count/'); };
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -540,6 +582,17 @@
   MockHandlers.deleteProduct = function (id) { var idx = products.findIndex(function (pr) { return pr.id === Number(id); }); if (idx === -1) return fail('Produk tidak ditemukan.', 404); products.splice(idx, 1); store.product_count = products.filter(function (pr) { return pr.store === 1; }).length; return ok({ message: 'Produk berhasil dihapus.' }); };
   MockHandlers.getProductReviews = function () { return ok({ count: 0, results: [] }); };
 
+  // Store Reviews mock
+  var mockStoreReviews = [
+    { id: 1, user: { id: 10, full_name: 'Siti Rahmawati' }, user_name: 'Siti Rahmawati', user_photo: null, product: 1, product_name: 'Bayam Segar', rating: 5, comment: 'Bayamnya segar banget! Besar-besar daunnya.', is_verified: true, seller_reply: 'Terima kasih Kak Siti!', seller_reply_at: '2026-06-25T14:00:00Z', created_at: '2026-06-25T10:30:00Z' },
+    { id: 2, user: { id: 11, full_name: 'Ahmad Fauzi' }, user_name: 'Ahmad Fauzi', user_photo: null, product: 3, product_name: 'Apel Fuji', rating: 4, comment: 'Apelnya manis dan renyah.', is_verified: true, seller_reply: null, seller_reply_at: null, created_at: '2026-06-24T08:15:00Z' },
+    { id: 3, user: { id: 12, full_name: 'Dewi Lestari' }, user_name: 'Dewi Lestari', user_photo: null, product: 5, product_name: 'Daging Sapi Giling', rating: 5, comment: 'Dagingnya fresh, tidak bau.', is_verified: true, seller_reply: 'Alhamdulillah, terima kasih!', seller_reply_at: '2026-06-23T19:30:00Z', created_at: '2026-06-23T16:45:00Z' },
+    { id: 4, user: { id: 13, full_name: 'Bambang Susilo' }, user_name: 'Bambang Susilo', user_photo: null, product: 10, product_name: 'Bawang Merah 250g', rating: 3, comment: 'Bawangnya sedang aja.', is_verified: true, seller_reply: null, seller_reply_at: null, created_at: '2026-06-22T11:20:00Z' },
+    { id: 5, user: { id: 14, full_name: 'Rina Marlina' }, user_name: 'Rina Marlina', user_photo: null, product: 4, product_name: 'Pisang Cavendish', rating: 5, comment: 'Pisang manis sekali!', is_verified: true, seller_reply: 'Terima kasih Kak Rina!', seller_reply_at: '2026-06-21T12:15:00Z', created_at: '2026-06-21T09:00:00Z' },
+    { id: 6, user: { id: 15, full_name: 'Fitriani' }, user_name: 'Fitriani', user_photo: null, product: 1, product_name: 'Bayam Segar', rating: 5, comment: 'Recommended!', is_verified: true, seller_reply: null, seller_reply_at: null, created_at: '2026-06-19T13:45:00Z' },
+  ];
+  MockHandlers.getStoreReviews = function () { return ok({ count: mockStoreReviews.length, results: mockStoreReviews }); };
+
   MockHandlers.getCart = function () { return ok({ count: cartItems.length, results: cartItems }); };
   MockHandlers.getCartCount = function () { var count = cartItems.reduce(function (s, i) { return s + i.qty; }, 0); return ok({ count: count }); };
   MockHandlers.addToCart = function (data) {
@@ -615,6 +668,31 @@
   MockHandlers.getRealtimeAnalytics = function () { return ok({ active_visitors: 12 + Math.floor(Math.random() * 20), today_orders: 3 + Math.floor(Math.random() * 8), today_revenue: 150000 + Math.floor(Math.random() * 400000), current_carts: 5 + Math.floor(Math.random() * 10) }); };
   MockHandlers.getSalesAnalytics = function () { return ok({ count: 7, results: salesTrend.slice(-7) }); };
   MockHandlers.getDailyReports = function () { return ok({ count: 7, results: salesTrend.slice(-7) }); };
+
+  // Seller Promos
+  MockHandlers.getSellerPromos = function () {
+    var list = mockPromos.filter(function (p) { return p.store === store.id; });
+    return ok({ count: list.length, results: list });
+  };
+  MockHandlers.createSellerPromo = function (data) {
+    var newPromo = { id: uid(), store: store.id, usage_count: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    Object.keys(data).forEach(function (k) { if (data[k] !== undefined) newPromo[k] = data[k]; });
+    mockPromos.unshift(newPromo);
+    return ok(newPromo);
+  };
+  MockHandlers.updateSellerPromo = function (id, data) {
+    var p = mockPromos.find(function (pr) { return pr.id === Number(id); });
+    if (!p) return fail('Promo tidak ditemukan.', 404);
+    Object.keys(data).forEach(function (k) { if (data[k] !== undefined) p[k] = data[k]; });
+    p.updated_at = new Date().toISOString();
+    return ok(p);
+  };
+  MockHandlers.deleteSellerPromo = function (id) {
+    var idx = mockPromos.findIndex(function (p) { return p.id === Number(id); });
+    if (idx === -1) return fail('Promo tidak ditemukan.', 404);
+    mockPromos.splice(idx, 1);
+    return ok({ message: 'Promo berhasil dihapus.' });
+  };
 
   var mockQualityChecks = {};
 
@@ -735,6 +813,311 @@
     });
   };
 
+  // ── Favorite Stores Mock ──
+  var mockFollowedStores = [store];
+  MockHandlers.getFollowedStores = function () { return ok({ count: mockFollowedStores.length, results: mockFollowedStores }); };
+  MockHandlers.checkFollowStatus = function (storeId) {
+    var is_following = mockFollowedStores.some(function (s) { return s.id === Number(storeId); });
+    return ok({ is_following: is_following, count: mockFollowedStores.length });
+  };
+
+  // ── Favorites Mock ──
+  var mockFavorites = [];
+  MockHandlers.getProductFavorite = function (productId) {
+    var is_fav = mockFavorites.some(function (f) { return f === Number(productId); });
+    return ok({ is_favorite: is_fav });
+  };
+  MockHandlers.toggleFavorite = function (productId) {
+    var idx = mockFavorites.indexOf(Number(productId));
+    if (idx === -1) {
+      mockFavorites.push(Number(productId));
+      return ok({ message: 'Produk ditambahkan ke favorit.', is_favorite: true });
+    } else {
+      mockFavorites.splice(idx, 1);
+      return ok({ message: 'Produk dihapus dari favorit.', is_favorite: false });
+    }
+  };
+
+  // ── Refunds Mock ──
+  var mockRefunds = [
+    { id: 1, refund_number: 'RFN-A1B2C3D4', order: { id: 1, order_number: 'WRG-20260601-001' }, store_name: 'Vega Fresh', reason: 'product_damaged', reason_display: 'Produk Rusak/Cacat', amount_requested: 50000, amount_approved: null, refund_status: 'pending', status_display: 'Menunggu Review', is_escalated: false, created_at: daysAgo(1), resolved_at: null, store: { id: 1 }, buyer_name: 'Demo User', reason_text: 'Produk datang dalam kondisi rusak saat dibuka.', evidence_images: ['/static/images/paket-sayur.png'], seller_notes: '' },
+    { id: 2, refund_number: 'RFN-E5F6G7H8', order: { id: 2, order_number: 'WRG-20260603-002' }, store_name: 'Vega Fresh', reason: 'expired', reason_display: 'Produk Kadaluarsa', amount_requested: 55000, amount_approved: 55000, refund_status: 'approved', status_display: 'Disetujui', is_escalated: false, created_at: daysAgo(3), resolved_at: daysAgo(1), store: { id: 1 }, buyer_name: 'Demo User', seller_notes: 'Mohon maaf, kami proses refund.' },
+    { id: 3, refund_number: 'RFN-I9J0K1L2', order: { id: 3, order_number: 'WRG-20260606-003' }, store_name: 'Toko Berkah Jaya', reason: 'not_as_described', reason_display: 'Tidak Sesuai Deskripsi', amount_requested: 75000, amount_approved: 75000, refund_status: 'refunded', status_display: 'Telah Direfund', is_escalated: false, created_at: daysAgo(5), resolved_at: daysAgo(2), store: { id: 2 }, buyer_name: 'Siti Rahma', seller_notes: 'Dana sudah kami kembalikan.' },
+  ];
+  var mockRefundTimeline = {
+    1: [
+      { event_type: 'created', description: 'Refund diajukan dengan alasan: Produk Rusak/Cacat', created_by_name: 'Demo User', created_by_role: 'buyer', created_at: daysAgo(1) },
+      { event_type: 'review_started', description: 'Review dimulai oleh penjual.', created_by_name: 'Vega Fresh', created_by_role: 'seller', created_at: daysAgo(1) },
+    ],
+    2: [
+      { event_type: 'created', description: 'Refund diajukan dengan alasan: Produk Kadaluarsa', created_by_name: 'Demo User', created_by_role: 'buyer', created_at: daysAgo(3) },
+      { event_type: 'approved', description: 'Refund disetujui oleh penjual. Jumlah: Rp 55,000.', created_by_name: 'Vega Fresh', created_by_role: 'seller', created_at: daysAgo(1) },
+    ],
+    3: [
+      { event_type: 'created', description: 'Refund diajukan dengan alasan: Tidak Sesuai Deskripsi', created_by_name: 'Demo User', created_by_role: 'buyer', created_at: daysAgo(5) },
+      { event_type: 'seller_responded', description: 'Penjual setuju untuk refund.', created_by_name: 'Toko Berkah Jaya', created_by_role: 'seller', created_at: daysAgo(4) },
+      { event_type: 'refunded', description: 'Dana telah direfund.', created_by_name: 'System', created_by_role: 'system', created_at: daysAgo(2) },
+    ],
+  };
+
+  MockHandlers.getMyRefunds = function () { return ok({ count: mockRefunds.length, results: mockRefunds }); };
+  MockHandlers.getRefund = function (id) {
+    var r = mockRefunds.find(function (rf) { return rf.id === Number(id); });
+    if (!r) return fail('Refund tidak ditemukan.', 404);
+    return ok({
+      ...r,
+      timeline: mockRefundTimeline[r.id] || [],
+      order_items: [
+        { id: 1, product_name: 'Bayam Segar', product_photo: '/static/images/paket-sayur.png', qty: 2, price: 5000, subtotal: 10000 },
+        { id: 2, product_name: 'Apel Fuji', product_photo: '/static/images/fruit.png', qty: 1, price: 25000, subtotal: 25000 },
+      ],
+      store_logo: '/static/images/store-icon-T.png',
+      evidence_description: 'Foto menunjukkan produk rusak',
+    });
+  };
+  MockHandlers.createRefund = function (data) {
+    var newRefund = {
+      id: uid(), refund_number: 'RFN-' + uid(),
+      order: { id: data.order, order_number: 'WRG-NEW-' + uid() },
+      store_name: 'Vega Fresh', reason: data.reason || 'other',
+      reason_display: 'Lainnya', amount_requested: Number(data.amount_requested) || 0,
+      amount_approved: null, refund_status: 'pending', status_display: 'Menunggu Review',
+      is_escalated: false, created_at: new Date().toISOString(), resolved_at: null,
+      store: { id: 1 }, buyer_name: 'Demo User', seller_notes: '',
+    };
+    mockRefunds.unshift(newRefund);
+    mockRefundTimeline[newRefund.id] = [
+      { event_type: 'created', description: 'Refund diajukan', created_by_name: 'Demo User', created_by_role: 'buyer', created_at: new Date().toISOString() },
+    ];
+    return ok(newRefund);
+  };
+  MockHandlers.cancelRefund = function (id) {
+    var r = mockRefunds.find(function (rf) { return rf.id === Number(id); });
+    if (!r) return fail('Refund tidak ditemukan.', 404);
+    r.refund_status = 'cancelled'; r.status_display = 'Dibatalkan';
+    return ok({ message: 'Refund berhasil dibatalkan.' });
+  };
+  MockHandlers.getStoreRefunds = function () { return ok({ count: mockRefunds.length, results: mockRefunds }); };
+  MockHandlers.sellerRefundAction = function (id, data) {
+    var r = mockRefunds.find(function (rf) { return rf.id === Number(id); });
+    if (!r) return fail('Refund tidak ditemukan.', 404);
+    if (data.action === 'approve') {
+      r.refund_status = 'approved'; r.status_display = 'Disetujui';
+      r.amount_approved = data.amount_approved || r.amount_requested;
+    } else if (data.action === 'reject') {
+      r.refund_status = 'rejected'; r.status_display = 'Ditolak';
+    } else if (data.action === 'negotiate') {
+      r.refund_status = 'waiting_buyer'; r.status_display = 'Menunggu Pembeli';
+      r.amount_approved = data.amount_approved;
+    }
+    return ok(r);
+  };
+  MockHandlers.getAdminRefunds = function () { return ok({ count: mockRefunds.length, results: mockRefunds }); };
+  MockHandlers.adminRefundAction = function (id, data) {
+    var r = mockRefunds.find(function (rf) { return rf.id === Number(id); });
+    if (!r) return fail('Refund tidak ditemukan.', 404);
+    if (data.action === 'resolve') {
+      r.refund_status = 'refunded'; r.status_display = 'Telah Direfund';
+      r.resolved_at = new Date().toISOString();
+    }
+    return ok(r);
+  };
+  MockHandlers.getRefundStats = function () {
+    return ok({ total: 12, pending: 3, under_review: 2, approved: 4, rejected: 1, refunded: 2, cancelled: 0, escalated: 1, total_amount_requested: 4500000, total_amount_refunded: 3200000 });
+  };
+
+  // ── Recently Viewed Mock ──
+  var mockRecentlyViewed = [
+    { id: 1, product: products[0], product_detail: products[0], viewed_at: daysAgo(0) },
+    { id: 2, product: products[2], product_detail: products[2], viewed_at: daysAgo(0) },
+    { id: 3, product: products[4], product_detail: products[4], viewed_at: daysAgo(1) },
+    { id: 4, product: products[6], product_detail: products[6], viewed_at: daysAgo(2) },
+  ];
+  MockHandlers.recordProductView = function (productId) {
+    var prod = products.find(function (p) { return p.id === Number(productId); });
+    if (prod) {
+      var idx = mockRecentlyViewed.findIndex(function (r) { return r.product.id === Number(productId); });
+      if (idx !== -1) mockRecentlyViewed.splice(idx, 1);
+      mockRecentlyViewed.unshift({ id: uid(), product: prod, product_detail: prod, viewed_at: new Date().toISOString() });
+      if (mockRecentlyViewed.length > 20) mockRecentlyViewed.pop();
+    }
+    return ok({ message: 'Produk dicatat.', viewed_at: new Date().toISOString() });
+  };
+  MockHandlers.getRecentlyViewed = function () { return ok({ count: mockRecentlyViewed.length, results: mockRecentlyViewed }); };
+
+  // ── Search Suggestions Mock ──
+  var mockCategories = [
+    { id: 1, category_name: 'Sayuran' },
+    { id: 2, category_name: 'Buah-buahan' },
+    { id: 3, category_name: 'Daging & Ikan' },
+    { id: 4, category_name: 'Sembako' },
+  ];
+  MockHandlers.searchSuggestions = function (q) {
+    var query = (q || '').toLowerCase();
+    if (query.length < 1) return ok({ suggestions: [], products: [], stores: [], categories: [] });
+    var matchedProducts = products.filter(function (p) { return p.product_name.toLowerCase().indexOf(query) !== -1; }).slice(0, 5).map(function (p) { return { type: 'product', label: p.product_name, value: p.slug, id: p.id }; });
+    var matchedStores = [store, store2].filter(function (s) { return s.store_name.toLowerCase().indexOf(query) !== -1; }).slice(0, 5).map(function (s) { return { type: 'store', label: s.store_name, value: s.slug, id: s.id, subtitle: s.city }; });
+    var matchedCategories = mockCategories.filter(function (c) { return c.category_name.toLowerCase().indexOf(query) !== -1; }).slice(0, 5).map(function (c) { return { type: 'category', label: c.category_name, value: c.category_name.toLowerCase(), id: c.id }; });
+    var all = matchedProducts.concat(matchedStores).concat(matchedCategories);
+    return ok({ suggestions: all, products: matchedProducts, stores: matchedStores, categories: matchedCategories });
+  };
+
+  // ── Finance / Keuangan Mock ──
+  var mockFinanceData = {
+    total_balance: 56780000,
+    available_balance: 45200000,
+    held_balance: 8200000,
+    total_income: 23500000,
+    total_withdrawals: 8900000,
+    total_pending_withdrawals: 3360000,
+    total_transactions: 47,
+    chart_data: (function() {
+      var labels = [];
+      var income = [];
+      var withdrawal = [];
+      for (var t = 0; t < 30; t++) {
+        var dd = new Date();
+        dd.setDate(dd.getDate() - (29 - t));
+        labels.push(dd.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+        income.push(500000 + Math.floor(Math.random() * 2500000));
+        withdrawal.push(Math.floor(Math.random() * 500000));
+      }
+      return { labels: labels, income: income, withdrawal: withdrawal };
+    })(),
+  };
+
+  var mockTransactions = [];
+  (function() {
+    var types = ['income', 'income', 'income', 'withdrawal', 'income', 'held', 'income'];
+    var descs = ['Pembayaran pesanan WRG-20260601-001', 'Pembayaran pesanan WRG-20260603-002', 'Pendapatan penjualan sayuran', 'Penarikan saldo ke BCA', 'Pembayaran pesanan WRG-20260605-004', 'Dana ditahan pesanan WRG-20260604-003', 'Pembayaran pesanan WRG-20260606-005'];
+    var cats = ['Penjualan Produk', 'Penjualan Produk', 'Penjualan Produk', 'Transfer Bank', 'Penjualan Produk', 'Penjualan Tertahan', 'Penjualan Produk'];
+    var methods = ['GoPay', 'Bank Transfer', 'QRIS', 'BCA', 'COD', 'GoPay', 'Bank Transfer'];
+    for (var i = 0; i < 47; i++) {
+      var dd = new Date();
+      dd.setDate(dd.getDate() - Math.floor(Math.random() * 30));
+      var t = types[i % types.length];
+      mockTransactions.push({
+        id: i + 1,
+        date: dd.toISOString().slice(0, 10),
+        type: t,
+        type_label: t === 'income' ? 'Pemasukan' : t === 'withdrawal' ? 'Penarikan' : 'Saldo Tertahan',
+        description: descs[i % descs.length] + ' #' + (i + 1),
+        category: cats[i % cats.length],
+        method: methods[i % methods.length],
+        amount: 5000 + Math.floor(Math.random() * 495000),
+        status: Math.random() > 0.15 ? 'success' : 'pending',
+        status_label: Math.random() > 0.15 ? 'Berhasil' : 'Menunggu',
+      });
+    }
+    // Sort by date descending
+    mockTransactions.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  })();
+
+  var mockBankAccounts = [
+    { id: 1, bank_name: 'BCA', bank_code: '014', account_number: '1234567890', account_holder: 'Budi Santoso', is_primary: true, created_at: '2026-01-15T08:00:00Z' },
+    { id: 2, bank_name: 'Mandiri', bank_code: '008', account_number: '9876543210', account_holder: 'Budi Santoso', is_primary: false, created_at: '2026-03-01T08:00:00Z' },
+  ];
+
+  MockHandlers.getFinanceSummary = function (days) {
+    var data = JSON.parse(JSON.stringify(mockFinanceData));
+    return ok(data);
+  };
+
+  MockHandlers.getFinanceTransactions = function (params) {
+    params = params || {};
+    var list = mockTransactions.slice();
+    var page = Number(params.page) || 1;
+    var pageSize = Number(params.page_size) || 15;
+    var total = list.length;
+    var start = (page - 1) * pageSize;
+    var pageData = list.slice(start, start + pageSize);
+    return ok({
+      count: total,
+      results: pageData,
+      next: start + pageSize < total ? page + 1 : null,
+      previous: page > 1 ? page - 1 : null,
+    });
+  };
+
+  MockHandlers.getBankAccounts = function () {
+    return ok({ count: mockBankAccounts.length, results: mockBankAccounts });
+  };
+
+  MockHandlers.createBankAccount = function (data) {
+    var newAcc = {
+      id: uid(),
+      bank_name: data.bank_name || 'BCA',
+      bank_code: data.bank_code || '014',
+      account_number: data.account_number || '',
+      account_holder: data.account_holder || '',
+      is_primary: data.is_primary || false,
+      created_at: new Date().toISOString(),
+    };
+    if (newAcc.is_primary) {
+      mockBankAccounts.forEach(function(a) { a.is_primary = false; });
+    }
+    mockBankAccounts.push(newAcc);
+    return ok(newAcc);
+  };
+
+  MockHandlers.updateBankAccount = function (id, data) {
+    var acc = mockBankAccounts.find(function(a) { return a.id === Number(id); });
+    if (!acc) return fail('Rekening tidak ditemukan.', 404);
+    Object.keys(data).forEach(function(k) { if (data[k] !== undefined) acc[k] = data[k]; });
+    if (data.is_primary) {
+      mockBankAccounts.forEach(function(a) {
+        if (a.id !== Number(id)) a.is_primary = false;
+      });
+    }
+    return ok(acc);
+  };
+
+  MockHandlers.deleteBankAccount = function (id) {
+    var idx = mockBankAccounts.findIndex(function(a) { return a.id === Number(id); });
+    if (idx === -1) return fail('Rekening tidak ditemukan.', 404);
+    mockBankAccounts.splice(idx, 1);
+    return ok({ message: 'Rekening berhasil dihapus.' });
+  };
+
+  MockHandlers.submitWithdrawal = function (data) {
+    var amount = Number(data.amount) || 0;
+    if (amount <= 0) return fail('Jumlah penarikan tidak valid.', 400);
+    mockFinanceData.available_balance = Math.max(0, mockFinanceData.available_balance - amount);
+    mockFinanceData.total_balance = mockFinanceData.available_balance + mockFinanceData.held_balance;
+    mockTransactions.unshift({
+      id: uid(),
+      date: new Date().toISOString().slice(0, 10),
+      type: 'withdrawal',
+      type_label: 'Penarikan',
+      description: 'Penarikan saldo ke ' + (mockBankAccounts.find(function(a) { return a.is_primary; }) || mockBankAccounts[0] || {}).bank_name || 'Bank',
+      category: 'Transfer Bank',
+      method: 'Bank Transfer',
+      amount: amount,
+      status: 'pending',
+      status_label: 'Menunggu',
+    });
+    return ok({ message: 'Permintaan penarikan berhasil dikirim.', amount: amount, remaining_balance: mockFinanceData.available_balance });
+  };
+
+  // ── Stock Alerts Mock ──
+  MockHandlers.getLowStockProducts = function (threshold) {
+    threshold = threshold || 5;
+    var out_of_stock = [
+      { id: 100, product_name: 'Telur Ayam', stock: 0, unit: 'kg', price: 28000, category: 'Sembako', product_photo: null, slug: 'telur-ayam' },
+    ];
+    var low_stock = [
+      { id: 101, product_name: 'Bayam Segar', stock: 3, unit: 'ikat', price: 5000, category: 'Sayuran', product_photo: null, slug: 'bayam-segar' },
+      { id: 102, product_name: 'Ikan Nila Segar', stock: 2, unit: 'kg', price: 35000, category: 'Daging & Ikan', product_photo: null, slug: 'ikan-nila-segar' },
+    ];
+    return ok({
+      count: low_stock.length + out_of_stock.length,
+      low_stock: low_stock,
+      out_of_stock: out_of_stock,
+      total_low_stock: low_stock.length,
+      total_out_of_stock: out_of_stock.length,
+    });
+  };
+
   MockHandlers.getNotifications = function (params) {
     params = params || {};
     var list = notifications.slice();
@@ -757,6 +1140,37 @@
   });
 
   // If mock mode is active, overlay mock handlers with delay
+  // Add RealAPI methods for finance
+  RealAPI.getFinanceSummary = function (days) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/summary/');
+  };
+  RealAPI.getFinanceTransactions = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/payments/finance/transactions/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getBankAccounts = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/');
+  };
+  RealAPI.createBankAccount = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateBankAccount = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.deleteBankAccount = function (id) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/bank-accounts/' + id + '/', { method: 'DELETE' });
+  };
+  RealAPI.submitWithdrawal = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/payments/finance/withdraw/', { method: 'POST', body: JSON.stringify(data) });
+  };
+
   if (window.MOCK_API) {
     Object.keys(MockHandlers).forEach(function (k) {
       var mockFn = MockHandlers[k];

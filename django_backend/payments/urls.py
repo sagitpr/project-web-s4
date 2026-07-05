@@ -23,4 +23,8 @@ urlpatterns = [
     path('finance/withdraw/', views.WithdrawBalanceView.as_view(), name='finance-withdraw'),
     # Public API Configuration (safe frontend keys)
     path('config/public/', views.PublicApiConfigView.as_view(), name='public-api-config'),
+
+    # Wallet Endpoints (database-driven, not device_info)
+    path('wallet/balance/', views.WalletBalanceView.as_view(), name='wallet-balance'),
+    path('wallet/transactions/', views.WalletTransactionListView.as_view(), name='wallet-transactions'),
 ]

@@ -138,7 +138,6 @@
           </div>
 
           <form id="requestForm" class="login-form" method="POST" action="#">
-              <input type="hidden" name="_csrf_token" value="" autocomplete="off" />
             <input type="hidden" name="mode" value="request" autocomplete="off" />
             <div id="formMessage" class="form-message hidden" style="color:var(--primary); font-weight:600; padding:10px; background:var(--primary-soft); border-radius:8px; margin-bottom:10px; text-align:center;"></div>
             
@@ -163,7 +162,6 @@
           </form>
 
           <form id="verifyForm" class="login-form hidden" method="POST" action="#">
-              <input type="hidden" name="_csrf_token" value="" autocomplete="off" />
             <input type="hidden" id="verifyIdentifier" name="identifier" value="" autocomplete="off" />
             <input type="hidden" name="mode" value="reset" autocomplete="off" />
 

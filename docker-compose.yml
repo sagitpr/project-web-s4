@@ -85,7 +85,9 @@ services:
       timeout: 10s
       retries: 5
       start_period: 240s
-    mem_limit: 320m
+    mem_limit: 256m
+    # Memory limit lebih rendah karena nginx handle static files,
+    # dan WhiteNoise dinonaktifkan di production (tidak perlu load static ke memory)
     networks:
       - warungio_net
     logging:
@@ -95,8 +97,10 @@ services:
         max-file: "3"
 
   # ---- Celery Worker (Async Tasks) — WITH EMBEDDED BEAT ----
-  # 1 concurrency, 100 max tasks per child, 5 min time limit
+  # 1 concurrency, 500 max tasks per child, 5 min time limit
   # Beat dijalankan embedded (-B) untuk hemat memory (tidak perlu container terpisah)
+  # --without-heartbeat --without-gossip --without-mingle: matikan discovery protocol
+  # celery worker akan restart setelah 500 tasks untuk cegah memory leak
   celery:
     build:
       context: .
@@ -115,7 +119,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
       CELERY_ENABLED: "true"
-    command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
+    command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "--max-tasks-per-child=500", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
     # Healthcheck: lightweight process check instead of heavy app-loading `celery inspect ping`

@@ -335,7 +335,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       var script = document.createElement('script');
-      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+      // Use the snap_js_url from payment config, fallback to sandbox
+      var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
+      script.src = snapBaseUrl + '/snap/snap.js';
       script.setAttribute('data-client-key', clientKey);
       script.onload = function() {
         snapScriptLoaded = true;
@@ -431,15 +433,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     placeOrderBtn.textContent = 'Menyiapkan pembayaran...';
 
     try {
-      // STEP 1: Get Midtrans client key from backend config
-      midtransClientKey = 'SB-Mid-client-wZQ4B2RbLEEIlCq9'; // fallback default
+      // STEP 1: Get Midtrans config from backend (client key + snap URL)
+      // ⚠️  Client key HARUS dari backend! Jangan hardcode.
       try {
         var config = await WarungioAPI.getPaymentConfig();
-        if (config && config.client_key) {
-          midtransClientKey = config.client_key;
+        if (config) {
+          if (config.client_key) midtransClientKey = config.client_key;
+          // Set the correct Snap JS base URL from API config
+          if (config.snap_js_url) {
+            window.WARUNGIO_SNAP_BASE_URL = new URL(config.snap_js_url).origin;
+          }
         }
       } catch (e) {
-        console.warn('Payment config fetch failed, using fallback key:', e);
+        console.error('Payment config fetch failed — cannot proceed:', e);
+        showToast('Gagal memuat konfigurasi pembayaran.', 'error');
+        return;
       }
 
       // STEP 2: Create Snap transaction — let Snap handle method selection
