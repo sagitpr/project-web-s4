@@ -22,6 +22,8 @@ urlpatterns = [
     
     # Reviews
     path('<int:product_id>/reviews/', views.ReviewListView.as_view(), name='product-reviews'),
+    path('reviews/mine/', views.MyReviewsView.as_view(), name='my-reviews'),
+    path('reviews/<int:pk>/', views.ReviewDetailView.as_view(), name='review-detail'),
     path('store-reviews/', views.SellerStoreReviewListView.as_view(), name='seller-store-reviews'),
     
     # Favorites

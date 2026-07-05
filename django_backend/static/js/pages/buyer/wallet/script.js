@@ -24,6 +24,12 @@
   const toastEl = $('#toast');
 
   function showToast(text, type) {
+    // Delegate to shared utility
+    if (window.WarungioAuthUI) {
+      WarungioAuthUI.showToast(text, type || 'success');
+      return;
+    }
+    // Fallback
     if (!toastEl) return;
     toastEl.textContent = text;
     toastEl.className = 'toast ' + (type || 'success');

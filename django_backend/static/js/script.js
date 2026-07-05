@@ -1137,20 +1137,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ── Setup Carousel Navigation controls ──
-  function setupCarouselNav(trackId, prevBtnId, nextBtnId) {
+  // ── Setup Carousel Pagination Dots ──
+  function setupCarouselDots(trackId, dotsContainerId) {
     const track = document.getElementById(trackId);
-    const prevBtn = document.getElementById(prevBtnId);
-    const nextBtn = document.getElementById(nextBtnId);
-    
-    if (track && prevBtn && nextBtn) {
-      prevBtn.addEventListener('click', () => {
-        track.scrollBy({ left: -320, behavior: 'smooth' });
+    const dotsContainer = document.getElementById(dotsContainerId);
+    if (!track || !dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    const numDots = 5;
+    const dots = [];
+
+    for (let i = 0; i < numDots; i++) {
+      const dot = document.createElement('span');
+      dot.className = `w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${i === 0 ? 'bg-primary w-4' : 'bg-slate-300'}`;
+      dot.addEventListener('click', () => {
+        const scrollWidth = track.scrollWidth - track.clientWidth;
+        const targetScroll = (scrollWidth / (numDots - 1)) * i;
+        track.scrollTo({ left: targetScroll, behavior: 'smooth' });
       });
-      nextBtn.addEventListener('click', () => {
-        track.scrollBy({ left: 320, behavior: 'smooth' });
-      });
+      dotsContainer.appendChild(dot);
+      dots.push(dot);
     }
+
+    track.addEventListener('scroll', () => {
+      const scrollWidth = track.scrollWidth - track.clientWidth;
+      if (scrollWidth <= 0) return;
+      const progress = track.scrollLeft / scrollWidth;
+      const activeIndex = Math.min(Math.round(progress * (numDots - 1)), numDots - 1);
+
+      dots.forEach((dot, idx) => {
+        if (idx === activeIndex) {
+          dot.className = 'w-4 h-2 rounded-full bg-primary transition-all duration-300 cursor-pointer';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-slate-300 transition-all duration-300 cursor-pointer';
+        }
+      });
+    });
   }
 
   // ── Setup Carousel Auto-Scroll (Pause on hover) ──
@@ -1210,8 +1232,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggleAuthStates();
   bindDropdownMenu();
   bindWalletTopUp();
-  startCountdown();
-  startDealsCountdown();
   setupCategoryChips();
   setupButtonRipple();
 
@@ -1256,8 +1276,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadStores(), loadFreshProducts(), loadBestDeals()]);
 
   // Setup carousels
-  setupCarouselNav('warungGrid', 'warungPrevBtn', 'warungNextBtn');
-  setupCarouselNav('bestDealsGrid', 'dealsPrevBtn', 'dealsNextBtn');
+  setupCarouselDots('warungGrid', 'warungCarouselDots');
+  setupCarouselDots('bestDealsGrid', 'dealsCarouselDots');
   setupCarouselAutoScroll('warungGrid');
   setupCarouselAutoScroll('bestDealsGrid');
 

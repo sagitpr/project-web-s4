@@ -1099,6 +1099,7 @@ html, body {
   height: 100vh;
   background-color: rgba(15, 59, 31, 0.4);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;

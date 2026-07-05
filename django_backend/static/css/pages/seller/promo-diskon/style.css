@@ -122,6 +122,7 @@ body { background: var(--bg, #F8FAFC); color: var(--text, #1e293b); }
 
 /* ── Modal ── */
 .modal { position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+-webkit-.modal { position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal-content { background: #fff; border-radius: 20px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.2); }
 .modal-sm { max-width: 440px; padding: 24px; }
 .modal-lg { max-width: 600px; padding: 28px; }

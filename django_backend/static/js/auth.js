@@ -14,6 +14,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
 
   /**
    * Read CSRF token from the 'csrftoken' cookie.
+   * Falls back to reading the csrfmiddlewaretoken hidden input in the DOM.
    * Requires CSRF_COOKIE_HTTPONLY = False in Django settings.
    * @returns {string|null} The CSRF token value, or null if not found.
    */
@@ -22,7 +23,15 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
     var cookie = document.cookie.split('; ').find(function (row) {
       return row.startsWith(name + '=');
     });
-    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+    var token = cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+
+    // Fallback: read from hidden input rendered by {% csrf_token %}
+    if (!token) {
+      var input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+      if (input) token = input.value;
+    }
+
+    return token;
   }
 
   const WarungioAuth = {
@@ -51,10 +60,11 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         fetch(API_BASE + '/token/blacklist/', {
           method: 'POST',
           headers: headers,
+          credentials: 'same-origin',
           body: JSON.stringify({ refresh }),
         }).catch(function () {});
       }
-      window.location.href = '/auth/login/';
+      window.location.href = '/';
     },
 
     /** Get access token */
@@ -94,9 +104,20 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       if (!refresh) return false;
 
       try {
+        var headers = {
+          'Content-Type': 'application/json',
+        };
+
+        // Include CSRF token for Django's CsrfViewMiddleware
+        var csrfToken = getCSRFToken();
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+
         const res = await fetch(API_BASE + '/token/refresh/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
+          credentials: 'same-origin',
           body: JSON.stringify({ refresh }),
         });
         if (!res.ok) {
@@ -141,6 +162,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       let res = await fetch(API_BASE + endpoint, {
         ...options,
         headers,
+        credentials: 'same-origin',
       });
 
       // If 401, try token refresh
@@ -151,6 +173,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
           res = await fetch(API_BASE + endpoint, {
             ...options,
             headers,
+            credentials: 'same-origin',
           });
         } else {
           this.logout();
@@ -193,6 +216,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       let res = await fetch(API_BASE + endpoint, {
         method: method,
         headers,
+        credentials: 'same-origin',
         body: formData,
       });
 
@@ -203,6 +227,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
           res = await fetch(API_BASE + endpoint, {
             method: method,
             headers,
+            credentials: 'same-origin',
             body: formData,
           });
         }

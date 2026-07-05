@@ -37,13 +37,31 @@ def get_client_ip(request):
 
 
 def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
-    """Dispatch OTP delivery to Celery worker (non-blocking)."""
+    """Dispatch OTP delivery to Celery worker (non-blocking).
+    
+    Safely handles Redis/Celery being unavailable — logs warning instead of hanging.
+    """
     from .tasks import send_otp_task, send_whatsapp_only_otp_task
     
     channels = []
     
+    def safe_delay(task_func, **kwargs):
+        """Call task.delay() with a timeout-safe wrapper."""
+        try:
+            task_func.delay(**kwargs)
+            return True
+        except Exception as exc:
+            logger.warning(
+                'Celery unavailable — OTP delivery skipped for %s/%s: %s',
+                kwargs.get('identifier', kwargs.get('phone', 'unknown')),
+                kwargs.get('purpose', 'unknown'),
+                exc,
+            )
+            return False
+    
     if email:
-        send_otp_task.delay(
+        safe_delay(
+            send_otp_task,
             identifier=email,
             otp_code=otp_code,
             purpose=purpose,
@@ -52,7 +70,8 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
         channels.append('email')
     
     if phone and _whatsapp_configured():
-        send_whatsapp_only_otp_task.delay(
+        safe_delay(
+            send_whatsapp_only_otp_task,
             phone=phone,
             otp_code=otp_code,
             purpose=purpose,
@@ -95,22 +114,9 @@ class RegisterView(generics.CreateAPIView):
             user_full_name=user.full_name,
         )
 
-        # Issue JWT tokens so auto-login works immediately after registration.
-        # Required by register-mitra flow which creates store right after register.
-        refresh = RefreshToken.for_user(user)
-
-        # ── Set Django session cookie ──
-        # Ensures login_required-protected pages (register-mitra creates store
-        # then redirects to /seller/dashboard/) recognize the authenticated user.
-        # Without this, the browser would get a 302 redirect loop to /auth/login/.
-        # login() is already imported at top of file.
-        login(request, user)
-
         response_data = {
             'message': 'Registrasi berhasil. Silakan verifikasi OTP.',
             'otp_channels': list(set(channels)),
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
             'user': UserSerializer(user).data,
         }
 

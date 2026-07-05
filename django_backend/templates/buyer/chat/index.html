@@ -412,25 +412,31 @@
                 </div>
             </div>
             <div class="topbar-actions">
-                <button class="icon-btn" aria-label="Notifikasi"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
-                <button class="icon-btn" aria-label="Chat" onclick="window.location.href='/buyer/chat/'"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
-                <button class="icon-btn" aria-label="Cart" onclick="window.location.href='/buyer/cart/'"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge" id="cartBadgeHeader">0</span></button>
-                
-                <div class="profile-dropdown-wrapper">
-                    <div class="profile-box" id="profileBox" style="cursor: pointer;">
-                        <div class="profile-info">
-                            <p id="topbarUserName">Hai, User</p>
-                            <span class="member-badge" id="userRoleBadge">Member</span>
+                <div id="authHeaderActions" style="display: flex; align-items: center; gap: 12px;">
+                    <button class="icon-btn" aria-label="Notifikasi"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
+                    <button class="icon-btn" aria-label="Chat" onclick="window.location.href='/buyer/chat/'"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
+                    <button class="icon-btn" aria-label="Cart" onclick="window.location.href='/buyer/cart/'"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge" id="cartBadgeHeader">0</span></button>
+                    
+                    <div class="profile-dropdown-wrapper">
+                        <div class="profile-box" id="profileBox" style="cursor: pointer;">
+                            <div class="profile-info">
+                                <p id="userName">Hai, User</p>
+                                <span class="member-badge" id="userRoleBadge">Member</span>
+                            </div>
+                            <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                            <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
-                        <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="topbarUserAvatar">
-                        <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <div class="dropdown-menu-custom" id="dropdownMenu">
+                            <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
+                            <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
+                            <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+                            <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                        </div>
                     </div>
-                    <div class="dropdown-menu-custom" id="dropdownMenu">
-                        <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-                        <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-                        <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                        <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-                    </div>
+                </div>
+                <div id="guestHeaderActions" style="display: none; align-items: center; gap: 8px;">
+                    <a href="/auth/login/" class="btn-login-premium">Masuk</a>
+                    <a href="/auth/register/" class="btn-register-premium">Daftar</a>
                 </div>
             </div>
         </div>
@@ -495,8 +501,10 @@
     </div>
 
     <!-- Scripts -->
+    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
+    <script>WarungioAuthUI.init({ syncBalance: false, syncCart: true });</script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             let currentUser = null;
@@ -517,9 +525,9 @@
                     const u = await WarungioAPI.checkAuth();
                     if (u && u.user) {
                         currentUser = u.user;
-                        document.getElementById('topbarUserName').textContent = `Hai, ${u.user.full_name || u.user.email.split('@')[0]}`;
+                        document.getElementById('userName').textContent = `Hai, ${u.user.full_name || u.user.email.split('@')[0]}`;
                         if (u.user.profile_photo) {
-                            document.getElementById('topbarUserAvatar').src = u.user.profile_photo;
+                            document.getElementById('userAvatar').src = u.user.profile_photo;
                         }
                         
                         // Load cart count
@@ -561,32 +569,7 @@
                 }
             }
 
-            // Dropdown profile & Logout
-            const profileBox = document.getElementById('profileBox');
-            const dropdownMenu = document.getElementById('dropdownMenu');
-            const btnLogout = document.getElementById('btnLogout');
-
-            if (profileBox && dropdownMenu) {
-                profileBox.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdownMenu.classList.toggle('show');
-                });
-                document.addEventListener('click', () => {
-                    dropdownMenu.classList.remove('show');
-                });
-            }
-
-            if (btnLogout) {
-                btnLogout.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (window.WarungioAuth) {
-                        window.WarungioAuth.logout();
-                        window.location.href = '/home/';
-                    }
-                });
-            }
-
-            // Load conversations
+            // Auth state handled by WarungioAuthUI.init() — load conversations
             async function loadConversations() {
                 try {
                     const res = await WarungioAPI.getConversations();

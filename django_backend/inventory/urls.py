@@ -8,6 +8,9 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
+    # Root — list available endpoints
+    path('', views.InventoryRootView.as_view(), name='inventory-root'),
+
     # Master Product Database
     path('master-products/', views.MasterProductSearchView.as_view(), name='master-product-search'),
     path('master-products/create/', views.MasterProductCreateView.as_view(), name='master-product-create'),

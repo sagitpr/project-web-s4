@@ -453,8 +453,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // ── Toast ──
+  // ── Toast (delegates to shared utility) ──
   function showToast(msg, type) {
+    if (window.WarungioAuthUI) {
+      WarungioAuthUI.showToast(msg, type || 'info');
+      return;
+    }
     if (window.WarungioToast) {
       window.WarungioToast.show(msg, type || 'info');
       return;
@@ -469,8 +473,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => { if (t.parentNode) t.remove(); }, 4000);
   }
 
-  // ── Profile Dropdown ──
+  // ── Profile Dropdown (handled by WarungioAuthUI.init()) ──
   function bindProfile() {
+    // auth-ui.js handles this via init() — skip if available
+    if (window.WarungioAuthUI) return;
     const profileBox = document.getElementById('profileBox');
     const dropdown = document.getElementById('dropdownMenu');
     const btnLogout = document.getElementById('btnLogout');

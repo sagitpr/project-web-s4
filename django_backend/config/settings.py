@@ -91,6 +91,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'accounts.middleware.CSRFExemptAPIMiddleware',  # Must be before CsrfViewMiddleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -301,6 +302,12 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Jakarta'
 
+# ── Development Mode: run tasks synchronously (no Redis required) ──
+# In DEBUG mode, execute tasks in-process so the app works without Redis.
+# Production sets this to False so tasks run via Celery workers.
+CELERY_TASK_ALWAYS_EAGER = DEBUG
+CELERY_TASK_EAGER_PROPAGATES = DEBUG
+
 # ── Task Execution Time Limits ──
 # Soft time limit: task gets a SoftTimeLimitExceeded exception (can catch & cleanup)
 # Hard time limit: worker kills the task process (prevents hung tasks from blocking)
@@ -351,7 +358,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 # AUTHENTICATION
 # =============================================================================
 AUTH_USER_MODEL = 'accounts.User'
-LOGIN_URL = '/auth/login/'
+LOGIN_URL = '/'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -438,10 +445,11 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # CSRF Trusted Origins — must be set explicitly for production
+# Default includes localhost for development; in production, set via env var.
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get(
         'CSRF_TRUSTED_ORIGINS',
-        ''
+        'http://localhost,http://127.0.0.1,http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,http://127.0.0.1:3000'
     ).split(',')
     if o.strip()
 ]
@@ -460,9 +468,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    # Semua direktori static sudah dipindah/dihapus.
-    # Static files di-serve dari STATIC_ROOT (staticfiles/).
-    # collectstatic dijalankan saat Docker build, bukan saat runtime.
+    BASE_DIR / 'django_backend' / 'static',
 ]
 
 MEDIA_URL = '/media/'

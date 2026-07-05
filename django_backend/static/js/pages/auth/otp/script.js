@@ -129,60 +129,16 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const data = await WarungioAPI.verifyOTP(email, otpValue, purpose);
       if (data.verified) {
-        showMsg('Verifikasi berhasil! Mengarahkan...', 'success');
+        showMsg('Verifikasi berhasil! Mengarahkan ke halaman login...', 'success');
         
-        // Auto login if tokens are present in the response
-        if (data.access && data.user) {
-          window.WarungioAuth.login(data.access, data.refresh, data.user);
-        } else {
-          // Attempt client-side auto login
-          const savedPassword = sessionStorage.getItem('register_password');
-          if (savedPassword) {
-            try {
-              const loginData = await WarungioAPI.login(email, savedPassword);
-              window.WarungioAuth.login(loginData.access, loginData.refresh, loginData.user);
-              sessionStorage.removeItem('register_password'); // clean up
-            } catch (loginErr) {
-              console.warn('Auto login failed:', loginErr);
-            }
-          }
-        }
-
-        /** Validate redirect URL — only allow relative paths to prevent open redirect */
-        function isValidRedirect(url) {
-          if (!url || typeof url !== 'string') return false;
-          return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
-        }
-
-        /** Validate that next URL matches user role — prevents role mismatch */
-        function isRoleAllowedRedirect(nextUrl, role) {
-          if (!nextUrl || !role) return false;
-          if (role === 'buyer') return nextUrl.startsWith('/buyer/');
-          if (role === 'seller') return nextUrl.startsWith('/seller/');
-          if (role === 'admin') return nextUrl.startsWith('/admin/');
-          return false;
-        }
-
         setTimeout(() => {
-          // If authenticated, check role and redirect
-          if (window.WarungioAuth.isAuthenticated()) {
-            const user = window.WarungioAuth.getUser();
-            const role = user ? user.role : null;
-            const nextUrl = params.get('next');
-
-            if (role === 'buyer') {
-              window.location.href = (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) ? nextUrl : '/buyer/home/';
-            } else if (role === 'seller') {
-              window.location.href = '/seller/dashboard/';
-            } else if (role === 'admin') {
-              window.location.href = '/admin/';
-            } else {
-              window.location.href = '/';
-            }
-          } else {
-            // Otherwise gracefully redirect to login page
-            window.location.href = '/auth/login/?email=' + encodeURIComponent(email);
+          // After OTP verification, gracefully redirect to login page with email prefilled
+          const nextUrl = params.get('next');
+          var loginUrl = '/auth/login/?verified=1&email=' + encodeURIComponent(email);
+          if (nextUrl) {
+            loginUrl += '&next=' + encodeURIComponent(nextUrl);
           }
+          window.location.href = loginUrl;
         }, 1500);
       }
     } catch (err) {

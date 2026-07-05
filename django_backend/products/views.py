@@ -184,6 +184,33 @@ class MyFavoritesView(generics.ListAPIView):
         return Favorite.objects.filter(user=self.request.user).select_related('product')
 
 
+class MyReviewsView(generics.ListAPIView):
+    """List reviews written by the authenticated user."""
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = None
+
+    def get_queryset(self):
+        return Review.objects.filter(
+            user=self.request.user
+        ).select_related('user', 'product').order_by('-created_at')
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a review."""
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        # Users can only manage their own reviews
+        return Review.objects.filter(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        product = instance.product
+        super().perform_destroy(instance)
+        product.update_rating()
+
+
 class SellerStoreReviewListView(generics.ListAPIView):
     """List all reviews for the seller's store products."""
     serializer_class = ReviewSerializer

@@ -112,10 +112,14 @@ def create_snap_token(
     midtrans_order_id = f'WRG-{order.id}-{int(timezone.now().timestamp())}'
 
     # Default customer details from order
+    # Phone must be converted to string — PhoneNumberField returns PhoneNumber object
+    # which is not directly JSON serializable.
+    _phone = getattr(order, 'user', None) and order.user.phone or ''
+    _phone_str = str(_phone) if _phone else ''
     default_customer = {
         'first_name': getattr(order, 'user', None) and order.user.full_name or 'Customer',
         'email': getattr(order, 'user', None) and order.user.email or '',
-        'phone': getattr(order, 'user', None) and getattr(order.user, 'phone', '') or '',
+        'phone': _phone_str,
     }
 
     # Gross amount must be integer (IDR)

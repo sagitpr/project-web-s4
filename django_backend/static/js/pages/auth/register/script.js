@@ -212,12 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         role: 'buyer',
       });
 
-      console.log('REGISTER SUCCESS');
-      console.log(data);
-
-      // Save password for auto-login after OTP verification
-      sessionStorage.setItem('register_password', password);
-
       showToastNotification(
         'Registrasi Berhasil',
         'Kode OTP telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam untuk melakukan verifikasi akun.'
@@ -230,8 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         encodeURIComponent(email) +
         (data.otp_code ? '&otp=' + encodeURIComponent(data.otp_code) : '') +
         (nextUrl ? '&next=' + encodeURIComponent(nextUrl) : '');
-
-      console.log('REDIRECT TO =', redirectUrl);
 
       setTimeout(() => {
         window.location.href = redirectUrl;

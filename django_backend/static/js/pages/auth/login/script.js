@@ -379,12 +379,17 @@
     }
   })();
 
-  // ── Pre-fill email from query param (after registration) ──
+  // ── Pre-fill email from query param (after OTP verification redirect) ──
   const params = new URLSearchParams(window.location.search);
   const registeredEmail = params.get('email');
   if (registeredEmail && emailInput) {
     emailInput.value = registeredEmail;
     if (pwdInput) pwdInput.focus();
+  }
+  
+  // ── Show success message when redirected from OTP verification ──
+  if (params.get('verified') === '1') {
+    setMessage('Akun berhasil diverifikasi! Silakan masuk dengan email dan password Anda.', 'success');
   }
 
   // ── Auto-redirect if already authenticated via SESSION (not JWT) ──

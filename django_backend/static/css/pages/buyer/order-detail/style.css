@@ -859,6 +859,7 @@ button {
   gap: 16px;
   background: rgba(244, 252, 229, 0.85);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 100;
 }
 
@@ -915,6 +916,7 @@ button {
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 999;
   padding: 24px;
   animation: fadeIn 0.2s ease;

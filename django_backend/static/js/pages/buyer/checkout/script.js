@@ -44,6 +44,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let snapScriptLoaded = false;
 
   function showToast(text, type) {
+    // Delegate to shared utility — eliminates duplicate code
+    if (window.WarungioAuthUI) {
+      WarungioAuthUI.showToast(text, type || 'success');
+      return;
+    }
+    // Fallback
     if (!toast) return;
     toast.textContent = text;
     toast.className = 'toast ' + (type || 'success');

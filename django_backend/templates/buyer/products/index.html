@@ -14,11 +14,11 @@
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/premium.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
-    <!-- Tailwind Play CDN for layout grid rendering -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
       tailwind.config = {
@@ -163,133 +163,12 @@
 
     <div class="page-shell">
         <!-- Sticky Left Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="brand-name">
-                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
-                    <span class="logo-text">Warung<span class="logo-green">io</span></span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <a href="{% url 'page-buyer-home' %}" class="nav-link">
-                    <i class="fa-regular fa-compass"></i>
-                    <span>Beranda</span>
-                </a>
-                <a href="{% url 'page-products' %}" class="nav-link active">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                    <span>Produk</span>
-                </a>
-                <a href="{% url 'page-buyer-home' %}#warung-section" class="nav-link">
-                    <i class="fa-solid fa-store"></i>
-                    <span>Warung Terdekat</span>
-                </a>
-                <a href="{% url 'page-favorites' %}" class="nav-link">
-                    <i class="fa-regular fa-heart"></i>
-                    <span>Favorit</span>
-                </a>
-                <a href="{% url 'page-buyer-orders' %}" class="nav-link">
-                    <i class="fa-regular fa-receipt"></i>
-                    <span>Pesanan Saya</span>
-                </a>
-                <a href="{% url 'page-buyer-dashboard' %}" class="nav-link">
-                    <i class="fa-regular fa-circle-check"></i>
-                    <span>Langganan</span>
-                </a>
-                <a href="{% url 'page-promo' %}" class="nav-link">
-                    <i class="fa-regular fa-percentage"></i>
-                    <span>Promo</span>
-                </a>
-                <a href="{% url 'page-wallet' %}" class="nav-link">
-                    <i class="fa-regular fa-wallet"></i>
-                    <span>Dompet Saya</span>
-                </a>
-                <a href="{% url 'page-buyer-reviews' %}" class="nav-link">
-                    <i class="fa-regular fa-star"></i>
-                    <span>Penilaian</span>
-                </a>
-                <a href="{% url 'bantuan-page' %}" class="nav-link">
-                    <i class="fa-regular fa-circle-question"></i>
-                    <span>Bantuan</span>
-                </a>
-                <a href="{% url 'page-settings' %}" class="nav-link">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Pengaturan</span>
-                </a>
-            </nav>
-
-            <!-- Bottom Widget: Warungio Points -->
-            <div class="sidebar-points-widget">
-                <div class="points-header">
-                    <i class="fa-solid fa-award points-icon"></i>
-                    <span>Warungio Points</span>
-                </div>
-                <div class="points-value">1.250 Poin</div>
-                <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
-            </div>
-        </aside>
+        {% include 'components/sidebar.html' %}
 
         <!-- Main Content Wrapper -->
         <main class="catalog-main-content">
             <!-- Glassmorphic Navigation -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <div class="menu-toggle" id="menuToggle">
-                        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    </div>
-                    
-                    <div class="topbar-location">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <div class="location-info">
-                            <span class="location-label">Kirim ke</span>
-                            <span class="location-value" id="userLocation">Memuat lokasi...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search Input matching query search function -->
-                <div class="search-panel">
-                    <div class="search-input">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" id="searchInput" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="topbar-actions">
-                    <!-- Authenticated Actions (Toggled by JS) -->
-                    <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
-                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
-                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                            <span class="icon-badge" id="cartBadgeHeader">0</span>
-                        </button>
-                        
-                        <div class="profile-dropdown-wrapper">
-                            <div class="profile-box-premium" id="profileBox">
-                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
-                                <div class="profile-info-premium">
-                                    <p id="userName" class="profile-name">Hai, User</p>
-                                    <span class="member-badge-premium" id="userRoleBadge">Member</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
-                            </div>
-                            <div class="dropdown-menu-custom" id="dropdownMenu">
-                                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-                                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-                                <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
-                                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Guest Actions -->
-                    <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
-                        <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
-                        <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
-                    </div>
-                </div>
-            </header>
+            {% include 'components/topbar.html' %}
 
             <!-- Product Grid Catalog Area -->
             <div class="px-6 md:px-8 py-8 space-y-8 flex-1">
@@ -367,11 +246,11 @@
 
                 <!-- Loading skeleton placeholders -->
                 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6" id="loadingSkeleton" style="display: none;">
-                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
-                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
-                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
-                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
-                    <div class="skeleton-card-premium"><div class="skeleton-img"></div><div class="skeleton-text w-2/3"></div><div class="skeleton-text w-1/2"></div><div class="skeleton-text w-3/4"></div></div>
+                    <div class="skeleton-product-card shimmer"></div>
+                    <div class="skeleton-product-card shimmer"></div>
+                    <div class="skeleton-product-card shimmer"></div>
+                    <div class="skeleton-product-card shimmer"></div>
+                    <div class="skeleton-product-card shimmer"></div>
                 </div>
 
                 <!-- Load More / Bottom Section -->
@@ -602,49 +481,39 @@
                     var imgSrc = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
                     var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
                     var oldPriceVal = p.old_price || (p.id % 2 === 1 ? Math.floor(p.price * 1.15) : null);
-                    var oldPriceHtml = oldPriceVal ? '<span class="text-xs text-slate-400 line-through">Rp ' + oldPriceVal.toLocaleString('id-ID') + '</span>' : '';
+                    var oldPriceStr = oldPriceVal ? 'Rp ' + oldPriceVal.toLocaleString('id-ID') : '';
                     var discountPct = p.discount_pct || (p.id % 2 === 1 ? 15 : null);
-                    var discountBadge = discountPct ? '<span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Disk ' + discountPct + '%</span>' : '';
-                    var freshBadge = (p.is_fresh || p.category === 1 || p.category === 2 || p.category_name === 'Sayuran' || p.category_name === 'Buah-buahan') ? '<span class="bg-[#16A34A] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Fresh</span>' : '';
-                    var rating = Number(p.rating_avg || 0).toFixed(1);
-                    var favClass = p.is_favorite ? 'active' : '';
-                    var storeName = p.store_name || 'Warung Mitra';
-                    var estDelivery = p.id % 2 === 1 ? '15-20 mnt' : '10-15 mnt';
-                    var isVerified = p.id % 2 === 1;
-                    var verifiedBadge = isVerified ? '<i class="fa-solid fa-circle-check text-primary text-xs ml-1" title="Verified Store"></i>' : '';
+                    var discountBadge = discountPct ? '<span class="card-badge-discount">-' + discountPct + '%</span>' : '';
+                    var freshBadge = (p.is_fresh || p.category === 1 || p.category === 2 || p.category_name === 'Sayuran' || p.category_name === 'Buah-buahan') ? '<span class="card-badge-fresh">Segar</span>' : '';
+                    var rating = Number(p.rating_avg || 4.7).toFixed(1);
+                    var favClass = p.is_favorite ? 'is-fav' : '';
+                    var storeName = p.store_name || 'Warung Lokal';
                     var productUrl = '/products/' + p.id + '/';
 
-                    return '<div class="product-card-premium" onclick="window.location.href=\'' + productUrl + '\'">' +
-                        '<div class="card-img-wrap">' +
-                            '<img src="' + imgSrc + '" alt="' + p.product_name + '" loading="lazy" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
-                            '<div class="badge-list">' + freshBadge + discountBadge + '</div>' +
-                            '<button class="fav-heart-btn ' + favClass + '" onclick="event.stopPropagation();toggleFav(' + p.id + ', this)" title="Favorit">' +
+                    return '<div class="produk-card" onclick="window.location.href=\'' + productUrl + '\'">' +
+                        '<div class="produk-image-wrapper">' +
+                            '<img src="' + imgSrc + '" alt="' + p.product_name + '" class="produk-img" loading="lazy" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
+                            freshBadge + discountBadge +
+                            '<button class="btn-wishlist-product ' + favClass + '" onclick="event.stopPropagation();toggleFav(' + p.id + ', this)" title="Favorit">' +
                                 '<i class="fa-' + (favClass ? 'solid' : 'regular') + ' fa-heart"></i>' +
                             '</button>' +
                         '</div>' +
-                        '<div class="flex-1 flex flex-col justify-between mt-2">' +
-                            '<div>' +
-                                '<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">' + (p.category_name || 'Produk') + ' • ' + (p.weight || '500') + 'g</div>' +
-                                '<h3 class="text-sm font-bold text-slate-800 line-clamp-2 leading-tight hover:text-primary transition-colors mb-2">' + p.product_name + '</h3>' +
+                        '<div class="produk-info">' +
+                            '<span class="produk-category">' + (p.category_name || 'Kategori') + '</span>' +
+                            '<h4 class="produk-name">' + p.product_name + '</h4>' +
+                            '<span class="produk-store-name">' + storeName + '</span>' +
+                            '<div class="produk-rating-sold">' +
+                                '<i class="fa-solid fa-star"></i>' +
+                                '<span>' + rating + '</span>' +
+                                '<span class="meta-divider">•</span>' +
+                                '<span>Terjual ' + (p.sold_count || 10) + '+</span>' +
                             '</div>' +
-                            '<div>' +
-                                '<div class="flex items-center gap-1.5 mb-2">' +
-                                    '<span class="text-base font-extrabold text-primary">' + price + '</span>' + oldPriceHtml +
-                                </div>' +
-                                '<div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-3">' +
-                                    '<span class="text-amber-500 flex items-center gap-0.5"><i class="fa-solid fa-star"></i> ' + rating + '</span>' +
-                                    '<span>•</span>' +
-                                    '<span>Terjual ' + (p.sold_count || 100) + '+</span>' +
+                            '<div class="produk-price-row">' +
+                                '<div class="produk-price-box">' +
+                                    (oldPriceStr ? '<span class="price-old-strikethrough">' + oldPriceStr + '</span>' : '') +
+                                    '<span class="price-actual">' + price + ' <span class="price-unit">/ ' + (p.unit || 'pcs') + '</span></span>' +
                                 '</div>' +
-                                '<div class="flex items-center justify-between border-t border-slate-100 pt-3 mt-2">' +
-                                    '<div class="min-w-0 flex-1">' +
-                                        '<div class="text-[11px] font-bold text-slate-700 truncate flex items-center">' + storeName + verifiedBadge + '</div>' +
-                                        '<div class="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-truck-fast"></i> ' + estDelivery + '</div>' +
-                                    '</div>' +
-                                    '<button class="w-8 h-8 rounded-full bg-primary hover:bg-[#15803d] text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-md ml-2" onclick="event.stopPropagation();addToCart(' + p.id + ')" title="Tambah ke Keranjang">' +
-                                        '<i class="fa-solid fa-cart-plus text-xs"></i>' +
-                                    '</button>' +
-                                '</div>' +
+                                '<button class="btn-add-cart" onclick="event.stopPropagation();addToCart(' + p.id + ')"><i class="fa-solid fa-plus"></i></button>' +
                             '</div>' +
                         '</div>' +
                     '</div>';

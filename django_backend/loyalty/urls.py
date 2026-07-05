@@ -7,6 +7,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Points balance shortcut
+    path('points/', views.MyLoyaltyAccountView.as_view(), name='loyalty-points'),
+
     # Account
     path('account/', views.MyLoyaltyAccountView.as_view(), name='my-loyalty-account'),
     path('account/earn/', views.EarnPointsView.as_view(), name='earn-points'),

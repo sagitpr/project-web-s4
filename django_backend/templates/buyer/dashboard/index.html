@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/premium.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
@@ -114,8 +116,8 @@
           <a href="/bantuan/">Bantuan</a>
         </nav>
         <div class="auth-buttons" id="authButtons" style="display: flex; align-items: center; gap: 12px;">
-          <!-- Dropdown menu wrapper -->
-          <div class="profile-dropdown-wrapper" id="profileDropdownWrap" style="display: none;">
+          <!-- Dropdown menu wrapper (authHeaderActions for auth-ui.js) -->
+          <div class="profile-dropdown-wrapper" id="authHeaderActions" style="display: none; align-items: center; gap: 12px;">
             <div class="profile-box" id="profileBox" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
               <div class="profile-info" style="text-align: right;">
                 <p id="userName" style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text);">Hai, User</p>
@@ -131,7 +133,7 @@
               <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
             </div>
           </div>
-          <div id="guestNavButtons" style="display: flex; gap: 8px; align-items: center;">
+          <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
             <a href="/auth/login/" class="btn-masuk" id="loginBtnNav">Masuk</a>
             <a href="/auth/register/" class="btn-daftar" id="registerBtnNav">Daftar</a>
           </div>
@@ -226,6 +228,7 @@
     </footer>
 
     <script src="{% static 'js/utils/asset-loader.js' %}"></script>
+<script src="{% static 'js/utils/auth-ui.js' %}"></script>
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
@@ -233,45 +236,16 @@
     (function() {
       'use strict';
 
+      // ── Initialize shared Auth UI (handles profile dropdown, logout, auth/guest toggle, user name) ──
+      WarungioAuthUI.init({ syncBalance: false, syncCart: false });
+
       document.addEventListener('DOMContentLoaded', async function() {
         // Auth guard — redirect unauthenticated or unverified users
         if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
           return;
         }
 
-        // Toggle Nav Bar display to show dropdown wrapper and hide guest login/register
-        var profileDropdownWrap = document.getElementById('profileDropdownWrap');
-        var guestNavButtons = document.getElementById('guestNavButtons');
-        if (profileDropdownWrap) profileDropdownWrap.style.display = 'block';
-        if (guestNavButtons) guestNavButtons.style.display = 'none';
-
-        // Bind dropdown toggle
-        var profileBox = document.getElementById('profileBox');
-        var dropdownMenu = document.getElementById('dropdownMenu');
-        var btnLogout = document.getElementById('btnLogout');
-
-        if (profileBox && dropdownMenu) {
-          profileBox.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('show');
-          });
-
-          document.addEventListener('click', () => {
-            dropdownMenu.classList.remove('show');
-          });
-        }
-
-        if (btnLogout) {
-          btnLogout.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (window.WarungioAuth) {
-              window.WarungioAuth.logout();
-              window.location.href = '/home/';
-            }
-          });
-        }
-
-        // Load user profile data
+        // Load user profile data for Dashboard-specific elements
         try {
           var u = await WarungioAPI.checkAuth();
           if (u && u.user) {
@@ -280,18 +254,8 @@
             var balanceEl = document.getElementById('dashWalletBalance');
             var badgeEl = document.getElementById('dashMemberBadge');
             
-            // Topbar elements
-            var userNameEl = document.getElementById('userName');
-            var userAvatarEl = document.getElementById('userAvatar');
-            var userRoleBadge = document.getElementById('userRoleBadge');
-
+            // Topbar elements handled by WarungioAuthUI.init() — only set Dashboard-specific elements
             var displayName = u.user.full_name || u.user.email;
-            if (userNameEl) userNameEl.textContent = 'Hai, ' + (u.user.full_name ? u.user.full_name.split(' ')[0] : 'User');
-            if (userAvatarEl && u.user.profile_photo) userAvatarEl.src = u.user.profile_photo;
-            if (userRoleBadge) {
-              userRoleBadge.textContent = u.user.role === 'seller' ? 'Penjual' : 'Member';
-            }
-
             if (greetEl) greetEl.textContent = 'Halo, ' + displayName + '!';
             if (balanceEl) balanceEl.textContent = 'Rp ' + Number(u.user.wallet_balance ?? 0).toLocaleString('id-ID');
             if (u.user.profile_photo && avatarEl) avatarEl.src = u.user.profile_photo;

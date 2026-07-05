@@ -439,34 +439,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ── Profile Dropdown Binding ──
-  function bindDropdownMenu() {
-    const profileBox = document.getElementById('profileBox');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    const btnLogout = document.getElementById('btnLogout');
-
-    if (profileBox && dropdownMenu) {
-      profileBox.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('show');
-      });
-
-      document.addEventListener('click', () => {
-        dropdownMenu.classList.remove('show');
-      });
-    }
-
-    if (btnLogout) {
-      btnLogout.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.WarungioAuth) {
-          window.WarungioAuth.logout();
-          window.location.href = '/home/';
-        }
-      });
-    }
-  }
-
   // ── Load User Profile ──
   async function loadUserProfile() {
     try {

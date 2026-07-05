@@ -3,6 +3,7 @@ API views for inventory management.
 Barcode lookup, batch entry, FEFO picking, expiry alerts, master product CRUD.
 """
 
+import logging
 from decimal import Decimal
 
 from django.db.models import Q, Sum
@@ -13,6 +14,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsSeller, IsStoreOwner
+
+logger = logging.getLogger(__name__)
 from .models import MasterProduct, ProductBatch, InventoryStock, ExpiryNotification, StockAlert
 from .serializers import (
     MasterProductSerializer,
@@ -35,6 +38,33 @@ from .services.fefo_engine import stock_in, stock_out, get_batch_summary, get_ex
 # ── Cache TTLs ──
 LOW_STOCK_CACHE_TTL = 60 * 3  # 3 minutes
 EXPIRY_CACHE_TTL = 60 * 5     # 5 minutes
+
+
+# =============================================================================
+# ROOT - API Overview
+# =============================================================================
+
+
+class InventoryRootView(APIView):
+    """List available inventory API endpoints."""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        return Response({
+            'service': 'Warungio Inventory Management API',
+            'version': '2.0.0',
+            'endpoints': {
+                'master_products': '/api/inventory/master-products/',
+                'master_product_detail': '/api/inventory/master-products/<id>/',
+                'barcode_lookup': '/api/inventory/barcode-lookup/?barcode=<code>',
+                'batches': '/api/inventory/batches/',
+                'batch_create': '/api/inventory/batches/create/',
+                'expiry_summary': '/api/inventory/expiry/summary/',
+                'low_stock_report': '/api/inventory/low-stock-report/',
+                'stock_alerts': '/api/inventory/alerts/',
+                'stock_out': '/api/inventory/stock-out/',
+            },
+        })
 
 
 # =============================================================================
@@ -647,10 +677,15 @@ class ExpiryCheckTriggerView(APIView):
 
     def post(self, request):
         from .tasks import run_expiry_check_task
-        task = run_expiry_check_task.delay(store_id=request.user.store.id)
+        try:
+            task = run_expiry_check_task.delay(store_id=request.user.store.id)
+            task_id = task.id
+        except Exception as exc:
+            logger.warning('Celery unavailable — expiry check skipped: %s', exc)
+            task_id = None
         return Response({
             'success': True,
-            'task_id': task.id,
+            'task_id': task_id,
             'message': 'Pemeriksaan kadaluwarsa sedang diproses.',
         })
 

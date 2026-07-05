@@ -107,7 +107,7 @@
 
     var url = getWebSocketUrl();
     if (!url) {
-      console.debug('WarungioWS: No auth token available, skipping WebSocket connection');
+      // // console.debug (production-safe) (production-safe)('WarungioWS: No auth token available, skipping WebSocket connection');
       return;
     }
 

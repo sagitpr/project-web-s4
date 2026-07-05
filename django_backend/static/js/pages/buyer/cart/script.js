@@ -24,10 +24,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let cartData = [];
 
-  function showToast(text, type = 'success') {
+  function showToast(text, type) {
+    // Delegate to shared utility — eliminates duplicate code
+    if (window.WarungioAuthUI) {
+      WarungioAuthUI.showToast(text, type || 'success');
+      return;
+    }
+    // Fallback if shared utility not available
     if (!toast) return;
     toast.textContent = text;
-    toast.className = 'toast ' + type;
+    toast.className = 'toast ' + (type || 'success');
     toast.classList.add('show');
     clearTimeout(toast._hide);
     toast._hide = setTimeout(() => toast.classList.remove('show'), 3000);

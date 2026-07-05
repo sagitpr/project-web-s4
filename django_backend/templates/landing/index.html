@@ -17,29 +17,94 @@
     <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
 </head>
   <body>
-    <header class="header">
+    <header class="header" id="siteHeader">
       <div class="header-container">
         <div class="logo">
+          <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu navigasi">
+            <span></span><span></span><span></span>
+          </button>
           <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
           <p class="brand-label">
-            <span class="brand-main">Warung</span
-            ><span class="brand-highlight">io</span>
+            <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
           </p>
         </div>
-        <nav class="nav">
-          <a href="#beranda">Beranda</a>
-          <a href="#tentang">Tentang</a>
-          <a href="#fitur">Fitur</a>
-          <a href="#cara-kerja">Cara Kerja</a>
-          <a href="#testimoni">Testimoni</a>
-          <a href="#faq">FAQ</a>
+        <nav class="nav" id="mainNav">
+          <a href="#beranda" class="nav-link active">Beranda</a>
+          <a href="#tentang" class="nav-link">Tentang</a>
+          <a href="#fitur" class="nav-link">Fitur</a>
+          <a href="#cara-kerja" class="nav-link">Cara Kerja</a>
+          <a href="#testimoni" class="nav-link">Testimoni</a>
+          <a href="#faq" class="nav-link">FAQ</a>
         </nav>
-        <div class="auth-buttons">
-          <a href="{% url 'page-login' %}" class="btn-masuk">Masuk</a>
-          <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
+        <div class="header-right">
+          <nav class="section-jump" id="sectionJump">
+            <button class="jump-trigger" id="jumpTrigger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span id="currentSectionLabel">Beranda</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="jump-dropdown" id="jumpDropdown">
+              <a href="#beranda" class="jump-item active" data-section="Beranda">Beranda</a>
+              <a href="#tentang" class="jump-item" data-section="Tentang">Tentang</a>
+              <a href="#fitur" class="jump-item" data-section="Fitur">Fitur</a>
+              <a href="#cara-kerja" class="jump-item" data-section="Cara Kerja">Cara Kerja</a>
+              <a href="#testimoni" class="jump-item" data-section="Testimoni">Testimoni</a>
+              <a href="#faq" class="jump-item" data-section="FAQ">FAQ</a>
+            </div>
+          </nav>
+          <div class="auth-buttons">
+            <div class="auth-state-indicator" id="authStateIndicator">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Belum Login</span>
+            </div>
+            <a href="{% url 'page-login' %}" class="btn-masuk" id="landingBtnMasuk">Masuk</a>
+            <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- Mobile drawer overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <aside class="mobile-drawer" id="mobileDrawer">
+      <div class="drawer-header">
+        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" />
+        <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
+        <button class="drawer-close" id="drawerClose" aria-label="Tutup menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="drawer-nav">
+        <a href="#beranda" class="drawer-link active">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          Beranda
+        </a>
+        <a href="#tentang" class="drawer-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Tentang
+        </a>
+        <a href="#fitur" class="drawer-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Fitur
+        </a>
+        <a href="#cara-kerja" class="drawer-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Cara Kerja
+        </a>
+        <a href="#testimoni" class="drawer-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Testimoni
+        </a>
+        <a href="#faq" class="drawer-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+          FAQ
+        </a>
+      </nav>
+      <div class="drawer-footer">
+        <a href="{% url 'page-login' %}" class="btn-masuk drawer-btn" id="landingDrawerMasuk">Masuk</a>
+        <a href="{% url 'page-register' %}" class="btn-daftar drawer-btn">Daftar</a>
+      </div>
+    </aside>
 
     <main>
       <section class="hero" id="beranda">
@@ -205,7 +270,7 @@
         <div class="container">
           <div class="categories-header">
             <h2 class="section-title">Kategori Populer</h2>
-            <a href="/buyer/products/" class="link-all">Lihat semua kategori →</a>
+            <a href="/info/tentang-kami/" class="link-all">Lihat semua kategori →</a>
           </div>
           <div class="category-promo-row">
             <div class="category-panel">
@@ -555,5 +620,174 @@
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/landing.js' %}"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      'use strict';
+
+      // ── Preserve ?next= on Masuk buttons (login_required redirects to /?next=...) ──
+      var urlParams = new URLSearchParams(window.location.search);
+      var nextUrl = urlParams.get('next');
+      if (nextUrl) {
+        var masukBtns = document.querySelectorAll('#landingBtnMasuk, #landingDrawerMasuk');
+        masukBtns.forEach(function(btn) {
+          btn.href = btn.href.split('?')[0] + '?next=' + encodeURIComponent(nextUrl);
+        });
+      }
+
+      // ── Elements ──
+      var header = document.getElementById('siteHeader');
+      var navLinks = document.querySelectorAll('.nav-link');
+      var jumpTrigger = document.getElementById('jumpTrigger');
+      var jumpDropdown = document.getElementById('jumpDropdown');
+      var jumpItems = document.querySelectorAll('.jump-item');
+      var currentLabel = document.getElementById('currentSectionLabel');
+      var hamburger = document.getElementById('hamburgerBtn');
+      var mobileDrawer = document.getElementById('mobileDrawer');
+      var mobileOverlay = document.getElementById('mobileOverlay');
+      var drawerClose = document.getElementById('drawerClose');
+      var drawerLinks = document.querySelectorAll('.drawer-link');
+
+      // Sections for scroll spy
+      var sections = [];
+      document.querySelectorAll('section[id], .hero[id]').forEach(function(el) {
+        sections.push(el);
+      });
+
+      // ── Scroll: Header shadow ──
+      function onScroll() {
+        if (header) {
+          header.classList.toggle('scrolled', window.scrollY > 20);
+        }
+
+        // Scroll spy
+        var scrollPos = window.scrollY + 120;
+        var currentId = '';
+        var currentName = 'Beranda';
+
+        for (var i = 0; i < sections.length; i++) {
+          var section = sections[i];
+          if (section.offsetTop <= scrollPos) {
+            currentId = section.getAttribute('id');
+          }
+        }
+
+        if (!currentId) currentId = 'beranda';
+
+        // Update nav link active state
+        navLinks.forEach(function(link) {
+          var href = link.getAttribute('href');
+          link.classList.toggle('active', href === '#' + currentId);
+        });
+
+        // Update dropdown active state and label
+        jumpItems.forEach(function(item) {
+          var href = item.getAttribute('href');
+          var isActive = href === '#' + currentId;
+          item.classList.toggle('active', isActive);
+          if (isActive) {
+            currentName = item.getAttribute('data-section') || currentId.charAt(0).toUpperCase() + currentId.slice(1);
+          }
+        });
+
+        if (currentLabel) {
+          currentLabel.textContent = currentName;
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      // Run once on load
+      setTimeout(onScroll, 100);
+
+      // ── Section Jump Dropdown ──
+      if (jumpTrigger && jumpDropdown) {
+        jumpTrigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          jumpDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function() {
+          jumpDropdown.classList.remove('open');
+        });
+
+        jumpDropdown.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+
+        jumpItems.forEach(function(item) {
+          item.addEventListener('click', function() {
+            jumpDropdown.classList.remove('open');
+            if (currentLabel) {
+              currentLabel.textContent = item.getAttribute('data-section');
+            }
+          });
+        });
+      }
+
+      // ── Mobile Hamburger ──
+      function openMobile() {
+        if (hamburger) hamburger.classList.add('active');
+        if (mobileOverlay) mobileOverlay.classList.add('open');
+        if (mobileDrawer) mobileDrawer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobile() {
+        if (hamburger) hamburger.classList.remove('active');
+        if (mobileOverlay) mobileOverlay.classList.remove('open');
+        if (mobileDrawer) mobileDrawer.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      if (hamburger) {
+        hamburger.addEventListener('click', function() {
+          if (mobileDrawer && mobileDrawer.classList.contains('open')) {
+            closeMobile();
+          } else {
+            openMobile();
+          }
+        });
+      }
+
+      if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', closeMobile);
+      }
+
+      if (drawerClose) {
+        drawerClose.addEventListener('click', closeMobile);
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeMobile();
+      });
+
+      // Close drawer on link click
+      drawerLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+          closeMobile();
+          // Update drawer active state
+          drawerLinks.forEach(function(l) { l.classList.remove('active'); });
+          link.classList.add('active');
+        });
+      });
+
+      // ── Smooth scroll for nav links ──
+      document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+          var targetId = this.getAttribute('href');
+          if (targetId && targetId.length > 1) {
+            var target = document.querySelector(targetId);
+            if (target) {
+              e.preventDefault();
+              var offset = 80;
+              if (header) offset = header.offsetHeight + 8;
+              var targetPos = target.getBoundingClientRect().top + window.scrollY - offset;
+              window.scrollTo({ top: targetPos, behavior: 'smooth' });
+            }
+          }
+        });
+      });
+    });
+    </script>
   </body>
 </html>

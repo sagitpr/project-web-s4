@@ -14,11 +14,11 @@
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/premium.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
-    <!-- Tailwind Play CDN for layout grid rendering -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
       tailwind.config = {
@@ -158,138 +158,12 @@
 <body>
     <div class="page-shell">
         <!-- Sticky Left Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="brand-name">
-                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
-                    <span class="logo-text">Warung<span class="logo-green">io</span></span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <a href="{% url 'home' %}" class="nav-link">
-                    <i class="fa-regular fa-compass"></i>
-                    <span>Beranda</span>
-                </a>
-                <a href="{% url 'page-products' %}" class="nav-link">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                    <span>Produk</span>
-                </a>
-                <a href="{% url 'home' %}#warung-section" class="nav-link">
-                    <i class="fa-solid fa-store"></i>
-                    <span>Warung Terdekat</span>
-                </a>
-                <a href="{% url 'page-favorites' %}" class="nav-link active">
-                    <i class="fa-solid fa-heart" style="color: #16A34A;"></i>
-                    <span>Favorit</span>
-                </a>
-                <a href="{% url 'page-buyer-orders' %}" class="nav-link">
-                    <i class="fa-regular fa-receipt"></i>
-                    <span>Pesanan Saya</span>
-                    <span class="nav-badge">2</span>
-                </a>
-                <a href="{% url 'page-buyer-dashboard' %}" class="nav-link">
-                    <i class="fa-regular fa-circle-check"></i>
-                    <span>Langganan</span>
-                    <span class="nav-badge new-badge">Baru</span>
-                </a>
-                <a href="{% url 'page-promo' %}" class="nav-link">
-                    <i class="fa-regular fa-percentage"></i>
-                    <span>Promo</span>
-                </a>
-                <a href="{% url 'page-wallet' %}" class="nav-link">
-                    <i class="fa-regular fa-wallet"></i>
-                    <span>Dompet Saya</span>
-                </a>
-                <a href="{% url 'page-buyer-reviews' %}" class="nav-link">
-                    <i class="fa-regular fa-star"></i>
-                    <span>Penilaian</span>
-                </a>
-                <a href="{% url 'bantuan-page' %}" class="nav-link">
-                    <i class="fa-regular fa-circle-question"></i>
-                    <span>Bantuan</span>
-                </a>
-                <a href="{% url 'page-settings' %}" class="nav-link">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Pengaturan</span>
-                </a>
-            </nav>
-
-            <!-- Bottom Widget: Warungio Points -->
-            <div class="sidebar-points-widget">
-                <div class="points-header">
-                    <i class="fa-solid fa-award points-icon"></i>
-                    <span>Warungio Points</span>
-                </div>
-                <div class="points-value">1.250 Poin</div>
-                <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
-            </div>
-        </aside>
+        {% include 'components/sidebar.html' %}
 
         <!-- Main Content Area -->
         <main class="favorites-main-content">
             <!-- Sticky Glassmorphism Top Navigation -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <div class="menu-toggle" id="menuToggle">
-                        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    </div>
-                    
-                    <!-- Location Selector -->
-                    <div class="topbar-location">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <div class="location-info">
-                            <span class="location-label">Kirim ke</span>
-                            <span class="location-value" id="userLocation">Memuat lokasi...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search Bar -->
-                <div class="search-panel">
-                    <div class="search-input">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" placeholder="Cari produk, warung, atau kategori..." id="searchInput" autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="topbar-actions">
-                    <!-- Authenticated Actions -->
-                    <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
-                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
-                        <button class="icon-btn-premium"><i class="fa-regular fa-comment-dots"></i></button>
-                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                            <span class="icon-badge" id="cartBadgeHeader">0</span>
-                        </button>
-                        
-                        <div class="profile-dropdown-wrapper">
-                            <div class="profile-box-premium" id="profileBox">
-                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
-                                <div class="profile-info-premium">
-                                    <p id="userName" class="profile-name">Hai, User</p>
-                                    <span class="member-badge-premium" id="userRoleBadge">Member</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
-                            </div>
-                            <div class="dropdown-menu-custom" id="dropdownMenu">
-                                <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-                                <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-                                <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
-                                <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Guest Actions -->
-                    <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
-                        <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
-                        <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
-                        <a href="{% url 'page-register-mitra' %}" class="btn-mitra-premium">Gabung Mitra</a>
-                    </div>
-                </div>
-            </header>
+            {% include 'components/topbar.html' %}
 
             <!-- Main Content Container -->
             <div class="px-6 md:px-8 py-8 space-y-8 flex-1">

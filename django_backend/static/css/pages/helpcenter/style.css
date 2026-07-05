@@ -40,6 +40,7 @@
   width: 100%;
   font-size: 1rem;
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: all 0.25s ease;
   outline: none;
 }

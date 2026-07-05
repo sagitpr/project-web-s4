@@ -8,7 +8,7 @@
     {% block meta %}{% endblock %}
 
     {% block tailwind %}
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
         tailwind.config = {
             theme: { extend: {
@@ -22,7 +22,7 @@
     {% block fonts %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     {% endblock %}
 
     {% block favicon %}
@@ -38,13 +38,18 @@
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/premium.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     {% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
+{% block grain %}
+<div class="premium-grain"></div>
+{% endblock %}
+
 {% block navbar %}
-<nav class="header" style="margin: 16px 16px 0; position: sticky; top: 16px; z-index: 40;">
+<nav class="header" style="margin: 8px 16px 0; position: sticky; top: 12px; z-index: 100;">
     <div class="flex items-center gap-4" style="flex:1;">
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -126,7 +131,42 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script>  // ── Scroll Reveal System ──
+(function() {
+  'use strict';
+  if (!window.IntersectionObserver) return;
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  function initReveal() {
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(function(el) {
+      observer.observe(el);
+    });
+  }
+
+  // Handle both direct and deferred execution
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReveal);
+  } else {
+    initReveal();
+  }
+
+  // Header shadow on scroll — targets .header class used by navbar
+  var header = document.querySelector('.header');
+  if (header) {
+    window.addEventListener('scroll', function() {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  }
+})();
+
 function showToast(message, type) {
     var container = document.getElementById('toastContainer');
     if (!container) return;
@@ -140,6 +180,7 @@ function showToast(message, type) {
 
 <script src="{% static 'js/utils/toast.js' %}"></script>
 <script src="{% static 'js/utils/asset-loader.js' %}"></script>
+<script src="{% static 'js/utils/auth-ui.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Profile dropdown

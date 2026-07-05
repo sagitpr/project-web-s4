@@ -13,6 +13,7 @@ body { background: var(--bg, #F8FAFC); color: var(--text, #1e293b); }
     background: rgba(15, 59, 31, 0.60);
     display: flex; align-items: center; justify-content: center;
     backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 .welcome-content {
     text-align: center; color: #fff;
