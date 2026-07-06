@@ -102,46 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /** Validate redirect URL — only allow relative paths to prevent open redirect */
-  function isValidRedirect(url) {
-    if (!url || typeof url !== 'string') return false;
-    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
-  }
-
-  /**
-   * Validate that the next URL matches the user's role.
-   * A buyer → /buyer/*, seller → /seller/*, admin → /admin/*
-   */
-  function isRoleAllowedRedirect(nextUrl, role) {
-    if (!nextUrl || !role) return false;
-    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
-    if (role === 'seller') return nextUrl.startsWith('/seller/');
-    if (role === 'admin') return nextUrl.startsWith('/admin/');
-    return false;
-  }
-
-  // ── Helper: handle auth response and redirect ──
+  // ── Helper: handle auth response and redirect based on role ──
+  // Uses centralized WarungioAuth.redirectToDashboard() for role-appropriate redirect
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
     const role = data.user.role;
-    
+
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
     // Only allow next parameter if it matches the user's role
-    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+    if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
       window.location.href = nextUrl;
       return;
     }
 
-    if (role === 'buyer') {
-      window.location.href = '/buyer/home/';
-    } else if (role === 'seller') {
-      window.location.href = '/seller/dashboard/';
-    } else if (role === 'admin') {
-      window.location.href = '/admin/';
-    } else {
-      window.location.href = '/';
-    }
+    window.WarungioAuth.redirectToDashboard();
   }
 
   if (eyeBtn && passwordInput) {

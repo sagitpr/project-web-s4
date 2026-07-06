@@ -579,5 +579,5 @@ class RootView(views.APIView):
             elif role == 'admin' or request.user.is_superuser:
                 return redirect('/admin/')
             else:
-                return redirect('/buyer/home/')
+                return redirect('/buyer/dashboard/')
         return render(request, 'landing/index.html')

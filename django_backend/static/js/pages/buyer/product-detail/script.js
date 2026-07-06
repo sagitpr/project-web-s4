@@ -11,11 +11,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // ── Helper: redirect to role-appropriate dashboard (WarungioAuth confirmed available at this point) ──
+  function redirectToDashboard() {
+    window.WarungioAuth.redirectToDashboard();
+  }
+
   // ── Extract Product ID ──
   const pathParts = window.location.pathname.split('/').filter(Boolean);
   const productId = pathParts[pathParts.length - 1];
   if (!productId || isNaN(productId)) {
-    window.location.href = '/buyer/home/';
+    redirectToDashboard();
     return;
   }
 
@@ -214,7 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) { /* ignore */ }
     } catch (err) {
       console.error('Failed to load product:', err);
-      window.location.href = '/buyer/home/';
+      redirectToDashboard();
     }
   }
 

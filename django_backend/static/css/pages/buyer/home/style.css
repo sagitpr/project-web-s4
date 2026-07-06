@@ -10,7 +10,7 @@ body {
 /* ── Page Layout structure overrides ── */
 .page-shell {
     display: grid !important;
-    grid-template-columns: 260px 1fr 320px !important;
+    grid-template-columns: 260px 1fr !important;
     gap: 24px !important;
     padding: 24px !important;
     max-width: 1600px !important;
@@ -59,8 +59,8 @@ body {
 }
 
 .brand-logo-img {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     object-fit: contain;
 }
 
@@ -131,16 +131,7 @@ body {
     color: #16A34A;
 }
 
-.nav-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 25%;
-    height: 50%;
-    width: 4px;
-    background: #16A34A;
-    border-radius: 0 4px 4px 0;
-}
+/* Removed left bar indicator for active nav link to match clean rounded pill */
 
 .nav-badge {
     margin-left: auto;
@@ -239,10 +230,17 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 12px;
-    background: #F1F5F9;
+    padding: 8px 16px;
+    background: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
     border-radius: 14px;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.topbar-location:hover {
+    border-color: rgba(22, 163, 74, 0.4) !important;
+    background: #F8FAF8 !important;
 }
 
 .topbar-location i {

@@ -42,7 +42,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       localStorage.setItem(USER_KEY, JSON.stringify(user));
     },
 
-    /** Clear all auth data */
+    /** Clear all auth data and redirect to landing page */
     logout() {
       const refresh = this.getRefreshToken();
       localStorage.removeItem(TOKEN_KEY);
@@ -96,6 +96,75 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
     isSeller() {
       const user = this.getUser();
       return user && user.role === 'seller';
+    },
+
+    /**
+     * Get the correct dashboard URL for the given role.
+     * @param {string} [role] - User role. Reads from cached user if omitted.
+     * @returns {string} Dashboard URL path
+     */
+    getRoleDashboardUrl(role) {
+      if (!role) {
+        const user = this.getUser();
+        role = user ? user.role : null;
+      }
+      if (role === 'seller') return '/seller/dashboard/';
+      if (role === 'admin') return '/admin/';
+      // Default for buyers and unknown roles
+      return '/buyer/home/';
+    },
+
+    /**
+     * Redirect user to their role-appropriate dashboard.
+     * Optionally fetches fresh user data from API first.
+     * @param {boolean} [forceFresh=false] - Whether to fetch fresh user role from API
+     */
+    redirectToDashboard(forceFresh) {
+      const self = this;
+      function doRedirect(role) {
+        window.location.href = self.getRoleDashboardUrl(role);
+      }
+
+      if (forceFresh && window.WarungioAPI) {
+        WarungioAPI.checkAuth()
+          .then(function(resp) {
+            if (resp && resp.user) {
+              self.login(self.getAccessToken(), self.getRefreshToken(), resp.user);
+              doRedirect(resp.user.role);
+            } else {
+              doRedirect();
+            }
+          })
+          .catch(function() { doRedirect(); });
+        return;
+      }
+
+      doRedirect();
+    },
+
+    /**
+     * Validate redirect URL — only allow relative paths to prevent open redirect.
+     * @param {string} url
+     * @returns {boolean}
+     */
+    isValidRedirect(url) {
+      if (!url || typeof url !== 'string') return false;
+      return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
+    },
+
+    /**
+     * Check if a redirect URL matches the user's role prefix.
+     * Buyer → /buyer/*, Seller → /seller/*, Admin → /admin/*
+     * @param {string} nextUrl
+     * @param {string} role
+     * @returns {boolean}
+     */
+    isRoleAllowedRedirect(nextUrl, role) {
+      if (!nextUrl || !role) return false;
+      if (role === 'buyer') return nextUrl.startsWith('/buyer/');
+      if (role === 'seller') return nextUrl.startsWith('/seller/');
+      if (role === 'admin') return nextUrl.startsWith('/admin/');
+      return false;
     },
 
     /** Try to refresh the access token */

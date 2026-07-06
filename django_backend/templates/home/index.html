@@ -358,78 +358,7 @@
             </div>
         </main>
 
-        <!-- Sticky Right Sidebar (Desktop layout widgets) -->
-        <aside class="right-sidebar" data-aos="fade-left" data-aos-duration="600">
-            <!-- Authenticated widgets (Toggled by JS) -->
-            <div id="authSidebarWidgets" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
-                
-                <!-- Wallet Card (Dompet Saya) -->
-                <div class="right-card-premium wallet-card-premium">
-                    <div class="right-card-header">
-                        <h3>Dompet Saya</h3>
-                        <a href="{% url 'page-wallet' %}" class="card-detail-link">Lihat Detail</a>
-                    </div>
-                    <div class="wallet-balance-box">
-                        <span class="balance-label">Saldo Aktif</span>
-                        <div class="balance-value-row">
-                            <strong id="userBalance" class="balance-amount">Rp 0</strong>
-                            <button class="btn-topup btn-topup-premium"><i class="fa-solid fa-wallet"></i> Top Up</button>
-                        </div>
-                    </div>
-                    <div class="wallet-quick-actions">
-                        <div class="w-action-premium" onclick="window.location.href='{% url 'page-wallet' %}';">
-                            <div class="w-icon-circle"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                            <span>Riwayat</span>
-                        </div>
-                        <div class="w-action-premium" onclick="window.location.href='{% url 'page-promo' %}';">
-                            <div class="w-icon-circle"><i class="fa-solid fa-ticket"></i></div>
-                            <span>Voucher</span>
-                        </div>
-                        <div class="w-action-premium" onclick="window.location.href='{% url 'page-wallet' %}';">
-                            <div class="w-icon-circle"><i class="fa-solid fa-credit-card"></i></div>
-                            <span>Metode</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Active Order Tracking (Pesanan Aktif) -->
-                <div class="right-card-premium" id="pesananAktifCard">
-                    <div class="right-card-header">
-                        <h3>Pesanan Aktif</h3>
-                        <a href="{% url 'page-buyer-orders' %}" class="card-detail-link">Lihat Semua</a>
-                    </div>
-                    <div class="active-orders-list-wrapper" id="pesananAktifContent">
-                        <div class="loading-orders-spinner">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i> Memuat pesanan...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Personal Recommendations (Rekomendasi Untukmu) -->
-                <div class="right-card-premium">
-                    <div class="right-card-header">
-                        <h3>Rekomendasi Untukmu</h3>
-                        <a href="{% url 'page-products' %}" class="card-detail-link">Lihat Semua</a>
-                    </div>
-                    <div class="recommendations-list-premium" id="rekomendasiList">
-                        <!-- Loaded dynamically by script.js -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Guest CTA Card -->
-            <div id="guestSidebarWidget" class="guest-cta-card-premium">
-                <div class="guest-card-illustration">
-                    <img src="{% static 'images/sayuran dan tas.png' %}" alt="Belanja Ilustrasi">
-                </div>
-                <h3>Yuk, Masuk Akun dulu!</h3>
-                <p>Nikmati kemudahan melacak pesanan, bayar pakai dompet digital, dan rekomendasi belanja khusus untukmu.</p>
-                <div class="guest-buttons-stack">
-                    <a href="/auth/login/" class="btn-guest-primary">Masuk Sekarang</a>
-                    <a href="/auth/register/" class="btn-guest-link">Belum punya akun? Daftar</a>
-                </div>
-            </div>
-        </aside>
     </div>
 
     <!-- Script integrations -->

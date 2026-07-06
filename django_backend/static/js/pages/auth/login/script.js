@@ -109,27 +109,24 @@
     return false;
   }
 
+  /**
+   * Handle login response: store tokens and redirect based on role.
+   * Uses centralized WarungioAuth.redirectToDashboard() for role-appropriate redirect.
+   */
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
     const role = data.user.role;
-    
+
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
     // Only allow next parameter if it matches the user's role — prevents role mismatch
-    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+    if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
       window.location.href = nextUrl;
       return;
     }
 
-    if (role === 'buyer') {
-      window.location.href = '/buyer/home/';
-    } else if (role === 'seller') {
-      window.location.href = '/seller/dashboard/';
-    } else if (role === 'admin') {
-      window.location.href = '/admin/';
-    } else {
-      window.location.href = '/';
-    }
+    // Redirect to role-appropriate dashboard using centralized function
+    window.WarungioAuth.redirectToDashboard();
   }
 
   // ── Login submit ──
@@ -445,15 +442,12 @@
       
       const role = data.user.role;
       const nextUrl = params.get('next');
-      
-      if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+
+      if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
         window.location.href = nextUrl;
-      } else if (role === 'seller') {
-        window.location.href = '/seller/dashboard/';
-      } else if (role === 'admin' || role === 'superadmin') {
-        window.location.href = '/admin/';
       } else {
-        window.location.href = '/buyer/home/';
+        // Redirect to role-appropriate dashboard using centralized function
+        window.WarungioAuth.redirectToDashboard();
       }
     } catch (e) {
       // Network error — stay on login page, don't redirect
