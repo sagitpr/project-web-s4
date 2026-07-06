@@ -86,6 +86,70 @@ body { background: var(--bg, #F8FAFC); color: var(--text, #1e293b); }
 .checkbox-label { flex-direction: row !important; align-items: center; gap: 8px !important; cursor: pointer; }
 .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; }
 
+/* ── Store Image Upload ── */
+.store-image-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; }
+.store-image-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.store-image-label { font-size: 13px; font-weight: 600; color: #1e293b; display: block; margin-bottom: 10px; }
+.store-image-upload { display: flex; gap: 16px; align-items: flex-start; }
+.store-image-upload.cover-upload { flex-direction: column; }
+.store-image-preview {
+    width: 100px; height: 100px; border-radius: 12px; overflow: hidden;
+    border: 2px dashed #e2e8f0; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #f8fafc; position: relative;
+}
+.store-image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.store-image-preview.cover-preview {
+    width: 100%; height: 160px; border-radius: 12px;
+    position: relative; overflow: hidden;
+}
+.store-image-preview.cover-preview img { object-fit: cover; }
+.cover-placeholder-overlay {
+    position: absolute; inset: 0; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    color: #94a3b8; font-size: 13px; gap: 8px;
+    background: #f1f5f9;
+}
+.cover-placeholder-overlay i { font-size: 32px; }
+.store-image-actions { flex: 1; min-width: 0; }
+.store-image-hint { font-size: 11px; color: #94a3b8; margin: 0 0 10px; line-height: 1.4; }
+.store-image-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.upload-status { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #64748b; margin-top: 10px; }
+
+/* ── Crop Modal ── */
+.crop-modal-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.crop-modal-overlay.open { opacity: 1; pointer-events: auto; }
+.crop-modal {
+    background: #fff; border-radius: 20px; width: 100%;
+    max-width: 640px; max-height: 90vh; overflow: hidden;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+    display: flex; flex-direction: column;
+}
+.crop-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px; border-bottom: 1px solid #f1f5f9;
+}
+.crop-modal-header h3 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0; }
+.crop-modal-close {
+    background: none; border: none; font-size: 20px;
+    color: #94a3b8; cursor: pointer; padding: 4px;
+}
+.crop-container { position: relative; width: 100%; height: 380px; background: #0f172a; }
+.crop-container img { max-width: 100%; max-height: 100%; }
+.crop-modal-footer {
+    display: flex; justify-content: flex-end; gap: 12px;
+    padding: 16px 24px; border-top: 1px solid #f1f5f9;
+}
+.crop-modal-footer .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+}
+
 .btn-primary {
     background: #16a34a; color: #fff; border: none; padding: 11px 22px; border-radius: 10px;
     font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;

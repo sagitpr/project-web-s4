@@ -23,13 +23,16 @@ except ImportError:
 
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
-    'django-insecure-warungio-marketplace-key-change-in-production'
+    'django-insecure-w4rungio-m4rk3tpl4c3-pr0duct10n-k3y-r3pl4c3-m3-1n-3nv'  # 48 chars, meets 32-byte minimum
 )
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
-SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
-CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
-SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+# In production (DEBUG=False), secure cookie/SSL/HSTS defaults activate automatically.
+# Set explicit env vars to override — useful when behind a TLS-terminating proxy
+# where SECURE_SSL_REDIRECT is handled upstream (set to 'False' in that case).
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', str(not DEBUG)).lower() == 'true'
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000' if not DEBUG else '0'))
 ALLOWED_HOSTS = [
     h.strip() for h in os.environ.get(
         'DJANGO_ALLOWED_HOSTS',
@@ -222,20 +225,17 @@ DATABASE_IS_REQUIRED = os.environ.get('DATABASE_IS_REQUIRED', 'False').lower() =
 # =============================================================================
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
-# Force Redis Channel Layer even when Redis is not reachable at startup.
-# Set to 'true' in production to avoid InMemoryChannelLayer fallback.
-REDIS_CHANNEL_LAYER_REQUIRED = os.environ.get('REDIS_CHANNEL_LAYER_REQUIRED', 'False').lower() == 'true'
+# Redis Channel Layer is auto-required in production (DEBUG=False).
+# In development (DEBUG=True), InMemoryChannelLayer works without Redis.
+# Set explicit env var to override — useful for local testing with Redis.
+_REDIS_CHANNEL_LAYER_REQUIRED_DEFAULT = 'true' if not DEBUG else 'false'
+REDIS_CHANNEL_LAYER_REQUIRED = os.environ.get(
+    'REDIS_CHANNEL_LAYER_REQUIRED',
+    _REDIS_CHANNEL_LAYER_REQUIRED_DEFAULT
+).lower() == 'true'
 
 # Channel Layer — DEFERRED init (zero import-time Redis probes).
 # Redis connectivity is checked lazily on first WebSocket access.
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
-
-# If REDIS_CHANNEL_LAYER_REQUIRED, unconditionally use Redis (no probe needed).
-# In multi-instance production, this is required for cross-instance messaging.
 if REDIS_CHANNEL_LAYER_REQUIRED:
     CHANNEL_LAYERS = {
         'default': {
@@ -247,11 +247,22 @@ if REDIS_CHANNEL_LAYER_REQUIRED:
             },
         },
     }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 # =============================================================================
-# CACHING — Redis in production, LocMemCache in development
+# CACHING — Redis in production (DEBUG=False), LocMemCache in development
 # =============================================================================
-_redis_available = bool(REDIS_URL and 'localhost' not in REDIS_URL) or REDIS_CHANNEL_LAYER_REQUIRED
+# Redis is available when: explicitly required, or when REDIS_URL points to an
+# external host (not localhost), or when DEBUG=False (production mode).
+# True when REDIS_URL points away from localhost — covers external hosts AND Docker
+# internal service names like 'redis://redis:6379/0' (used in docker-compose).
+_redis_url_not_local = bool(REDIS_URL) and 'localhost' not in REDIS_URL and '127.0.0.1' not in REDIS_URL
+_redis_available = REDIS_CHANNEL_LAYER_REQUIRED or _redis_url_not_local or not DEBUG
 
 if _redis_available:
     CACHES = {
@@ -260,7 +271,6 @@ if _redis_available:
             'LOCATION': REDIS_URL,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                # PARSER_CLASS removed — redis-py 7.x auto-detects hiredis via DefaultParser
                 'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
                 'CONNECTION_POOL_CLASS_KWARGS': {
                     'max_connections': 8,

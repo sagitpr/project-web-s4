@@ -81,6 +81,22 @@ class NotificationUnreadCountView(views.APIView):
         })
 
 
+class NotificationDeleteView(views.APIView):
+    """Delete a single notification."""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def delete(self, request, pk):
+        try:
+            notification = Notification.objects.get(id=pk, user=request.user)
+            notification.delete()
+            return Response({'message': 'Notifikasi berhasil dihapus.'}, status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response(
+                {'error': 'Notifikasi tidak ditemukan.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
 class NotificationPreferenceView(generics.RetrieveUpdateAPIView):
     """Get/update notification preferences."""
     serializer_class = NotificationPreferenceSerializer

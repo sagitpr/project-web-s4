@@ -865,3 +865,577 @@ class OTPTests(BaseTestCase):
             'password': 'NewResetPass123!',
         }, format='json')
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+    def test_resend_otp_success(self):
+        """Test successful OTP resend after cooldown expires."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Create an OTP that's old enough to be eligible for resend
+        old_otp = OTP.objects.create(
+            email='verified@warungio.com',
+            purpose='login',
+            otp_code='111111',
+        )
+        # Backdate it past the cooldown
+        cooldown = getattr(settings, 'OTP_COOLDOWN_SECONDS', 60)
+        old_otp.created_at = timezone.now() - timedelta(seconds=cooldown + 10)
+        old_otp.save(update_fields=['created_at'])
+
+        with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            response = self.client.post(reverse('otp-resend'), {
+                'email': 'verified@warungio.com',
+                'purpose': 'login',
+            }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('message', response.data)
+        self.assertIn('expires_in_minutes', response.data)
+        self.assertEqual(len(mail.outbox), 1)
+
+    @override_settings(OTP_COOLDOWN_SECONDS=60)
+    def test_resend_otp_cooldown_blocked(self):
+        """Test that resend is blocked during cooldown period."""
+        from django.utils import timezone
+
+        # Create a recent OTP (just created = cooldown not expired)
+        OTP.objects.create(
+            email='verified@warungio.com',
+            purpose='login',
+            otp_code='222222',
+        )
+
+        response = self.client.post(reverse('otp-resend'), {
+            'email': 'verified@warungio.com',
+            'purpose': 'login',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn('cooldown_seconds', response.data)
+        self.assertIn('otp_cooldown', response.data.get('code', ''))
+
+    @override_settings(OTP_COOLDOWN_SECONDS=60)
+    def test_resend_otp_invalidates_old_otps(self):
+        """Test that resend invalidates previous OTPs."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Create old OTP past cooldown
+        old_otp = OTP.objects.create(
+            email='verified@warungio.com',
+            purpose='login',
+            otp_code='333333',
+        )
+        cooldown = getattr(settings, 'OTP_COOLDOWN_SECONDS', 60)
+        old_otp.created_at = timezone.now() - timedelta(seconds=cooldown + 10)
+        old_otp.save(update_fields=['created_at'])
+        old_otp_id = old_otp.id
+
+        with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            response = self.client.post(reverse('otp-resend'), {
+                'email': 'verified@warungio.com',
+                'purpose': 'login',
+            }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Refresh from DB — old OTP should be invalid
+        old_otp.refresh_from_db()
+        self.assertFalse(old_otp.is_valid)
+
+        # A new OTP should exist and be valid
+        new_otps = OTP.objects.filter(
+            email='verified@warungio.com', purpose='login', is_valid=True
+        )
+        self.assertEqual(new_otps.count(), 1)
+        self.assertNotEqual(new_otps.first().id, old_otp_id)
+
+    @override_settings(OTP_COOLDOWN_SECONDS=60, DEBUG=True)
+    def test_resend_otp_new_code_expiry(self):
+        """Test that resend generates a new code with correct expiration."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Create old OTP past cooldown
+        old_otp = OTP.objects.create(
+            email='verified@warungio.com',
+            purpose='login',
+            otp_code='444444',
+        )
+        cooldown = getattr(settings, 'OTP_COOLDOWN_SECONDS', 60)
+        old_otp.created_at = timezone.now() - timedelta(seconds=cooldown + 10)
+        old_otp.save(update_fields=['created_at'])
+
+        with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            response = self.client.post(reverse('otp-resend'), {
+                'email': 'verified@warungio.com',
+                'purpose': 'login',
+            }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # New OTP code should be returned in DEBUG mode
+        self.assertIn('otp_code', response.data)
+        new_code = response.data['otp_code']
+        self.assertNotEqual(new_code, '444444')
+
+        # Verify expiration is in the future (within expected window)
+        new_otp = OTP.objects.get(
+            email='verified@warungio.com', purpose='login', is_valid=True
+        )
+        expected_expiry = timedelta(minutes=settings.OTP_EXPIRE_MINUTES)
+        self.assertLess(
+            new_otp.expires_at - timezone.now(),
+            expected_expiry + timedelta(seconds=5)  # 5s tolerance
+        )
+        self.assertGreater(new_otp.expires_at, timezone.now())
+
+
+@override_settings(DEBUG=True)
+class SellerE2EFlowTests(TestCase):
+    """
+    Comprehensive end-to-end test for the complete Seller (Mitra) flow.
+    
+    Tests every step: register → OTP verify → login → JWT access →
+    protected API endpoints → seller dashboard pages → token refresh.
+    Verifies all database records and ensures no HTTP 4xx/5xx errors.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.register_url = reverse('register')
+        self.otp_verify_url = reverse('otp-verify')
+        self.login_url = reverse('login')
+        self.check_auth_url = reverse('check-auth')
+        self.profile_url = reverse('profile')
+        self.seller_email = 'mitra.seller@warungio.com'
+        self.seller_password = 'MitraPass789!'
+        self.seller_full_name = 'Toko Sembako Sejahtera'
+
+    def _assert_no_client_error(self, response, step_name):
+        """Assert no HTTP 4xx or 5xx errors at any step.
+        
+        Handles both DRF API responses (with .data) and template responses.
+        """
+        body = getattr(response, 'data', None) or getattr(response, 'content', b'')[:500]
+        self.assertNotEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST,
+            f'{step_name}: Got HTTP 400. Body: {body}'
+        )
+        self.assertNotEqual(
+            response.status_code, status.HTTP_401_UNAUTHORIZED,
+            f'{step_name}: Got HTTP 401. Body: {body}'
+        )
+        self.assertNotEqual(
+            response.status_code, status.HTTP_403_FORBIDDEN,
+            f'{step_name}: Got HTTP 403. Body: {body}'
+        )
+        self.assertNotEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND,
+            f'{step_name}: Got HTTP 404. Body: {body}'
+        )
+        self.assertNotEqual(
+            response.status_code, status.HTTP_429_TOO_MANY_REQUESTS,
+            f'{step_name}: Got HTTP 429. Body: {body}'
+        )
+        self.assertNotEqual(
+            response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR,
+            f'{step_name}: Got HTTP 500. Body: {body}'
+        )
+
+    def test_seller_full_registration_and_login(self):
+        """Test complete Seller flow: register → OTP verify → login → protected endpoints."""
+
+        # =====================================================================
+        # STEP 1: Register as Seller (Mitra)
+        # =====================================================================
+        register_response = self.client.post(self.register_url, {
+            'email': self.seller_email,
+            'full_name': self.seller_full_name,
+            'password': self.seller_password,
+            'password2': self.seller_password,
+            'phone': '+6281234567890',
+            'address': 'Jl. Merdeka No. 10, Jakarta',
+            'role': 'seller',
+        }, format='json')
+
+        self.assertEqual(
+            register_response.status_code, status.HTTP_201_CREATED,
+            f'Step 1 - Seller registration failed: {register_response.data}'
+        )
+        self._assert_no_client_error(register_response, 'Step 1 - Register')
+        self.assertEqual(register_response.data['user']['role'], 'seller')
+        self.assertEqual(register_response.data['user']['email'], self.seller_email)
+        self.assertIn('otp_code', register_response.data,
+                      'OTP code should be returned in DEBUG mode')
+        otp_code = register_response.data['otp_code']
+        self.assertEqual(len(otp_code), 6, 'OTP code should be 6 digits')
+        
+        # Verify OTP record in DB
+        otp_records = OTP.objects.filter(email=self.seller_email, purpose='registration')
+        self.assertEqual(otp_records.count(), 1, 'Should be exactly 1 OTP record')
+        otp_db = otp_records.first()
+        self.assertTrue(otp_db.is_valid, 'OTP should be valid')
+        self.assertFalse(otp_db.is_used, 'OTP should not be used yet')
+        self.assertEqual(otp_db.attempts, 0, 'OTP should have 0 attempts')
+        self.assertIsNotNone(otp_db.expires_at, 'OTP should have expiry')
+        self.assertGreater(otp_db.expires_at, otp_db.created_at, 'Expiry should be in the future')
+
+        # Verify User record in DB
+        user = User.objects.get(email=self.seller_email)
+        self.assertEqual(user.role, 'seller', 'User role should be seller')
+        self.assertFalse(user.is_verified, 'User should NOT be verified before OTP')
+        self.assertTrue(user.is_active, 'User should be active after registration')
+        self.assertEqual(user.registration_step, 'email_phone')
+        self.assertTrue(user.check_password(self.seller_password),
+                        'Password should be correctly hashed')
+        self.assertFalse(user.password.startswith(self.seller_password),
+                         'Password should NOT be stored as plaintext')
+        self.assertEqual(user.email, self.seller_email)
+        self.assertEqual(user.full_name, self.seller_full_name)
+        self.assertEqual(str(user.phone), '+6281234567890')
+        self.assertEqual(user.address, 'Jl. Merdeka No. 10, Jakarta')
+        self.assertIsNone(user.registration_completed_at,
+                          'registration_completed_at should NOT be set before OTP')
+        
+        # Verify NO store exists yet (not auto-created before OTP verification)
+        from stores.models import Store
+        pre_store_count = Store.objects.filter(user=user).count()
+        self.assertEqual(pre_store_count, 0,
+                         'Store should NOT exist before OTP verification')
+        
+        # Verify LoginAttempt is NOT created during registration
+        self.assertFalse(
+            LoginAttempt.objects.filter(email=self.seller_email).exists(),
+            'No LoginAttempt should exist after registration'
+        )
+
+        # =====================================================================
+        # STEP 2: OTP Verification (Account Activation)
+        # =====================================================================
+        verify_response = self.client.post(self.otp_verify_url, {
+            'email': self.seller_email,
+            'otp_code': otp_code,
+            'purpose': 'registration',
+        }, format='json')
+
+        self.assertEqual(
+            verify_response.status_code, status.HTTP_200_OK,
+            f'Step 2 - OTP verification failed: {verify_response.data}'
+        )
+        self._assert_no_client_error(verify_response, 'Step 2 - OTP Verify')
+        self.assertTrue(verify_response.data['verified'])
+        self.assertIn('next_step', verify_response.data)
+        self.assertEqual(verify_response.data['next_step'], 'complete')
+        self.assertIn('next_endpoint', verify_response.data)
+        self.assertEqual(verify_response.data['next_endpoint'], '/auth/login/?role=seller')
+
+        # Verify User record after activation
+        user.refresh_from_db()
+        self.assertTrue(user.is_verified, 'User should be verified after OTP')
+        self.assertTrue(user.is_active, 'User should remain active after OTP')
+        self.assertEqual(user.registration_step, 'complete')
+        self.assertIsNotNone(user.registration_completed_at,
+                             'registration_completed_at should be set after OTP')
+        self.assertGreater(user.registration_completed_at, user.registration_started_at or user.date_joined,
+                          'completion time should be after start')
+        
+        # Verify OTP record after activation
+        otp_db.refresh_from_db()
+        self.assertFalse(otp_db.is_valid, 'OTP should be invalid after verification')
+        self.assertTrue(otp_db.is_used, 'OTP should be marked as used')
+        self.assertIsNotNone(otp_db.verified_at, 'OTP should have verified_at timestamp')
+
+        # =====================================================================
+        # STEP 3: Verify Store Auto-Creation
+        # =====================================================================
+        store = Store.objects.filter(user=user).first()
+        self.assertIsNotNone(store, 'Step 3 - Store should be auto-created for seller after OTP')
+        self.assertEqual(store.store_name, 'Toko Sembako Sejahtera',
+                         'Store name should match full_name with Toko prefix deduplicated')
+        self.assertEqual(store.status, 'pending', 'New store should be in pending status')
+        self.assertIn('Mitra Warungio', store.description or '',
+                      'Store description should mention Mitra Warungio')
+        self.assertEqual(store.address, 'Jl. Merdeka No. 10, Jakarta',
+                         'Store address should match user address')
+        self.assertIsNotNone(store.slug, 'Store should have a slug generated')
+        self.assertEqual(store.follower_count, 0, 'New store should have 0 followers')
+        self.assertEqual(store.product_count, 0, 'New store should have 0 products')
+        self.assertEqual(float(store.rating_avg), 0.0, 'New store should have 0 rating')
+        self.assertEqual(float(store.total_sales), 0.0, 'New store should have 0 sales')
+        
+        # Verify only ONE store was created (no duplicates)
+        store_count = Store.objects.filter(user=user).count()
+        self.assertEqual(store_count, 1, 'Should be exactly 1 store per seller')
+
+        # =====================================================================
+        # STEP 4: Login (JWT Token Generation)
+        # =====================================================================
+        login_response = self.client.post(self.login_url, {
+            'email': self.seller_email,
+            'password': self.seller_password,
+        }, format='json')
+
+        self.assertEqual(
+            login_response.status_code, status.HTTP_200_OK,
+            f'Step 4 - Seller login failed. Response: {login_response.data}'
+        )
+        self._assert_no_client_error(login_response, 'Step 4 - Login')
+        
+        # Verify JWT tokens
+        self.assertIn('access', login_response.data, 'Access token should be returned')
+        self.assertIn('refresh', login_response.data, 'Refresh token should be returned')
+        access_token = login_response.data['access']
+        refresh_token = login_response.data['refresh']
+        self.assertTrue(len(access_token) > 50, 'Access token should be a valid JWT')
+        self.assertTrue(len(refresh_token) > 50, 'Refresh token should be a valid JWT')
+        
+        # Verify user data in response
+        self.assertEqual(login_response.data['user']['role'], 'seller')
+        self.assertEqual(login_response.data['user']['email'], self.seller_email)
+        self.assertTrue(login_response.data['user']['is_verified'])
+        self.assertIn('id', login_response.data['user'])
+        self.assertEqual(login_response.data['user']['id'], user.id)
+        
+        # Verify LoginAttempt was tracked
+        attempt = LoginAttempt.objects.filter(email=self.seller_email).first()
+        self.assertIsNotNone(attempt, 'LoginAttempt should be created')
+        self.assertTrue(attempt.was_successful)
+        
+        # Verify Django session was set (for template-based pages)
+        # The session cookie should be present in the response
+        session_cookie_set = any(
+            k.startswith('sessionid') for k in login_response.cookies.keys()
+        )
+        self.assertTrue(session_cookie_set,
+                        'Django session cookie should be set for template access')
+
+        # =====================================================================
+        # STEP 5: JWT-Protected API Endpoints
+        # =====================================================================
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        
+        # 5a. Check-Auth endpoint
+        check_response = self.client.get(self.check_auth_url)
+        self.assertEqual(
+            check_response.status_code, status.HTTP_200_OK,
+            f'Step 5a - Check-Auth failed: {check_response.data}'
+        )
+        self._assert_no_client_error(check_response, 'Step 5a - Check Auth')
+        self.assertTrue(check_response.data['authenticated'])
+        self.assertEqual(check_response.data['user']['role'], 'seller')
+        self.assertEqual(check_response.data['user']['email'], self.seller_email)
+        self.assertEqual(check_response.data['user']['id'], user.id)
+        
+        # 5b. Profile endpoint
+        profile_response = self.client.get(self.profile_url)
+        self.assertEqual(
+            profile_response.status_code, status.HTTP_200_OK,
+            f'Step 5b - Profile failed: {profile_response.data}'
+        )
+        self._assert_no_client_error(profile_response, 'Step 5b - Profile')
+        self.assertEqual(profile_response.data['email'], self.seller_email)
+        self.assertEqual(profile_response.data['role'], 'seller')
+        self.assertTrue(profile_response.data['is_verified'])
+        self.assertEqual(profile_response.data['full_name'], self.seller_full_name)
+        
+        # 5c. My Store endpoint
+        my_store_response = self.client.get('/api/stores/my-store/')
+        self.assertEqual(
+            my_store_response.status_code, status.HTTP_200_OK,
+            f'Step 5c - My Store failed: {my_store_response.data}'
+        )
+        self._assert_no_client_error(my_store_response, 'Step 5c - My Store')
+        self.assertEqual(my_store_response.data['store_name'], 'Toko Sembako Sejahtera')
+        self.assertEqual(my_store_response.data['status'], 'pending')
+        # MyStore endpoint returns `user` as integer (user ID), not nested object
+        if isinstance(my_store_response.data.get('user'), dict):
+            self.assertEqual(my_store_response.data['user']['id'], user.id)
+        else:
+            self.assertEqual(my_store_response.data['user'], user.id)
+
+        # =====================================================================
+        # STEP 6: Seller Dashboard Pages (Session-Based Access)
+        # =====================================================================
+        # Since login() was called in LoginView, the session cookie is available.
+        # We need to include the session cookie from the login response.
+        
+        # 6a. Seller Dashboard page
+        dashboard_response = self.client.get('/seller/dashboard/',
+            HTTP_COOKIE=f'sessionid={login_response.cookies.get("sessionid").value}')
+        self.assertEqual(
+            dashboard_response.status_code, status.HTTP_200_OK,
+            f'Step 6a - Seller Dashboard returned {dashboard_response.status_code}'
+        )
+        self._assert_no_client_error(dashboard_response, 'Step 6a - Seller Dashboard')
+        
+        # 6b. Seller Products page
+        products_page_response = self.client.get('/seller/products/',
+            HTTP_COOKIE=f'sessionid={login_response.cookies.get("sessionid").value}')
+        self.assertEqual(
+            products_page_response.status_code, status.HTTP_200_OK,
+            f'Step 6b - Seller Products page returned {products_page_response.status_code}'
+        )
+        self._assert_no_client_error(products_page_response, 'Step 6b - Seller Products')
+        
+        # 6c. Seller Orders page
+        orders_page_response = self.client.get('/seller/orders/',
+            HTTP_COOKIE=f'sessionid={login_response.cookies.get("sessionid").value}')
+        self.assertEqual(
+            orders_page_response.status_code, status.HTTP_200_OK,
+            f'Step 6c - Seller Orders page returned {orders_page_response.status_code}'
+        )
+        self._assert_no_client_error(orders_page_response, 'Step 6c - Seller Orders')
+        
+        # 6d. Seller Partner Guide page
+        partner_page_response = self.client.get('/seller/partner-guide/',
+            HTTP_COOKIE=f'sessionid={login_response.cookies.get("sessionid").value}')
+        self.assertEqual(
+            partner_page_response.status_code, status.HTTP_200_OK,
+            f'Step 6d - Seller Partner Guide returned {partner_page_response.status_code}'
+        )
+        self._assert_no_client_error(partner_page_response, 'Step 6d - Partner Guide')
+
+        # =====================================================================
+        # STEP 7: JWT Token Refresh
+        # =====================================================================
+        refresh_response = self.client.post(reverse('token-refresh'), {
+            'refresh': refresh_token
+        }, format='json')
+        self.assertEqual(
+            refresh_response.status_code, status.HTTP_200_OK,
+            f'Step 7 - Token refresh failed: {refresh_response.data}'
+        )
+        self._assert_no_client_error(refresh_response, 'Step 7 - Token Refresh')
+        self.assertIn('access', refresh_response.data,
+                      'New access token should be returned')
+        new_access_token = refresh_response.data['access']
+        self.assertTrue(len(new_access_token) > 50, 'New access token should be a valid JWT')
+        self.assertNotEqual(new_access_token, access_token,
+                            'New access token should differ from original')
+
+        # =====================================================================
+        # STEP 8: Verify New JWT Token Works
+        # =====================================================================
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {new_access_token}')
+        reauth_response = self.client.get(self.check_auth_url)
+        self.assertEqual(
+            reauth_response.status_code, status.HTTP_200_OK,
+            f'Step 8 - Re-auth with refreshed token failed: {reauth_response.data}'
+        )
+        self._assert_no_client_error(reauth_response, 'Step 8 - Re-auth')
+        self.assertTrue(reauth_response.data['authenticated'])
+        self.assertEqual(reauth_response.data['user']['role'], 'seller')
+        self.assertEqual(reauth_response.data['user']['email'], self.seller_email)
+
+        # =====================================================================
+        # FINAL: Verify NO duplicate records in the entire flow
+        # =====================================================================
+        user_count = User.objects.filter(email=self.seller_email).count()
+        self.assertEqual(user_count, 1, 'Should be exactly 1 user')
+        
+        store_count = Store.objects.filter(user=user).count()
+        self.assertEqual(store_count, 1, 'Should be exactly 1 store')
+        
+        otp_count = OTP.objects.filter(email=self.seller_email, purpose='registration').count()
+        self.assertEqual(otp_count, 1, 'Should be exactly 1 registration OTP')
+
+    def test_seller_flow_rejects_unverified_login(self):
+        """Test that unverified seller cannot login (verification gate)."""
+        # Register seller but DON'T verify OTP
+        register_response = self.client.post(self.register_url, {
+            'email': self.seller_email,
+            'full_name': self.seller_full_name,
+            'password': self.seller_password,
+            'password2': self.seller_password,
+            'phone': '+6281234567899',
+            'address': 'Jl. Test No. 1',
+            'role': 'seller',
+        }, format='json')
+        self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
+
+        # Try login without OTP verification — should be blocked
+        login_response = self.client.post(self.login_url, {
+            'email': self.seller_email,
+            'password': self.seller_password,
+        }, format='json')
+        self.assertEqual(
+            login_response.status_code, status.HTTP_403_FORBIDDEN,
+            'Unverified seller should be blocked from login'
+        )
+        self.assertTrue(login_response.data.get('needs_verification', False),
+                        'Response should indicate verification is needed')
+        self.assertEqual(login_response.data.get('email'), self.seller_email,
+                         'Response should include email for OTP redirect')
+        
+        # Verify no JWT tokens are returned
+        self.assertNotIn('access', login_response.data,
+                         'No JWT access token should be returned for unverified user')
+        self.assertNotIn('refresh', login_response.data,
+                         'No JWT refresh token should be returned for unverified user')
+        
+        # Verify no store was created (OTP not verified)
+        from stores.models import Store
+        user = User.objects.get(email=self.seller_email)
+        store_count = Store.objects.filter(user=user).count()
+        self.assertEqual(store_count, 0,
+                         'Store should NOT be created if OTP is not verified')
+        
+        # LoginAttempt is only created AFTER the is_verified check in LoginView
+        # (the view returns early for unverified users before LoginAttempt creation).
+        # So no LoginAttempt is expected here.
+
+    def test_seller_flow_wrong_password_rejected(self):
+        """Test that wrong password is rejected at every stage."""
+        # Register seller
+        register_response = self.client.post(self.register_url, {
+            'email': self.seller_email,
+            'full_name': self.seller_full_name,
+            'password': self.seller_password,
+            'password2': self.seller_password,
+            'phone': '+6281234567888',
+            'address': 'Jl. Salah No. 1',
+            'role': 'seller',
+        }, format='json')
+        self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
+        otp_code = register_response.data['otp_code']
+
+        # Verify OTP
+        verify_response = self.client.post(self.otp_verify_url, {
+            'email': self.seller_email,
+            'otp_code': otp_code,
+            'purpose': 'registration',
+        }, format='json')
+        self.assertEqual(verify_response.status_code, status.HTTP_200_OK)
+
+        # Try login with wrong password
+        login_response = self.client.post(self.login_url, {
+            'email': self.seller_email,
+            'password': 'WrongPassword999!',
+        }, format='json')
+        self.assertEqual(
+            login_response.status_code, status.HTTP_400_BAD_REQUEST,
+            'Wrong password should return HTTP 400'
+        )
+
+    def test_seller_flow_protected_pages_reject_unauthenticated(self):
+        """Test that unauthenticated users cannot access seller pages."""
+        # Access seller dashboard without auth — should redirect to login
+        dashboard_response = self.client.get('/seller/dashboard/')
+        self.assertEqual(
+            dashboard_response.status_code, status.HTTP_302_FOUND,
+            'Unauthenticated access should redirect'
+        )
+        # Django login_required redirects to settings.LOGIN_URL which defaults to /accounts/login/
+        # unless configured. The actual redirect uses ?next= parameter.
+        self.assertIn('next=/seller/dashboard/', dashboard_response.url or '',
+                      'Redirect should include next parameter for post-login redirect')
+        
+        # Access seller products without auth — should redirect to login
+        products_response = self.client.get('/seller/products/')
+        self.assertEqual(
+            products_response.status_code, status.HTTP_302_FOUND,
+            'Unauthenticated access should redirect'
+        )
+        self.assertIn('next=/seller/products/', products_response.url or '',
+                      'Redirect should include next parameter for post-login redirect')

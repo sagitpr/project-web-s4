@@ -6,27 +6,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Checkout - Warungio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/buyer/checkout/style.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" /><div><h1>Warungio</h1><p>Pembeli</p></div></div>
-        <nav class="nav-menu">
-          <a href="{% url 'page-buyer-dashboard' %}">Beranda</a>
-          <a href="{% url 'page-buyer-cart' %}">Keranjang</a>
-          <a href="{% url 'page-buyer-orders' %}">Pesanan</a>
-          <a href="{% url 'page-buyer-profile' %}">Profil</a>
-        </nav>
-      </aside>
-      <main class="content-area">
-        <section class="page-header"><div><h1>Checkout</h1><p class="section-subtitle">Konfirmasi pesanan dan metode pembayaran.</p></div></section>
-        <p style="color:var(--muted);text-align:center;padding:40px">Halaman checkout akan tersedia segera.</p>
+    <div class="page-shell">
+      {% include 'components/sidebar.html' %}
+
+      <main class="main-content-area" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        {% include 'components/topbar.html' %}
+
+        <div style="padding: 24px 0; flex:1;">
+          <div class="page-header-section">
+            <h1>Checkout</h1>
+            <p class="page-subtitle">Konfirmasi alamat, pesanan, dan pilih metode pembayaran.</p>
+          </div>
+
+          <div class="checkout-layout">
+            <!-- Left: Form Sections -->
+            <div class="checkout-main">
+              <!-- Address Section -->
+              <section class="checkout-section">
+                <div class="checkout-section-header">
+                  <i class="fa-solid fa-location-dot"></i>
+                  <h2>Alamat Pengiriman</h2>
+                </div>
+                <div class="checkout-address-card" id="addressCard">
+                  <div class="address-display" id="addressDisplay">
+                    <div class="address-info">
+                      <p class="address-name" id="addressName">Nama Penerima</p>
+                      <p class="address-phone" id="addressPhone">0812-3456-7890</p>
+                      <p class="address-detail" id="addressDetail">Jl. Alamat Lengkap, No. 123, Kecamatan, Kota, Provinsi</p>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="btnChangeAddress">Ubah</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Order Items Section -->
+              <section class="checkout-section">
+                <div class="checkout-section-header">
+                  <i class="fa-solid fa-box"></i>
+                  <h2>Pesanan</h2>
+                </div>
+                <div class="checkout-items" id="checkoutItems">
+                  <!-- Loaded dynamically -->
+                </div>
+              </section>
+
+              <!-- Payment Section -->
+              <section class="checkout-section">
+                <div class="checkout-section-header">
+                  <i class="fa-solid fa-credit-card"></i>
+                  <h2>Metode Pembayaran</h2>
+                </div>
+                <div class="payment-methods" id="paymentMethods">
+                  <label class="payment-option active">
+                    <input type="radio" name="payment" value="cod" checked>
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <div class="payment-info">
+                      <strong>COD (Bayar di Tempat)</strong>
+                      <span>Bayar tunai saat pesanan tiba</span>
+                    </div>
+                  </label>
+                  <label class="payment-option">
+                    <input type="radio" name="payment" value="transfer">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <div class="payment-info">
+                      <strong>Transfer Bank</strong>
+                      <span>BCA, Mandiri, BRI, BNI, Permata</span>
+                    </div>
+                  </label>
+                  <label class="payment-option">
+                    <input type="radio" name="payment" value="ewallet">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <div class="payment-info">
+                      <strong>E-Wallet</strong>
+                      <span>GoPay, OVO, DANA, QRIS</span>
+                    </div>
+                  </label>
+                </div>
+              </section>
+            </div>
+
+            <!-- Right: Summary -->
+            <div class="checkout-summary">
+              <div class="card">
+                <div class="card-header"><h3>Ringkasan Pesanan</h3></div>
+                <div class="card-body">
+                  <div class="checkout-summary-items" id="checkoutSummaryItems">
+                    <!-- Loaded dynamically -->
+                  </div>
+                  <div class="summary-divider"></div>
+                  <div class="summary-row"><span>Subtotal</span><strong id="coSubtotal">Rp 0</strong></div>
+                  <div class="summary-row"><span>Ongkos Kirim</span><strong id="coShipping">Rp 0</strong></div>
+                  <div class="summary-divider"></div>
+                  <div class="summary-row total-row"><span>Total Pembayaran</span><strong id="coTotal">Rp 0</strong></div>
+                  <button class="btn btn-primary btn-lg w-full" id="btnPlaceOrder" onclick="placeOrder()">
+                    <i class="fa-solid fa-check-circle"></i> Buat Pesanan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
+
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                }
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+            });
+
+            await loadCheckoutData();
+        });
+
+        async function loadCheckoutData() {
+            try {
+                const cartData = await WarungioAPI.getCart();
+                const items = cartData.results || cartData.items || cartData || [];
+                
+                const checkoutItems = document.getElementById('checkoutItems');
+                const summaryItems = document.getElementById('checkoutSummaryItems');
+                let total = 0;
+
+                if (!items || items.length === 0) {
+                    window.location.href = '{% url "page-buyer-cart" %}';
+                    return;
+                }
+
+                checkoutItems.innerHTML = items.map(function(item) {
+                    const name = item.product_name || item.product?.name || 'Produk';
+                    const price = item.product_price || item.price || item.product?.price || 0;
+                    const qty = item.quantity || item.qty || 1;
+                    const img = item.product_photo_url || item.product?.product_photo_url || '/static/images/paket-sayur.png';
+                    const subtotal = price * qty;
+                    total += subtotal;
+                    return '<div class="co-item">' +
+                        '<img src="' + img + '" alt="' + name + '" class="co-item-img" onerror="this.src=\'{% static "images/paket-sayur.png" %}\'">' +
+                        '<div class="co-item-info"><h4>' + name + '</h4><p>' + qty + ' x Rp ' + Number(price).toLocaleString('id-ID') + '</p></div>' +
+                        '<strong class="co-item-total">Rp ' + Number(subtotal).toLocaleString('id-ID') + '</strong>' +
+                    '</div>';
+                }).join('');
+
+                summaryItems.innerHTML = items.map(function(item) {
+                    const name = item.product_name || item.product?.name || 'Produk';
+                    const qty = item.quantity || item.qty || 1;
+                    return '<div class="summary-item-row"><span>' + name + ' × ' + qty + '</span></div>';
+                }).join('');
+
+                const shipping = total >= 20000 ? 0 : 8000;
+                document.getElementById('coSubtotal').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+                document.getElementById('coShipping').textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
+                document.getElementById('coTotal').textContent = 'Rp ' + Number(total + shipping).toLocaleString('id-ID');
+
+            } catch(e) {
+                console.warn('Checkout load error:', e);
+            }
+        }
+
+        window.placeOrder = async function() {
+            const btn = document.getElementById('btnPlaceOrder');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Memproses...';
+
+            try {
+                const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'cod';
+                const result = await WarungioAPI.checkout({ payment_method: paymentMethod });
+                if (result && result.order_id) {
+                    window.location.href = '/buyer/order-success/?id=' + result.order_id;
+                } else if (result && result.url) {
+                    window.location.href = result.url;
+                } else {
+                    window.location.href = '{% url "page-buyer-orders" %}';
+                }
+            } catch(e) {
+                alert('Gagal membuat pesanan: ' + (e.message || 'Terjadi kesalahan'));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Buat Pesanan';
+            }
+        };
+
+        document.querySelectorAll('.payment-option').forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(function(o) { o.classList.remove('active'); });
+                this.classList.add('active');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+    })();
+    </script>
   </body>
 </html>

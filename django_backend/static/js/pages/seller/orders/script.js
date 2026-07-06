@@ -385,6 +385,55 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchOrders();
   });
 
+  // ── Real-time WebSocket order updates ──
+  // Automatically refresh the orders list and stats when:
+  //   - A new order is placed → order_update with status='pending'
+  //   - Order status changes → order_update (processed, shipped, completed, cancelled)
+  //   - Payment is confirmed → payment_update (paid)
+  //
+  // Events are broadcast by the backend via NotificationConsumer WebSocket.
+  // The client (WarungioWS) is already connected — we just subscribe to events.
+
+  var _wsRetries = 0;
+  var _wsMaxRetries = 10;
+
+  function setupRealtimeUpdates() {
+    if (typeof WarungioWS === 'undefined' || typeof WarungioWS.on !== 'function') {
+      // WebSocket not yet initialized — retry after a short delay
+      if (++_wsRetries >= _wsMaxRetries) return;
+      setTimeout(setupRealtimeUpdates, 1000);
+      return;
+    }
+
+    // When any order is created or status changes, refresh the full list
+    WarungioWS.on('order_update', function (data) {
+      console.info('[Orders WS] Order update:', data.order_number, '→', data.status);
+
+      // Show brief toast for significant events
+      if (data.status === 'pending') {
+        window.WarungioToast?.show('Pesanan baru masuk: ' + (data.order_number || ''), 'info');
+      }
+
+      // Refresh the entire orders list to stay in sync
+      fetchOrders();
+    });
+
+    // Also refresh on payment confirmation (pending → paid)
+    WarungioWS.on('payment_update', function (data) {
+      console.info('[Orders WS] Payment update:', data.order_number, '→', data.status);
+      fetchOrders();
+    });
+
+    // When WebSocket reconnects after disconnection, refresh to catch missed updates
+    WarungioWS.on('connected', function () {
+      console.info('[Orders WS] Reconnected — refreshing orders');
+      fetchOrders();
+    });
+  }
+
+  // Initialize real-time WebSocket subscriptions
+  setupRealtimeUpdates();
+
   // Initialize page
   fetchOrders();
 });

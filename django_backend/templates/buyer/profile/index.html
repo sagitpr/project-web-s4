@@ -1,320 +1,299 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profil Saya - Warungio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-  <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/premium.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/pages/buyer/profile/style.css' %}">
-  <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Saya - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/profile/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 </head>
 <body>
+    <div class="page-shell">
+        {% include 'components/sidebar.html' %}
 
-  <!-- ========== TOP NAVBAR ========== -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a href="/home/" class="topbar-brand">
-        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo" />
-        <span class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></span>
-      </a>
-      <div class="search-panel">
-        <div class="search-input">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#94A3B8"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round"/></svg>
-          <input type="text" placeholder="Cari produk, warung, atau kategori..." autocomplete="off">
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <div id="authHeaderActions" style="display: flex; align-items: center; gap: 12px;">
-          <button class="icon-btn" aria-label="Notifikasi"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
-          <button class="icon-btn" aria-label="Chat"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
-          <button class="icon-btn" aria-label="Cart"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge">2</span></button>
-          <div class="profile-dropdown-wrapper">
-            <div class="profile-box" id="profileBox" style="cursor: pointer;">
-              <div class="profile-info">
-                <p id="userName">Hai, Sari</p>
-                <span class="member-badge" id="userRoleBadge">Member</span>
-              </div>
-              <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
-              <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <main style="flex:1; display:flex; flex-direction:column; min-width:0;">
+            {% include 'components/topbar.html' %}
+
+            <div style="padding: 24px 0; flex:1;">
+                <div class="page-header-section">
+                    <h1>Profil Saya</h1>
+                    <p class="page-subtitle">Kelola informasi akun, keamanan, dan pengaturan profil Anda.</p>
+                </div>
+
+                <!-- Profile Layout -->
+                <div class="profile-layout">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <!-- Avatar Card -->
+                        <div class="profile-card">
+                            <div class="avatar-container">
+                                <div class="avatar-wrapper">
+                                    <img src="{% static 'images/av-siti.png' %}" alt="Foto Profil" class="avatar-img" id="profileAvatar" />
+                                    <button class="avatar-edit" id="btnChangePhoto" title="Ubah Foto"><i class="fa-solid fa-camera"></i></button>
+                                </div>
+                            </div>
+                            <p class="photo-info">Format: JPG/PNG. Maks. 2MB</p>
+                            <p style="font-size:13px;font-weight:700;text-align:center;color:var(--color-text-primary)" id="profileDisplayName">Nama Pengguna</p>
+                            <p style="font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-top:4px" id="profileEmail">email@example.com</p>
+                            <input type="file" id="photoInput" accept="image/*" style="display:none">
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="profile-card">
+                            <h3>Statistik</h3>
+                            <div class="stats-list">
+                                <div class="stat-item"><span>Pesanan</span><strong id="statOrders">0</strong></div>
+                                <div class="stat-item"><span>Ulasan</span><strong id="statReviews">0</strong></div>
+                                <div class="stat-item"><span>Poin</span><strong id="statPoints">0</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column with Tabs -->
+                    <div class="main-panel">
+                        <!-- Tabs -->
+                        <div class="tabs-container">
+                            <div class="profile-tabs">
+                                <button class="tab-header-btn active" data-tab="info">Informasi Akun</button>
+                                <button class="tab-header-btn" data-tab="security">Keamanan</button>
+                                <button class="tab-header-btn" data-tab="settings">Pengaturan</button>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Informasi Akun -->
+                        <div class="tab-content active" id="tabInfo">
+                            <form id="profileForm">
+                                <div class="form-section">
+                                    <h2>Informasi Dasar</h2>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Nama Lengkap</label>
+                                            <input type="text" id="inputFullName" placeholder="Nama lengkap" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" id="inputEmail" placeholder="email@example.com" class="input-disabled" disabled />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nomor HP</label>
+                                            <input type="tel" id="inputPhone" placeholder="08XX-XXXX-XXXX" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Tanggal Lahir</label>
+                                            <input type="date" id="inputBirthDate" />
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label>Alamat</label>
+                                            <textarea id="inputAddress" rows="2" placeholder="Alamat lengkap"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions-bar">
+                                    <button type="submit" class="btn-solid-green" id="btnSaveProfile">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tab: Keamanan -->
+                        <div class="tab-content" id="tabSecurity" style="display:none;">
+                            <div class="form-section">
+                                <h2>Ubah Password</h2>
+                                <div class="info-alert">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Gunakan kombinasi huruf besar, huruf kecil, angka, dan simbol untuk password yang kuat.</span>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>Password Saat Ini</label>
+                                        <div class="input-wrapper">
+                                            <input type="password" id="inputCurrentPassword" placeholder="Masukkan password saat ini" />
+                                            <span class="toggle-pwd" onclick="togglePassword('inputCurrentPassword',this)"><i class="fa-regular fa-eye"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label>Password Baru</label>
+                                        <div class="input-wrapper">
+                                            <input type="password" id="inputNewPassword" placeholder="Masukkan password baru" />
+                                            <span class="toggle-pwd" onclick="togglePassword('inputNewPassword',this)"><i class="fa-regular fa-eye"></i></span>
+                                        </div>
+                                        <div class="password-strength"><div class="strength-bar" id="passwordStrengthBar"></div></div>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label>Konfirmasi Password Baru</label>
+                                        <div class="input-wrapper">
+                                            <input type="password" id="inputConfirmPassword" placeholder="Ulangi password baru" />
+                                            <span class="toggle-pwd" onclick="togglePassword('inputConfirmPassword',this)"><i class="fa-regular fa-eye"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions-bar">
+                                <button class="btn-solid-green" id="btnChangePassword">Ubah Password</button>
+                            </div>
+
+                            <div class="form-section" style="margin-top:32px;">
+                                <h2>Verifikasi</h2>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Verifikasi Email</label>
+                                        <p class="input-disabled" style="padding:12px 16px;border:1.5px solid var(--color-border);border-radius:8px;background:#f9fafb;font-size:13px;">
+                                            <i class="fa-solid fa-check-circle" style="color:var(--color-success,#16a34a);"></i> Terverifikasi
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Verifikasi Nomor HP</label>
+                                        <p class="input-disabled" style="padding:12px 16px;border:1.5px solid var(--color-border);border-radius:8px;background:#f9fafb;font-size:13px;">
+                                            <i class="fa-solid fa-check-circle" style="color:var(--color-success,#16a34a);"></i> Terverifikasi
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Pengaturan -->
+                        <div class="tab-content" id="tabSettings" style="display:none;">
+                            <div class="form-section">
+                                <h2>Preferensi</h2>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Bahasa</label>
+                                        <select id="inputLanguage">
+                                            <option value="id">Indonesia</option>
+                                            <option value="en">English</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Notifikasi</label>
+                                        <select id="inputNotifications">
+                                            <option value="all">Semua Notifikasi</option>
+                                            <option value="important">Penting Saja</option>
+                                            <option value="none">Nonaktifkan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions-bar">
+                                <button class="btn-solid-green" id="btnSaveSettings">Simpan Pengaturan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="dropdown-menu-custom" id="dropdownMenu">
-              <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-              <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-              <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-              <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-            </div>
-          </div>
-        </div>
-        <div id="guestHeaderActions" style="display: none; align-items: center; gap: 8px;">
-          <a href="/auth/login/" class="btn-login-premium">Masuk</a>
-          <a href="/auth/register/" class="btn-register-premium">Daftar</a>
-        </div>
-      </div>
+        </main>
     </div>
-  </header>
 
-  <!-- ========== BREADCRUMB / TITLE BAR ========== -->
-  <div class="title-bar-container">
-    <div class="title-bar">
-      <div class="title-left">
-        <div class="title-icon-wrap">
-          <i class="fa-regular fa-user"></i>
-        </div>
-        <div class="title-text-group">
-          <h1>Profil Saya</h1>
-          <p>Kelola informasi profil dan preferensi akun Anda.</p>
-        </div>
-      </div>
-      <div class="title-right">
-        <a href="/home/" class="btn-back">
-          <i class="fa-solid fa-chevron-left"></i> Kembali ke Beranda
-        </a>
-      </div>
-    </div>
-  </div>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
 
-  <!-- ========== TAB HEADERS ========== -->
-  <div class="tabs-container">
-    <div class="profile-tabs">
-      <button class="tab-header-btn active" data-tab="info">Informasi Profil</button>
-      <button class="tab-header-btn" data-tab="password">Preferensi Akun</button>
-    </div>
-  </div>
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                }
+                
+                // Load profile
+                try {
+                    const data = await WarungioAPI.checkAuth();
+                    if (data && data.user) {
+                        const user = data.user;
+                        document.getElementById('profileDisplayName').textContent = user.full_name || user.email;
+                        document.getElementById('profileEmail').textContent = user.email;
+                        if (user.profile_photo) document.getElementById('profileAvatar').src = user.profile_photo;
+                        
+                        document.getElementById('inputFullName').value = user.full_name || '';
+                        document.getElementById('inputEmail').value = user.email || '';
+                        document.getElementById('inputPhone').value = user.phone_number || '';
+                        if (user.birth_date) document.getElementById('inputBirthDate').value = user.birth_date;
+                        if (user.address) document.getElementById('inputAddress').value = user.address;
+                    }
+                } catch(e) { console.warn(e); }
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+            
+            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+            });
 
-  <!-- ========== MAIN CONTENT AREA ========== -->
-  <div class="profile-layout">
-    <!-- Left Column: Photo & Security -->
-    <aside class="left-column">
-      <!-- Foto Profil Card -->
-      <div class="profile-card photo-card">
-        <h3>Foto Profil</h3>
-        <div class="avatar-container">
-          <div class="avatar-wrapper">
-            <img id="profileAvatar" src="{% static 'images/av-siti.png' %}" alt="Foto Profil" class="avatar-img" />
-            <button class="avatar-edit" id="avatarUploadBtn" aria-label="Ubah foto profil">
-              <i class="fa-solid fa-camera"></i>
-            </button>
-            <input type="file" id="avatarInput" accept="image/*" class="hidden" />
-          </div>
-        </div>
-        <p class="photo-info">PNG, JPG maksimal 2MB</p>
-        <button class="btn-outline-green" id="avatarUploadTriggerBtn">Ubah Foto</button>
-      </div>
+            // Tab switching
+            document.querySelectorAll('.tab-header-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-header-btn').forEach(function(b) { b.classList.remove('active'); });
+                    document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+                    this.classList.add('active');
+                    var tabId = this.dataset.tab;
+                    document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).style.display = 'block';
+                });
+            });
 
-      <!-- Keamanan Akun Card -->
-      <div class="profile-card security-card">
-        <h3>Keamanan Akun</h3>
-        <div class="form-group">
-          <label>Password</label>
-          <div class="password-masked">*******</div>
-        </div>
-        <button class="btn-outline-green" id="triggerChangePwdBtn">Ubah Password</button>
-      </div>
-    </aside>
+            // Password toggle
+            window.togglePassword = function(inputId, el) {
+                var input = document.getElementById(inputId);
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    el.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+                } else {
+                    input.type = 'password';
+                    el.innerHTML = '<i class="fa-regular fa-eye"></i>';
+                }
+            };
 
-    <!-- Right Column: Profile Form -->
-    <main class="main-panel">
-      <form id="profileForm" novalidate>
-        <div id="profileMessage" class="form-message" style="display:none"></div>
+            // Photo change
+            document.getElementById('btnChangePhoto')?.addEventListener('click', function() {
+                document.getElementById('photoInput').click();
+            });
+            document.getElementById('photoInput')?.addEventListener('change', async function(e) {
+                if (!e.target.files.length) return;
+                try {
+                    const result = await WarungioAPI.uploadProfilePhoto(e.target.files[0]);
+                    if (result && result.user?.profile_photo) {
+                        document.getElementById('profileAvatar').src = result.user.profile_photo;
+                    }
+                } catch(e) { console.warn(e); }
+            });
 
-        <!-- Section 1: Informasi Pribadi -->
-        <section class="form-section">
-          <h2>Informasi Pribadi</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="fullName">Nama Lengkap</label>
-              <input type="text" id="fullName" name="full_name" placeholder="Nama Lengkap" required />
-            </div>
-            <div class="form-group">
-              <label for="phone">Nomor Handphone</label>
-              <input type="tel" id="phone" name="phone" placeholder="Nomor Handphone" required />
-            </div>
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" id="email" name="email" disabled class="input-disabled" />
-            </div>
-            <div class="form-group">
-              <label for="gender">Jenis Kelamin</label>
-              <select id="gender" name="gender">
-                <option value="">Pilih Jenis Kelamin</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="birthDate">Tanggal Lahir</label>
-              <div class="input-date-wrapper">
-                <input type="date" id="birthDate" name="birth_date" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="job">Pekerjaan</label>
-              <select id="job" name="job">
-                <option value="">Pilih Pekerjaan</option>
-                <option value="Pemilik Usaha">Pemilik Usaha</option>
-                <option value="Karyawan Swasta">Karyawan Swasta</option>
-                <option value="PNS / BUMN">PNS / BUMN</option>
-                <option value="Wiraswasta">Wiraswasta</option>
-                <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
-                <option value="Mahasiswa / Pelajar">Mahasiswa / Pelajar</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <!-- Section 2: Informasi Alamat Utama -->
-        <section class="form-section">
-          <h2>Informasi Alamat Utama</h2>
-          <div class="form-group full-width">
-            <label for="address">Alamat</label>
-            <textarea id="address" name="address" rows="3" placeholder="Masukkan alamat lengkap (Nama Jalan, RT/RW, Kelurahan, Kecamatan)"></textarea>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="city">Kota / Kabupaten</label>
-              <input type="text" id="city" name="city" placeholder="Kota / Kabupaten" />
-            </div>
-            <div class="form-group">
-              <label for="province">Provinsi</label>
-              <select id="province" name="province">
-                <option value="">Pilih Provinsi</option>
-                <option value="DKI Jakarta">DKI Jakarta</option>
-                <option value="Jawa Barat">Jawa Barat</option>
-                <option value="Banten">Banten</option>
-                <option value="Jawa Tengah">Jawa Tengah</option>
-                <option value="DI Yogyakarta">DI Yogyakarta</option>
-                <option value="Jawa Timur">Jawa Timur</option>
-                <option value="Sumatera Utara">Sumatera Utara</option>
-                <option value="Bali">Bali</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="zipCode">Kode Pos</label>
-              <input type="text" id="zipCode" name="zip_code" placeholder="Kode Pos" />
-            </div>
-          </div>
-        </section>
-
-        <!-- Section 3: Informasi Usaha -->
-        <section class="form-section">
-          <h2>Informasi Usaha (Sebagai Buyer)</h2>
-          <div class="info-alert">
-            <i class="fa-solid fa-store"></i>
-            <span>Dengan melengkapi informasi usaha, kami dapat memberikan rekomendasi produk dan penawaran terbaik untuk kebutuhan bisnismu.</span>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="businessName">Nama Usaha</label>
-              <input type="text" id="businessName" name="business_name" placeholder="Nama Usaha" />
-            </div>
-            <div class="form-group">
-              <label for="businessType">Jenis Usaha</label>
-              <select id="businessType" name="business_type">
-                <option value="">Pilih Jenis Usaha</option>
-                <option value="Toko Kelontong">Toko Kelontong</option>
-                <option value="Warung Makan">Warung Makan</option>
-                <option value="Katering">Katering</option>
-                <option value="Reseller / Dropshipper">Reseller / Dropshipper</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="businessScale">Skala Usaha</label>
-              <select id="businessScale" name="business_scale">
-                <option value="">Pilih Skala Usaha</option>
-                <option value="Kecil (1-5 karyawan)">Kecil (1-5 karyawan)</option>
-                <option value="Menengah (6-19 karyawan)">Menengah (6-19 karyawan)</option>
-                <option value="Besar (20+ karyawan)">Besar (20+ karyawan)</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group full-width" style="margin-top: 16px;">
-            <label for="businessDescription">Deskripsi Usaha (Opsional)</label>
-            <textarea id="businessDescription" name="business_description" rows="3" placeholder="Jelaskan secara singkat mengenai usaha Anda..."></textarea>
-          </div>
-        </section>
-
-        <!-- Form Submit Button -->
-        <div class="form-actions-bar">
-          <button type="submit" class="btn-solid-green" id="saveProfileBtn">
-            <span class="btn-text">Simpan Perubahan</span>
-            <span class="btn-spinner hidden"></span>
-          </button>
-        </div>
-      </form>
-    </main>
-  </div>
-
-  <!-- Change Password Modal -->
-  <div id="passwordModal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>Ubah Kata Sandi</h2>
-        <button class="btn-close-modal" id="closePwdModalBtn"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="passwordForm" novalidate>
-        <div id="passwordMessage" class="form-message" style="display:none"></div>
-        <div class="form-group">
-          <label for="oldPassword">Kata Sandi Lama</label>
-          <div class="input-wrapper">
-            <input type="password" id="oldPassword" name="old_password" placeholder="Masukkan kata sandi lama" required />
-            <button type="button" class="toggle-pwd" data-target="oldPassword" aria-label="Tampilkan kata sandi">
-              <i class="fa-regular fa-eye eye-open"></i>
-              <i class="fa-regular fa-eye-slash eye-closed hidden"></i>
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="newPassword">Kata Sandi Baru</label>
-          <div class="input-wrapper">
-            <input type="password" id="newPassword" name="new_password" placeholder="Minimal 8 karakter" required minlength="8" />
-            <button type="button" class="toggle-pwd" data-target="newPassword" aria-label="Tampilkan kata sandi">
-              <i class="fa-regular fa-eye eye-open"></i>
-              <i class="fa-regular fa-eye-slash eye-closed hidden"></i>
-            </button>
-          </div>
-          <div class="password-strength" id="pwdStrength">
-            <div class="strength-bar" id="strengthBar"></div>
-          </div>
-          <small class="field-hint" id="strengthText">Masukkan kata sandi baru</small>
-        </div>
-        <div class="form-group">
-          <label for="confirmPassword">Konfirmasi Kata Sandi Baru</label>
-          <input type="password" id="confirmPassword" name="new_password2" placeholder="Ulangi kata sandi baru" required minlength="8" />
-        </div>
-        <div class="modal-actions">
-          <button type="submit" class="btn-solid-green" id="changePwdBtn">
-            <span class="btn-text">Ubah Kata Sandi</span>
-            <span class="btn-spinner hidden"></span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay hidden">
-    <div class="spinner-lg"></div>
-    <p>Memuat profil...</p>
-  </div>
-
-  <script src="{% static 'js/utils/auth-ui.js' %}"></script>
-  <script src="{% static 'js/utils/asset-loader.js' %}"></script>
-  <script src="{% static 'js/device-detector.js' %}"></script>
-  <script src="{% static 'js/auth.js' %}"></script>
-  <script src="{% static 'js/api.js' %}"></script>
-  <script>WarungioAuthUI.init({ syncBalance: false, syncCart: false });</script>
-  <script src="{% static 'js/nav.js' %}"></script>
-  <script src="{% static 'js/pages/buyer/profile/script.js' %}"></script>
+            // Save profile
+            document.getElementById('profileForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('btnSaveProfile');
+                btn.disabled = true;
+                btn.textContent = 'Menyimpan...';
+                
+                try {
+                    const result = await WarungioAPI.updateProfile({
+                        full_name: document.getElementById('inputFullName').value,
+                        phone_number: document.getElementById('inputPhone').value,
+                        birth_date: document.getElementById('inputBirthDate').value,
+                        address: document.getElementById('inputAddress').value
+                    });
+                    if (result && result.user) {
+                        document.getElementById('profileDisplayName').textContent = result.user.full_name || result.user.email;
+                        alert('Profil berhasil diperbarui!');
+                    }
+                } catch(e) {
+                    alert('Gagal menyimpan profil: ' + (e.message || 'Terjadi kesalahan'));
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Simpan Perubahan';
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

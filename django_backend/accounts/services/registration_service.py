@@ -110,6 +110,10 @@ def verify_registration_otp(
     """
     Step 2: Verify OTP code for registration.
     
+    Uses SHA256 hash comparison with plaintext fallback for legacy records.
+    Tracks failed attempts to prevent brute force.
+    Marks user as verified upon success.
+    
     Returns:
         dict with success, message, next_step
     """
@@ -120,17 +124,17 @@ def verify_registration_otp(
     except User.DoesNotExist:
         return {'success': False, 'error': 'Pengguna tidak ditemukan atau langkah tidak valid.'}
 
-    # Find valid OTP
+    # Find candidate OTP by user + purpose (WITHOUT code comparison)
+    # so we can track failed attempts even when the code is wrong.
     otp = OTP.objects.filter(
         user=user,
         purpose='registration',
         is_valid=True,
         is_used=False,
-        otp_code=otp_code,
-    ).first()
+    ).order_by('-created_at').first()
 
     if not otp:
-        return {'success': False, 'error': 'Kode OTP tidak valid.'}
+        return {'success': False, 'error': 'Kode OTP tidak ditemukan.'}
 
     if otp.is_expired():
         otp.is_valid = False
@@ -144,15 +148,24 @@ def verify_registration_otp(
             'needs_new_otp': True,
         }
 
-    # Verify
+    # Verify the code against stored hash (with plaintext fallback)
+    otp_code_hash = OTP.hash_otp(otp_code)
+    is_code_valid = (otp.otp_code_hash == otp_code_hash) or (otp.otp_code == otp_code)
+
+    if not is_code_valid:
+        otp.increment_attempts()
+        return {'success': False, 'error': 'Kode OTP tidak valid.'}
+
+    # Code is correct — mark as verified
     otp.is_used = True
     otp.is_valid = False
     otp.verified_at = timezone.now()
-    otp.save()
+    otp.save(update_fields=['is_used', 'is_valid', 'verified_at'])
 
-    # Update user step
+    # Update user: set verified, advance registration step
+    user.is_verified = True
     user.registration_step = 'otp'
-    user.save(update_fields=['registration_step'])
+    user.save(update_fields=['is_verified', 'registration_step'])
 
     # Track event
     _track_event(user, 'otp_verified', ip_address, user_agent)

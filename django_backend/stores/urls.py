@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.StoreListView.as_view(), name='store-list'),
     path('categories/', views.StoreCategoryListView.as_view(), name='store-categories'),
     path('my-store/', views.MyStoreView.as_view(), name='my-store'),
+    path('my-store/remove-image/', views.RemoveStoreImageView.as_view(), name='my-store-remove-image'),
     path('create/', views.StoreCreateView.as_view(), name='store-create'),
     path('<int:pk>/', views.StoreDetailView.as_view(), name='store-detail'),
     path('slug/<slug:slug>/', views.StoreDetailView.as_view(), name='store-detail-slug'),

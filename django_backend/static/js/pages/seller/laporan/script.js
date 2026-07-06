@@ -85,23 +85,48 @@
   }
 
   function exportReport(format) {
-    showToast('Mengekspor laporan sebagai ' + format.toUpperCase() + '...', 'success');
-    if ((format === 'csv' || format === 'excel') && window._dailySalesData) {
-      var csv = 'Tanggal,Penjualan,Pesanan\n';
-      var d = window._dailySalesData;
-      for (var i = 0; i < d.labels.length; i++) {
-        csv += d.labels[i] + ',' + (d.daily_sales[i] || 0) + ',' + (d.daily_orders[i] || 0) + '\n';
-      }
-      var type = format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv';
-      var blob = new Blob([csv], { type: type });
-      var url = URL.createObjectURL(blob);
-      var link = document.createElement('a');
-      link.href = url;
-      link.download = 'laporan-penjualan.' + (format === 'excel' ? 'xls' : 'csv');
-      link.click();
-      URL.revokeObjectURL(url);
-    } else if (format === 'pdf') {
-      window.print();
+    showToast('Mengunduh laporan ' + format.toUpperCase() + '...', 'success');
+    
+    // Map 'excel' to 'xlsx' for the API
+    var apiFormat = format === 'excel' ? 'xlsx' : format;
+    
+    // Get current period from the filter
+    var filter = $('dateFilter');
+    var period = filter ? filter.value : '30days';
+    
+    // Build export URL with auth token
+    var token = (window.WarungioAuth && window.WarungioAuth.getToken) ? WarungioAuth.getToken() : localStorage.getItem('access_token');
+    var baseUrl = window.API_BASE_URL || '/api';
+    var exportUrl = baseUrl + '/analytics/export/?format=' + apiFormat + '&period=' + period;
+    
+    if (token) {
+      // Use fetch with auth header for proper binary handling
+      fetch(exportUrl, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(function (res) {
+        if (!res.ok) { throw new Error('Gagal mengekspor laporan'); }
+        return res.blob();
+      })
+      .then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        var ext = format === 'excel' ? 'xlsx' : format;
+        link.download = 'laporan-penjualan.' + ext;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Laporan ' + format.toUpperCase() + ' berhasil diunduh!', 'success');
+      })
+      .catch(function (err) {
+        console.error('Export error:', err);
+        showToast(err.message || 'Gagal mengekspor laporan.', 'error');
+      });
+    } else {
+      // Fallback: direct download (will redirect to login if unauthenticated)
+      window.location.href = exportUrl;
     }
   }
 

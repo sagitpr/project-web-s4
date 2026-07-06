@@ -119,6 +119,8 @@ class Order(models.Model):
                                     verbose_name='Biaya Admin (Seller)')
     admin_fee_buyer = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('1500.00'),
                                          verbose_name='Biaya Admin (Buyer)')
+    admin_fee_seller = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('1000.00'),
+                                          verbose_name='Biaya Admin Seller (legacy)')
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     
     # Payment
@@ -183,7 +185,7 @@ class Order(models.Model):
         # Buyer: total_price = subtotal + shipping - discount + admin_fee_buyer (Rp 1.500)
         # Seller: admin_fee_seller (Rp 1.000) dipotong dari pendapatan seller ke e-wallet owner.
         self.total_price = self.subtotal + shipping - disc + Decimal(str(self.admin_fee_buyer))
-        self.save(update_fields=['subtotal', 'total_price', 'admin_fee', 'admin_fee_buyer'])
+        self.save(update_fields=['subtotal', 'total_price', 'admin_fee', 'admin_fee_buyer', 'admin_fee_seller'])
 
 
 class OrderItem(models.Model):

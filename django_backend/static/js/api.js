@@ -295,6 +295,12 @@
   RealAPI.followStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
   // Follow/unfollow toggle: POST once to follow, POST again to unfollow (backend toggle)
   RealAPI.unfollowStore = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/' + id + '/follow/', { method: 'POST' }); };
+  
+  // Store image upload/remove
+  RealAPI.uploadStoreLogo = function (file) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var fd = new FormData(); fd.append('store_logo', file); return auth.apiUpload('/stores/my-store/', fd, 'PATCH'); };
+  RealAPI.uploadStoreBanner = function (file) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var fd = new FormData(); fd.append('store_banner', file); return auth.apiUpload('/stores/my-store/', fd, 'PATCH'); };
+  RealAPI.removeStoreLogo = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/remove-image/', { method: 'POST', body: JSON.stringify({ image_type: 'logo' }) }); };
+  RealAPI.removeStoreBanner = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-store/remove-image/', { method: 'POST', body: JSON.stringify({ image_type: 'banner' }) }); };
 
   // Products
   RealAPI.getProducts = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/products/' + (qs ? '?' + qs : '')); };
@@ -412,6 +418,7 @@
   RealAPI.getNotifications = function (params) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); var qs = params ? new URLSearchParams(params).toString() : ''; return auth.api('/notifications/' + (qs ? '?' + qs : '')); };
   RealAPI.markNotificationRead = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ notification_ids: [id] }) }); };
   RealAPI.markAllNotificationsRead = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ mark_all: true }) }); };
+  RealAPI.deleteNotification = function (id) { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/notifications/' + id + '/delete/', { method: 'DELETE' }); };
 
   // Favorite Stores (followed stores)
   RealAPI.getFollowedStores = function () { if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' }); return auth.api('/stores/my-followed/'); };
@@ -568,6 +575,26 @@
   MockHandlers.getStore = function (id) { id = Number(id); if (id === store.id) return ok(store); if (id === store2.id) return ok(store2); return fail('Toko tidak ditemukan.', 404); };
   MockHandlers.createStore = function (data) { store.store_name = data.store_name || store.store_name; store.description = data.description || store.description; store.city = data.city || store.city; store.id = uid(); user.role = 'seller'; return ok({ message: 'Toko berhasil dibuat.', store: store }); };
   MockHandlers.updateStore = function (id, data) { Object.keys(data).forEach(function (k) { if (data[k] !== undefined) store[k] = data[k]; }); return ok(store); };
+  MockHandlers.uploadStoreLogo = function (file) {
+    store.store_logo = URL.createObjectURL(file);
+    store.store_logo_url = store.store_logo;
+    return ok({ message: 'Logo berhasil diunggah.', store: store });
+  };
+  MockHandlers.uploadStoreBanner = function (file) {
+    store.store_banner = URL.createObjectURL(file);
+    store.store_banner_url = store.store_banner;
+    return ok({ message: 'Banner berhasil diunggah.', store: store });
+  };
+  MockHandlers.removeStoreLogo = function () {
+    store.store_logo = null;
+    store.store_logo_url = null;
+    return ok({ message: 'Logo berhasil dihapus.' });
+  };
+  MockHandlers.removeStoreBanner = function () {
+    store.store_banner = null;
+    store.store_banner_url = null;
+    return ok({ message: 'Banner berhasil dihapus.' });
+  };
   MockHandlers.followStore = function () { store.follower_count = (store.follower_count || 0) + 1; return ok({ message: 'Berhasil mengikuti toko.', is_following: true }); };
   MockHandlers.unfollowStore = function () { store.follower_count = Math.max(0, (store.follower_count || 1) - 1); return ok({ message: 'Berhenti mengikuti toko.', is_following: false }); };
 
@@ -1127,6 +1154,12 @@
   };
   MockHandlers.markNotificationRead = function (id) { var n = notifications.find(function (notif) { return notif.id === Number(id); }); if (n) n.is_read = true; return ok({ message: 'Notifikasi ditandai sudah dibaca.' }); };
   MockHandlers.markAllNotificationsRead = function () { notifications.forEach(function (n) { n.is_read = true; }); return ok({ message: 'Semua notifikasi ditandai sudah dibaca.' }); };
+  MockHandlers.deleteNotification = function (id) {
+    var idx = notifications.findIndex(function (n) { return n.id === Number(id); });
+    if (idx === -1) return fail('Notifikasi tidak ditemukan.', 404);
+    notifications.splice(idx, 1);
+    return ok({ message: 'Notifikasi berhasil dihapus.' });
+  };
 
   // ──────────────────────────────────────────────────────────────────────────
   //  ASSEMBLY  — RealAPI first, then overlay mock if MOCK_API=true

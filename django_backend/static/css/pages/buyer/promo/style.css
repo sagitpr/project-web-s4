@@ -1,0 +1,100 @@
+/* Warungio Buyer — Promo & Voucher Page */
+/* Premium design system */
+
+/* ── Layout ── */
+.page-shell { grid-template-columns: 260px 1fr !important; }
+.promo-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Product Card Overrides ── */
+.product-card-premium {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.05);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+.product-card-premium .img-zoom-parent {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F8FAF8;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-card-premium .img-zoom-parent img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.5s ease;
+}
+.product-card-premium:hover .img-zoom-parent img { transform: scale(1.08); }
+
+/* ── Voucher Card ── */
+.voucher-card-premium {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+.voucher-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(31, 41, 55, 0.06);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Skeleton ── */
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card-premium {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 16px;
+}
+.skeleton-img {
+  aspect-ratio: 1;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .page-shell { grid-template-columns: 260px 1fr !important; }
+}
+@media (max-width: 1023px) {
+  .page-shell { grid-template-columns: 1fr !important; }
+}

@@ -269,6 +269,20 @@ class BatchCreateView(APIView):
 
         if result['success']:
             batch = result['batch']
+            # Broadcast stock change to followers and seller
+            if batch.product:
+                try:
+                    from orders.views import notify_stock_update
+                    notify_stock_update(
+                        store_id=store.id,
+                        product_id=batch.product.id,
+                        product_name=batch.product.product_name,
+                        stock_change=float(data['quantity']),
+                        action='stock_added',
+                        store_user_id=store.user_id,
+                    )
+                except Exception as exc:
+                    logger.warning('Stock broadcast failed for batch create: %s', exc)
             return Response({
                 'success': True,
                 'batch': {
@@ -313,6 +327,7 @@ class BatchUpdateView(generics.UpdateAPIView):
             )
 
         current_qty = request.data.get('current_quantity')
+        qty_changed = False
         if current_qty is not None:
             new_qty = Decimal(str(current_qty))
             if new_qty < 0:
@@ -320,6 +335,8 @@ class BatchUpdateView(generics.UpdateAPIView):
                     {'error': 'Jumlah tidak boleh negatif.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            qty_changed = new_qty != batch.current_quantity
+            old_qty = float(batch.current_quantity)
             batch.current_quantity = new_qty
 
         notes = request.data.get('notes')
@@ -328,6 +345,24 @@ class BatchUpdateView(generics.UpdateAPIView):
 
         batch.save()
         batch.refresh_status()
+
+        # Sync Product.stock + broadcast if quantity changed
+        if qty_changed and batch.product:
+            from .services.fefo_engine import _sync_product_stock
+            _sync_product_stock(batch.product)
+            try:
+                from orders.views import notify_stock_update
+                stock_change = float(new_qty) - old_qty
+                notify_stock_update(
+                    store_id=batch.store.id,
+                    product_id=batch.product.id,
+                    product_name=batch.product.product_name,
+                    stock_change=stock_change,
+                    action='stock_adjusted',
+                    store_user_id=batch.store.user_id,
+                )
+            except Exception as exc:
+                logger.warning('Stock broadcast failed for batch update: %s', exc)
 
         serializer = ProductBatchSerializer(batch)
         return Response(serializer.data)
@@ -353,7 +388,7 @@ class BatchDisposeView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        qty_before = batch.current_quantity
+        qty_before = float(batch.current_quantity)
         batch.current_quantity = 0
         batch.is_active = False
         batch.save()
@@ -379,10 +414,27 @@ class BatchDisposeView(APIView):
             days_until_expiry=-1,
         )
 
+        # Sync Product.stock from remaining batches + broadcast
+        if batch.product:
+            from .services.fefo_engine import _sync_product_stock
+            _sync_product_stock(batch.product)
+            try:
+                from orders.views import notify_stock_update
+                notify_stock_update(
+                    store_id=batch.store.id,
+                    product_id=batch.product.id,
+                    product_name=batch.product.product_name,
+                    stock_change=-qty_before,
+                    action='stock_disposed',
+                    store_user_id=batch.store.user_id,
+                )
+            except Exception as exc:
+                logger.warning('Stock broadcast failed for batch dispose: %s', exc)
+
         return Response({
             'success': True,
             'message': f'Batch {batch.batch_number} telah di-dispose.',
-            'disposed_quantity': float(qty_before),
+            'disposed_quantity': qty_before,
         })
 
 
@@ -428,6 +480,29 @@ class StockOutView(APIView):
         )
 
         if result['success']:
+            # Broadcast stock deduction — find Product listing from first affected batch
+            try:
+                product_obj = None
+                if result.get('transactions'):
+                    first_batch_id = result['transactions'][0].get('batch_id')
+                    if first_batch_id:
+                        from .models import ProductBatch
+                        batch_obj = ProductBatch.objects.filter(id=first_batch_id).select_related('product').first()
+                        if batch_obj and batch_obj.product:
+                            product_obj = batch_obj.product
+                if product_obj:
+                    from orders.views import notify_stock_update
+                    notify_stock_update(
+                        store_id=store.id,
+                        product_id=product_obj.id,
+                        product_name=product_obj.product_name,
+                        stock_change=-float(data['quantity']),
+                        action='stock_deducted',
+                        store_user_id=store.user_id,
+                    )
+            except Exception as exc:
+                logger.warning('Stock broadcast failed for stock_out: %s', exc)
+
             return Response({
                 'success': True,
                 'total_quantity': result['total_quantity'],

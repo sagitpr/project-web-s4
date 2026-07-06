@@ -216,7 +216,7 @@ class MidtransNotificationView(views.APIView):
                         message=f'Top Up saldo Warungio sebesar Rp {float(gross_amount):,} berhasil! Saldo Anda telah diperbarui.',
                     )
                 else:
-                    # Create persistent notification record
+                    # ── Notify BUYER via Notification DB record + WebSocket ──
                     from notifications.models import Notification as Notif
                     Notif.objects.create(
                         user_id=order.user_id,
@@ -227,8 +227,6 @@ class MidtransNotificationView(views.APIView):
                         action_url=f'/buyer/order-detail/?id={order.id}',
                         action_text='Lihat Pesanan',
                     )
-
-                    # Notify buyer via WebSocket
                     notify_payment_update(
                         user_id=order.user_id,
                         order_id=order.id,
@@ -236,6 +234,26 @@ class MidtransNotificationView(views.APIView):
                         payment_status='paid',
                         message=f'Pembayaran untuk pesanan {order.order_number} berhasil! Pesanan akan segera diproses.',
                     )
+
+                    # ── Notify SELLER via WebSocket order_update (real-time orders list refresh) ──
+                    # Signal on_order_status_change already creates the Notification DB record.
+                    # Only broadcast WebSocket event to trigger auto-refresh on seller orders page.
+                    if order.store and order.store.user_id:
+                        try:
+                            channel_layer = get_channel_layer()
+                            if channel_layer:
+                                async_to_sync(channel_layer.group_send)(
+                                    f'notifications_{order.store.user_id}',
+                                    {
+                                        'type': 'order_update',
+                                        'order_id': order.id,
+                                        'order_number': order.order_number,
+                                        'status': 'paid',
+                                        'message': f'Pembayaran untuk pesanan {order.order_number} telah dikonfirmasi!',
+                                    }
+                                )
+                        except Exception as exc:
+                            logger.warning('Failed to send order_update WS to seller %s: %s', order.store.user_id, exc)
 
                 # Update Midtrans settlement
                 midtrans_tx.settlement_time = timezone.now()
@@ -574,8 +592,8 @@ class FinanceSummaryView(views.APIView):
                 'withdrawal': withdrawal_trend
             }
         }
-        # Cache for 2 minutes to reduce DB load (~45 queries per request)
-        cache.set(cache_key, data, 120)
+        # Cache briefly for spike protection — finance cards always show near-live data
+        cache.set(cache_key, data, 15)
         return Response(data)
 
 
@@ -776,7 +794,23 @@ class WithdrawBalanceView(views.APIView):
             va_number=primary_bank.account_number,
         )
 
-        # 5. Notify seller via notification
+        # 5. Debit seller wallet atomically
+        try:
+            from .services.wallet import debit_wallet
+            result = debit_wallet(
+                user=user,
+                amount=amount,
+                tx_type='withdrawal',
+                description=f'Penarikan dana ke {primary_bank.bank_name} - {primary_bank.account_number}',
+                reference_type='withdrawal',
+                reference_id=str(withdrawal_tx.id),
+            )
+            logger.info('Seller wallet debited for withdrawal %s: Rp %s \u2192 Rp %s',
+                       withdrawal_tx.id, result['balance_before'], result['balance_after'])
+        except Exception as e:
+            logger.error('Failed to debit seller wallet for withdrawal %s: %s', withdrawal_tx.id, e)
+
+        # 6. Notify seller via notification
         try:
             from notifications.models import Notification
             Notification.objects.create(

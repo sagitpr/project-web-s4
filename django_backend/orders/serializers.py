@@ -38,18 +38,27 @@ class CartSerializer(serializers.ModelSerializer):
         return None
 
     def validate_qty(self, value):
-        product = self.initial_data.get('product')
-        if product:
-            from products.models import Product
+        # For POST (create): get product ID from request data
+        # For PATCH (update): get product from existing instance
+        product_id = self.initial_data.get('product')
+        product = None
+        from products.models import Product
+        if product_id:
             try:
-                prod = Product.objects.get(id=product)
-                available = prod.available_stock
-                if value > available:
-                    raise serializers.ValidationError(
-                        f"Stok tidak mencukupi. Tersedia: {available}"
-                    )
+                product = Product.objects.get(id=product_id)
             except Product.DoesNotExist:
                 pass
+        elif self.instance and self.instance.product_id:
+            try:
+                product = Product.objects.get(id=self.instance.product_id)
+            except Product.DoesNotExist:
+                pass
+        if product:
+            available = product.available_stock
+            if value > available:
+                raise serializers.ValidationError(
+                    f"Stok tidak mencukupi. Tersedia: {available}"
+                )
         return value
 
 

@@ -724,32 +724,48 @@ document.addEventListener('DOMContentLoaded', async () => {
       startTrackingPolling(orderId, order);
     }
 
-    // ── Listen for real-time updates ──
-    document.addEventListener('warungio:order_update', (e) => {
-      if (e.detail && e.detail.order_id == orderId) {
-        console.info('Order update received, reloading...');
-        setTimeout(() => window.location.reload(), 1500);
+    // ── Listen for real-time updates via WebSocket ──
+    // Delivery tracking updates — instantly refresh tracking without polling
+    var _wsRetries = 0;
+    var _wsMaxRetries = 10;
+
+    function setupRealtimeDeliveryUpdates() {
+      if (_wsRetries >= _wsMaxRetries) return;
+      if (typeof WarungioWS === 'undefined' || typeof WarungioWS.on !== 'function') {
+        _wsRetries++;
+        setTimeout(setupRealtimeDeliveryUpdates, 1000);
+        return;
       }
-    });
-    document.addEventListener('warungio:payment_update', (e) => {
-      if (e.detail && e.detail.order_id == orderId) {
-        console.info('Payment update received, reloading...');
-        setTimeout(() => window.location.reload(), 1500);
-      }
-    });
-    document.addEventListener('warungio:delivery_update', (e) => {
-      if (e.detail && e.detail.order_id == orderId) {
-        console.info('Delivery update received via WebSocket, reloading tracking...');
-        // Refresh tracking data without full page reload
-        var trackingCard = document.getElementById('trackingCard');
-        if (trackingCard && trackingCard.style.display !== 'none') {
-          // Re-fetch tracking silently
-          fetchTrackingStatus(orderId, false);
-        } else {
-          setTimeout(() => window.location.reload(), 1500);
+
+      WarungioWS.on('delivery_update', function (data) {
+        if (data.order_id == orderId) {
+          console.info('[Order Detail] Delivery update: ' + data.delivery_status);
+          var trackingCard = document.getElementById('trackingCard');
+          if (trackingCard && trackingCard.style.display !== 'none') {
+            // Re-fetch tracking silently — no loading spinner
+            fetchTrackingStatus(orderId, false);
+          } else {
+            // Tracking not visible yet — refresh the full page to show it
+            setTimeout(function () { window.location.reload(); }, 1500);
+          }
         }
-      }
-    });
+      });
+
+      WarungioWS.on('order_update', function (data) {
+        if (data.order_id == orderId && data.status === 'cancelled') {
+          // Cancellation — reload to show cancelled status
+          setTimeout(function () { window.location.reload(); }, 1500);
+        }
+      });
+
+      WarungioWS.on('payment_update', function (data) {
+        if (data.order_id == orderId && (data.status === 'paid' || data.status === 'settlement')) {
+          // Payment confirmed — reload to show paid status
+          setTimeout(function () { window.location.reload(); }, 1500);
+        }
+      });
+    }
+    setupRealtimeDeliveryUpdates();
 
   } catch (err) {
     console.error('Failed to load order:', err);

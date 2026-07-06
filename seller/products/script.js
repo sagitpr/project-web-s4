@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         data.results.forEach(p => {
           const status = p.stock > 0 ? '<span class="status-green">Tersedia</span>' : '<span class="status-red">Habis</span>';
           const tr = document.createElement('tr');
+          const isActiveDisplay = p.is_active !== false;
+          const activeBtnClass = isActiveDisplay ? 'btn-toggle' : 'btn-toggle inactive';
+          const activeBtnIcon = isActiveDisplay ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+          const activeBtnText = isActiveDisplay ? 'Aktif' : 'Nonaktif';
           tr.innerHTML = `
             <td><img src="${p.image || WarungioAssets.img('vega-fresh.png')}" width="50" height="50" style="object-fit:cover;border-radius:8px;" /></td>
             <td><b>${p.name}</b></td>
@@ -47,9 +51,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${status}</td>
             <td>${p.average_rating ? '★' + Number(p.average_rating).toFixed(1) : '-'}</td>
             <td>
+              <button class="${activeBtnClass}" data-id="${p.id}" data-active="${isActiveDisplay}" title="${isActiveDisplay ? 'Nonaktifkan' : 'Aktifkan'} produk">${activeBtnIcon} ${activeBtnText}</button>
               <button class="btn-edit" data-id="${p.id}"><i class="fa-solid fa-pen"></i></button>
               <button class="btn-delete" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
             </td>`;
+          // Toggle active status
+          tr.querySelector('.btn-toggle')?.addEventListener('click', () => toggleProductActive(p.id, p.name, isActiveDisplay));
           productTable.appendChild(tr);
 
           tr.querySelector('.btn-edit')?.addEventListener('click', () => openEditModal(p));
@@ -103,6 +110,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     modal.querySelector('#edit-stock').value = product.stock || 0;
     modal.querySelector('#edit-category').value = product.category || '';
     modal.querySelector('#edit-unit').value = product.unit || 'kg';
+    // Set is_active toggle
+    const activeCheckbox = modal.querySelector('#edit-active');
+    if (activeCheckbox) {
+      activeCheckbox.checked = product.is_active !== false;
+    }
   }
 
   editForm?.addEventListener('submit', async (e) => {
@@ -113,6 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.disabled = true; btn.textContent = 'Menyimpan...';
 
     try {
+      const isActive = fd.get('is_active') === 'on';
       await WarungioAPI.updateProduct(id, {
         name: fd.get('name'),
         description: fd.get('description'),
@@ -120,6 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         stock: parseInt(fd.get('stock')) || 0,
         category: fd.get('category'),
         unit: fd.get('unit') || 'kg',
+        is_active: isActive,
       });
       setMsg('Produk berhasil diperbarui!', 'success');
       modal.style.display = 'none';
@@ -137,6 +151,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
   });
+
+  // ── Toggle product active status ──
+  async function toggleProductActive(id, name, currentlyActive) {
+    const newActive = !currentlyActive;
+    const action = newActive ? 'Aktifkan' : 'Nonaktifkan';
+    if (!confirm(`${action} produk "${name}"?`)) return;
+    try {
+      await WarungioAPI.updateProduct(id, { is_active: newActive });
+      setMsg(`Produk "${name}" berhasil ${newActive ? 'diaktifkan' : 'dinonaktifkan'}.`, 'success');
+      loadProducts();
+    } catch (err) {
+      setMsg(err.message || `Gagal ${newActive ? 'mengaktifkan' : 'menonaktifkan'} produk.`);
+    }
+  }
 
   // ── Delete product ──
   async function deleteProduct(id, name) {

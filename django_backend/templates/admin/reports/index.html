@@ -10,8 +10,9 @@
         <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>This Month</option><option>Last Month</option><option>This Quarter</option><option>This Year</option><option>Custom Range</option></select>
     </div>
     <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary btn-sm"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-        <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="exportAdminReport('pdf')"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportAdminReport('csv')"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportAdminReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
     </div>
 </div>
 

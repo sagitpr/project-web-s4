@@ -14,6 +14,7 @@ urlpatterns = [
     path('activities/', views.UserActivityView.as_view(), name='user-activities'),
     path('reports/', views.DailyReportView.as_view(), name='daily-reports'),
     path('seller-report/', views.SellerReportView.as_view(), name='seller-report'),
+    path('export/', views.ReportExportView.as_view(), name='report-export'),
     path('realtime/', views.RealTimeAnalyticsView.as_view(), name='realtime-analytics'),
 
     # AI Business Insights

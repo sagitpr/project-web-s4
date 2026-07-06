@@ -1,0 +1,179 @@
+/* Warungio Buyer — Product Catalog Page */
+/* Premium design matching home/style.css design system */
+
+/* ── Layout ── */
+.page-shell {
+  grid-template-columns: 260px 1fr !important;
+}
+.catalog-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Product Card ── */
+.product-card-premium {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-card-premium:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+.card-img-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f9fafb;
+  margin-bottom: 12px;
+}
+.card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.product-card-premium:hover .card-img-wrap img {
+  transform: scale(1.06);
+}
+.fav-heart-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: all 0.2s;
+  cursor: pointer;
+  z-index: 10;
+}
+.fav-heart-btn:hover { color: #ef4444; transform: scale(1.05); }
+.fav-heart-btn.active { color: #ef4444; }
+
+.badge-list {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+/* ── Sticky Filter Bar ── */
+.filter-sticky-bar {
+  position: sticky;
+  top: 76px;
+  z-index: 50;
+  background: rgba(248, 250, 248, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 12px 0;
+}
+
+/* ── Skeleton Shimmer ── */
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card-premium {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 16px;
+}
+.skeleton-img {
+  aspect-ratio: 1;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+.skeleton-text {
+  height: 14px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+/* ── Product Card (inline version) ── */
+.produk-card {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  cursor: pointer !important;
+}
+.produk-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(22, 163, 74, 0.2) !important;
+}
+.produk-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: #f8faf8;
+  overflow: hidden;
+}
+.produk-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+.produk-card:hover .produk-img { transform: scale(1.05); }
+
+/* ── Loading Grid ── */
+.product-grid-loading {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+@media (max-width: 1200px) {
+  .product-grid-loading { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 1024px) {
+  .product-grid-loading { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .product-grid-loading { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .page-shell { grid-template-columns: 260px 1fr !important; }
+}
+@media (max-width: 1023px) {
+  .page-shell { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 768px) {
+  .filter-sticky-bar { top: 60px; }
+}

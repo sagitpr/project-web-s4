@@ -24,11 +24,12 @@ class ProductListSerializer(serializers.ModelSerializer):
     store_slug = serializers.CharField(source='store.slug', read_only=True)
     category_name = serializers.CharField(source='category.category_name', read_only=True)
     product_photo_url = serializers.SerializerMethodField()
+    available_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ('id', 'product_name', 'slug', 'price', 'stock', 'unit',
-                  'product_photo_url', 'product_status', 'quality_score',
+        fields = ('id', 'product_name', 'slug', 'price', 'stock', 'available_stock',
+                  'unit', 'product_photo_url', 'product_status', 'quality_score',
                   'sold_count', 'rating_avg', 'review_count', 'store_name',
                   'store_slug', 'category_name', 'is_featured', 'is_active',
                   'created_at')
@@ -37,6 +38,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         if obj.product_photo:
             return obj.product_photo.url
         return None
+
+    def get_available_stock(self, obj):
+        return obj.available_stock
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):

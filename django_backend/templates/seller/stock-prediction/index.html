@@ -5,187 +5,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Prediksi Stok & AI Demand - Warungio Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/seller/stock-prediction/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <style>
-        .forecast-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        .recommendation-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .recommendation-item {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            transition: all 0.15s ease;
-        }
-        .recommendation-item:hover {
-            border-color: var(--color-brand);
-            box-shadow: var(--shadow-sm);
-        }
-        .product-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .product-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-lg);
-            background: var(--color-surface-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        .status-warning {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        .status-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-    </style>
 </head>
-<body style="background: var(--color-surface-secondary);">
-
-<button class="mobile-menu-btn" id="mobileMenuToggle" style="position:fixed;top:16px;left:16px;z-index:100;background:var(--color-surface);box-shadow:var(--shadow-md);">
-    <i class="fa-solid fa-bars"></i>
-</button>
-
-<div style="display:flex; min-height:100vh;">
+<body>
+<div class="container">
     <!-- Sidebar -->
-    <aside id="sellerSidebar" style="width:var(--sidebar-width); background:var(--color-surface); border-right:1px solid var(--color-border); position:fixed; top:0; left:0; bottom:0; z-index:90; display:flex; flex-direction:column; overflow-y:auto;">
-        <div style="padding:24px 20px; border-bottom:1px solid var(--color-border-light);">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:32px; width:auto;">
-                <div>
-                    <div style="font-size:18px; font-weight:800; color:var(--color-text-primary);">
-                        <span style="color:var(--color-brand);">Warung</span>io
-                    </div>
-                    <small style="font-size:11px; color:var(--color-text-tertiary);">Mitra</small>
-                </div>
+    <aside class="sidebar" id="sidebarNav">
+        <div class="logo">
+            <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+            <div class="logo-text">
+                <span class="brand-name">Warungio</span>
+                <small class="brand-tag">Seller Dashboard</small>
             </div>
         </div>
-        <nav style="flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:2px;">
-            <a href="{% url 'page-seller-dashboard' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-house"></i> Dashboard
-            </a>
-            <a href="{% url 'page-seller-products' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-box"></i> Produk
-            </a>
-            <a href="{% url 'page-seller-orders' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-receipt"></i> Pesanan
-            </a>
-            <a href="{% url 'page-seller-keuangan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-wallet"></i> Keuangan
-            </a>
-            <a href="{% url 'page-seller-pelanggan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-users"></i> Pelanggan
-            </a>
-            <a href="{% url 'page-seller-promo-diskon' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-bullhorn"></i> Promo & Diskon
-            </a>
-            <a href="{% url 'page-seller-ulasan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-star"></i> Ulasan
-            </a>
-            <a href="{% url 'page-seller-supplier' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-truck-field"></i> B2B Supplier
-            </a>
-            <a href="{% url 'page-seller-stock-prediction' %}" class="active" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:white; background:var(--color-brand);">
-                <i class="fa-solid fa-brain"></i> Prediksi Stok
-            </a>
-            <a href="{% url 'page-seller-laporan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-chart-line"></i> Laporan
-            </a>
-            <div style="flex:1;"></div>
-            <a href="{% url 'page-seller-pengaturan' %}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:600; color:var(--color-text-secondary); transition:all 0.15s;">
-                <i class="fa-solid fa-gear"></i> Pengaturan
-            </a>
+        <nav>
+            <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+            <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+            <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+            <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+            <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
+            <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+            <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
+            <a href="{% url 'page-seller-supplier' %}"><i class="fa-solid fa-truck-field"></i> B2B Supplier</a>
+            <a href="{% url 'page-seller-stock-prediction' %}" class="active"><i class="fa-solid fa-brain"></i> Prediksi Stok</a>
+            <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+            <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+            <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
         </nav>
+        <div class="sidebar-ads">
+            <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+            <p><b>Prediksi stok dengan AI</b></p>
+            <p class="desc">Antisipasi permintaan pasar dengan prediksi cerdas.</p>
+            <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+            <button class="btn-learn">Pelajari</button>
+        </div>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Main Content -->
-    <main style="flex:1; margin-left:var(--sidebar-width); padding:24px; min-width:0;">
-        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:16px 24px; margin-bottom:24px;">
-            <div>
-                <h2 style="font-size:20px; font-weight:800; color:var(--color-text-primary); margin:0;">AI Stock Forecast & Demand Prediction</h2>
-                <p style="font-size:13px; color:var(--color-text-secondary); margin:4px 0 0 0;">Visualisasi perkiraan kebutuhan stok produk berbasis AI.</p>
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="top-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                    <div class="shop-status-block">
+                        <div class="shop-name-row">
+                            <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                            <span class="badge-active">Aktif</span>
+                        </div>
+                        <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                    </div>
+                </div>
+                <div class="header-right">                        <div id="notif-container" class="notif-wrap"></div>
+                    <div class="profile-block">
+                        <div class="avatar-wrap">
+                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                            <div class="status-online"></div>
+                        </div>
+                        <div class="profile-info">
+                            <span class="profile-name">Bu Sari</span>
+                            <span class="profile-role">Seller</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                    </div>
+                </div>
             </div>
-        </div>
+        </header>
 
+        <!-- Page Title -->
+        <section class="page-title-section">
+            <div class="page-title-left">
+                <h1>AI Stock Forecast & Demand Prediction</h1>
+                <p class="page-subtitle">Visualisasi perkiraan kebutuhan stok produk berbasis AI.</p>
+            </div>
+        </section>
+
+        <!-- Forecast Grid -->
         <div class="forecast-grid">
-            <!-- Chart Card -->
-            <div class="card" style="grid-column: span 2; padding:24px;">
-                <h3 style="font-size:16px; font-weight:700; color:var(--color-text-primary); margin-bottom:16px;">Grafik Tren Penjualan vs Prediksi Demand (30 Hari)</h3>
-                <div style="position:relative; height:300px; width:100%;">
+            <div class="card forecast-chart-card">
+                <h3>Grafik Tren Penjualan vs Prediksi Demand (30 Hari)</h3>
+                <div class="forecast-chart-wrap">
                     <canvas id="demandChart"></canvas>
                 </div>
             </div>
-
-            <!-- Accuracy Card -->
-            <div class="card" style="padding:24px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-                <div style="font-size:48px; font-weight:800; color:var(--color-brand); line-height:1; margin-bottom:8px;">94.2%</div>
-                <h4 style="font-size:15px; font-weight:700; color:var(--color-text-primary); margin:0;">Akurasi Prediksi AI</h4>
-                <p style="font-size:12px; color:var(--color-text-tertiary); margin:6px 0 0 0; max-width:200px;">Model diperbarui otomatis menggunakan data transaksi historis warungmu.</p>
+            <div class="card forecast-accuracy-card">
+                <div class="accuracy-pct">94.2%</div>
+                <h4 class="accuracy-title">Akurasi Prediksi AI</h4>
+                <p class="accuracy-desc">Model diperbarui otomatis menggunakan data transaksi historis warungmu.</p>
             </div>
         </div>
 
-        <div class="card" style="padding:24px;">
-            <h3 style="font-size:16px; font-weight:700; color:var(--color-text-primary); margin-bottom:16px;">Rekomendasi Restock AI</h3>
+        <!-- Recommendations -->
+        <div class="card recommendation-card">
+            <h3>Rekomendasi Restock AI</h3>
             <div class="recommendation-list">
                 <div class="recommendation-item">
                     <div class="product-meta">
                         <div class="product-icon">🥬</div>
                         <div>
-                            <h4 style="font-size:14px; font-weight:700; margin:0 0 4px 0;">Bayam Hijau Segar</h4>
-                            <span style="font-size:12px; color:var(--color-text-tertiary);">Stok saat ini: 4 ikat | Prediksi demand: 25 ikat (7 hari)</span>
+                            <h4 class="product-name">Bayam Hijau Segar</h4>
+                            <span class="product-stock-info">Stok saat ini: 4 ikat | Prediksi demand: 25 ikat (7 hari)</span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:16px;">
-                        <span class="status-pill status-danger">Stok Kritis</span>
-                        <button class="btn btn-primary" onclick="window.location.href='{% url 'page-seller-supplier' %}'">Restock Grosir</button>
+                    <div class="recommendation-actions">
+                        <span class="status-pill status-pill-danger">Stok Kritis</span>
+                        <button class="btn-primary btn-sm" onclick="window.location.href='{% url 'page-seller-supplier' %}'">Restock Grosir</button>
                     </div>
                 </div>
-
                 <div class="recommendation-item">
                     <div class="product-meta">
                         <div class="product-icon">🍳</div>
                         <div>
-                            <h4 style="font-size:14px; font-weight:700; margin:0 0 4px 0;">Minyak Goreng Bimoli 2L</h4>
-                            <span style="font-size:12px; color:var(--color-text-tertiary);">Stok saat ini: 12 pouch | Prediksi demand: 48 pouch (7 hari)</span>
+                            <h4 class="product-name">Minyak Goreng Bimoli 2L</h4>
+                            <span class="product-stock-info">Stok saat ini: 12 pouch | Prediksi demand: 48 pouch (7 hari)</span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:16px;">
-                        <span class="status-pill status-warning">Stok Rendah</span>
-                        <button class="btn btn-primary" onclick="window.location.href='{% url 'page-seller-supplier' %}'">Restock Grosir</button>
+                    <div class="recommendation-actions">
+                        <span class="status-pill status-pill-warning">Stok Rendah</span>
+                        <button class="btn-primary btn-sm" onclick="window.location.href='{% url 'page-seller-supplier' %}'">Restock Grosir</button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="seller-footer">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                    <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
+                    <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Layanan</h4>
+                    <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a><a href="{% url 'page-metode-pembayaran' %}">Metode Pembayaran</a><a href="{% url 'home' %}">Pengiriman</a><a href="{% url 'page-landing' %}">Promo & Diskon</a><a href="{% url 'page-bantuan' %}">Pusat Bantuan</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Tentang Warungio</h4>
+                    <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="#">Karir</a><a href="{% url 'page-blog' %}">Blog</a><a href="{% url 'page-landing' %}">Mitra Warung</a><a href="{% url 'page-kontak-kami' %}">Kontak Kami</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Untuk Seller</h4>
+                    <a href="{% url 'page-panduan-seller' %}">Panduan Seller</a><a href="{% url 'page-tips-sukses' %}">Tips Sukses</a><a href="{% url 'page-komunitas' %}">Komunitas Seller</a><a href="{% url 'page-kebijakan' %}">Kebijakan & Ketentuan</a>
+                </div>
+                <div class="footer-download">
+                    <h4>Download Aplikasi Warungio</h4>
+                    <p>Belanja lebih mudah melalui aplikasi</p>
+                    <div class="store-badges">
+                        <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
+                        <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
+                    </div>
+                    <div class="social-links">
+                        <span>Ikuti kami di</span>
+                        <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </main>
 </div>
 
@@ -219,18 +207,22 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+                    legend: { position: 'bottom' }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+                    y: { beginAtZero: true }
                 }
             }
         });
     });
 </script>
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script src="{% static 'js/utils/toast.js' %}"></script>
+<script src="{% static 'js/websocket.js' %}"></script>
+<script src="{% static 'js/utils/notifications.js' %}"></script>
+<script src="{% static 'js/nav.js' %}"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
 </body>
 </html>

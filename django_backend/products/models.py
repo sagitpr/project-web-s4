@@ -166,6 +166,11 @@ class Product(models.Model):
         self.review_count = result['count']
         self.save(update_fields=['rating_avg', 'review_count'])
 
+        # Cascade rating update up to the store level
+        # This ensures Store.rating_avg reflects all product reviews across the store
+        if hasattr(self, 'store') and self.store:
+            self.store.update_rating_avg()
+
 
 class ProductGallery(models.Model):
     """Additional product images."""

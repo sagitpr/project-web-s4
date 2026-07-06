@@ -126,6 +126,47 @@ class StoreFollowersView(generics.ListAPIView):
         return StoreFollower.objects.filter(store_id=self.kwargs['store_id'])
 
 
+class RemoveStoreImageView(views.APIView):
+    """Remove store logo or banner image (set to null, delete file)."""
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        image_type = request.data.get('image_type')  # 'logo' or 'banner'
+        if image_type not in ('logo', 'banner'):
+            return Response({'error': 'Field image_type harus "logo" atau "banner".'},
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            store = Store.objects.get(user=request.user)
+        except Store.DoesNotExist:
+            return Response({'error': 'Toko tidak ditemukan.'},
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        if image_type == 'logo':
+            if store.store_logo:
+                try:
+                    storage = store.store_logo.storage
+                    if storage.exists(store.store_logo.name):
+                        storage.delete(store.store_logo.name)
+                except Exception:
+                    pass
+                store.store_logo = None
+                store.save(update_fields=['store_logo'])
+            return Response({'message': 'Logo toko berhasil dihapus.'})
+        
+        elif image_type == 'banner':
+            if store.store_banner:
+                try:
+                    storage = store.store_banner.storage
+                    if storage.exists(store.store_banner.name):
+                        storage.delete(store.store_banner.name)
+                except Exception:
+                    pass
+                store.store_banner = None
+                store.save(update_fields=['store_banner'])
+            return Response({'message': 'Banner toko berhasil dihapus.'})
+
+
 class MyFollowedStoresView(generics.ListAPIView):
     """List stores the current user follows."""
     serializer_class = StoreListSerializer

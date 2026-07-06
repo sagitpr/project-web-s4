@@ -9,29 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/seller/ulasan/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/refunds/style.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-    <style>
-    .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
-    .badge-pending { background:#fef3c7; color:#d97706; }
-    .badge-review { background:#dbeafe; color:#2563eb; }
-    .badge-approved { background:#dcfce7; color:#16a34a; }
-    .badge-rejected { background:#fef2f2; color:#dc2626; }
-    .badge-cancelled { background:#f1f5f9; color:#64748b; }
-    .badge-refunded { background:#dcfce7; color:#16a34a; }
-    .badge-waiting { background:#fef3c7; color:#d97706; }
-    .badge-escalated { background:#fce7f3; color:#db2777; }
-    .refund-row { display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:1px solid var(--color-border-light,#e2e8f0); text-decoration:none; transition:background 0.1s; }
-    .refund-row:hover { background:#f8fafc; }
-    .refund-row:last-child { border-bottom:none; }
-    .filter-bar { display:flex; gap:8px; flex-wrap:wrap; padding:16px 28px; }
-    .filter-btn { padding:7px 14px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.15s; }
-    .filter-btn:hover { border-color:#16a34a; color:#16a34a; }
-    .filter-btn.active { background:#16a34a; color:#fff; border-color:#16a34a; }
-    .refund-amount { font-weight:700; color:#1e293b; font-size:14px; }
-    .refund-info-label { font-size:11px; color:#94a3b8; }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -85,10 +65,7 @@
                         </div>
                     </div>
                     <div class="header-right">
-                        <div class="notif">
-                            <i class="fa-solid fa-bell"></i>
-                            <span class="notif-badge">3</span>
-                        </div>
+                        <div id="notif-container" class="notif-wrap"></div>
                         <div class="profile-block">
                             <div class="avatar-wrap">
                                 <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
@@ -119,7 +96,7 @@
             </section>
 
             <!-- Stats Grid -->
-            <section class="stats-grid" id="statsGrid" style="grid-template-columns:repeat(5,1fr);">
+            <section class="stats-grid refund-stats" id="statsGrid">
                 <div class="stat-card">
                     <div class="icon-box orange"><i class="fa-solid fa-clock"></i></div>
                     <div class="stat-info">
@@ -176,9 +153,9 @@
             </div>
 
             <!-- Refund List -->
-            <div class="card" style="padding:0;">
+            <div class="card refund-list-card">
                 <div id="refundList">
-                    <div style="text-align:center;padding:60px 20px;color:#94a3b8;font-size:13px;" id="refundLoadingState">
+                    <div class="refund-loading" id="refundLoadingState">
                         <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:16px;"></i>
                         Memuat data refund...
                     </div>
@@ -233,7 +210,10 @@
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/websocket.js' %}"></script>
+    <script src="{% static 'js/utils/notifications.js' %}"></script>
     <script src="{% static 'js/nav.js' %}"></script>
+    <script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
     <script>
 document.addEventListener('DOMContentLoaded', async function() {
     if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {

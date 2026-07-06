@@ -6,52 +6,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Keranjang Belanja - Warungio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/premium.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/buyer/cart/style.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-panel">
-          <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" />
-          <div><h1>Warungio</h1><p>Pembeli</p></div>
-        </div>
-        <nav class="nav-menu">
-          <a href="{% url 'page-buyer-dashboard' %}">Beranda</a>
-          <a href="#" class="active">Keranjang</a>
-          <a href="{% url 'page-buyer-orders' %}">Pesanan</a>
-          <a href="{% url 'page-buyer-profile' %}">Profil</a>
-        </nav>
-        <div class="sidebar-footer">
-          <p>Belanja dari warung terdekat, jadi lebih mudah.</p>
-          <a href="{% url 'page-buyer-home' %}" class="cta-button">Kembali Belanja</a>
-        </div>
-      </aside>
-      <main class="content-area">
-        <header class="topbar">
-          <div class="topbar-left"><h1>Keranjang Belanja</h1><p class="cart-status">Memuat keranjang...</p></div>
-        </header>
-        <div class="empty-state" style="text-align:center;padding:60px 20px">
-          <div class="empty-icon" style="font-size:64px;margin-bottom:16px">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <div class="page-shell">
+      {% include 'components/sidebar.html' %}
+
+      <main class="main-content-area" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        {% include 'components/topbar.html' %}
+
+        <div style="padding: 24px 0; flex:1;">
+          <div class="page-header-section">
+            <h1>Keranjang Belanja</h1>
+            <p class="page-subtitle" id="cartStatusText">Memuat keranjang...</p>
           </div>
-          <h2>Keranjang Belanja Kosong</h2>
-          <p>Belum ada produk di keranjang. Yuk mulai belanja!</p>
-          <a href="{% url 'page-buyer-home' %}" class="btn-primary">Mulai Belanja</a>
+
+          <!-- Cart Content: Items + Summary -->
+          <div class="cart-layout" id="cartLayout">
+            <!-- Cart Items -->
+            <div class="cart-items-section">
+              <div class="cart-items" id="cartItems">
+                <!-- Loaded dynamically -->
+              </div>
+
+              <!-- Empty State -->
+              <div class="empty-state" id="cartEmpty" style="display:none;">
+                <div class="empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                <h3>Keranjang Belanja Kosong</h3>
+                <p>Belum ada produk di keranjang. Yuk mulai belanja!</p>
+                <a href="{% url 'page-buyer-home' %}" class="btn btn-primary">Mulai Belanja</a>
+              </div>
+
+              <!-- Loading Skeleton -->
+              <div class="cart-skeleton" id="cartSkeleton">
+                <div class="skeleton-cart-item"></div>
+                <div class="skeleton-cart-item"></div>
+                <div class="skeleton-cart-item"></div>
+              </div>
+            </div>
+
+            <!-- Summary Sidebar -->
+            <div class="cart-summary-section">
+              <div class="card">
+                <div class="card-header"><h3>Ringkasan Belanja</h3></div>
+                <div class="card-body">
+                  <div class="summary-row"><span>Total Harga</span><strong id="summaryTotal">Rp 0</strong></div>
+                  <div class="summary-row"><span>Ongkos Kirim</span><strong id="summaryShipping">Rp 0</strong></div>
+                  <div class="summary-divider"></div>
+                  <div class="summary-row total-row"><span>Total Pesanan</span><strong id="summaryGrandTotal">Rp 0</strong></div>
+                  <p class="summary-note" id="summaryNote">Belanja minimal Rp20.000 untuk gratis ongkir</p>
+                  <button class="btn btn-primary btn-lg w-full" id="btnCheckout" disabled>
+                    <i class="fa-solid fa-credit-card"></i> Checkout
+                  </button>
+                  <a href="{% url 'page-buyer-home' %}" class="btn btn-ghost w-full">Lanjut Belanja</a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
+
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
-    <script>WarungioAuthUI.init({ syncBalance: false, syncCart: true });</script>
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/utils/format.js' %}"></script>
-    <script src="{% static 'js/pages/buyer/cart/script.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                }
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+            });
+
+            await loadCart();
+        });
+
+        async function loadCart() {
+            const skeleton = document.getElementById('cartSkeleton');
+            const itemsContainer = document.getElementById('cartItems');
+            const empty = document.getElementById('cartEmpty');
+            const statusText = document.getElementById('cartStatusText');
+
+            skeleton.style.display = 'block';
+            
+            try {
+                const data = await WarungioAPI.getCart();
+                const items = data.results || data.items || data || [];
+                
+                if (window.WarungioAuth && window.WarungioAuth.init) {
+                    window.WarungioAuth.init({ syncCart: true });
+                }
+                
+                skeleton.style.display = 'none';
+
+                if (!items || items.length === 0) {
+                    empty.style.display = 'block';
+                    statusText.textContent = '0 produk di keranjang';
+                    return;
+                }
+
+                statusText.textContent = items.length + ' produk di keranjang';
+                
+                itemsContainer.innerHTML = items.map(function(item) {
+                    const id = item.id || item.product?.id;
+                    const name = item.product_name || item.product?.name || item.product?.product_name || 'Produk';
+                    const price = item.product_price || item.price || item.product?.price || 0;
+                    const qty = item.quantity || item.qty || 1;
+                    const img = item.product_photo_url || item.product?.product_photo_url || item.product?.product_photo || '/static/images/paket-sayur.png';
+                    const store = item.store_name || item.store?.store_name || 'Warung Lokal';
+                    const subtotal = price * qty;
+
+                    return '<div class="cart-item" data-id="' + id + '">' +
+                        '<img src="' + img + '" alt="' + name + '" class="cart-item-img" onerror="this.src=\'{% static "images/paket-sayur.png" %}\'">' +
+                        '<div class="cart-item-info">' +
+                            '<p class="cart-item-store">' + store + '</p>' +
+                            '<h4 class="cart-item-name">' + name + '</h4>' +
+                            '<p class="cart-item-price">Rp ' + Number(price).toLocaleString('id-ID') + '</p>' +
+                            '<div class="cart-item-controls">' +
+                                '<button class="qty-btn" onclick="updateQty(' + id + ', -1)">−</button>' +
+                                '<span class="qty-value">' + qty + '</span>' +
+                                '<button class="qty-btn" onclick="updateQty(' + id + ', 1)">+</button>' +
+                                '<button class="btn-remove" onclick="removeItem(' + id + ')" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="cart-item-subtotal">Rp ' + Number(subtotal).toLocaleString('id-ID') + '</div>' +
+                    '</div>';
+                }).join('');
+
+                updateSummary(items);
+                document.getElementById('btnCheckout').disabled = false;
+                
+            } catch(e) {
+                console.warn('Cart load error:', e);
+                skeleton.style.display = 'none';
+                empty.style.display = 'block';
+                empty.querySelector('h3').textContent = 'Gagal memuat keranjang';
+                empty.querySelector('p').textContent = 'Silakan coba kembali.';
+            }
+        }
+
+        function updateSummary(items) {
+            let total = 0;
+            let count = 0;
+            items.forEach(function(item) {
+                const price = item.product_price || item.price || item.product?.price || 0;
+                const qty = item.quantity || item.qty || 1;
+                total += price * qty;
+                count += qty;
+            });
+            const shipping = total >= 20000 ? 0 : 8000;
+            const grandTotal = total + shipping;
+
+            document.getElementById('summaryTotal').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+            document.getElementById('summaryShipping').textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
+            document.getElementById('summaryGrandTotal').textContent = 'Rp ' + Number(grandTotal).toLocaleString('id-ID');
+            document.getElementById('summaryNote').textContent = shipping === 0 ? 'Yey! Gratis ongkir 🎉' : 'Belanja minimal Rp20.000 untuk gratis ongkir';
+            document.getElementById('cartStatusText').textContent = count + ' produk di keranjang';
+        }
+
+        window.updateQty = async function(id, delta) {
+            try {
+                const data = await WarungioAPI.getCart();
+                const items = data.results || data.items || data || [];
+                const item = items.find(function(i) { 
+                    const iid = i.id || i.product?.id; 
+                    return iid == id; 
+                });
+                if (!item) return;
+                
+                const currentQty = item.quantity || item.qty || 1;
+                const newQty = Math.max(1, currentQty + delta);
+                
+                if (window.WarungioAPI && window.WarungioAPI.updateCartItem) {
+                    await WarungioAPI.updateCartItem(id, { qty: newQty });
+                } else if (window.WarungioAPI && window.WarungioAPI.addToCart) {
+                    await WarungioAPI.addToCart({ product: id, qty: delta });
+                }
+                await loadCart();
+            } catch(e) { console.warn(e); }
+        };
+
+        window.removeItem = async function(id) {
+            try {
+                if (window.WarungioAPI && window.WarungioAPI.removeFromCart) {
+                    await WarungioAPI.removeFromCart(id);
+                }
+                await loadCart();
+            } catch(e) { console.warn(e); }
+        };
+
+        document.getElementById('btnCheckout')?.addEventListener('click', function() {
+            window.location.href = '{% url "page-buyer-checkout" %}';
+        });
+    })();
+    </script>
   </body>
 </html>

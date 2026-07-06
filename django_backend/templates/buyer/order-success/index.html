@@ -6,30 +6,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pesanan Berhasil - Warungio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/orders/style.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/order-success/style.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-panel"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="brand-logo" /><div><h1>Warungio</h1><p>Pembeli</p></div></div>
-        <nav class="nav-menu">
-          <a href="{% url 'page-buyer-dashboard' %}">Beranda</a>
-          <a href="{% url 'page-buyer-orders' %}">Pesanan</a>
-        </nav>
-      </aside>
-      <main class="content-area">
-        <section class="page-header"><div><h1>Pesanan Berhasil</h1><p class="section-subtitle">Pesanan kamu telah dikonfirmasi.</p></div></section>
-        <div style="text-align:center;padding:60px 20px">
-          <div style="font-size:64px;color:var(--primary);margin-bottom:16px">&#10003;</div>
-          <h2>Pesanan Berhasil!</h2>
-          <p>Pesanan kamu sedang diproses oleh penjual.</p>
-          <a href="{% url 'page-buyer-orders' %}" class="btn-primary" style="display:inline-block;margin-top:16px">Lihat Pesanan</a>
+    <div class="page-shell">
+      {% include 'components/sidebar.html' %}
+
+      <main style="flex:1; display:flex; flex-direction:column; min-width:0; align-items:center; justify-content:center;padding:24px;">
+        <div class="success-card">
+          <div class="success-icon-wrap">
+            <div class="success-icon-circle">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <h1>Pesanan Berhasil!</h1>
+          <p class="success-subtitle">Pesanan kamu telah dikonfirmasi dan sedang diproses oleh penjual.</p>
+
+          <div class="order-number-box">
+            <span class="label">Nomor Pesanan</span>
+            <span class="number" id="orderNumber">#INV/----/------</span>
+          </div>
+
+          <div class="status-timeline">
+            <div class="status-step active">
+              <div class="step-dot"></div>
+              <div><strong>Pesanan Dibuat</strong><p>Pesanan berhasil dikonfirmasi</p></div>
+            </div>
+            <div class="status-step">
+              <div class="step-dot"></div>
+              <div><strong>Diproses Penjual</strong><p>Penjual sedang menyiapkan pesanan</p></div>
+            </div>
+            <div class="status-step">
+              <div class="step-dot"></div>
+              <div><strong>Dalam Pengiriman</strong><p>Pesanan sedang diantar kurir</p></div>
+            </div>
+            <div class="status-step">
+              <div class="step-dot"></div>
+              <div><strong>Pesanan Diterima</strong><p>Pesanan sampai di tujuan</p></div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a href="{% url 'page-buyer-orders' %}" class="btn btn-primary"><i class="fa-solid fa-receipt"></i> Lihat Pesanan</a>
+            <a href="{% url 'home' %}" class="btn btn-secondary"><i class="fa-solid fa-store"></i> Belanja Lagi</a>
+          </div>
         </div>
       </main>
     </div>
+
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse order ID from URL
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('id');
+            if (orderId) {
+                document.getElementById('orderNumber').textContent = '#INV/' + orderId;
+            }
+            
+            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+                document.getElementById('authHeaderActions').style.display = 'flex';
+                document.getElementById('guestHeaderActions').style.display = 'none';
+                const u = window.WarungioAuth.getUser();
+                if (u && u.full_name) {
+                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                }
+            } else {
+                document.getElementById('authHeaderActions').style.display = 'none';
+                document.getElementById('guestHeaderActions').style.display = 'flex';
+            }
+        });
+    })();
+    </script>
   </body>
 </html>

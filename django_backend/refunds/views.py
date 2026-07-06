@@ -3,12 +3,16 @@ Refunds views for Warungio Marketplace.
 Buyer, Seller, and Admin refund management.
 """
 
+import logging
+from django.db import transaction as db_transaction
 from django.utils import timezone
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 from django.db.models import Q
 
 from .models import Refund, RefundTimelineEvent
+
+logger = logging.getLogger(__name__)
 from .serializers import (
     RefundCreateSerializer, RefundListSerializer, RefundDetailSerializer,
     SellerRefundActionSerializer, AdminRefundActionSerializer,
@@ -232,11 +236,43 @@ class AdminRefundActionView(views.APIView):
             refund.refund_status = 'refunded'
             refund.admin_notes = serializer.validated_data.get('admin_notes', '')
             refund.resolved_at = timezone.now()
-            _add_timeline(
-                refund, 'resolved',
-                f"Admin menyelesaikan refund. Resolusi: {refund.get_resolution_display()}. Jumlah: Rp {amount:,.0f}.",
-                request.user, 'admin',
-            )
+
+            # ── Wallet updates + timeline (atomic: all or roll back) ──
+            try:
+                with db_transaction.atomic():
+                    from payments.services.wallet import credit_wallet, debit_wallet
+                    _add_timeline(
+                        refund, 'resolved',
+                        f"Admin menyelesaikan refund. Resolusi: {refund.get_resolution_display()}. Jumlah: Rp {amount:,.0f}.",
+                        request.user, 'admin',
+                    )
+                    if refund.user:
+                        credit_result = credit_wallet(
+                            user=refund.user,
+                            amount=float(amount),
+                            tx_type='refund',
+                            description=f'Refund untuk pesanan #{refund.order.order_number}',
+                            reference_type='refund',
+                            reference_id=str(refund.id),
+                        )
+                        logger.info('Buyer wallet credited for refund %s: Rp %s \u2192 Rp %s',
+                                   refund.id, credit_result['balance_before'], credit_result['balance_after'])
+                    if refund.store and refund.store.user_id:
+                        debit_result = debit_wallet(
+                            user=refund.store.user,
+                            amount=float(amount),
+                            tx_type='refund',
+                            description=f'Refund pesanan #{refund.order.order_number}',
+                            reference_type='refund',
+                            reference_id=str(refund.id),
+                        )
+                        logger.info('Seller wallet debited for refund %s: Rp %s \u2192 Rp %s',
+                                   refund.id, debit_result['balance_before'], debit_result['balance_after'])
+                    # Persist refund status changes inside the same atomic block
+                    refund.save(update_fields=['refund_status', 'amount_approved', 'resolution', 'admin_notes', 'resolved_at'])
+            except Exception as e:
+                logger.error('Failed to update wallets for refund %s (rolled back): %s', refund.id, e)
+                raise
 
         elif action == 'escalate':
             refund.is_escalated = True

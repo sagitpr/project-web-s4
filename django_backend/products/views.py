@@ -2,6 +2,9 @@
 Products views for Warungio Marketplace.
 """
 
+import logging
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import status, generics, permissions, views, filters
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,6 +25,42 @@ from accounts.permissions import IsSeller, IsStoreOwner
 from .services.smart_scan import process_scan
 from .services.stock_prediction import StockPredictor, ReorderOptimizer
 from notifications.models import Notification
+
+
+# =============================================================================
+# HELPER: Broadcast product changes via WebSocket to relevant store followers
+# =============================================================================
+
+def notify_product_update(store_id, product_id, product_name, action, store_user_id=None):
+    """Broadcast product change via WebSocket to:
+    1. Store followers (via store_{store_id} group)
+    2. Store owner/seller (via notifications_{user_id} group)
+    
+    Action is one of: 'product_created', 'product_updated', 'product_deleted', 'product_status_changed'
+    """
+    try:
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            event = {
+                'type': action,
+                'product_id': product_id,
+                'product_name': product_name,
+                'store_id': store_id,
+            }
+            # Broadcast to store followers
+            async_to_sync(channel_layer.group_send)(
+                f'store_{store_id}',
+                event
+            )
+            # Also notify the store owner/seller directly
+            if store_user_id:
+                async_to_sync(channel_layer.group_send)(
+                    f'notifications_{store_user_id}',
+                    event
+                )
+    except Exception as e:
+        _log = logging.getLogger('django_backend.products')
+        _log.warning('WebSocket broadcast error (product update): %s', str(e))
 
 
 class CategoryListView(generics.ListAPIView):
@@ -89,9 +128,11 @@ class ProductCreateView(generics.CreateAPIView):
     @transaction.atomic
     def perform_create(self, serializer):
         store = self.request.user.store
-        serializer.save(store=store)
+        product = serializer.save(store=store)
         store.product_count = store.products.count()
         store.save(update_fields=['product_count'])
+        # Broadcast to store followers and seller
+        notify_product_update(store.id, product.id, product.product_name, 'product_created', store.user_id)
 
 
 class ProductManageView(generics.RetrieveUpdateDestroyAPIView):
@@ -105,9 +146,38 @@ class ProductManageView(generics.RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def perform_destroy(self, instance):
         store = instance.store
+        product_id = instance.id
+        product_name = instance.product_name
         super().perform_destroy(instance)
         store.product_count = store.products.filter(is_active=True).count()
         store.save(update_fields=['product_count'])
+        # Broadcast deletion
+        notify_product_update(store.id, product_id, product_name, 'product_deleted', store.user_id)
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        old_stock = self.get_object().stock  # capture before save
+        product = serializer.save()
+        store = product.store
+        # Detect if stock changed
+        if 'stock' in serializer.validated_data:
+            stock_change = product.stock - old_stock
+            if stock_change != 0:
+                from orders.views import notify_stock_update
+                notify_stock_update(
+                    store_id=store.id,
+                    product_id=product.id,
+                    product_name=product.product_name,
+                    stock_change=stock_change,
+                    action='stock_adjusted',
+                    store_user_id=store.user_id,
+                )
+        # Detect if is_active status changed
+        if 'is_active' in serializer.validated_data:
+            action = 'product_status_changed'
+        else:
+            action = 'product_updated'
+        notify_product_update(store.id, product.id, product.product_name, action, store.user_id)
 
 
 class StoreProductsView(generics.ListAPIView):
@@ -146,6 +216,15 @@ class ReviewListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         product = Product.objects.get(id=self.kwargs['product_id'])
         serializer.save(user=self.request.user, product=product)
+
+        # Broadcast review update via WebSocket to store followers + seller
+        notify_product_update(
+            store_id=product.store_id,
+            product_id=product.id,
+            product_name=product.product_name,
+            action='product_updated',
+            store_user_id=product.store.user_id if product.store else None,
+        )
 
 
 class FavoriteView(views.APIView):
@@ -205,10 +284,32 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
         # Users can only manage their own reviews
         return Review.objects.filter(user=self.request.user)
 
+    def perform_update(self, serializer):
+        review = serializer.save()
+        product = review.product
+        # Broadcast review update via WebSocket
+        if product:
+            notify_product_update(
+                store_id=product.store_id,
+                product_id=product.id,
+                product_name=product.product_name,
+                action='product_updated',
+                store_user_id=product.store.user_id if product.store else None,
+            )
+
     def perform_destroy(self, instance):
         product = instance.product
         super().perform_destroy(instance)
         product.update_rating()
+
+        # Broadcast review deletion via WebSocket
+        notify_product_update(
+            store_id=product.store_id,
+            product_id=product.id,
+            product_name=product.product_name,
+            action='product_updated',
+            store_user_id=product.store.user_id if product.store else None,
+        )
 
 
 class SellerStoreReviewListView(generics.ListAPIView):

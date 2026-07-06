@@ -72,7 +72,7 @@ class TestOrderModel:
         )
         order.refresh_from_db()
         assert order.subtotal == 40000
-        assert order.total_price == 45000  # subtotal + shipping - discount
+        assert order.total_price == 46500  # subtotal + shipping - discount + admin_fee_buyer (1500)
 
 
 class TestOrderItemModel:
@@ -572,12 +572,18 @@ class TestOrderStatusUpdate:
             user=buyer_user, store=test_store, total_price=10000,
         )
         OrderItem.objects.create(order=order, product=product, qty=2, price=10000)
+        # Simulate stock reservation (as happens in OrderCreateView)
+        product.reserved_stock = 2
+        product.save(update_fields=['reserved_stock'])
+        product.refresh_from_db()
+        assert product.available_stock == 3  # 5 stock - 2 reserved
         Delivery.objects.create(order=order, delivery_status="diproses_penjual")
         url = reverse("order-status-update", args=[order.id])
         resp = seller_client.post(url, {"status": "cancelled", "cancel_reason": "out_of_stock"}, format="json")
         assert resp.status_code == status.HTTP_200_OK
         product.refresh_from_db()
-        assert product.stock == 7  # restored 2 from cancellation
+        assert product.stock == 5  # stock unchanged (reservation system)
+        assert product.available_stock == 5  # restored after release
 
     def test_cancelled_invalid_status(self, seller_client, test_store, buyer_user):
         """Cannot cancel an already-shipped order."""

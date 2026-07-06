@@ -1,0 +1,269 @@
+/* Warungio Buyer — Wallet Page */
+/* Premium design system matching home/style.css */
+
+/* ── Layout ── */
+.page-shell { grid-template-columns: 260px 1fr !important; }
+.wallet-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Wallet Hero Card ── */
+.wallet-hero-card {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border-radius: 24px;
+  padding: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.wallet-hero-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.wallet-balance-label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+.wallet-balance-amount {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+.wallet-hero-actions {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+.btn-topup-hero {
+  padding: 12px 28px;
+  background: white;
+  color: #16a34a;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-topup-hero:hover { background: #f0fdf4; }
+.btn-history-hero {
+  padding: 12px 28px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-history-hero:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Transaction List ── */
+.transaction-card {
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.transaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+.transaction-item:last-child { border-bottom: none; }
+.transaction-item:hover { background: #f8fafc; }
+.tx-id-date {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.tx-description {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.tx-amount {
+  font-size: 14px;
+  font-weight: 800;
+}
+.tx-amount.positive { color: #16a34a; }
+.tx-amount.negative { color: #dc2626; }
+
+/* ── Top Up Drawer ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  max-width: 440px;
+  background: white;
+  z-index: 70;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+}
+.drawer-panel.open { transform: translateX(0); }
+.drawer-header {
+  padding: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.drawer-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.drawer-close:hover { background: #e2e8f0; }
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.nominal-chip {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  background: white;
+}
+.nominal-chip:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+  background: #f0fdf4;
+}
+.nominal-chip.selected {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.drawer-footer {
+  padding: 24px;
+  border-top: 1px solid #f1f5f9;
+}
+.btn-drawer-primary {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: #16a34a;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-drawer-primary:hover { background: #15803d; }
+.btn-drawer-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Skeleton ── */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+.skeleton-block {
+  height: 14px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: wallet-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes wallet-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.load-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: wallet-spin 0.6s linear infinite;
+}
+@keyframes wallet-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .page-shell { grid-template-columns: 260px 1fr !important; }
+}
+@media (max-width: 1023px) {
+  .page-shell { grid-template-columns: 1fr !important; }
+  .wallet-balance-amount { font-size: 28px; }
+}
+@media (max-width: 768px) {
+  .wallet-hero-card { padding: 24px; }
+  .wallet-hero-actions { flex-direction: column; }
+  .btn-topup-hero, .btn-history-hero { width: 100%; justify-content: center; }
+  .drawer-panel { max-width: 100%; border-radius: 0; }
+}

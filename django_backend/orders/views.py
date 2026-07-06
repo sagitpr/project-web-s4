@@ -4,6 +4,8 @@ Cart management, order placement, order tracking.
 """
 
 import logging
+
+logger = logging.getLogger(__name__)
 from asgiref.sync import async_to_sync
 from django.db import transaction
 from django.db.models import F, Sum
@@ -76,6 +78,48 @@ def notify_order_update(user_id, order_id, order_number, status, message=''):
 # HELPER: Send delivery tracking update via WebSocket
 # =============================================================================
 
+# =============================================================================
+# HELPER: Broadcast stock changes via WebSocket
+# =============================================================================
+
+def notify_stock_update(store_id, product_id, product_name, stock_change, action='stock_updated', store_user_id=None):
+    """Broadcast stock change via WebSocket to store followers and seller.
+    
+    Args:
+        store_id: The store whose product stock changed
+        product_id: The product that changed
+        product_name: Display name
+        stock_change: Positive for stock increase, negative for decrease
+        action: 'stock_reserved', 'stock_released', 'stock_deducted', 'stock_adjusted'
+        store_user_id: Optional — if provided, also notifies the store owner directly
+    """
+    try:
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            event = {
+                'type': 'stock_update',
+                'product_id': product_id,
+                'product_name': product_name,
+                'store_id': store_id,
+                'stock_change': stock_change,
+                'action': action,
+            }
+            # Broadcast to store followers
+            async_to_sync(channel_layer.group_send)(
+                f'store_{store_id}',
+                event,
+            )
+            # Also notify the store owner/seller directly
+            if store_user_id:
+                async_to_sync(channel_layer.group_send)(
+                    f'notifications_{store_user_id}',
+                    event,
+                )
+    except Exception as e:
+        _log = logging.getLogger('django_backend.orders')
+        _log.warning('WebSocket broadcast error (stock update): %s', str(e))
+
+
 def notify_delivery_update(user_id, order_id, order_number, delivery_status, tracking_number='', courier=''):
     """
     Broadcast delivery tracking update via WebSocket only.
@@ -138,6 +182,30 @@ class CartListView(generics.ListCreateAPIView):
             'product', 'product__store'
         )
 
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """
+        Add item to cart with select_for_update locking on product row.
+        
+        Locks the product row before reading available_stock to prevent
+        race conditions when concurrent requests hit the same product.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Lock product row — guarantees stock snapshot is race-condition free
+        product_id = serializer.validated_data.get('product')
+        if product_id:
+            product = Product.objects.select_for_update().get(id=product_id)
+            requested_qty = serializer.validated_data.get('qty', 0)
+            if requested_qty > product.available_stock:
+                raise ValidationError({
+                    'qty': [f'Stok tidak mencukupi. Tersedia: {product.available_stock}']
+                })
+
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -149,6 +217,32 @@ class CartDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        """
+        Update cart item qty with select_for_update locking on product row.
+        
+        Locks the product row before re-validating available_stock to prevent
+        race conditions when concurrent requests modify the same item.
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # Lock product row — guarantees stock snapshot is race-condition free
+        product_id = instance.product_id
+        if product_id:
+            product = Product.objects.select_for_update().get(id=product_id)
+            requested_qty = serializer.validated_data.get('qty', instance.qty)
+            if requested_qty > product.available_stock:
+                raise ValidationError({
+                    'qty': [f'Stok tidak mencukupi. Tersedia: {product.available_stock}']
+                })
+
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 class CartClearView(views.APIView):
@@ -274,6 +368,15 @@ class OrderCreateView(views.APIView):
                 # Stock akan benar-benar berkurang saat seller scan barang di packing
                 Product.objects.filter(id=product.id).update(
                     reserved_stock=F('reserved_stock') + cart_item.qty
+                )
+                # Broadcast stock reservation to store followers + seller
+                notify_stock_update(
+                    store_id=store_id,
+                    product_id=product.id,
+                    product_name=product.product_name,
+                    stock_change=-cart_item.qty,
+                    action='stock_reserved',
+                    store_user_id=store.user_id if store else None,
                 )
 
                 OrderItem.objects.create(
@@ -428,9 +531,7 @@ class OrderStatusUpdateView(views.APIView):
         serializer = OrderStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        status_value = serializer.validated_data['status']
-
-        # ── Validation: Cancellation only for pending/paid/processed ──
+        status_value = serializer.validated_data['status']            # ── Validation: Cancellation only for pending/paid/processed ──
         if status_value == 'cancelled' and order.order_status not in ('pending', 'paid', 'processed'):
             return Response({
                 'error': 'Pesanan tidak dapat dibatalkan pada status saat ini. '
@@ -481,11 +582,20 @@ class OrderStatusUpdateView(views.APIView):
 
         if status_value == 'cancelled':
             with transaction.atomic():
-                for item in order.items.all():
+                for item in order.items.prefetch_related('product').all():
                     if item.product:
                         # Release reserved_stock (stock tidak pernah berkurang saat order)
                         Product.objects.filter(id=item.product.id).update(
                             reserved_stock=F('reserved_stock') - item.qty,
+                        )
+                        # Broadcast stock release to store followers + seller
+                        notify_stock_update(
+                            store_id=order.store_id,
+                            product_id=item.product.id,
+                            product_name=item.product_name or item.product.product_name,
+                            stock_change=item.qty,
+                            action='stock_released',
+                            store_user_id=order.store.user_id if order.store else None,
                         )
                 Store.objects.filter(id=order.store_id).update(
                     total_sales=F('total_sales') - order.total_price
@@ -494,6 +604,34 @@ class OrderStatusUpdateView(views.APIView):
                 order.save()
         else:
             order.save()
+
+        # ── Credit seller wallet on order completion ──
+        if status_value == 'completed' and order.store and order.store.user_id:
+            try:
+                from payments.services.wallet import credit_wallet
+                result = credit_wallet(
+                    user=order.store.user,
+                    amount=float(order.total_price),
+                    tx_type='payment',
+                    description=f'Pendapatan dari pesanan #{order.order_number}',
+                    reference_type='order',
+                    reference_id=str(order.id),
+                )
+                logger.info('Seller wallet credited for completed order %s: Rp %s \u2192 Rp %s',
+                           order.id, result['balance_before'], result['balance_after'])
+            except Exception as e:
+                logger.error('Failed to credit seller wallet for completed order %s: %s', order.id, e)
+
+        # ── Broadcast delivery_update via WebSocket for real-time tracking ──
+        if delivery_status and order.user_id:
+            notify_delivery_update(
+                user_id=order.user_id,
+                order_id=order.id,
+                order_number=order.order_number,
+                delivery_status=delivery_status,
+                tracking_number=serializer.validated_data.get('tracking_number', order.tracking_number or ''),
+                courier=serializer.validated_data.get('courier', order.courier or ''),
+            )
 
         # ── Build notification message ──
         cancel_reason = serializer.validated_data.get('cancel_reason', '')
@@ -620,6 +758,22 @@ class DeliveryTrackingView(views.APIView):
                     order.completed_at = timezone.now()
                     order.order_status = 'completed'
                     order.save(update_fields=['completed_at', 'order_status'])
+                    # Credit seller wallet on auto-completion (tracking)
+                    if order.store and order.store.user_id:
+                        try:
+                            from payments.services.wallet import credit_wallet
+                            cr = credit_wallet(
+                                user=order.store.user,
+                                amount=float(order.total_price),
+                                tx_type='payment',
+                                description=f'Pendapatan dari pesanan #{order.order_number}',
+                                reference_type='order',
+                                reference_id=str(order.id),
+                            )
+                            logger.info('Seller wallet credited via tracking for order %s: Rp %s \u2192 Rp %s',
+                                       order.id, cr['balance_before'], cr['balance_after'])
+                        except Exception as exc:
+                            logger.error('Failed to credit seller wallet for auto-completed order %s: %s', order.id, exc)
                 delivery.save(update_fields=['delivery_status', 'delivered_at'])
             except Exception as e:
                 _log = logging.getLogger('django_backend.orders')
@@ -656,10 +810,11 @@ class BuyerCancelOrderView(views.APIView):
     """
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request, order_id):
         order = Order.objects.filter(
             id=order_id, user=request.user
-        ).first()
+        ).prefetch_related('items__product').first()
 
         if not order:
             return Response({'error': 'Pesanan tidak ditemukan.'},
@@ -673,6 +828,22 @@ class BuyerCancelOrderView(views.APIView):
         serializer.is_valid(raise_exception=True)
 
         reason = serializer.validated_data.get('reason', '')
+
+        # Release reserved_stock atomically
+        for item in order.items.all():
+            if item.product:
+                Product.objects.filter(id=item.product.id).update(
+                    reserved_stock=F('reserved_stock') - item.qty,
+                )
+                # Broadcast stock update — reserved_stock released → available increases
+                notify_stock_update(
+                    store_id=order.store_id,
+                    product_id=item.product.id,
+                    product_name=item.product_name or item.product.product_name,
+                    stock_change=item.qty,
+                    action='stock_released',
+                    store_user_id=order.store.user_id if order.store else None,
+                )
 
         order.order_status = 'cancelled'
         order.save(update_fields=['order_status'])
@@ -701,7 +872,7 @@ class BuyerCancelOrderView(views.APIView):
             )
 
         return Response({
-            'message': 'Pesanan berhasil dibatalkan.',
+            'message': 'Pesanan berhasil dibatalkan. Stok produk sudah dikembalikan.',
             'order': OrderDetailSerializer(order).data,
         })
 
@@ -779,6 +950,16 @@ class OfflineSaleCreateView(views.APIView):
             Product.objects.filter(id=product.id).update(
                 stock=F('stock') - quantity
             )
+
+        # Broadcast stock deduction to store followers + seller
+        notify_stock_update(
+            store_id=product.store_id,
+            product_id=product.id,
+            product_name=product.product_name,
+            stock_change=-quantity,
+            action='stock_deducted',
+            store_user_id=product.store.user_id,
+        )
 
         # Refresh product
         product.refresh_from_db()
@@ -971,6 +1152,16 @@ class PackingScanItemView(views.APIView):
         # Release reserved_stock
         Product.objects.filter(id=product.id).update(
             reserved_stock=F('reserved_stock') - quantity
+        )
+
+        # Broadcast stock deduction to store followers + seller
+        notify_stock_update(
+            store_id=request.user.store.id,
+            product_id=product.id,
+            product_name=product.product_name,
+            stock_change=-quantity,
+            action='stock_deducted',
+            store_user_id=request.user.store.user_id,
         )
 
         return Response({
@@ -1167,6 +1358,16 @@ class POSOfflineCreateView(views.APIView):
                     'error': stock_result.get('error', 'Gagal kurangi stok.'),
                 })
                 continue
+
+            # Broadcast POS stock deduction to store followers + seller
+            notify_stock_update(
+                store_id=request.user.store.id,
+                product_id=product.id,
+                product_name=product.product_name,
+                stock_change=-quantity,
+                action='stock_deducted',
+                store_user_id=request.user.store.user_id,
+            )
 
             # Catat offline sale
             sale = OfflineSale.objects.create(

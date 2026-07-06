@@ -4,6 +4,7 @@ Stores app models for Warungio Marketplace.
 
 from django.db import models
 from django.conf import settings
+from .utils import resize_store_image, LOGO_MAX_SIZE, BANNER_MAX_SIZE
 
 
 class Store(models.Model):
@@ -102,7 +103,29 @@ class Store(models.Model):
                 slug = f'{base_slug}-{counter}'
                 counter += 1
             self.slug = slug
+        
+        # Track which image fields changed before saving
+        _logo_changed = False
+        _banner_changed = False
+        if self.pk:
+            try:
+                old = Store.objects.get(pk=self.pk)
+                _logo_changed = bool(self.store_logo) and self.store_logo.name != getattr(old.store_logo, 'name', None)
+                _banner_changed = bool(self.store_banner) and self.store_banner.name != getattr(old.store_banner, 'name', None)
+            except Store.DoesNotExist:
+                _logo_changed = bool(self.store_logo)
+                _banner_changed = bool(self.store_banner)
+        else:
+            _logo_changed = bool(self.store_logo)
+            _banner_changed = bool(self.store_banner)
+        
         super().save(*args, **kwargs)
+        
+        # Auto-resize and optimize only if the image was actually changed/uploaded
+        if _logo_changed and self.store_logo:
+            resize_store_image(self.store_logo, LOGO_MAX_SIZE, 'store_logo')
+        if _banner_changed and self.store_banner:
+            resize_store_image(self.store_banner, BANNER_MAX_SIZE, 'store_banner')
 
     def update_follower_count(self):
         self.follower_count = self.followers.count()

@@ -1,2 +1,199 @@
-/* Buyer checkout page */
-@import url("../cart/style.css");
+/* Warungio Buyer — Checkout Page */
+/* Premium design system using tokens.css + shared.css */
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Checkout Sections ── */
+.checkout-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.checkout-section {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-2xl, 20px);
+  padding: 24px;
+}
+
+.checkout-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.checkout-section-header i {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg, 10px);
+  background: var(--color-brand-soft, #f0fdf4);
+  color: var(--color-brand, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.checkout-section-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  margin: 0;
+}
+
+/* ── Address ── */
+.address-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.address-info { flex: 1; }
+.address-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  margin: 0 0 2px;
+}
+.address-phone {
+  font-size: 12px;
+  color: var(--color-text-secondary, #475569);
+  margin: 0 0 6px;
+}
+.address-detail {
+  font-size: 13px;
+  color: var(--color-text-secondary, #475569);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Order Items ── */
+.co-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light, #f1f5f9);
+}
+.co-item:last-child { border-bottom: none; }
+.co-item-img {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg, 12px);
+  object-fit: cover;
+  background: var(--color-gray-50, #f9fafb);
+  flex-shrink: 0;
+}
+.co-item-info { flex: 1; min-width: 0; }
+.co-item-info h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  margin: 0 0 2px;
+}
+.co-item-info p {
+  font-size: 12px;
+  color: var(--color-text-tertiary, #94a3b8);
+  margin: 0;
+}
+.co-item-total {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  white-space: nowrap;
+}
+
+/* ── Payment Methods ── */
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-xl, 14px);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+}
+.payment-option:hover {
+  border-color: var(--color-brand, #16a34a);
+  background: var(--color-brand-soft, #f0fdf4);
+}
+.payment-option.active {
+  border-color: var(--color-brand, #16a34a);
+  background: var(--color-brand-soft, #f0fdf4);
+}
+.payment-option input[type="radio"] {
+  accent-color: var(--color-brand, #16a34a);
+  width: 18px;
+  height: 18px;
+}
+.payment-option i {
+  font-size: 20px;
+  color: var(--color-brand, #16a34a);
+  width: 36px;
+  text-align: center;
+}
+.payment-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-primary, #0f172a);
+}
+.payment-info span {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #94a3b8);
+}
+
+/* ── Summary ── */
+.checkout-summary {
+  position: sticky;
+  top: 96px;
+}
+.checkout-summary .summary-item-row {
+  font-size: 12px;
+  color: var(--color-text-secondary, #475569);
+  padding: 4px 0;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-secondary, #475569);
+  margin: 8px 0;
+}
+.summary-row.total-row {
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+}
+.summary-divider {
+  height: 1px;
+  background: var(--color-border-light, #f1f5f9);
+  margin: 12px 0;
+}
+
+.checkout-summary .btn-lg {
+  padding: 14px 20px;
+  margin-top: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+  .checkout-summary {
+    position: static;
+  }
+}
+@media (max-width: 768px) {
+  .checkout-section {
+    padding: 16px;
+  }
+}

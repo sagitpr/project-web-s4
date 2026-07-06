@@ -44,8 +44,8 @@
 
   function getWebSocketUrl() {
     var token = null;
-    if (window.WarungioAuth && typeof window.WarungioAuth.getToken === 'function') {
-      token = window.WarungioAuth.getToken();
+    if (window.WarungioAuth && typeof window.WarungioAuth.getAccessToken === 'function') {
+      token = window.WarungioAuth.getAccessToken();
     } else if (window.WarungioAuth && window.WarungioAuth.token) {
       token = window.WarungioAuth.token;
     }

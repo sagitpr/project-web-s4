@@ -1,0 +1,148 @@
+/* ============================================================
+   Warungio Seller Dashboard — Prediksi Stok Page Styles
+   ============================================================ */
+
+/* ── Forecast Grid ── */
+.forecast-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 20px 28px 0;
+}
+
+/* ── Chart Card ── */
+.forecast-chart-card {
+  padding: 24px;
+}
+.forecast-chart-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+.forecast-chart-wrap {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* ── Accuracy Card ── */
+.forecast-accuracy-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.accuracy-pct {
+  font-size: 48px;
+  font-weight: 800;
+  color: #16a34a;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.accuracy-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+.accuracy-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0 0;
+  max-width: 200px;
+}
+
+/* ── Recommendations Card ── */
+.recommendation-card {
+  margin: 0 28px 20px;
+  padding: 24px;
+}
+.recommendation-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+.recommendation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendation-item {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.15s ease;
+}
+.recommendation-item:hover {
+  border-color: #16a34a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.product-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.product-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--color-surface-secondary, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+.product-stock-info {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.recommendation-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ── Status Pills ── */
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.status-pill-warning {
+  background: var(--color-warning-soft, #fef3c7);
+  color: #d97706;
+}
+.status-pill-danger {
+  background: var(--color-danger-soft, #fee2e2);
+  color: #dc2626;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .forecast-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .forecast-grid { padding: 0 16px 16px; gap: 16px; }
+  .recommendation-card { margin: 0 16px 16px; }
+  .recommendation-item { flex-direction: column; align-items: flex-start; }
+  .recommendation-actions { width: 100%; justify-content: space-between; }
+}

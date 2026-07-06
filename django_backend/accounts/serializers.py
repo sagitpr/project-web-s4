@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
@@ -5,6 +6,8 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User, OTP
 from .services.indonesia_validators import normalize_indonesian_phone
 from .services.captcha_service import verify_captcha_token
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -66,26 +69,60 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    """User login serializer."""
-    email = serializers.CharField(required=True, max_length=254)
+    """User login serializer.
+    
+    Accepts `email` OR `phone` as the identifier field.
+    The backend (EmailBackend) supports both email and Indonesian phone lookup.
+    """
+    email = serializers.CharField(required=False, max_length=254)
+    phone = serializers.CharField(required=False)
     password = serializers.CharField(required=True, write_only=True)
 
     def validate(self, attrs):
         email = attrs.get('email')
+        phone = attrs.get('phone')
         password = attrs.get('password')
 
-        if email and password:
-            user = authenticate(
-                request=self.context.get('request'),
-                email=email, password=password
+        ip_address = None
+        request = self.context.get('request')
+        if request:
+            ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+
+        if not email and not phone:
+            logger.warning(
+                'LOGIN VALIDATION FAILED — No identifier provided | IP: %s | Payload keys: %s',
+                ip_address, list(attrs.keys()),
             )
-            if not user:
-                raise serializers.ValidationError(
-                    "Email atau password salah.", code='authorization'
-                )
-        else:
             raise serializers.ValidationError(
-                "Email dan password harus diisi.", code='authorization'
+                "Email atau nomor HP harus diisi.", code='authorization'
+            )
+
+        if not password:
+            logger.warning(
+                'LOGIN VALIDATION FAILED — No password provided | Email: %s | IP: %s',
+                email or phone, ip_address,
+            )
+            raise serializers.ValidationError(
+                "Password harus diisi.", code='authorization'
+            )
+
+        # Use whichever identifier was provided (email takes precedence if both given)
+        identifier = email or phone
+
+        user = authenticate(
+            request=request,
+            email=identifier, password=password
+        )
+        if not user:
+            logger.warning(
+                'LOGIN VALIDATION FAILED — Identifier: %s | IP: %s | '
+                'Reason: authentication backend returned None '
+                '(see accounts.backends log for specific cause: '
+                'user not found / wrong password / account locked / inactive)',
+                identifier, ip_address,
+            )
+            raise serializers.ValidationError(
+                "Email atau password salah.", code='authorization'
             )
 
         attrs['user'] = user

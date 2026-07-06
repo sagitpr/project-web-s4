@@ -104,9 +104,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  exportBtn?.addEventListener('click', () => {
-    setMsg('Fitur ekspor laporan akan segera tersedia.', 'success');
-  });
+function exportReport() {
+  var token = localStorage.getItem('access_token');
+  var baseUrl = window.API_BASE_URL || '/api';
+  var exportUrl = baseUrl + '/analytics/export/?format=pdf&period=30days';
+  if (token) {
+    fetch(exportUrl, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(r) { if (!r.ok) throw new Error('Gagal'); return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url;
+      a.download = 'laporan-penjualan.pdf';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(function() { });
+  }
+}
 
   loadAnalytics(currentPeriod);
 });

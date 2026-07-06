@@ -75,10 +75,7 @@
                         </div>
                     </div>
                     <div class="header-right">
-                        <div class="notif">
-                            <i class="fa-solid fa-bell"></i>
-                            <span class="notif-badge">3</span>
-                        </div>
+                        <div id="notif-container" class="notif-wrap"></div>
                         <div class="profile-block">
                             <div class="avatar-wrap">
                                 <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
@@ -366,7 +363,10 @@
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/websocket.js' %}"></script>
+<script src="{% static 'js/utils/notifications.js' %}"></script>
+<script src="{% static 'js/nav.js' %}"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
     <script src="{% static 'js/pages/seller/laporan/script.js' %}"></script>
 </body>
 </html>

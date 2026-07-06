@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/seller/pengaturan/style.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 </head>
 <body>
@@ -57,6 +58,7 @@
                         <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
                         <div class="shop-status-block">
                             <div class="shop-name-row">
+                                <img id="headerStoreLogo" src="{% static 'images/store-placeholder.png' %}" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:cover;display:none;" onerror="this.style.display='none'">
                                 <span class="shop-name" id="shopName">Warung Bu Sari</span>
                                 <span class="badge-active">Aktif</span>
                             </div>
@@ -64,10 +66,7 @@
                         </div>
                     </div>
                     <div class="header-right">
-                        <div class="notif">
-                            <i class="fa-solid fa-bell"></i>
-                            <span class="notif-badge">3</span>
-                        </div>
+                        <div id="notif-container" class="notif-wrap"></div>
                         <div class="profile-block">
                             <div class="avatar-wrap">
                                 <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
@@ -98,6 +97,55 @@
                     <div class="card-header">
                         <h2><i class="fa-solid fa-store"></i> Profil Toko</h2>
                     </div>
+
+                    <!-- Store Logo Upload -->
+                    <div class="store-image-section">
+                        <label class="store-image-label">Logo Toko</label>
+                        <div class="store-image-upload" id="logoUploadArea">
+                            <div class="store-image-preview" id="logoPreview">
+                                <img id="logoImg" src="{% static 'images/store-placeholder.png' %}" alt="Logo Toko" onerror="this.src='{% static 'images/store-placeholder.png' %}'">
+                            </div>
+                            <div class="store-image-actions">
+                                <p class="store-image-hint">Ukuran maksimal 5MB. Format: JPG, PNG, WEBP. Resolusi 400×400 piksel.</p>
+                                <div class="store-image-buttons">
+                                    <input type="file" id="logoFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+                                    <button type="button" class="btn-primary btn-sm" id="btnUploadLogo"><i class="fa-solid fa-upload"></i> Unggah Logo</button>
+                                    <button type="button" class="btn-outline btn-sm" id="btnReplaceLogo" style="display:none;"><i class="fa-solid fa-rotate"></i> Ganti</button>
+                                    <button type="button" class="btn-outline btn-sm" id="btnRemoveLogo" style="display:none;color:#ef4444;border-color:#fee2e2;"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                </div>
+                                <div id="logoUploadStatus" class="upload-status" style="display:none;">
+                                    <span class="spinner"></span> Mengunggah...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Store Cover Photo Upload -->
+                    <div class="store-image-section">
+                        <label class="store-image-label">Foto Sampul Toko</label>
+                        <div class="store-image-upload cover-upload" id="bannerUploadArea">
+                            <div class="store-image-preview cover-preview" id="bannerPreview">
+                                <img id="bannerImg" src="{% static 'images/cover-placeholder.png' %}" alt="Sampul Toko" onerror="this.style.display='none'">
+                                <div class="cover-placeholder-overlay" id="coverPlaceholder">
+                                    <i class="fa-solid fa-image"></i>
+                                    <span>Belum ada foto sampul</span>
+                                </div>
+                            </div>
+                            <div class="store-image-actions">
+                                <p class="store-image-hint">Ukuran maksimal 5MB. Format: JPG, PNG, WEBP. Resolusi 1200×400 piksel.</p>
+                                <div class="store-image-buttons">
+                                    <input type="file" id="bannerFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+                                    <button type="button" class="btn-primary btn-sm" id="btnUploadBanner"><i class="fa-solid fa-upload"></i> Unggah Sampul</button>
+                                    <button type="button" class="btn-outline btn-sm" id="btnReplaceBanner" style="display:none;"><i class="fa-solid fa-rotate"></i> Ganti</button>
+                                    <button type="button" class="btn-outline btn-sm" id="btnRemoveBanner" style="display:none;color:#ef4444;border-color:#fee2e2;"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                </div>
+                                <div id="bannerUploadStatus" class="upload-status" style="display:none;">
+                                    <span class="spinner"></span> Mengunggah...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <form id="storeProfileForm" class="settings-form">
                         <div class="form-row">
                             <label>
@@ -264,12 +312,33 @@
 
     <div id="toast-notification" class="toast"></div>
 
+    <!-- Crop Modal -->
+    <div class="crop-modal-overlay" id="cropModalOverlay">
+        <div class="crop-modal">
+            <div class="crop-modal-header">
+                <h3 id="cropModalTitle">Potong Gambar</h3>
+                <button type="button" class="crop-modal-close" id="cropModalClose"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="crop-container">
+                <img id="cropImage" src="" alt="Crop">
+            </div>
+            <div class="crop-modal-footer">
+                <button type="button" class="btn-outline btn-sm" id="cropModalCancel">Batal</button>
+                <button type="button" class="btn-primary btn-sm" id="cropModalConfirm"><i class="fa-solid fa-crop"></i> Potong & Unggah</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="{% static 'js/utils/toast.js' %}"></script>
     <script src="{% static 'js/utils/format.js' %}"></script>
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/nav.js' %}"></script>
+    <script src="{% static 'js/websocket.js' %}"></script>
+<script src="{% static 'js/utils/notifications.js' %}"></script>
+<script src="{% static 'js/nav.js' %}"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
     <script src="{% static 'js/pages/seller/pengaturan/script.js' %}"></script>
 </body>
 </html>
