@@ -114,6 +114,9 @@ class User(AbstractUser):
             self.full_name = self.get_full_name() or self.email.split('@')[0]
         if not self.username:
             self.username = self.email.split('@')[0]
+        # Auto-verify superusers/staff so they can login without OTP
+        if (self.is_superuser or self.is_staff) and not self.is_verified:
+            self.is_verified = True
         super().save(*args, **kwargs)
 
     def is_account_locked(self):

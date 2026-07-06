@@ -190,32 +190,44 @@
               /></label>
               <label class="field"
                 >Provinsi <b>*</b
-                ><select name="province" id="regionProvince" required>
-                  <option value="">— Pilih Provinsi —</option>
-                </select>
-                <input type="hidden" name="province_code" />
-              </label>
+                ><input
+                  name="province"
+                  id="regionProvince"
+                  type="text"
+                  placeholder="Contoh: DKI Jakarta"
+                  autocomplete="address-level1"
+                  required
+              /></label>
               <label class="field"
                 >Kota / Kabupaten <b>*</b
-                ><select name="city" id="regionCity" required disabled>
-                  <option value="">— Pilih Provinsi dulu —</option>
-                </select>
-                <input type="hidden" name="city_code" />
-              </label>
+                ><input
+                  name="city"
+                  id="regionCity"
+                  type="text"
+                  placeholder="Contoh: Jakarta Pusat"
+                  autocomplete="address-level2"
+                  required
+              /></label>
               <label class="field"
                 >Kecamatan <b>*</b
-                ><select name="district" id="regionDistrict" required disabled>
-                  <option value="">— Pilih Kota dulu —</option>
-                </select>
-                <input type="hidden" name="district_code" />
-              </label>
+                ><input
+                  name="district"
+                  id="regionDistrict"
+                  type="text"
+                  placeholder="Contoh: Gambir"
+                  autocomplete="address-level3"
+                  required
+              /></label>
               <label class="field"
                 >Desa / Kelurahan <b>*</b
-                ><select name="village" id="regionVillage" required disabled>
-                  <option value="">— Pilih Kecamatan dulu —</option>
-                </select>
-                <input type="hidden" name="village_code" />
-              </label>
+                ><input
+                  name="village"
+                  id="regionVillage"
+                  type="text"
+                  placeholder="Contoh: Kebon Kelapa"
+                  autocomplete="address-level4"
+                  required
+              /></label>
               <label class="field"
                 >Kode Pos <b>*</b
                 ><input

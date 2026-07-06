@@ -331,6 +331,14 @@ button {
 }
 
 /* ── Mobile Drawer ── */
+/* Desktop: completely hide mobile-only drawer & overlay */
+@media (min-width: 769px) {
+  .mobile-overlay,
+  .mobile-drawer {
+    display: none !important;
+  }
+}
+
 .mobile-overlay {
     display: none;
     position: fixed;

@@ -71,7 +71,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     """Product creation serializer."""
     class Meta:
         model = Product
-        fields = ('category', 'product_name', 'description', 'product_photo',
+        fields = ('id', 'category', 'product_name', 'description', 'product_photo',
                   'price', 'stock', 'unit', 'product_status', 'is_featured')
         extra_kwargs = {
             'price': {'required': True},
@@ -116,7 +116,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ('id', 'user', 'user_name', 'user_photo', 'product', 'product_name',
                   'rating', 'comment', 'is_verified', 'seller_reply', 'seller_reply_at', 'created_at')
-        read_only_fields = ('user', 'is_verified', 'created_at', 'seller_reply', 'seller_reply_at')
+        read_only_fields = ('user', 'product', 'is_verified', 'created_at', 'seller_reply', 'seller_reply_at')
 
     def get_user_photo(self, obj):
         if obj.user and obj.user.profile_photo:

@@ -61,7 +61,7 @@ class StoreCreateSerializer(serializers.ModelSerializer):
     """Store registration serializer with full region hierarchy."""
     class Meta:
         model = Store
-        fields = ('store_name', 'category', 'description', 'address',
+        fields = ('id', 'store_name', 'category', 'description', 'address',
                   'province', 'province_code',
                   'city', 'city_code',
                   'district', 'district_code',
