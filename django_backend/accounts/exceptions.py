@@ -55,22 +55,38 @@ def custom_exception_handler(exc, context):
 
 
 def extract_error_message(errors):
-    """Extract human-readable error message from DRF errors."""
+    """Extract human-readable error message from DRF errors.
+    
+    Aggregates ALL field errors into a single message string so users
+    can see every validation problem at once (not just the first error).
+    """
     if isinstance(errors, dict):
+        parts = []
         for field, error_list in errors.items():
             if isinstance(error_list, list) and len(error_list) > 0:
-                error = error_list[0]
-                if isinstance(error, dict):
-                    return extract_error_message(error)
-                return str(error)
+                first_error = error_list[0]
+                if isinstance(first_error, dict):
+                    # Nested dict error (e.g., non_field_errors with details)
+                    nested = extract_error_message(first_error)
+                    parts.append(nested)
+                else:
+                    # Simple field error
+                    field_label = field.replace('_', ' ').title()
+                    parts.append(f"{field_label}: {str(first_error)}")
             elif isinstance(error_list, str):
-                return error_list
+                parts.append(str(error_list))
+        if parts:
+            return ' | '.join(parts)
         return 'Data yang dikirim tidak valid.'
     elif isinstance(errors, list) and len(errors) > 0:
-        error = errors[0]
-        if isinstance(error, dict):
-            return extract_error_message(error)
-        return str(error)
+        parts = []
+        for error in errors:
+            if isinstance(error, dict):
+                nested = extract_error_message(error)
+                parts.append(nested)
+            else:
+                parts.append(str(error))
+        return ' | '.join(parts) if parts else 'Terjadi kesalahan.'
     return 'Terjadi kesalahan.'
 
 

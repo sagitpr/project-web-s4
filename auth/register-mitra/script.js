@@ -209,13 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
     setMsg('Mendaftarkan mitra toko...', 'success');
 
     try {
+      // Validate passwords match
+      if (data.ownerPassword !== data.ownerPassword2) {
+        setMsg('Kata sandi dan konfirmasi tidak sama.', 'error');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }
+        return;
+      }
+      if (!data.ownerPassword || data.ownerPassword.length < 8) {
+        setMsg('Kata sandi minimal 8 karakter.', 'error');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }
+        return;
+      }
+
       // Step 1: Register user as seller
       const registerData = await WarungioAPI.register({
         full_name: data.ownerName,
         email: data.ownerEmail,
         phone: data.ownerPhone,
-        password: data.ownerPassword || 'Toko12345!',
-        password2: data.ownerPassword || 'Toko12345!',
+        password: data.ownerPassword,
+        password2: data.ownerPassword,
         address: data.address,
         role: 'seller',
       });

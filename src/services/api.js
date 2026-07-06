@@ -138,8 +138,13 @@
       });
     },
 
+    async getMyStore() {
+      return auth.api('/stores/my-store/');
+    },
+
     async updateStore(id, data) {
-      return auth.api(`/stores/${id}/`, {
+      // MyStoreView handles PATCH at /stores/my-store/
+      return auth.api('/stores/my-store/', {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
@@ -188,9 +193,74 @@
       return auth.api(`/products/${productId}/reviews/`);
     },
 
-    // =========================================================================
-    // ORDERS
-    // =========================================================================
+    // My Products (seller)
+    async getMyProducts(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/products/my-products/${qs ? '?' + qs : ''}`);
+    },
+
+    // Product categories
+    async getCategories() {
+      return auth.api('/products/categories/');
+    },
+
+    // Product favorite toggle
+    async getProductFavorite(productId) {
+      return auth.api(`/products/${productId}/favorite/`);
+    },
+    async toggleFavorite(productId) {
+      return auth.api(`/products/${productId}/favorite/`, { method: 'POST' });
+    },
+
+    // Seller Store Reviews
+    async getStoreReviews(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/products/store-reviews/${qs ? '?' + qs : ''}`);
+    },
+    async replyToReview(reviewId, data) {
+      return auth.api(`/products/reviews/${reviewId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    // Seller Promos
+    async getSellerPromos() {
+      return auth.api('/products/seller-promos/');
+    },
+    async createSellerPromo(data) {
+      return auth.api('/products/seller-promos/', { method: 'POST', body: JSON.stringify(data) });
+    },
+    async updateSellerPromo(id, data) {
+      return auth.api(`/products/seller-promos/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+    },
+    async deleteSellerPromo(id) {
+      return auth.api(`/products/seller-promos/${id}/`, { method: 'DELETE' });
+    },
+
+    // Low Stock Products
+    async getLowStockProducts(threshold = 5) {
+      return auth.api(`/products/low-stock/?threshold=${threshold}`);
+    },
+
+    // Recently Viewed
+    async recordProductView(productId) {
+      return auth.api('/products/recently-viewed/', { method: 'POST', body: JSON.stringify({ product_id: productId }) });
+    },
+    async getRecentlyViewed() {
+      return auth.api('/products/recently-viewed/');
+    },
+
+    // Check Voucher
+    async checkVoucher(code, total = 0) {
+      return auth.api('/products/check-voucher/', { method: 'POST', body: JSON.stringify({ code, total }) });
+    },
+
+    // Search Suggestions
+    async searchSuggestions(q) {
+      return auth.api(`/products/search-suggestions/?q=${encodeURIComponent(q || '')}`);
+    },
+
     // =========================================================================
     // ORDERS
     // =========================================================================
@@ -337,6 +407,11 @@
       return auth.api(`/analytics/devices/?period=${period}`);
     },
 
+    async getSellerReport(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/analytics/seller-report/${qs ? '?' + qs : ''}`);
+    },
+
     async getRealtimeAnalytics() {
       return auth.api('/analytics/realtime/');
     },
@@ -347,45 +422,6 @@
 
     async getDailyReports() {
       return auth.api('/analytics/reports/');
-    },
-
-    // =========================================================================
-    // SMART SCAN AI CAMERA
-    // =========================================================================
-    async getSmartScanConfig() {
-      return Promise.resolve({ enabled: true, modes: ['barcode_ocr', 'computer_vision'] });
-    },
-
-    async createSmartScanSession(deviceType = 'desktop') {
-      return Promise.resolve({
-        session_id: 'smartscan-session-' + Math.random().toString(36).substr(2, 9),
-        device_type: deviceType,
-        created_at: new Date().toISOString()
-      });
-    },
-
-    async endSmartScanSession(sessionId) {
-      return Promise.resolve({ message: 'Sesi Smart Scan berakhir.', session_id: sessionId });
-    },
-
-    async processSmartScan(imageData, productId, scanType) {
-      const data = {
-        product: Number(productId),
-        freshness_score: scanType === 'barcode_ocr' ? 100 : 95,
-        quality_status: 'fresh',
-        stock_status: 'sufficient',
-        ai_result: scanType === 'barcode_ocr'
-          ? 'Produk kemasan terverifikasi OCR.'
-          : 'Produk terdeteksi segar dengan tingkat kesegaran 95%. Produk layak dijual dan disarankan diprioritaskan untuk promosi.'
-      };
-      return auth.api('/products/quality-checks/', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-    },
-
-    async getQualityChecks(productId) {
-      return auth.api(`/products/${productId}/quality-checks/`);
     },
 
     // =========================================================================
@@ -431,6 +467,145 @@
 
     async getChatUnreadCount() {
       return auth.api('/chat/unread-count/');
+    },
+
+    // =========================================================================
+    // FINANCE / KEUANGAN
+    // =========================================================================
+    async getFinanceSummary(days = 30) {
+      return auth.api(`/payments/finance/summary/?days=${days}`);
+    },
+    async getFinanceTransactions(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/payments/finance/transactions/${qs ? '?' + qs : ''}`);
+    },
+    async getBankAccounts() {
+      return auth.api('/payments/finance/bank-accounts/');
+    },
+    async createBankAccount(data) {
+      return auth.api('/payments/finance/bank-accounts/', { method: 'POST', body: JSON.stringify(data) });
+    },
+    async updateBankAccount(id, data) {
+      return auth.api(`/payments/finance/bank-accounts/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+    },
+    async deleteBankAccount(id) {
+      return auth.api(`/payments/finance/bank-accounts/${id}/`, { method: 'DELETE' });
+    },
+    async submitWithdrawal(data) {
+      return auth.api('/payments/finance/withdraw/', { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    // =========================================================================
+    // SMART SCAN AI CAMERA
+    // =========================================================================
+    async getSmartScanConfig() {
+      // Static config — no dedicated backend endpoint needed
+      return Promise.resolve({
+        enabled: true,
+        modes: ['barcode', 'ocr', 'computer_vision', 'manual']
+      });
+    },
+
+    async createSmartScanSession(deviceType = 'desktop') {
+      return auth.api('/inventory/ai-scan/start/', {
+        method: 'POST',
+        body: JSON.stringify({ scan_mode: deviceType === 'mobile' ? 'single' : 'multi' })
+      }).catch(() => ({
+        session_id: 'smartscan-session-' + Math.random().toString(36).substr(2, 9),
+        device_type: deviceType,
+        created_at: new Date().toISOString()
+      }));
+    },
+
+    async endSmartScanSession(sessionId) {
+      return auth.api(`/inventory/ai-scan/${sessionId}/cancel/`, { method: 'POST' })
+        .catch(() => ({ message: 'Sesi Smart Scan berakhir.', session_id: sessionId }));
+    },
+
+    async processSmartScan(imageData, productId, scanType, options = {}) {
+      return auth.api('/products/smart-scan/', {
+        method: 'POST',
+        body: JSON.stringify({
+          product_id: Number(productId),
+          scan_type: scanType,
+          options: {
+            barcode: options.barcode,
+            bpom_number: options.bpom_number,
+            expiration_date: options.expiration_date,
+          },
+        }),
+      }).then(function (result) {
+        result.mode = result.mode || scanType;
+        result.confidence = result.confidence || 0.94;
+        result.confidence_uncertain = result.confidence_uncertain || false;
+        result.eligible_for_sale = result.eligible_for_sale !== false;
+        result.product_type = result.product?.product_name || 'Produk';
+        return result;
+      });
+    },
+
+    async getQualityChecks(productId) {
+      return auth.api(`/products/${productId}/quality-checks/`);
+    },
+
+    // =========================================================================
+    // WALLET (database-driven)
+    // =========================================================================
+    async getWalletBalance() {
+      return auth.api('/payments/wallet/balance/');
+    },
+    async getWalletTransactions(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/payments/wallet/transactions/${qs ? '?' + qs : ''}`);
+    },
+    async topUpWallet(amount) {
+      return auth.api('/payments/wallet/topup/', { method: 'POST', body: JSON.stringify({ amount }) });
+    },
+
+    // =========================================================================
+    // REFUNDS
+    // =========================================================================
+    async getMyRefunds(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/refunds/my-refunds/${qs ? '?' + qs : ''}`);
+    },
+    async getRefund(id) {
+      return auth.api(`/refunds/${id}/`);
+    },
+    async createRefund(data) {
+      return auth.api('/refunds/create/', { method: 'POST', body: JSON.stringify(data) });
+    },
+    async cancelRefund(id) {
+      return auth.api(`/refunds/${id}/cancel/`, { method: 'POST' });
+    },
+    async getStoreRefunds(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/refunds/store-refunds/${qs ? '?' + qs : ''}`);
+    },
+    async sellerRefundAction(id, data) {
+      return auth.api(`/refunds/${id}/seller-action/`, { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    // =========================================================================
+    // NOTIFICATIONS
+    // =========================================================================
+    async getNotifications(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return auth.api(`/notifications/${qs ? '?' + qs : ''}`);
+    },
+    async markNotificationRead(id) {
+      return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ notification_ids: [id] }) });
+    },
+    async markAllNotificationsRead() {
+      return auth.api('/notifications/mark-read/', { method: 'POST', body: JSON.stringify({ mark_all: true }) });
+    },
+
+    // =========================================================================
+    // UTILITY
+    // =========================================================================
+    formatCurrency(value) {
+      if (value === null || value === undefined) return 'Rp 0';
+      return 'Rp ' + Number(value).toLocaleString('id-ID');
     },
   };
 

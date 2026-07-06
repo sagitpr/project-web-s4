@@ -9,9 +9,23 @@ from django.utils import timezone
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
-from rest_framework import status, generics, permissions, views, throttling
+from rest_framework import serializers as drf_serializers, status, generics, permissions, views, throttling
 
 logger = logging.getLogger(__name__)
+
+# ── Registration instrumentation helpers ──
+REGISTER_SENSITIVE_FIELDS = frozenset({'password', 'password2', 'captcha_token'})
+
+def _mask_payload(data):
+    """Return a copy of request data with sensitive field values masked."""
+    masked = {}
+    for k, v in data.items():
+        if k in REGISTER_SENSITIVE_FIELDS:
+            masked[k] = '***MASKED***'
+        else:
+            masked[k] = str(v)[:200] if v is not None else None
+    return masked
+
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -88,11 +102,61 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
-
+    
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  INSTRUMENTATION: Log the COMPLETE incoming request payload
+        #  (sensitive fields masked, non-sensitive shown in full)
+        # ────────────────────────────────────────────────────────────────────
+        logger.info(
+            'REGISTER REQUEST — IP: %s | User-Agent: %s | Complete payload: %s',
+            ip,
+            user_agent,
+            _mask_payload(dict(request.data.items())),
+        )
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  VALIDATION
+        # ────────────────────────────────────────────────────────────────────
+        if not serializer.is_valid():
+            error_detail = dict(serializer.errors)
+            payload_masked = _mask_payload(dict(request.data.items()))
+            
+            logger.warning(
+                'REGISTER VALIDATION FAILED — IP: %s | Errors: %s | Payload: %s',
+                ip,
+                error_detail,
+                payload_masked,
+            )
+            
+            # Log every single field error with received value (or MASKED for sensitive)
+            for field, field_errors in serializer.errors.items():
+                for err in field_errors:
+                    raw_val = request.data.get(field, 'MISSING')
+                    val_preview = '***MASKED***' if field in REGISTER_SENSITIVE_FIELDS else str(raw_val)[:200]
+                    logger.warning(
+                        '  REGISTER FIELD ERROR — Field: "%s" | Error: %s | Value: %s',
+                        field,
+                        str(err),
+                        val_preview,
+                    )
+            
+            # Log the error response that will be sent back
+            logger.warning(
+                'REGISTER ERROR RESPONSE — HTTP 400 | Response: {\"success\": false, \"errors\": %s}',
+                error_detail,
+            )
+            
+            raise drf_serializers.ValidationError(serializer.errors)
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  SUCCESS: Create user, send OTP
+        # ────────────────────────────────────────────────────────────────────
         user = serializer.save()
 
         # Send OTP for verification
@@ -122,6 +186,20 @@ class RegisterView(generics.CreateAPIView):
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  INSTRUMENTATION: Log the response body (without full user data)
+        # ────────────────────────────────────────────────────────────────────
+        response_log = {
+            'status': 'success',
+            'user_id': user.id,
+            'email': user.email,
+            'role': user.role,
+            'otp_channels': list(set(channels)),
+        }
+        if settings.DEBUG:
+            response_log['otp_code'] = otp.otp_code
+        logger.info('REGISTER RESPONSE — HTTP 201 | Response: %s', response_log)
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
