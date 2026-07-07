@@ -8,7 +8,7 @@
     </div>
 
     <nav class="sidebar-nav">
-        <a href="{% url 'page-buyer-home' %}" class="nav-link {% if request.path == '/buyer/home/' or request.path == '/home/' or request.path == '/' %}active{% endif %}">
+        <a href="{% url 'page-buyer-home' %}" class="nav-link {% if request.path == '/buyer/home/' or request.path == '/home/' %}active{% endif %}">
             <i class="fa-regular fa-compass"></i>
             <span>Beranda</span>
         </a>

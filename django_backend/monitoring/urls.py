@@ -39,6 +39,5 @@ urlpatterns = [
     # Admin Dashboard stats (real data from database)
     path('admin-stats/', views.AdminDashboardStatsView.as_view(), name='admin-dashboard-stats'),
 
-    # Mock Data (for Flutter development)
-    path('mock/dashboard/', views.MockMonitoringDashboardView.as_view(), name='mock-monitoring-dashboard'),
+    # Mock endpoint removed for production
 ]

@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           btn.addEventListener('click', async (e) => {
             e.preventDefault();
             if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-              window.location.href = '../auth/login/index.html';
+              window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
               return;
             }
             const productId = parseInt(btn.dataset.productId);

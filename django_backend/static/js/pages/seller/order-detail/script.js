@@ -10,7 +10,7 @@
   var API = window.WarungioAPI;
 
   if (!auth || !auth.isAuthenticated()) {
-    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
     return;
   }
 

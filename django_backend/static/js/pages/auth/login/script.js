@@ -2,7 +2,12 @@
  * Login page - Warungio
  * JWT authentication via Django REST API.
  * Supports email/password login + social login (Google, Facebook, Apple).
- * Redirects to buyer or seller dashboard based on user role.
+ * Uses explicit ?role= query parameter to determine redirect target
+ * instead of automatic role detection from cached user data.
+ *   ?role=buyer  → /buyer/home/
+ *   ?role=seller → /seller/dashboard/
+ *   ?role=admin  → /admin/
+ *   no role      → / (Landing Page)
  */
 (function () {
   'use strict';
@@ -15,6 +20,10 @@
   const loginBtn = document.getElementById('loginBtn');
   const formMessage = document.getElementById('formMessage');
   const emailInput = document.getElementById('email');
+
+  // ── Read explicit role from query param ──
+  const loginParams = new URLSearchParams(window.location.search);
+  const loginRole = loginParams.get('role');       // 'seller' | 'buyer' | null
 
   // ── Password toggle ──
   if (eyeBtn && pwdInput && eyeOpen && eyeClosed) {
@@ -88,45 +97,37 @@
     }
   });
 
-  /** Validate redirect URL — only allow relative paths to prevent open redirect */
-  function isValidRedirect(url) {
-    if (!url || typeof url !== 'string') return false;
-    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
-  }
-
   /**
-   * Validate that the next URL matches the user's role.
-   * A buyer can only be redirected to /buyer/* paths.
-   * A seller can only be redirected to /seller/* paths.
-   * An admin can only be redirected to /admin/* paths.
-   * If no role-specific prefix matches, fall back to role-based redirect.
+   * Determine the redirect URL after successful login.
+   * Priority:
+   *   1. ?next= param (only relative paths to prevent open redirect)
+   *   2. ?role= param → role-specific entry point (buyer→/buyer/home/, seller→/seller/dashboard/, admin→/admin/)
+   *   3. Default → / (Landing Page — the only public homepage)
    */
-  function isRoleAllowedRedirect(nextUrl, role) {
-    if (!nextUrl || !role) return false;
-    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
-    if (role === 'seller') return nextUrl.startsWith('/seller/');
-    if (role === 'admin') return nextUrl.startsWith('/admin/');
-    return false;
+  function getRedirectUrl() {
+    const nextUrl = loginParams.get('next');
+    if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://')) {
+      return nextUrl;
+    }
+    // Delegate role-based redirect to the centralized helper
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleLoginRedirect === 'function') {
+      return window.WarungioAuth.getRoleLoginRedirect(loginRole);
+    }
+    // Fallback (should not be reached if auth.js is loaded)
+    if (loginRole === 'seller') return '/seller/dashboard/';
+    if (loginRole === 'buyer') return '/buyer/home/';
+    if (loginRole === 'admin') return '/admin/';
+    return '/';
   }
 
   /**
-   * Handle login response: store tokens and redirect based on role.
-   * Uses centralized WarungioAuth.redirectToDashboard() for role-appropriate redirect.
+   * Handle login response: store tokens and redirect explicitly.
+   * Does NOT rely on automatic role detection from cached user data.
+   * Uses the ?role= query param (or ?next=) to determine where to go.
    */
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    const role = data.user.role;
-
-    const params = new URLSearchParams(window.location.search);
-    const nextUrl = params.get('next');
-    // Only allow next parameter if it matches the user's role — prevents role mismatch
-    if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
-      window.location.href = nextUrl;
-      return;
-    }
-
-    // Redirect to role-appropriate dashboard using centralized function
-    window.WarungioAuth.redirectToDashboard();
+    window.location.href = getRedirectUrl();
   }
 
   // ── Login submit ──
@@ -434,20 +435,18 @@
         return;
       }
       
-      // Session exists! Redirect to role-appropriate dashboard
+      // Session exists! Redirect explicitly using ?role= param (not role detection)
       const data = await resp.json();
       if (!data || !data.authenticated || !data.user) {
         return;  // Safety check
       }
       
-      const role = data.user.role;
-      const nextUrl = params.get('next');
-
-      if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
+      const nextUrl = loginParams.get('next');
+      if (nextUrl && isValidRedirect(nextUrl)) {
         window.location.href = nextUrl;
       } else {
-        // Redirect to role-appropriate dashboard using centralized function
-        window.WarungioAuth.redirectToDashboard();
+        // Use explicit role-based redirect via getRedirectUrl()
+        window.location.href = getRedirectUrl();
       }
     } catch (e) {
       // Network error — stay on login page, don't redirect

@@ -3,19 +3,6 @@
  * Connected to Django analytics API and product management.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const DEFAULT_DATA = {
-    products: [
-      { name: 'Selada Keriting', cat: 'Sayuran', status: 'Kurang Segar', statusClass: 'status-orange', issue: 'Kesegaran menurun', action: 'Perbarui Foto' },
-      { name: 'Stok Telur Ayam', cat: 'Sembako', status: 'Stok Rendah', statusClass: 'status-yellow', issue: 'Stok di bawah minimum', action: 'Restock' },
-      { name: 'Cabai Rawit Merah', cat: 'Bumbu', status: 'Tidak Layak', statusClass: 'status-red', issue: 'Kualitas tidak memenuhi standar', action: 'Hapus' },
-    ],
-    activities: [
-      { msg: 'Pesanan baru #INV/240501/0012', time: '10 Mei 2024, 10:30' },
-      { msg: 'Produk Bayam Hijau Segar Lolos Quality Check', time: '10 Mei 2024, 09:45' },
-      { msg: 'Pesanan #INV/240501/0011 dikirim', time: '09 Mei 2024, 18:45' },
-    ]
-  };
-
   if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
     return;
   }
@@ -26,39 +13,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const addProductMessage = document.getElementById('add-product-message');
   let chartInstance = null;
 
-  function initChart(feasible = 78, moderate = 42, low = 8, rejected = 10) {
+  function initChart(feasible = 0, moderate = 0, low = 0, rejected = 0) {
     const ctx = document.getElementById('eligibilityChart')?.getContext('2d');
     if (!ctx) return;
     if (chartInstance) chartInstance.destroy();
+    const total = feasible + moderate + low + rejected;
+    const chartData = total > 0
+      ? [feasible, moderate, low, rejected]
+      : [1]; // Placeholder gray dot when no data
+    const chartColors = total > 0
+      ? ['#22c55e', '#a3e635', '#facc15', '#ef4444']
+      : ['#e5e7eb'];
     chartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
         datasets: [{
-          data: [feasible, moderate, low, rejected],
-          backgroundColor: ['#22c55e', '#a3e635', '#facc15', '#ef4444'],
+          data: chartData,
+          backgroundColor: chartColors,
           borderWidth: 0, cutout: '80%',
         }]
       },
-      options: { plugins: { tooltip: { enabled: false } }, cutout: '80%' }
+      options: { plugins: { tooltip: { enabled: total > 0 } }, cutout: '80%' }
     });
   }
   initChart();
-
-  function renderProducts(data) {
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-    (data.products || []).forEach(p => {
-      tableBody.innerHTML += '<tr><td><b>' + p.name + '</b></td><td>' + p.cat + '</td><td><span class="status-pill ' + p.statusClass + '">' + p.status + '</span></td><td>' + p.issue + '</td><td><button class="btn-action">' + p.action + '</button></td></tr>';
-    });
-  }
-
-  function renderActivities(data) {
-    if (!actList) return;
-    actList.innerHTML = '';
-    (data.activities || []).forEach(a => {
-      actList.innerHTML += '<div class="activity-item"><b>' + a.msg + '</b><small>' + a.time + '</small></div>';
-    });
-  }
 
   function showAddMsg(text, type) {
     if (!addProductMessage) return;
@@ -98,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actList.innerHTML += '<div class="activity-item"><b>Pesanan #' + o.order_number + '</b><small>' + new Date(o.created_at).toLocaleString('id-ID') + ' - Rp ' + Number(o.total_price).toLocaleString('id-ID') + '</small></div>';
           });
         } else {
-          renderActivities(DEFAULT_DATA);
+          actList.innerHTML = '<div class="activity-item" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada aktivitas terbaru</div>';
         }
       }
 
@@ -107,13 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
         data.top_products.forEach(p => {
           tableBody.innerHTML += '<tr><td><b>' + p.product_name + '</b></td><td>Terjual: ' + p.total_sold + '</td><td><span class="status-pill status-green">Laris</span></td><td>Penjualan: Rp ' + Number(p.total_revenue).toLocaleString('id-ID') + '</td><td><button class="btn-action">Detail</button></td></tr>';
         });
-      } else {
-        renderProducts(DEFAULT_DATA);
+      } else if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data produk</td></tr>';
       }
     } catch (err) {
       console.warn('Dashboard load fallback:', err);
-      renderProducts(DEFAULT_DATA);
-      renderActivities(DEFAULT_DATA);
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat data produk</td></tr>';
+      if (actList) actList.innerHTML = '<div class="activity-item" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat aktivitas</div>';
+    }
     }
   }
 

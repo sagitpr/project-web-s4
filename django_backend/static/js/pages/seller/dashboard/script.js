@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const LOADING_ERROR_MSG = 'Gagal memuat data. Silakan refresh halaman.';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -97,6 +97,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   showLoadingSkeleton();
 
+  // ── Load store profile (shop name, ID, wallet balance) ──
+  async function loadStoreProfile() {
+    try {
+      const store = await WarungioAPI.getMyStore();
+      const shopNameEl = document.getElementById('shopName');
+      const shopIdEl = document.getElementById('shopId');
+      const logoEl = document.getElementById('headerStoreLogo');
+      if (shopNameEl && store) {
+        shopNameEl.textContent = store.store_name || 'Warung';
+      }
+      if (shopIdEl && store) {
+        shopIdEl.textContent = 'ID: ' + (store.slug ? store.slug.toUpperCase() : 'WRG' + (store.id || ''));
+      }
+      if (logoEl && store && store.store_logo) {
+        logoEl.src = store.store_logo;
+        logoEl.style.display = 'inline-block';
+      }
+
+      // Load wallet balance separately
+      try {
+        const wallet = await WarungioAPI.getWalletBalance();
+        const balanceEl = document.getElementById('store-balance');
+        if (balanceEl && wallet) {
+          balanceEl.textContent = 'Rp ' + Number(wallet.balance || 0).toLocaleString('id-ID');
+        }
+      } catch (e) {
+        // Wallet API unavailable — keep skeleton
+      }
+    } catch (e) {
+      console.warn('Store profile load failed:', e);
+    }
+  }
+
   async function loadDashboardData() {
     try {
       const data = await WarungioAPI.getDashboardSummary('month');
@@ -105,13 +138,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const ordersEl = document.getElementById('new-orders');
       const productsEl = document.getElementById('active-products');
       const ratingEl = document.getElementById('store-rating');
-      const balanceEl = document.getElementById('store-balance');
 
       if (salesEl) salesEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
       if (ordersEl) ordersEl.textContent = data.total_orders || 0;
       if (productsEl) productsEl.textContent = data.total_products || 0;
       if (ratingEl) ratingEl.textContent = Number(data.average_rating || 0).toFixed(1);
-      if (balanceEl) balanceEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
+
+      // ── Trends: compare current period vs previous period ──
+      const deltaSales = Number(data.sales_trend_percent || 0);
+      const deltaOrders = Number(data.order_trend_percent || 0);
+      renderTrend('sales-trend', deltaSales, 'dari bulan lalu');
+      renderTrend('orders-trend', deltaOrders, 'dari bulan lalu');
+
+      const productsTrendEl = document.getElementById('products-trend');
+      if (productsTrendEl) {
+        productsTrendEl.textContent = data.total_products ? data.total_products + ' produk aktif' : 'Belum ada produk';
+        productsTrendEl.className = 'stat-trend';
+      }
+
+      const reviewCount = data.total_reviews || data.review_count || 0;
+      const ratingTrendEl = document.getElementById('rating-trend');
+      if (ratingTrendEl) {
+        ratingTrendEl.textContent = '(' + Number(reviewCount).toLocaleString('id-ID') + ' ulasan)';
+        ratingTrendEl.className = 'stat-trend';
+      }
 
       if (actList) {
         actList.innerHTML = '';
@@ -129,14 +179,35 @@ document.addEventListener('DOMContentLoaded', () => {
         data.top_products.forEach(p => {
           tableBody.innerHTML += '<tr><td><b>' + p.product_name + '</b></td><td>Terjual: ' + p.total_sold + '</td><td><span class="status-pill status-green">Laris</span></td><td>Penjualan: Rp ' + Number(p.total_revenue).toLocaleString('id-ID') + '</td><td><button class="btn-action">Detail</button></td></tr>';
         });
+        const badgeEl = document.getElementById('actionBadge');
+        if (badgeEl) badgeEl.textContent = data.top_products.length;
       } else if (tableBody) {
         tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data produk</td></tr>';
+        const badgeEl = document.getElementById('actionBadge');
+        if (badgeEl) badgeEl.textContent = '0';
       }
+
+      // ── Quality chart from real quality data ──
+      refreshQualityChartFromData(data);
     } catch (err) {
       console.warn('Dashboard load fallback:', err);
       if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat data produk. ' + LOADING_ERROR_MSG + '</td></tr>';
       if (actList) actList.innerHTML = '<div class="activity-item" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat aktivitas. ' + LOADING_ERROR_MSG + '</div>';
     }
+  }
+
+  function renderTrend(elId, pctChange, suffix) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (pctChange === 0 || isNaN(pctChange)) {
+      el.textContent = 'Belum ada data';
+      el.className = 'stat-trend';
+      return;
+    }
+    const isUp = pctChange > 0;
+    const icon = isUp ? '<i class="fa-solid fa-arrow-up"></i>' : '<i class="fa-solid fa-arrow-down"></i>';
+    el.innerHTML = icon + ' ' + Math.abs(pctChange).toFixed(1) + '% ' + suffix;
+    el.className = 'stat-trend ' + (isUp ? 'up' : 'down');
   }
 
   addProductForm?.addEventListener('submit', async (e) => {
@@ -256,15 +327,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!selectedProductId) return;
 
     btnManualConfirmSave.disabled = true;
-    btnManualConfirmSave.textContent = 'Menyimpan...';
-
-    try {
-      const mockImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-      const finalRes = await WarungioAPI.processSmartScan(mockImg, selectedProductId, 'manual', {
+    btnManualConfirmSave.textContent = 'Menyimpan...';    try {
+      const finalRes = await WarungioAPI.processSmartScan(null, selectedProductId, 'manual', {
         barcode: confirmBarcodeInp?.value || '8991234567890',
         expiration_date: confirmExpDateInp?.value || '2027-12-31',
         bpom_number: confirmBpomInp?.value || 'MD 231456789012'
-      });      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
+      });
+
+      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
 
       playScanSound(); // 🔊 Tit_kasir! Manual confirm success sound
 
@@ -314,8 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(async () => {
       try {
-        const mockImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-        
         // Options setup for custom testing values
         let options = {};
         if (activeScanMode === 'computer_vision') {
@@ -337,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        const res = await WarungioAPI.processSmartScan(mockImg, selectedProductId, activeScanMode, options);
+        const res = await WarungioAPI.processSmartScan(null, selectedProductId, activeScanMode, options);
         
         if (activeScanMode === 'ocr' && res.confidence_uncertain) {
           // Force manual confirmation when OCR results have uncertain confidence
@@ -487,20 +555,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function refreshQualityChart() {
-    try {
-      const data = await WarungioAPI.getDashboardSummary('month');
-      // Gunakan data real dari dashboard summary
-      const feasible = data.total_products ? Math.round(data.total_products * 0.7) : 0;
-      const moderate = data.total_products ? Math.round(data.total_products * 0.2) : 0;
-      const low = data.total_products ? Math.round(data.total_products * 0.07) : 0;
-      const rejected = data.total_products ? Math.max(0, data.total_products - feasible - moderate - low) : 0;
-      initChart(feasible, moderate, low, rejected);
-    } catch (err) {
-      console.warn('Quality chart data unavailable:', err);
-      initChart(0, 0, 0, 0); // Empty chart — no misleading hardcoded data
+  function refreshQualityChartFromData(data) {
+    const qualityStats = data.quality_summary || {};
+    const feasible = qualityStats.fresh || 0;
+    const moderate = qualityStats.normal || 0;
+    const low = qualityStats.warning || 0;
+    const rejected = qualityStats.rejected || 0;
+    const total = feasible + moderate + low + rejected || 1;
+
+    initChart(feasible, moderate, low, rejected);
+
+    // Update labels with real counts
+    document.getElementById('qualityFeasible').textContent = feasible;
+    document.getElementById('qualityModerate').textContent = moderate;
+    document.getElementById('qualityLow').textContent = low;
+    document.getElementById('qualityRejected').textContent = rejected;
+
+    // Update progress bars
+    document.getElementById('qualityBarFeasible').style.width = (feasible / total * 100) + '%';
+    document.getElementById('qualityBarModerate').style.width = (moderate / total * 100) + '%';
+    document.getElementById('qualityBarLow').style.width = (low / total * 100) + '%';
+    document.getElementById('qualityBarRejected').style.width = (rejected / total * 100) + '%';
+
+    // Center percentage
+    const pctEl = document.getElementById('eligibilityPct');
+    if (pctEl) {
+      const totalProducts = feasible + moderate + low + rejected;
+      const healthyPct = totalProducts > 0 ? Math.round((feasible / totalProducts) * 100) : 0;
+      pctEl.textContent = healthyPct + '%';
     }
   }
 
+  loadStoreProfile();
   loadDashboardData();
 });

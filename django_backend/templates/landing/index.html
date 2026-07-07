@@ -1,793 +1,597 @@
+{% extends "base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Warungio - Belanja dari Warung Terdekat</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="{% static 'css/landing.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
-    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
-</head>
-  <body>
-    <header class="header" id="siteHeader">
-      <div class="header-container">
-        <div class="logo">
-          <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu navigasi">
-            <span></span><span></span><span></span>
+
+{% block title %}Warungio - Belanja dari Warung Terdekat{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}" />
+<style>
+  /* Neutralise landing.css .header rules so they don't conflict with base.html's .header navbar.
+     The base.html navbar uses inline styles (position: sticky, top: 12px) which take precedence
+     over fixed positioning, but we reset other inherited properties explicitly. */
+  nav.header {
+    padding: 0 !important;
+    background: transparent !important;
+    transition: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+  nav.header.scrolled {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<main>
+  <section class="hero" id="beranda">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>
+          Belanja dari<br>warung terdekat,<br>hidup <span>lebih dekat.</span>
+        </h1>
+        <p>
+          Warungio menghubungkan kamu dengan warung dan produk terbaik di
+          sekitarmu. Belanja jadi lebih mudah, cepat, dan terpercaya.
+        </p>
+        <div class="hero-buttons">
+          <a href="{% url 'page-register' %}" class="btn-primary btn-hero"
+            >Mulai Belanja</a
+          >
+          <button
+            onclick="window.location.href = '{% url 'page-register' %}'"
+            class="btn-secondary btn-hero"
+          >
+            <span>Daftar Sekarang</span>
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12H19M12 5L19 12L12 19"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
-          <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
-          <p class="brand-label">
-            <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
+        </div>
+        <div class="hero-highlights">
+          <div class="highlight-item">
+            <img src="{% static 'images/location.png' %}" alt="Warung terdekat" />
+            <span>Warung<br />Terdekat</span>
+          </div>
+          <div class="highlight-item">
+            <img
+              src="{% static 'images/shield.png' %}"
+              alt="Aman dan terpercaya"
+            />
+            <span>Aman &<br />Terpercaya</span>
+          </div>
+          <div class="highlight-item">
+            <img src="{% static 'images/kilat.png' %}" alt="Cepat dan praktis" />
+            <span>Cepat &<br />Praktis</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <img
+          src="{% static 'images/store-bike.png' %}"
+          alt="Warung Warungio"
+          class="store-image"
+        />
+        <img
+          src="{% static 'images/phone-home.png' %}"
+          alt="App Warungio"
+          class="phone-image"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="fitur">
+    <div class="container">
+      <h2 class="section-title">Fitur Unggulan <span>Warungio</span></h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <img src="{% static 'images/location.png' %}" alt="Lokasi" />
+            </div>
+            <div>
+              <h3>Warung Terdekat</h3>
+              <p>
+                Temukan warung terdekat dari lokasi Anda secara real-time
+                dengan mudah.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <img src="{% static 'images/shield.png' %}" alt="Aman" />
+            </div>
+            <div>
+              <h3>Aman & Terpercaya</h3>
+              <p>
+                Mendukung transaksi lancar dan cepat setiap saat dengan
+                aman.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <img src="{% static 'images/kilat.png' %}" alt="Cepat" />
+            </div>
+            <div>
+              <h3>Pesan Instan</h3>
+              <p>
+                Pesan sekarang, diantar dalam hitungan jam langsung ke
+                tangan Anda.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <img src="{% static 'images/pengiriman.png' %}" alt="Tracking" />
+            </div>
+            <div>
+              <h3>Tracking Pesanan</h3>
+              <p>
+                Pantau status pesananmu setiap saat sampai barang tiba di
+                rumah.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="container">
+      <div class="video-content">
+        <div class="video-player">
+          <video autoplay muted loop>
+            <source
+              src="{% static 'video/video-vegetable.mp4' %}"
+              type="video/mp4"
+            />
+          </video>
+          <button class="play-button" aria-label="Putar video">
+            <span></span>
+          </button>
+        </div>
+        <div class="video-text">
+          <p class="video-label">warungio</p>
+          <h2>Kesegaran Terjaga, Kualitas <span>Terpercaya</span></h2>
+          <p>
+            Warungio memastikan setiap sayur dan bahan makanan segar pilihan
+            untuk keluarga kamu. Tonton video di samping untuk lihat
+            langsung kesegaran produk kami!
           </p>
         </div>
-        <nav class="nav" id="mainNav">
-          <a href="#beranda" class="nav-link active">Beranda</a>
-          <a href="#tentang" class="nav-link">Tentang</a>
-          <a href="#fitur" class="nav-link">Fitur</a>
-          <a href="#cara-kerja" class="nav-link">Cara Kerja</a>
-          <a href="#testimoni" class="nav-link">Testimoni</a>
-          <a href="#faq" class="nav-link">FAQ</a>
-        </nav>
-        <div class="header-right">
-          <nav class="section-jump" id="sectionJump">
-            <button class="jump-trigger" id="jumpTrigger">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              <span id="currentSectionLabel">Beranda</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="jump-dropdown" id="jumpDropdown">
-              <a href="#beranda" class="jump-item active" data-section="Beranda">Beranda</a>
-              <a href="#tentang" class="jump-item" data-section="Tentang">Tentang</a>
-              <a href="#fitur" class="jump-item" data-section="Fitur">Fitur</a>
-              <a href="#cara-kerja" class="jump-item" data-section="Cara Kerja">Cara Kerja</a>
-              <a href="#testimoni" class="jump-item" data-section="Testimoni">Testimoni</a>
-              <a href="#faq" class="jump-item" data-section="FAQ">FAQ</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="categories" id="tentang">
+    <div class="container">
+      <div class="categories-header">
+        <h2 class="section-title">Kategori Populer</h2>
+        <a href="/info/tentang-kami/" class="link-all">Lihat semua kategori →</a>
+      </div>
+      <div class="category-promo-row">
+        <div class="category-panel">
+          <div class="categories-grid">
+            <div class="category-item">
+              <img
+                src="{% static 'images/sembako.png' %}"
+                alt="Sembako"
+                class="category-icon"
+              />
+              <p>Sembako</p>
             </div>
-          </nav>
-          <div class="auth-buttons">
-            <div class="auth-state-indicator" id="authStateIndicator">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span>Belum Login</span>
+            <div class="category-item">
+              <img
+                src="{% static 'images/vegetable.png' %}"
+                alt="Sayuran"
+                class="category-icon"
+              />
+              <p>Sayuran</p>
             </div>
-            <a href="{% url 'page-login' %}" class="btn-masuk" id="landingBtnMasuk">Masuk</a>
-            <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
+            <div class="category-item">
+              <img
+                src="{% static 'images/fruit.png' %}"
+                alt="Buah"
+                class="category-icon"
+              />
+              <p>Buah</p>
+            </div>
+            <div class="category-item">
+              <img
+                src="{% static 'images/meat.png' %}"
+                alt="Daging"
+                class="category-icon"
+              />
+              <p>Daging</p>
+            </div>
+            <div class="category-item">
+              <img
+                src="{% static 'images/beverage.png' %}"
+                alt="Minuman"
+                class="category-icon"
+              />
+              <p>Minuman</p>
+            </div>
+            <div class="category-item">
+              <img
+                src="{% static 'images/food.png' %}"
+                alt="Makanan"
+                class="category-icon"
+              />
+              <p>Makanan</p>
+            </div>
+            <div class="category-item">
+              <img
+                src="{% static 'images/kebutuhan dapur.png' %}"
+                alt="Kebutuhan"
+                class="category-icon"
+              />
+              <p>Kebutuhan</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="promo-card">
+          <div class="promo-content">
+            <h3>Promo Spesial Hari Ini!</h3>
+            <p>Diskon hingga</p>
+            <div class="promo-discount">30%</div>
+            <p class="promo-subtitle">Untuk semua produk segar</p>
+            <button class="btn-primary btn-small">Belanja Sekarang</button>
+          </div>
+          <img
+            src="{% static 'images/tambah-produk.png' %}"
+            alt="Promo produk segar"
+            class="promo-image"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works" id="cara-kerja">
+    <div class="container">
+      <h2 class="section-title">Cara Kerja <span>Warungio</span></h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <img src="{% static 'images/store.png' %}" alt="Pilih Warung" />
+          <h3>Pilih Warung</h3>
+          <p>Pilih warung terdekat dari lokasi Anda.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <img src="{% static 'images/keranjang.png' %}" alt="Pilih Produk" />
+          <h3>Pilih Produk</h3>
+          <p>Pilih produk yang ingin kamu beli.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <img src="{% static 'images/credit-card-icon.png' %}" alt="Checkout" />
+          <h3>Checkout</h3>
+          <p>Konfirmasi pesanan dan metode pembayaran.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <img src="{% static 'images/pengiriman.png' %}" alt="Pesanan Diantar" />
+          <h3>Pesanan Diantar</h3>
+          <p>Pesanan diantar cepat sampai ke alamat Anda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="testimonials" id="testimoni">
+    <div class="container">
+      <div class="testimonials-header">
+        <h2 class="section-title">Testimoni Pelanggan</h2>
+        <a href="/info/tentang-kami/" class="link-all">Lihat semua testimoni →</a>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <span class="quote-mark">&ldquo;</span>
+          <div class="testimonial-stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span
+            ><span>★</span>
+          </div>
+          <p class="testimonial-text">
+            Belanja di Warungio sangat membantu, sayurnya segar dan
+            pengiriman cepat!
+          </p>
+          <div class="testimonial-author">
+            <img src="{% static 'images/av-siti.png' %}" alt="Siti Aisyah" />
+            <div>
+              <p class="author-name">Siti Aisyah</p>
+              <p class="author-location">Jakarta Selatan</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <span class="quote-mark">&ldquo;</span>
+          <div class="testimonial-stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span
+            ><span>★</span>
+          </div>
+          <p class="testimonial-text">
+            Harga terjangkau, produk lengkap, dan warung dekat rumah. Sangat
+            puas!
+          </p>
+          <div class="testimonial-author">
+            <img src="{% static 'images/av-stev.png' %}" alt="Budi Santoso" />
+            <div>
+              <p class="author-name">Budi Santoso</p>
+              <p class="author-location">Bandung</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <span class="quote-mark">&ldquo;</span>
+          <div class="testimonial-stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span
+            ><span>★</span>
+          </div>
+          <p class="testimonial-text">
+            Aplikasi mudah digunakan, pelayanan juga sangat ramah.
+            Rekomendasi untuk keluarga!
+          </p>
+          <div class="testimonial-author">
+            <img src="{% static 'images/av-melinda.png' %}" alt="Rina Kartika" />
+            <div>
+              <p class="author-name">Rina Kartika</p>
+              <p class="author-location">Surabaya</p>
+            </div>
           </div>
         </div>
       </div>
-    </header>
-
-    <!-- Mobile drawer overlay -->
-    <div class="mobile-overlay" id="mobileOverlay"></div>
-    <aside class="mobile-drawer" id="mobileDrawer">
-      <div class="drawer-header">
-        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" />
-        <p class="brand-label"><span class="brand-main">Warung</span><span class="brand-highlight">io</span></p>
-        <button class="drawer-close" id="drawerClose" aria-label="Tutup menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
+      <div class="testimonial-dots">
+        <span class="active"></span>
+        <span></span>
+        <span></span>
       </div>
-      <nav class="drawer-nav">
-        <a href="#beranda" class="drawer-link active">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-          Beranda
-        </a>
-        <a href="#tentang" class="drawer-link">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          Tentang
-        </a>
-        <a href="#fitur" class="drawer-link">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Fitur
-        </a>
-        <a href="#cara-kerja" class="drawer-link">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          Cara Kerja
-        </a>
-        <a href="#testimoni" class="drawer-link">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          Testimoni
-        </a>
-        <a href="#faq" class="drawer-link">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-          FAQ
-        </a>
-      </nav>
-      <div class="drawer-footer">
-        <a href="{% url 'page-login' %}" class="btn-masuk drawer-btn" id="landingDrawerMasuk">Masuk</a>
-        <a href="{% url 'page-register' %}" class="btn-daftar drawer-btn">Daftar</a>
-      </div>
-    </aside>
+    </div>
+  </section>
 
-    <main>
-      <section class="hero" id="beranda">
-        <div class="hero-content">
-          <div class="hero-text">
-            <h1>
-              Belanja dari<br>warung terdekat,<br>hidup <span>lebih dekat.</span>
-            </h1>
-            <p>
-              Warungio menghubungkan kamu dengan warung dan produk terbaik di
-              sekitarmu. Belanja jadi lebih mudah, cepat, dan terpercaya.
-            </p>
-            <div class="hero-buttons">
-              <a href="{% url 'page-register' %}" class="btn-primary btn-hero"
-                >Mulai Belanja</a
-              >
-              <button
-                onclick="window.location.href = '{% url 'page-register' %}'"
-                class="btn-secondary btn-hero"
-              >
-                <span>Daftar Sekarang</span>
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5 12H19M12 5L19 12L12 19"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div class="hero-highlights">
-              <div class="highlight-item">
-                <img src="{% static 'images/location.png' %}" alt="Warung terdekat" />
-                <span>Warung<br />Terdekat</span>
-              </div>
-              <div class="highlight-item">
-                <img
-                  src="{% static 'images/shield.png' %}"
-                  alt="Aman dan terpercaya"
-                />
-                <span>Aman &<br />Terpercaya</span>
-              </div>
-              <div class="highlight-item">
-                <img src="{% static 'images/kilat.png' %}" alt="Cepat dan praktis" />
-                <span>Cepat &<br />Praktis</span>
-              </div>
-            </div>
-          </div>
-          <div class="hero-visual">
-            <img
-              src="{% static 'images/store-bike.png' %}"
-              alt="Warung Warungio"
-              class="store-image"
-            />
-            <img
-              src="{% static 'images/phone-home.png' %}"
-              alt="App Warungio"
-              class="phone-image"
-            />
-          </div>
+  <section class="download">
+    <div class="container">
+      <div class="download-content">
+        <div class="download-visual">
+          <img
+            src="{% static 'images/download-app.png' %}"
+            alt="Download Warungio"
+          />
         </div>
-      </section>
-
-      <section class="features" id="fitur">
-        <div class="container">
-          <h2 class="section-title">Fitur Unggulan <span>Warungio</span></h2>
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-card-inner">
-                <div class="feature-icon">
-                  <img src="{% static 'images/location.png' %}" alt="Lokasi" />
-                </div>
-                <div>
-                  <h3>Warung Terdekat</h3>
-                  <p>
-                    Temukan warung terdekat dari lokasi Anda secara real-time
-                    dengan mudah.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-inner">
-                <div class="feature-icon">
-                  <img src="{% static 'images/shield.png' %}" alt="Aman" />
-                </div>
-                <div>
-                  <h3>Aman & Terpercaya</h3>
-                  <p>
-                    Mendukung transaksi lancar dan cepat setiap saat dengan
-                    aman.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-inner">
-                <div class="feature-icon">
-                  <img src="{% static 'images/kilat.png' %}" alt="Cepat" />
-                </div>
-                <div>
-                  <h3>Pesan Instan</h3>
-                  <p>
-                    Pesan sekarang, diantar dalam hitungan jam langsung ke
-                    tangan Anda.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-inner">
-                <div class="feature-icon">
-                  <img src="{% static 'images/pengiriman.png' %}" alt="Tracking" />
-                </div>
-                <div>
-                  <h3>Tracking Pesanan</h3>
-                  <p>
-                    Pantau status pesananmu setiap saat sampai barang tiba di
-                    rumah.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="video-section">
-        <div class="container">
-          <div class="video-content">
-            <div class="video-player">
-              <video autoplay muted loop>
-                <source
-                  src="{% static 'video/video-vegetable.mp4' %}"
-                  type="video/mp4"
-                />
-              </video>
-              <button class="play-button" aria-label="Putar video">
-                <span></span>
-              </button>
-            </div>
-            <div class="video-text">
-              <p class="video-label">warungio</p>
-              <h2>Kesegaran Terjaga, Kualitas <span>Terpercaya</span></h2>
-              <p>
-                Warungio memastikan setiap sayur dan bahan makanan segar pilihan
-                untuk keluarga kamu. Tonton video di samping untuk lihat
-                langsung kesegaran produk kami!
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="categories" id="tentang">
-        <div class="container">
-          <div class="categories-header">
-            <h2 class="section-title">Kategori Populer</h2>
-            <a href="/info/tentang-kami/" class="link-all">Lihat semua kategori →</a>
-          </div>
-          <div class="category-promo-row">
-            <div class="category-panel">
-              <div class="categories-grid">
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/sembako.png' %}"
-                    alt="Sembako"
-                    class="category-icon"
-                  />
-                  <p>Sembako</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/vegetable.png' %}"
-                    alt="Sayuran"
-                    class="category-icon"
-                  />
-                  <p>Sayuran</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/fruit.png' %}"
-                    alt="Buah"
-                    class="category-icon"
-                  />
-                  <p>Buah</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/meat.png' %}"
-                    alt="Daging"
-                    class="category-icon"
-                  />
-                  <p>Daging</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/beverage.png' %}"
-                    alt="Minuman"
-                    class="category-icon"
-                  />
-                  <p>Minuman</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/food.png' %}"
-                    alt="Makanan"
-                    class="category-icon"
-                    />
-                  <p>Makanan</p>
-                </div>
-                <div class="category-item">
-                  <img
-                    src="{% static 'images/kebutuhan dapur.png' %}"
-                    alt="Kebutuhan"
-                    class="category-icon"
-                  />
-                  <p>Kebutuhan</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="promo-card">
-              <div class="promo-content">
-                <h3>Promo Spesial Hari Ini!</h3>
-                <p>Diskon hingga</p>
-                <div class="promo-discount">30%</div>
-                <p class="promo-subtitle">Untuk semua produk segar</p>
-                <button class="btn-primary btn-small">Belanja Sekarang</button>
-              </div>
+        <div class="download-text">
+          <h2>Download Warungio Sekarang!</h2>
+          <p>Belanja dari warung terdekat jadi lebih mudah.</p>
+          <div class="download-buttons">
+            <a href="https://play.google.com/store" target="_blank" rel="noopener" class="store-button">
               <img
-                src="{% static 'images/tambah-produk.png' %}"
-                alt="Promo produk segar"
-                class="promo-image"
+                src="{% static 'images/google-playstore.png' %}"
+                alt="Google Play Store"
               />
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="how-it-works" id="cara-kerja">
-        <div class="container">
-          <h2 class="section-title">Cara Kerja <span>Warungio</span></h2>
-          <div class="steps-grid">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <img src="{% static 'images/store.png' %}" alt="Pilih Warung" />
-              <h3>Pilih Warung</h3>
-              <p>Pilih warung terdekat dari lokasi Anda.</p>
-            </div>
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <img src="{% static 'images/keranjang.png' %}" alt="Pilih Produk" />
-              <h3>Pilih Produk</h3>
-              <p>Pilih produk yang ingin kamu beli.</p>
-            </div>
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <img src="{% static 'images/credit-card-icon.png' %}" alt="Checkout" />
-              <h3>Checkout</h3>
-              <p>Konfirmasi pesanan dan metode pembayaran.</p>
-            </div>
-            <div class="step-card">
-              <div class="step-number">4</div>
-              <img src="{% static 'images/pengiriman.png' %}" alt="Pesanan Diantar" />
-              <h3>Pesanan Diantar</h3>
-              <p>Pesanan diantar cepat sampai ke alamat Anda.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="testimonials" id="testimoni">
-        <div class="container">
-          <div class="testimonials-header">
-            <h2 class="section-title">Testimoni Pelanggan</h2>
-            <a href="/info/tentang-kami/" class="link-all">Lihat semua testimoni →</a>
-          </div>
-          <div class="testimonials-grid">
-            <div class="testimonial-card">
-              <span class="quote-mark">&ldquo;</span>
-              <div class="testimonial-stars">
-                <span>★</span><span>★</span><span>★</span><span>★</span
-                ><span>★</span>
-              </div>
-              <p class="testimonial-text">
-                Belanja di Warungio sangat membantu, sayurnya segar dan
-                pengiriman cepat!
-              </p>
-              <div class="testimonial-author">
-                <img src="{% static 'images/av-siti.png' %}" alt="Siti Aisyah" />
-                <div>
-                  <p class="author-name">Siti Aisyah</p>
-                  <p class="author-location">Jakarta Selatan</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="testimonial-card">
-              <span class="quote-mark">&ldquo;</span>
-              <div class="testimonial-stars">
-                <span>★</span><span>★</span><span>★</span><span>★</span
-                ><span>★</span>
-              </div>
-              <p class="testimonial-text">
-                Harga terjangkau, produk lengkap, dan warung dekat rumah. Sangat
-                puas!
-              </p>
-              <div class="testimonial-author">
-                <img src="{% static 'images/av-stev.png' %}" alt="Budi Santoso" />
-                <div>
-                  <p class="author-name">Budi Santoso</p>
-                  <p class="author-location">Bandung</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="testimonial-card">
-              <span class="quote-mark">&ldquo;</span>
-              <div class="testimonial-stars">
-                <span>★</span><span>★</span><span>★</span><span>★</span
-                ><span>★</span>
-              </div>
-              <p class="testimonial-text">
-                Aplikasi mudah digunakan, pelayanan juga sangat ramah.
-                Rekomendasi untuk keluarga!
-              </p>
-              <div class="testimonial-author">
-                <img src="{% static 'images/av-melinda.png' %}" alt="Rina Kartika" />
-                <div>
-                  <p class="author-name">Rina Kartika</p>
-                  <p class="author-location">Surabaya</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-dots">
-            <span class="active"></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </section>
-
-      <section class="download">
-        <div class="container">
-          <div class="download-content">
-            <div class="download-visual">
-              <img
-                src="{% static 'images/download-app.png' %}"
-                alt="Download Warungio"
-              />
-            </div>
-            <div class="download-text">
-              <h2>Download Warungio Sekarang!</h2>
-              <p>Belanja dari warung terdekat jadi lebih mudah.</p>
-              <div class="download-buttons">
-                <a href="https://play.google.com/store" target="_blank" rel="noopener" class="store-button">
-                  <img
-                    src="{% static 'images/google-playstore.png' %}"
-                    alt="Google Play Store"
-                  />
-                </a>
-                <a href="https://apps.apple.com" target="_blank" rel="noopener" class="store-button">
-                  <img src="{% static 'images/appstore.png' %}" alt="App Store" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="partner" id="faq">
-        <div class="container">
-          <div class="partner-content">
-            <div class="partner-text">
-              <h2>Gabung Jadi Mitra <span>Warungio</span></h2>
-              <p>
-                Jangkau lebih banyak pelanggan dan kembangkan usaha warungmu
-                bersama Warungio.
-              </p>
-              <ul class="partner-benefits">
-                <li>
-                  <img src="{% static 'images/verified.png' %}" alt="Benefit" />
-                  <div>
-                    <h4>Meningkatkan Penjualan</h4>
-                    <p>
-                      Jangkau lebih banyak pelanggan di seluruh wilayah Anda.
-                    </p>
-                  </div>
-                </li>
-                <li>
-                  <img src="{% static 'images/shield.png' %}" alt="Benefit" />
-                  <div>
-                    <h4>Mudah Digunakan</h4>
-                    <p>
-                      Kelola produk dan pesanan dengan aplikasi yang simpel.
-                    </p>
-                  </div>
-                </li>
-              </ul>
-              <a
-                href="{% url 'page-register-mitra' %}"
-                class="btn-primary btn-partner"
-                >Daftar Jadi Mitra</a
-              >
-            </div>
-            <div class="partner-visual">
-              <img
-                src="{% static 'images/store-icon-T.png' %}"
-                alt="Mitra Warungio"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Recent Orders (only shown when logged in) -->
-      <section class="orders-section" id="ordersSection" style="display:none">
-        <div class="container">
-          <div class="section-header-row">
-            <h2 class="section-title" style="margin-bottom:0;text-align:left">Pesanan Terbaru</h2>
-            <a href="{% url 'page-orders' %}" class="link-all">Lihat Semua →</a>
-          </div>
-          <div class="orders-dashboard-grid" id="ordersDashboardGrid">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-column footer-brand">
-            <img
-              src="{% static 'images/Warungio L.png' %}"
-              alt="Warungio Logo"
-              class="footer-logo"
-            />
-            <p>Belanja dari warung terdekat, jadi lebih dekat.</p>
-          </div>
-
-          <div class="footer-column">
-            <h4>Menu</h4>
-            <ul>
-              <li><a href="/">Beranda</a></li>
-              <li><a href="/info/tentang-kami/">Tentang</a></li>
-              <li><a href="/#fitur">Fitur</a></li>
-              <li><a href="/#cara-kerja">Cara Kerja</a></li>
-              <li><a href="/bantuan/">FAQ</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-column">
-            <h4>Bantuan</h4>
-            <ul>
-              <li><a href="/bantuan/">Pusat Bantuan</a></li>
-              <li><a href="/info/kebijakan/">Syarat & Ketentuan</a></li>
-              <li><a href="/info/kebijakan/">Kebijakan Privasi</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-column">
-            <h4>Hubungi Kami</h4>
-            <ul>
-              <li>
-                <img src="{% static 'images/location.png' %}" alt="Location" />
-                Jl. Mawar No. 30, Tasikmalaya
-              </li>
-              <li>
-                <img src="{% static 'images/call.png' %}" alt="Email" />
-                info@warungio.id
-              </li>
-              <li>
-                <img src="{% static 'images/call.png' %}" alt="Phone" />
-                +62 812-3456-7890
-              </li>
-            </ul>
-            <div class="payment-methods">
-              <img src="{% static 'images/cod-icon.png' %}" alt="COD" />
-              <img
-                src="{% static 'images/credit-card-icon.png' %}"
-                alt="Credit Card"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="footer-social">
-          <div class="social-icons">
-            <a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="social-icon">
-              <img src="{% static 'images/facebook.png' %}" alt="Facebook" />
             </a>
-            <a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="social-icon">
-              <img src="{% static 'images/instagram.png' %}" alt="Instagram" />
-            </a>
-            <a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="social-icon">
-              <img src="{% static 'images/youtube.png' %}" alt="YouTube" />
+            <a href="https://apps.apple.com" target="_blank" rel="noopener" class="store-button">
+              <img src="{% static 'images/appstore.png' %}" alt="App Store" />
             </a>
           </div>
-          <p>© 2026 Warungio. All rights reserved.</p>
         </div>
       </div>
-    </footer>
+    </div>
+  </section>
 
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/landing.js' %}"></script>
+  <section class="partner" id="faq">
+    <div class="container">
+      <div class="partner-content">
+        <div class="partner-text">
+          <h2>Gabung Jadi Mitra <span>Warungio</span></h2>
+          <p>
+            Jangkau lebih banyak pelanggan dan kembangkan usaha warungmu
+            bersama Warungio.
+          </p>
+          <ul class="partner-benefits">
+            <li>
+              <img src="{% static 'images/verified.png' %}" alt="Benefit" />
+              <div>
+                <h4>Meningkatkan Penjualan</h4>
+                <p>
+                  Jangkau lebih banyak pelanggan di seluruh wilayah Anda.
+                </p>
+              </div>
+            </li>
+            <li>
+              <img src="{% static 'images/shield.png' %}" alt="Benefit" />
+              <div>
+                <h4>Mudah Digunakan</h4>
+                <p>
+                  Kelola produk dan pesanan dengan aplikasi yang simpel.
+                </p>
+              </div>
+            </li>
+          </ul>
+          <a
+            href="{% url 'page-register-mitra' %}"
+            class="btn-primary btn-partner"
+            >Daftar Jadi Mitra</a
+          >
+        </div>
+        <div class="partner-visual">
+          <img
+            src="{% static 'images/store-icon-T.png' %}"
+            alt="Mitra Warungio"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      'use strict';
+  <!-- Recent Orders (only shown when logged in) -->
+  <section class="orders-section" id="ordersSection" style="display:none">
+    <div class="container">
+      <div class="section-header-row">
+        <h2 class="section-title" style="margin-bottom:0;text-align:left">Pesanan Terbaru</h2>
+        <a href="{% url 'page-orders' %}" class="link-all">Lihat Semua →</a>
+      </div>
+      <div class="orders-dashboard-grid" id="ordersDashboardGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </section>
+</main>
 
-      // ── Preserve ?next= on Masuk buttons (login_required redirects to /?next=...) ──
-      var urlParams = new URLSearchParams(window.location.search);
-      var nextUrl = urlParams.get('next');
-      if (nextUrl) {
-        var masukBtns = document.querySelectorAll('#landingBtnMasuk, #landingDrawerMasuk');
-        masukBtns.forEach(function(btn) {
-          btn.href = btn.href.split('?')[0] + '?next=' + encodeURIComponent(nextUrl);
-        });
+{% endblock %}
+
+{% block mobile_nav %}{% endblock %}
+
+{% block footer %}
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column footer-brand">
+        <img
+          src="{% static 'images/Warungio L.png' %}"
+          alt="Warungio Logo"
+          class="footer-logo"
+        />
+        <p>Belanja dari warung terdekat, jadi lebih dekat.</p>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu</h4>
+        <ul>
+          <li><a href="/">Beranda</a></li>
+          <li><a href="/info/tentang-kami/">Tentang</a></li>
+          <li><a href="/#fitur">Fitur</a></li>
+          <li><a href="/#cara-kerja">Cara Kerja</a></li>
+          <li><a href="/bantuan/">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Bantuan</h4>
+        <ul>
+          <li><a href="/bantuan/">Pusat Bantuan</a></li>
+          <li><a href="/info/kebijakan/">Syarat & Ketentuan</a></li>
+          <li><a href="/info/kebijakan/">Kebijakan Privasi</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Hubungi Kami</h4>
+        <ul>
+          <li>
+            <img src="{% static 'images/location.png' %}" alt="Location" />
+            Jl. Mawar No. 30, Tasikmalaya
+          </li>
+          <li>
+            <img src="{% static 'images/call.png' %}" alt="Email" />
+            info@warungio.id
+          </li>
+          <li>
+            <img src="{% static 'images/call.png' %}" alt="Phone" />
+            +62 812-3456-7890
+          </li>
+        </ul>
+        <div class="payment-methods">
+          <img src="{% static 'images/cod-icon.png' %}" alt="COD" />
+          <img
+            src="{% static 'images/credit-card-icon.png' %}"
+            alt="Credit Card"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-social">
+      <div class="social-icons">
+        <a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="social-icon">
+          <img src="{% static 'images/facebook.png' %}" alt="Facebook" />
+        </a>
+        <a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="social-icon">
+          <img src="{% static 'images/instagram.png' %}" alt="Instagram" />
+        </a>
+        <a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="social-icon">
+          <img src="{% static 'images/youtube.png' %}" alt="YouTube" />
+        </a>
+      </div>
+      <p>&copy; 2026 Warungio. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+{{ block.super }}
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/landing.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  'use strict';
+
+  // ── Preserve ?next= on all login/register buttons without breaking existing params ──
+  var urlParams = new URLSearchParams(window.location.search);
+  var nextUrl = urlParams.get('next');
+  if (nextUrl) {
+    document.querySelectorAll('[href*="/auth/login"], [href*="/auth/register"]').forEach(function(btn) {
+      var href = btn.getAttribute('href');
+      if (!href) return;
+      // Parse existing query params to preserve them (e.g. ?role=seller on Login Seller)
+      var parts = href.split('?');
+      var base = parts[0];
+      var existingParams = new URLSearchParams(parts[1] || '');
+      // Only add ?next= if not already present
+      if (!existingParams.has('next')) {
+        existingParams.set('next', nextUrl);
+        btn.setAttribute('href', base + '?' + existingParams.toString());
       }
-
-      // ── Elements ──
-      var header = document.getElementById('siteHeader');
-      var navLinks = document.querySelectorAll('.nav-link');
-      var jumpTrigger = document.getElementById('jumpTrigger');
-      var jumpDropdown = document.getElementById('jumpDropdown');
-      var jumpItems = document.querySelectorAll('.jump-item');
-      var currentLabel = document.getElementById('currentSectionLabel');
-      var hamburger = document.getElementById('hamburgerBtn');
-      var mobileDrawer = document.getElementById('mobileDrawer');
-      var mobileOverlay = document.getElementById('mobileOverlay');
-      var drawerClose = document.getElementById('drawerClose');
-      var drawerLinks = document.querySelectorAll('.drawer-link');
-
-      // Sections for scroll spy
-      var sections = [];
-      document.querySelectorAll('section[id], .hero[id]').forEach(function(el) {
-        sections.push(el);
-      });
-
-      // ── Scroll: Header shadow ──
-      function onScroll() {
-        if (header) {
-          header.classList.toggle('scrolled', window.scrollY > 20);
-        }
-
-        // Scroll spy
-        var scrollPos = window.scrollY + 120;
-        var currentId = '';
-        var currentName = 'Beranda';
-
-        for (var i = 0; i < sections.length; i++) {
-          var section = sections[i];
-          if (section.offsetTop <= scrollPos) {
-            currentId = section.getAttribute('id');
-          }
-        }
-
-        if (!currentId) currentId = 'beranda';
-
-        // Update nav link active state
-        navLinks.forEach(function(link) {
-          var href = link.getAttribute('href');
-          link.classList.toggle('active', href === '#' + currentId);
-        });
-
-        // Update dropdown active state and label
-        jumpItems.forEach(function(item) {
-          var href = item.getAttribute('href');
-          var isActive = href === '#' + currentId;
-          item.classList.toggle('active', isActive);
-          if (isActive) {
-            currentName = item.getAttribute('data-section') || currentId.charAt(0).toUpperCase() + currentId.slice(1);
-          }
-        });
-
-        if (currentLabel) {
-          currentLabel.textContent = currentName;
-        }
-      }
-
-      window.addEventListener('scroll', onScroll, { passive: true });
-      // Run once on load
-      setTimeout(onScroll, 100);
-
-      // ── Section Jump Dropdown ──
-      if (jumpTrigger && jumpDropdown) {
-        jumpTrigger.addEventListener('click', function(e) {
-          e.stopPropagation();
-          jumpDropdown.classList.toggle('open');
-        });
-
-        document.addEventListener('click', function() {
-          jumpDropdown.classList.remove('open');
-        });
-
-        jumpDropdown.addEventListener('click', function(e) {
-          e.stopPropagation();
-        });
-
-        jumpItems.forEach(function(item) {
-          item.addEventListener('click', function() {
-            jumpDropdown.classList.remove('open');
-            if (currentLabel) {
-              currentLabel.textContent = item.getAttribute('data-section');
-            }
-          });
-        });
-      }
-
-      // ── Mobile Hamburger ──
-      function openMobile() {
-        if (hamburger) hamburger.classList.add('active');
-        if (mobileOverlay) mobileOverlay.classList.add('open');
-        if (mobileDrawer) mobileDrawer.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      }
-
-      function closeMobile() {
-        if (hamburger) hamburger.classList.remove('active');
-        if (mobileOverlay) mobileOverlay.classList.remove('open');
-        if (mobileDrawer) mobileDrawer.classList.remove('open');
-        document.body.style.overflow = '';
-      }
-
-      if (hamburger) {
-        hamburger.addEventListener('click', function() {
-          if (mobileDrawer && mobileDrawer.classList.contains('open')) {
-            closeMobile();
-          } else {
-            openMobile();
-          }
-        });
-      }
-
-      if (mobileOverlay) {
-        mobileOverlay.addEventListener('click', closeMobile);
-      }
-
-      if (drawerClose) {
-        drawerClose.addEventListener('click', closeMobile);
-      }
-
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeMobile();
-      });
-
-      // Close drawer on link click
-      drawerLinks.forEach(function(link) {
-        link.addEventListener('click', function() {
-          closeMobile();
-          // Update drawer active state
-          drawerLinks.forEach(function(l) { l.classList.remove('active'); });
-          link.classList.add('active');
-        });
-      });
-
-      // ── Smooth scroll for nav links ──
-      document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
-        anchor.addEventListener('click', function(e) {
-          var targetId = this.getAttribute('href');
-          if (targetId && targetId.length > 1) {
-            var target = document.querySelector(targetId);
-            if (target) {
-              e.preventDefault();
-              var offset = 80;
-              if (header) offset = header.offsetHeight + 8;
-              var targetPos = target.getBoundingClientRect().top + window.scrollY - offset;
-              window.scrollTo({ top: targetPos, behavior: 'smooth' });
-            }
-          }
-        });
-      });
     });
-    </script>
-  </body>
-</html>
+  }
+
+  // ── Smooth scroll for anchor links in content ──
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+      var targetId = this.getAttribute('href');
+      if (targetId && targetId.length > 1) {
+        var target = document.querySelector(targetId);
+        if (target) {
+          e.preventDefault();
+          var nav = document.querySelector('.header');
+          var offset = nav ? nav.offsetHeight + 8 : 80;
+          var targetPos = target.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: targetPos, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

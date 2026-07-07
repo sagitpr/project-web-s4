@@ -6,6 +6,7 @@ Barcode lookup, batch entry, FEFO picking, expiry alerts, master product CRUD.
 import logging
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
 from django.core.cache import cache
@@ -104,6 +105,7 @@ class MasterProductCreateView(generics.CreateAPIView):
     queryset = MasterProduct.objects.all()
     serializer_class = MasterProductCreateSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = MasterProductCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -316,6 +318,7 @@ class BatchUpdateView(generics.UpdateAPIView):
     queryset = ProductBatch.objects.all()
     serializer_class = ProductBatchSerializer
 
+    @transaction.atomic
     def patch(self, request, *args, **kwargs):
         batch = self.get_object()
 
@@ -379,6 +382,7 @@ class BatchDisposeView(APIView):
     """Dispose of a batch (mark as disposed, remove from inventory)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
             batch = ProductBatch.objects.get(id=pk, store=request.user.store)

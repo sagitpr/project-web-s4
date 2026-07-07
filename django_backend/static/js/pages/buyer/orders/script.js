@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // Auth guard: redirect to login if not authenticated
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 

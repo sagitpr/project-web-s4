@@ -53,7 +53,7 @@ urlpatterns = [
     path('stock-prediction/', views.StockPredictionView.as_view(), name='stock-prediction'),
     path('store-forecast/', views.StoreStockForecastView.as_view(), name='store-forecast'),
     path('reorder-suggestions/', views.ReorderSuggestionView.as_view(), name='reorder-suggestions'),
-    path('mock/stock-prediction/', views.MockStockPredictionView.as_view(), name='mock-stock-prediction'),
+    # Mock endpoint removed for production
 
     # Low Stock Alerts (seller)
     path('low-stock/', views.LowStockProductsView.as_view(), name='low-stock-products'),

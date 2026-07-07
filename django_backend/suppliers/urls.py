@@ -34,9 +34,7 @@ urlpatterns = [
     path('my-suppliers/', views.MySupplierListView.as_view(), name='my-suppliers'),
     path('register/', views.SupplierRegisterView.as_view(), name='supplier-register'),
 
-    # Dummy Data / Mock (for Flutter development)
-    path('mock/suppliers/', views.MockSupplierListView.as_view(), name='mock-suppliers'),
-    path('mock/products/', views.MockSupplierProductListView.as_view(), name='mock-supplier-products'),
+    # Mock endpoints removed for production
 
     # Search
     path('search/', views.SupplierSearchView.as_view(), name='supplier-search'),

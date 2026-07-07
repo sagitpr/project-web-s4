@@ -229,6 +229,11 @@ class Review(models.Model):
         super().save(*args, **kwargs)
         self.product.update_rating()
 
+    def delete(self, *args, **kwargs):
+        product = self.product
+        super().delete(*args, **kwargs)
+        product.update_rating()
+
 
 class Favorite(models.Model):
     """User favorite/wishlist products."""

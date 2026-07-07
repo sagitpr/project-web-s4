@@ -4,7 +4,7 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
     return;
   }
 

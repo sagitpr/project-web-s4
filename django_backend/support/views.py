@@ -2,6 +2,7 @@
 Support / Help Center views for Warungio Marketplace API.
 """
 
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
@@ -236,6 +237,7 @@ class AIChatView(generics.GenericAPIView):
     """
     permission_classes = (permissions.AllowAny,)
 
+    @transaction.atomic
     def post(self, request):
         from .ai_chat_service import get_ai_chat_service
         

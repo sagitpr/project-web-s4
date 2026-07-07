@@ -58,17 +58,21 @@
           });
 
           window.WarungioAuth.login(data.access, data.refresh, data.user);
-          const role = data.user.role;
-          if (role === 'seller') {
-            window.location.href = '../../seller/dashboard/index.html';
+          // Use centralized role-based redirect to canonical Django URLs
+          if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+            window.location.href = window.WarungioAuth.getRoleDashboardUrl(data.user.role);
           } else {
-            window.location.href = '../../buyer/dashboard/index.html';
+            // Fallback: manual role check with absolute Django paths
+            const role = data.user.role;
+            if (role === 'seller') window.location.href = '/seller/dashboard/';
+            else if (role === 'buyer') window.location.href = '/buyer/home/';
+            else window.location.href = '/';
           }
         } else {
-          window.location.href = '../../auth/login/index.html?error=apple_auth_failed';
+          window.location.href = '/auth/login/?error=apple_auth_failed';
         }
       } catch (err) {
-        window.location.href = '../../auth/login/index.html?error=' + encodeURIComponent(err.message);
+        window.location.href = '/auth/login/?error=' + encodeURIComponent(err.message);
       }
     })();
   </script>

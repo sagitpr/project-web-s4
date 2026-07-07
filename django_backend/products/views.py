@@ -300,7 +300,7 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         product = instance.product
         super().perform_destroy(instance)
-        product.update_rating()
+        # Rating cascade handled by Review.delete() → product.update_rating() → store.update_rating_avg()
 
         # Broadcast review deletion via WebSocket
         notify_product_update(
@@ -650,63 +650,7 @@ class StoreStockForecastView(views.APIView):
         })
 
 
-class MockStockPredictionView(views.APIView):
-    """Mock stock prediction data for Flutter development."""
-    permission_classes = (permissions.AllowAny,)
 
-    def get(self, request):
-        from datetime import datetime, timedelta
-        today = timezone.now().date()
-        return Response({
-            'store_id': 1,
-            'store_name': 'Warung Makmur',
-            'total_products': 45,
-            'low_stock_count': 12,
-            'out_of_stock_count': 3,
-            'predictions': [
-                {
-                    'product_id': 1,
-                    'product_name': 'Beras Premium 5kg',
-                    'current_stock': 12,
-                    'unit': 'karung',
-                    'status': 'sufficient_data',
-                    'predicted_daily_demand': 3.5,
-                    'predicted_monthly_demand': 105.0,
-                    'confidence_score': 0.85,
-                    'safety_stock': 8,
-                    'reorder_point': 15,
-                    'recommended_reorder_qty': 50,
-                    'days_until_stockout': 3.4,
-                    'trend_direction': 'up',
-                    'trend_factor': 0.12,
-                    'avg_daily_sales': 3.2,
-                    'lead_time_days': 3,
-                },
-                {
-                    'product_id': 2,
-                    'product_name': 'Minyak Goreng 1L',
-                    'current_stock': 5,
-                    'unit': 'dus',
-                    'status': 'sufficient_data',
-                    'predicted_daily_demand': 8.2,
-                    'predicted_monthly_demand': 246.0,
-                    'confidence_score': 0.92,
-                    'safety_stock': 15,
-                    'reorder_point': 25,
-                    'recommended_reorder_qty': 100,
-                    'days_until_stockout': 0.6,
-                    'trend_direction': 'up',
-                    'trend_factor': 0.25,
-                    'avg_daily_sales': 7.8,
-                    'lead_time_days': 2,
-                },
-            ],
-            'generated_at': timezone.now().isoformat(),
-            'meta': {
-                'api_version': '1.0.0',
-                'source': 'mock',
-            },
-        })
 
 
 class LowStockProductsView(views.APIView):
@@ -742,24 +686,34 @@ class LowStockProductsView(views.APIView):
             else:
                 low_stock.append(item)
 
-        # Auto-create notifications for seller
+        # Auto-create notifications for seller — use bulk_create for efficiency
         combined = low_stock + out_of_stock
+        existing_titles = set(Notification.objects.filter(
+            user=request.user,
+            notification_type__in=['stok_habis', 'stok_rendah'],
+            title__in=[f"{item['product_name']} — {'Stok Habis' if item['stock'] <= 0 else 'Stok Rendah'}" for item in combined]
+        ).values_list('title', flat=True))
+        
+        new_notifications = []
         for item in combined:
-            ntype = 'stok_habis' if item['stock'] <= 0 else 'stok_rendah'
             title = f"{item['product_name']} — {'Stok Habis' if item['stock'] <= 0 else 'Stok Rendah'}"
+            if title in existing_titles:
+                continue
+            ntype = 'stok_habis' if item['stock'] <= 0 else 'stok_rendah'
             desc = f"Stok {item['product_name']}: {item['stock']} {item.get('unit', 'pcs')}. "
             desc += "Segera lakukan restock!" if item['stock'] <= 0 else "Segera tambah stok."
-            Notification.objects.get_or_create(
+            new_notifications.append(Notification(
                 user=request.user,
                 notification_type=ntype,
                 title=title,
-                defaults={
-                    'description': desc,
-                    'action_url': f"/seller/products/?highlight={item['id']}",
-                    'action_text': 'Lihat Produk',
-                    'priority': 'high' if item['stock'] <= 0 else 'medium',
-                }
-            )
+                description=desc,
+                action_url=f"/seller/products/?highlight={item['id']}",
+                action_text='Lihat Produk',
+                priority='high' if item['stock'] <= 0 else 'medium',
+            ))
+        
+        if new_notifications:
+            Notification.objects.bulk_create(new_notifications, ignore_conflicts=False)
 
         return Response({
             'count': len(combined),

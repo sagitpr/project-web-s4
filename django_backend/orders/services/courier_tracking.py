@@ -267,7 +267,7 @@ def get_tracking_status(delivery):
     # ── Check if this is a national courier (Binderbyte-supported) ──
     courier_code = ''
     if delivery.shipping_method:
-        courier_code = delivery.shipping_method.slug
+        courier_code = delivery.shipping_method.code
     elif delivery.courier_name:
         courier_code = delivery.courier_name.lower()
 

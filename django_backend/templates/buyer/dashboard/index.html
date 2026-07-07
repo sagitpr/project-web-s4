@@ -133,15 +133,8 @@
 
       <!-- Active Promos -->
       <div class="section-row"><h2>Promo Aktif</h2><a href="/home/">Lihat Semua →</a></div>
-      <div class="promo-grid-dash">
-        <div class="promo-card-dash">
-          <img src="{% static 'images/discount.png' %}" alt="Diskon" />
-          <div><h4>Diskon 30% Sayur Segar</h4><p>Belanja min. Rp 20.000 di warung terdekat</p></div>
-        </div>
-        <div class="promo-card-dash">
-          <img src="{% static 'images/pengiriman.png' %}" alt="Ongkir" />
-          <div><h4>Gratis Ongkir</h4><p>Belanja min. Rp 20.000 — bebas ongkos kirim!</p></div>
-        </div>
+      <div class="promo-grid-dash" id="promoDashGrid">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;" id="promoDashLoading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat promo...</div>
       </div>
     </div>
 
@@ -236,6 +229,33 @@
             });
           }
         } catch (err) { console.warn('Orders load error:', err); }
+
+        // ── Load active promos ──
+        try {
+          var promoData = await WarungioAPI.getPromos();
+          var promos = promoData.results || promoData || [];
+          var promoGrid = document.getElementById('promoDashGrid');
+          var promoLoading = document.getElementById('promoDashLoading');
+          if (promoGrid) {
+            if (promoLoading) promoLoading.style.display = 'none';
+            if (promos.length > 0) {
+              promoGrid.innerHTML = '';
+              promos.slice(0, 4).forEach(function(promo) {
+                var card = document.createElement('div');
+                card.className = 'promo-card-dash';
+                var discDesc = promo.discount_percent ? 'Diskon ' + promo.discount_percent + '%' : (promo.discount_amount ? 'Diskon Rp ' + Number(promo.discount_amount).toLocaleString('id-ID') : promo.promo_name);
+                card.innerHTML = '<img src="{% static 'images/discount.png' %}" alt="Promo" /><div><h4>' + promo.promo_name + '</h4><p>' + discDesc + '</p></div>';
+                promoGrid.appendChild(card);
+              });
+            } else {
+              promoGrid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada promo aktif</div>';
+            }
+          }
+        } catch (err) {
+          console.warn('Promos load error:', err);
+          var promoGrid = document.getElementById('promoDashGrid');
+          if (promoGrid) promoGrid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada promo aktif</div>';
+        }
       });
     })();
     </script>

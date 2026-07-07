@@ -2,7 +2,12 @@
  * Login page - Warungio
  * JWT authentication via Django REST API.
  * Supports email/password login + social login (Google, Facebook, Apple).
- * Redirects to buyer or seller dashboard based on user role.
+ * Uses explicit ?role= query parameter to determine redirect target
+ * instead of automatic role detection from cached user data.
+ *   ?role=buyer  → /buyer/home/
+ *   ?role=seller → /seller/dashboard/
+ *   ?role=admin  → /admin/
+ *   no role      → / (Landing Page)
  */
 (function () {
   'use strict';
@@ -15,6 +20,10 @@
   const loginBtn = document.getElementById('loginBtn');
   const formMessage = document.getElementById('formMessage');
   const emailInput = document.getElementById('email');
+
+  // ── Read explicit role from query param ──
+  const loginParams = new URLSearchParams(window.location.search);
+  const loginRole = loginParams.get('role');       // 'seller' | 'buyer' | null
 
   // ── Password toggle ──
   if (eyeBtn && pwdInput && eyeOpen && eyeClosed) {
@@ -88,18 +97,32 @@
     }
   });
 
+  /**
+   * Determine the redirect URL after successful login.
+   * Priority:
+   *   1. ?next= param (only relative paths to prevent open redirect)
+   *   2. ?role= param → role-specific entry point (buyer→/buyer/home/, seller→/seller/dashboard/, admin→/admin/)
+   *   3. Default → / (Landing Page — the only public homepage)
+   */
+  function getRedirectUrl() {
+    const nextUrl = loginParams.get('next');
+    if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://')) {
+      return nextUrl;
+    }
+    // Delegate role-based redirect to the centralized helper
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleLoginRedirect === 'function') {
+      return window.WarungioAuth.getRoleLoginRedirect(loginRole);
+    }
+    // Fallback (should not be reached if auth.js is loaded)
+    if (loginRole === 'seller') return '/seller/dashboard/';
+    if (loginRole === 'buyer') return '/buyer/home/';
+    if (loginRole === 'admin') return '/admin/';
+    return '/';
+  }
+
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    const role = data.user.role;
-    if (role === 'buyer') {
-      window.location.href = '/home/';
-    } else if (role === 'seller') {
-      window.location.href = '/seller/dashboard/';
-    } else if (role === 'admin') {
-      window.location.href = '/admin/';
-    } else {
-      window.location.href = '/';
-    }
+    window.location.href = getRedirectUrl();
   }
 
   // ── Login submit ──

@@ -149,22 +149,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         setTimeout(() => {
-          // If authenticated, check role and redirect
+          // If authenticated, redirect based on role from the backend's next_endpoint
           if (window.WarungioAuth.isAuthenticated()) {
-            const user = window.WarungioAuth.getUser();
-            const role = user ? user.role : null;
-            if (role === 'buyer') {
-              window.location.href = '/home/';
-            } else if (role === 'seller') {
-              window.location.href = '/seller/dashboard/';
-            } else if (role === 'admin') {
-              window.location.href = '/admin/';
+            // Extract role from the backend's next_endpoint (e.g. '/auth/login/?role=seller')
+            var roleParam = '';
+            if (data.next_endpoint) {
+              var endpointParams = new URLSearchParams(data.next_endpoint.split('?')[1] || '');
+              roleParam = endpointParams.get('role') || '';
+            }
+            // Use centralized helper for role-based redirect
+            if (window.WarungioAuth && typeof window.WarungioAuth.getRoleLoginRedirect === 'function') {
+              window.location.href = window.WarungioAuth.getRoleLoginRedirect(roleParam || null);
             } else {
-              window.location.href = '/';
+              // Fallback: manual role check
+              if (roleParam === 'seller') window.location.href = '/seller/dashboard/';
+              else if (roleParam === 'buyer') window.location.href = '/buyer/home/';
+              else if (roleParam === 'admin') window.location.href = '/admin/';
+              else window.location.href = '/';
             }
           } else {
-            // Otherwise gracefully redirect to login page
-            window.location.href = '/auth/login/?email=' + encodeURIComponent(email);
+            // Otherwise gracefully redirect to login page with role param from backend
+            var loginRedirectUrl = '/auth/login/?email=' + encodeURIComponent(email);
+            if (data.next_endpoint) {
+              var epParams = new URLSearchParams(data.next_endpoint.split('?')[1] || '');
+              var epRole = epParams.get('role');
+              if (epRole) {
+                loginRedirectUrl += '&role=' + encodeURIComponent(epRole);
+              }
+            }
+            window.location.href = loginRedirectUrl;
           }
         }, 1500);
       }

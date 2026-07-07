@@ -4,7 +4,7 @@ Listens for model events across the application and creates notifications.
 """
 
 import logging
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 
 from django.core.cache import cache
@@ -207,14 +207,16 @@ def connect_review_signals():
         from products.models import Review
         
         @receiver(post_save, sender=Review, weak=False, dispatch_uid='notif_new_review')
-        def on_review_created(sender, instance, created, **kwargs):
-            if not created:
-                return
+        def on_review_saved(sender, instance, created, **kwargs):
             product = getattr(instance, 'product', None)
-            if product and hasattr(product, 'store') and product.store:
-                # Clear dashboard cache — new review affects rating stats
-                _clear_dashboard_cache(product.store.id)
+            if not product or not hasattr(product, 'store') or not product.store:
+                return
 
+            # Always clear dashboard cache — rating stats may have changed
+            _clear_dashboard_cache(product.store.id)
+
+            if created:
+                # Only send push notification on new review (not on update)
                 seller_id = product.store.user_id
                 store_name = product.store.store_name if hasattr(product.store, 'store_name') else None
                 notify_new_review(
@@ -223,7 +225,14 @@ def connect_review_signals():
                     rating=float(instance.rating or 0),
                     review_id=instance.id,
                 )
-        
+
+        @receiver(post_delete, sender=Review, weak=False, dispatch_uid='notif_review_deleted')
+        def on_review_deleted(sender, instance, **kwargs):
+            """Clear dashboard cache when a review is deleted."""
+            product = getattr(instance, 'product', None)
+            if product and hasattr(product, 'store') and product.store:
+                _clear_dashboard_cache(product.store.id)
+
         logger.info('Review notification signals connected')
     except ImportError:
         logger.debug('Products app not available, skipping review signals')

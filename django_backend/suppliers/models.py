@@ -410,7 +410,22 @@ class SupplierReview(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Update supplier average rating
+        self._update_supplier_rating()
+
+    def delete(self, *args, **kwargs):
+        supplier = self.supplier
+        super().delete(*args, **kwargs)
+        # Recalculate supplier rating after deletion
+        from django.db.models import Avg
+        result = SupplierReview.objects.filter(supplier=supplier).aggregate(
+            avg=Avg('rating'), count=models.Count('id')
+        )
+        supplier.rating_avg = result['avg'] or 0
+        supplier.rating_count = result['count']
+        supplier.save(update_fields=['rating_avg', 'rating_count'])
+
+    def _update_supplier_rating(self):
+        """Recalculate and persist the supplier's average rating and count."""
         from django.db.models import Avg
         result = SupplierReview.objects.filter(supplier=self.supplier).aggregate(
             avg=Avg('rating'), count=models.Count('id')

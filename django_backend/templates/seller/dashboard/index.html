@@ -58,10 +58,10 @@
                         <div class="shop-status-block">
                             <div class="shop-name-row">
                                 <img id="headerStoreLogo" src="{% static 'images/store-placeholder.png' %}" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:cover;display:none;" onerror="this.style.display='none'">
-                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
                                 <span class="badge-active">Aktif</span>
                             </div>
-                            <span class="shop-id">ID: WRG12345</span>
+                            <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                         </div>
                     </div>
                 <div class="header-right">
@@ -95,40 +95,40 @@
                 <div class="icon-box green"><i class="fa-solid fa-cart-shopping"></i></div>
                 <div class="stat-info">
                     <span class="stat-label">Total Penjualan</span>
-                    <div class="stat-value" id="total-sales">Rp 8.560.000</div>
-                    <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 12.5% dari kemarin</div>
+                    <div class="stat-value" id="total-sales"><div class="skeleton skeleton-stat"></div></div>
+                    <div class="stat-trend" id="sales-trend"><span class="skeleton" style="display:inline-block;width:100px;height:10px;"></span></div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="icon-box blue"><i class="fa-solid fa-box-open"></i></div>
                 <div class="stat-info">
                     <span class="stat-label">Pesanan Baru</span>
-                    <div class="stat-value" id="new-orders">12</div>
-                    <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 3 dari kemarin</div>
+                    <div class="stat-value" id="new-orders"><div class="skeleton skeleton-stat"></div></div>
+                    <div class="stat-trend" id="orders-trend"><span class="skeleton" style="display:inline-block;width:100px;height:10px;"></span></div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="icon-box orange"><i class="fa-solid fa-layer-group"></i></div>
                 <div class="stat-info">
                     <span class="stat-label">Produk Aktif</span>
-                    <div class="stat-value" id="active-products">128</div>
-                    <div class="stat-trend">Semua tersedia</div>
+                    <div class="stat-value" id="active-products"><div class="skeleton skeleton-stat"></div></div>
+                    <div class="stat-trend" id="products-trend"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="icon-box purple"><i class="fa-solid fa-star"></i></div>
                 <div class="stat-info">
                     <span class="stat-label">Penilaian Toko</span>
-                    <div class="stat-value" id="store-rating">4.9</div>
-                    <div class="stat-trend">(236 ulasan)</div>
+                    <div class="stat-value" id="store-rating"><div class="skeleton skeleton-stat"></div></div>
+                    <div class="stat-trend" id="rating-trend"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></div>
                 </div>
             </div>
             <div class="stat-card stat-highlight">
                 <div class="icon-box green"><i class="fa-solid fa-wallet"></i></div>
                 <div class="stat-info">
                     <span class="stat-label">Saldo Warungio</span>
-                    <div class="stat-value" id="store-balance">Rp 2.350.000</div>
-                    <a href="#" class="btn-primary btn-sm stat-cta">Tarik Saldo</a>
+                    <div class="stat-value" id="store-balance"><div class="skeleton skeleton-stat"></div></div>
+                    <a href="{% url 'page-seller-keuangan' %}" class="btn-primary btn-sm stat-cta">Tarik Saldo</a>
                 </div>
             </div>
         </section>
@@ -147,17 +147,17 @@
                     <div class="eligibility-wrap">
                         <div class="eligibility-donut">
                             <canvas id="eligibilityChart"></canvas>
-                            <div class="eligibility-pct">92%</div>
+                            <div class="eligibility-pct" id="eligibilityPct">--</div>
                         </div>
                         <div class="eligibility-labels">
-                            <div class="eligibility-row"><span>Sangat Segar</span><span>78</span></div>
-                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" style="width:56%; background:#22c55e;"></div></div></div>
-                            <div class="eligibility-row"><span>Segar</span><span>42</span></div>
-                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" style="width:30%; background:#a3e635;"></div></div></div>
-                            <div class="eligibility-row"><span>Kurang Segar</span><span>8</span></div>
-                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" style="width:14%; background:#facc15;"></div></div></div>
-                            <div class="eligibility-row"><span>Tidak Layak</span><span>10</span></div>
-                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" style="width:8%; background:#ef4444;"></div></div></div>
+                            <div class="eligibility-row"><span>Sangat Segar</span><span id="qualityFeasible">--</span></div>
+                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" id="qualityBarFeasible" style="width:0%; background:#22c55e;"></div></div></div>
+                            <div class="eligibility-row"><span>Segar</span><span id="qualityModerate">--</span></div>
+                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" id="qualityBarModerate" style="width:0%; background:#a3e635;"></div></div></div>
+                            <div class="eligibility-row"><span>Kurang Segar</span><span id="qualityLow">--</span></div>
+                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" id="qualityBarLow" style="width:0%; background:#facc15;"></div></div></div>
+                            <div class="eligibility-row"><span>Tidak Layak</span><span id="qualityRejected">--</span></div>
+                            <div class="eligibility-bar"><div class="progress"><div class="progress-bar" id="qualityBarRejected" style="width:0%; background:#ef4444;"></div></div></div>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@
                 <div class="card-header">
                     <div class="card-header-left">
                         <h3>Produk Perlu Tindakan</h3>
-                        <span class="badge badge-red">10</span>
+                        <span class="badge badge-red" id="actionBadge">--</span>
                     </div>
                     <button class="btn-ghost btn-sm">Lihat Semua <i class="fa-solid fa-arrow-right"></i></button>
                 </div>

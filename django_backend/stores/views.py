@@ -2,6 +2,7 @@
 Stores views for Warungio Marketplace.
 """
 
+from django.db import transaction
 from rest_framework import status, generics, permissions, views, filters
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -70,6 +71,7 @@ class StoreCreateView(generics.CreateAPIView):
     serializer_class = StoreCreateSerializer
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
+    @transaction.atomic
     def perform_create(self, serializer):
         user = self.request.user
         user.role = 'seller'
@@ -81,6 +83,7 @@ class StoreFollowView(views.APIView):
     """Follow/unfollow a store."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request, store_id):
         store = Store.objects.filter(id=store_id, status='active').first()
         if not store:
@@ -130,6 +133,7 @@ class RemoveStoreImageView(views.APIView):
     """Remove store logo or banner image (set to null, delete file)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
+    @transaction.atomic
     def post(self, request):
         image_type = request.data.get('image_type')  # 'logo' or 'banner'
         if image_type not in ('logo', 'banner'):

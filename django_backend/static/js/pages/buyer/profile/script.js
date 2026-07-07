@@ -61,7 +61,7 @@
   if (changePwdBtn) changePwdBtn.dataset.originalText = 'Ubah Kata Sandi';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 

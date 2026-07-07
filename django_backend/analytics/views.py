@@ -49,6 +49,11 @@ class DashboardSummaryView(views.APIView):
             start_date = today - timedelta(days=365)
         else:
             start_date = today - timedelta(days=30)
+
+        # Previous period for trend comparison
+        period_days = (today - start_date).days or 1
+        prev_start = start_date - timedelta(days=period_days)
+        prev_end = start_date - timedelta(days=1)
         
         # Orders in period (completed/paid)
         orders_qs = Order.objects.filter(
@@ -56,13 +61,33 @@ class DashboardSummaryView(views.APIView):
             created_at__date__gte=start_date,
             order_status__in=['paid', 'processed', 'shipped', 'completed']
         )
+        # Previous period orders
+        prev_orders_qs = Order.objects.filter(
+            store=store,
+            created_at__date__gte=prev_start,
+            created_at__date__lte=prev_end,
+            order_status__in=['paid', 'processed', 'shipped', 'completed']
+        )
         
         # Calculate stats
         total_sales = orders_qs.aggregate(
             total=Sum('total_price')
         )['total'] or 0
+        prev_total_sales = prev_orders_qs.aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
         
         total_orders = orders_qs.count()
+        prev_total_orders = prev_orders_qs.count()
+        
+        # Trend percentages
+        def calc_pct(current, previous):
+            if previous == 0:
+                return 100.0 if current > 0 else 0.0
+            return round(((float(current) - float(previous)) / float(previous)) * 100, 1)
+        
+        sales_trend_percent = calc_pct(total_sales, prev_total_sales)
+        order_trend_percent = calc_pct(total_orders, prev_total_orders)
         
         # Products sold
         products_sold = OrderItem.objects.filter(
@@ -82,6 +107,9 @@ class DashboardSummaryView(views.APIView):
         avg_rating = Review.objects.filter(
             product__store=store
         ).aggregate(avg=Avg('rating'))['avg'] or 0
+        total_reviews = Review.objects.filter(
+            product__store=store
+        ).count()
         
         # Total products
         total_products = Product.objects.filter(store=store, is_active=True).count()
@@ -90,6 +118,31 @@ class DashboardSummaryView(views.APIView):
         pending_orders = Order.objects.filter(
             store=store, order_status='pending'
         ).count()
+        
+        # Quality summary — single annotated query instead of 4-8 separate queries
+        qs = Product.objects.filter(store=store, is_active=True)
+        quality_counts = qs.aggregate(
+            fresh=Count('id', filter=Q(product_status='fresh', quality_score__gte=80)),
+            normal=Count('id', filter=Q(product_status='normal', quality_score__gte=60) & ~Q(product_status='fresh')),
+            warning=Count('id', filter=Q(quality_score__lt=60, quality_score__gte=30)),
+            rejected=Count('id', filter=Q(quality_score__lt=30) & ~Q(quality_score=0)),
+        )
+        fresh_count = quality_counts['fresh']
+        normal_count = quality_counts['normal']
+        warning_count = quality_counts['warning']
+        rejected_count = quality_counts['rejected']
+        if fresh_count + normal_count + warning_count + rejected_count == 0:
+            # Fallback to product_status if quality_score not set — single annotated query
+            fallback = qs.aggregate(
+                fresh=Count('id', filter=Q(product_status='fresh')),
+                normal=Count('id', filter=Q(product_status='normal') & ~Q(product_status='fresh')),
+                warning=Count('id', filter=Q(product_status='low')),
+                rejected=Count('id', filter=Q(product_status='bad')),
+            )
+            fresh_count = fallback['fresh']
+            normal_count = fallback['normal']
+            warning_count = fallback['warning']
+            rejected_count = fallback['rejected']
         
         # Sales trend data
         sales_data = self._get_sales_trend(store, start_date, today)
@@ -110,8 +163,17 @@ class DashboardSummaryView(views.APIView):
             'new_customers': new_customers,
             'total_followers': total_followers,
             'average_rating': round(avg_rating, 2),
+            'total_reviews': total_reviews,
             'total_products': total_products,
             'pending_orders': pending_orders,
+            'sales_trend_percent': sales_trend_percent,
+            'order_trend_percent': order_trend_percent,
+            'quality_summary': {
+                'fresh': fresh_count,
+                'normal': normal_count,
+                'warning': warning_count,
+                'rejected': rejected_count,
+            },
             'sales_chart': sales_data,
             'device_breakdown': device_data,
             'recent_orders': recent_orders,
@@ -136,7 +198,12 @@ class DashboardSummaryView(views.APIView):
             daily_orders=Count('id')
         ).order_by('day')
         
-        # Build chart data
+        # Build chart data — use dict indexing instead of O(n*m) linear scan
+        indexed = {}
+        for o in orders:
+            if o['day']:
+                indexed[o['day'].date()] = o
+        
         days = []
         sales = []
         order_counts = []
@@ -144,10 +211,10 @@ class DashboardSummaryView(views.APIView):
         current = start_date
         while current <= end_date:
             days.append(current.strftime('%d %b'))
-            found = [o for o in orders if o['day'] and o['day'].date() == current]
+            found = indexed.get(current)
             if found:
-                sales.append(float(found[0]['daily_sales']))
-                order_counts.append(found[0]['daily_orders'])
+                sales.append(float(found['daily_sales']))
+                order_counts.append(found['daily_orders'])
             else:
                 sales.append(0)
                 order_counts.append(0)
@@ -248,6 +315,12 @@ class SalesTrendDataView(views.APIView):
             count=Count('id')
         ).order_by('day')
         
+        # Build chart data — use dict indexing instead of O(n*m) linear scan
+        indexed = {}
+        for o in orders:
+            if o['day']:
+                indexed[o['day'].date()] = o
+        
         labels = []
         sales = []
         order_counts = []
@@ -255,10 +328,10 @@ class SalesTrendDataView(views.APIView):
         current = start_date
         while current <= end_date:
             labels.append(current.strftime('%d %b'))
-            found = [o for o in orders if o['day'] and o['day'].date() == current]
+            found = indexed.get(current)
             if found:
-                sales.append(float(found[0]['total']))
-                order_counts.append(found[0]['count'])
+                sales.append(float(found['total']))
+                order_counts.append(found['count'])
             else:
                 sales.append(0)
                 order_counts.append(0)
@@ -428,89 +501,7 @@ class AdminAIBusinessOverviewView(views.APIView):
         })
 
 
-class MockAIBusinessInsightView(views.APIView):
-    """Mock AI insight data for Flutter development."""
-    permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request):
-        return Response({
-            'store_id': 1,
-            'store_name': 'Warung Makmur',
-            'period': {
-                'start': (timezone.now()-timedelta(days=30)).strftime('%Y-%m-%d'),
-                'end': timezone.now().strftime('%Y-%m-%d'),
-                'days': 30,
-            },
-            'sales_insights': {
-                'total_sales': 15750000,
-                'total_orders': 234,
-                'avg_daily_sales': 525000,
-                'avg_daily_orders': 7.8,
-                'sales_growth_percent': 23.5,
-                'order_growth_percent': 18.2,
-                'avg_order_value': 67307,
-                'best_day': {'date': '2026-06-15', 'total_sales': 1250000, 'order_count': 18},
-                'summary': 'Total penjualan Rp 15.750.000 dari 234 pesanan. Naik 23.5% 📈',
-            },
-            'product_insights': {
-                'top_products': [
-                    {'product_name': 'Beras Premium 5kg', 'total_sold': 45, 'total_revenue': 2925000},
-                    {'product_name': 'Minyak Goreng 1L', 'total_sold': 38, 'total_revenue': 684000},
-                    {'product_name': 'Gula Pasir 1kg', 'total_sold': 32, 'total_revenue': 480000},
-                ],
-                'total_active_products': 48,
-                'products_with_sales': 35,
-                'summary': '35 dari 48 produk aktif memiliki penjualan.',
-            },
-            'customer_insights': {
-                'total_customers': 87,
-                'new_customers': 34,
-                'returning_customers': 53,
-                'return_rate': 60.9,
-                'total_followers': 156,
-                'new_followers': 22,
-                'summary': '34 pelanggan baru, 53 pelanggan kembali (61% retensi).',
-            },
-            'inventory_insights': {
-                'total_products': 48,
-                'total_stock_units': 1250,
-                'total_stock_value': 85000000,
-                'healthy_stock': 33,
-                'low_stock': 12,
-                'out_of_stock': 3,
-                'stock_health_percent': 68.8,
-                'summary': '33 produk stok sehat, 12 stok rendah, 3 habis.',
-            },
-            'growth_insights': {
-                'sales_growth_percent': 23.5,
-                'order_growth_percent': 18.2,
-                'growth_stage': 'growing',
-                'growth_label': 'Berkembang',
-                'summary': 'Berkembang: Penjualan naik 24% dibanding periode sebelumnya.',
-            },
-            'recommendations': [
-                {
-                    'type': 'inventory',
-                    'priority': 'high',
-                    'title': 'Stok Menipis',
-                    'description': '12 produk memiliki stok rendah.',
-                    'action': 'Restock sekarang',
-                    'action_url': '/seller/products/',
-                },
-                {
-                    'type': 'customer',
-                    'priority': 'medium',
-                    'title': 'Ulasan Belum Dibalas',
-                    'description': '8 ulasan pelanggan belum mendapat balasan.',
-                    'action': 'Lihat ulasan',
-                    'action_url': '/seller/ulasan/',
-                },
-            ],
-            'meta': {
-                'api_version': '1.0.0',
-                'source': 'mock',
-            },
-        })
 
 
 class SellerReportView(views.APIView):

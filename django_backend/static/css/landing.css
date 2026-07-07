@@ -267,7 +267,7 @@ button {
 /* ── Auth Buttons ── */
 .auth-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
 }
 
@@ -288,6 +288,30 @@ button {
 .auth-state-indicator svg {
     color: #EA580C;
     flex-shrink: 0;
+}
+
+.auth-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.auth-group-divider {
+    display: inline-block;
+    width: 1px;
+    height: 24px;
+    background: #e2e8f0;
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+.auth-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-masuk {
@@ -328,6 +352,48 @@ button {
     background: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(22, 163, 74, 0.2);
+}
+
+.btn-seller-login {
+    padding: 9px 18px;
+    background: transparent;
+    color: var(--primary-dark);
+    border: 2px solid var(--primary-dark);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-seller-login:hover {
+    background: var(--primary-dark);
+    color: var(--surface);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(20, 83, 45, 0.25);
+}
+
+.btn-mitra {
+    padding: 9px 18px;
+    background: var(--primary-dark);
+    color: var(--surface);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-mitra:hover {
+    background: #0f3f22;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(20, 83, 45, 0.25);
 }
 
 /* ── Mobile Drawer ── */
@@ -453,6 +519,24 @@ button {
     width: 100%;
     text-align: center;
     padding: 12px 20px;
+}
+
+.drawer-mitra-section {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(20, 83, 45, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.drawer-mitra-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-align: center;
 }
 
 
@@ -1326,10 +1410,18 @@ button {
     }
 
     .auth-buttons .btn-masuk,
-    .auth-buttons .btn-daftar {
+    .auth-buttons .btn-daftar,
+    .auth-buttons .btn-seller-login,
+    .auth-buttons .btn-mitra {
         padding: 7px 14px;
         font-size: 12px;
         border-radius: 8px;
+    }
+    .auth-group-label {
+        display: none;
+    }
+    .auth-group-divider {
+        display: none;
     }
 
     .mobile-overlay {

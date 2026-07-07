@@ -586,49 +586,4 @@ class AdminDashboardStatsView(views.APIView):
         return Response(data)
 
 
-class MockMonitoringDashboardView(views.APIView):
-    """Mock monitoring data for Flutter development."""
-    permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request):
-        return Response({
-            'overview': {
-                'status': 'healthy',
-                'uptime_percent': 99.97,
-                'active_services': 12,
-                'degraded_services': 0,
-                'errors_24h': 3,
-                'total_requests_today': 15420,
-                'active_users': 47,
-            },
-            'performance': {
-                'cpu_usage': 23.5,
-                'memory_usage': 62.1,
-                'disk_usage': 45.0,
-                'api_latency_ms': 145,
-                'db_connections': 12,
-                'cache_hit_rate': 94.2,
-            },
-            'services': [
-                {'name': 'API Server', 'status': 'healthy', 'response_time_ms': 45, 'uptime': 99.99},
-                {'name': 'Database', 'status': 'healthy', 'response_time_ms': 12, 'uptime': 100.0},
-                {'name': 'Redis Cache', 'status': 'healthy', 'response_time_ms': 2, 'uptime': 100.0},
-                {'name': 'WebSocket', 'status': 'healthy', 'response_time_ms': 8, 'uptime': 99.95},
-                {'name': 'File Storage', 'status': 'healthy', 'response_time_ms': 35, 'uptime': 99.98},
-            ],
-            'errors': {
-                'total_last_7d': 15,
-                'critical': 0,
-                'warning': 12,
-                'info': 3,
-                'trend': [
-                    {'date': (timezone.now()-timedelta(days=i)).strftime('%Y-%m-%d'), 'count': max(0, 5-i)}
-                    for i in range(6, -1, -1)
-                ],
-            },
-            'meta': {
-                'api_version': '1.0.0',
-                'source': 'mock',
-                'note': 'Data dummy untuk pengembangan Flutter.',
-            },
-        })

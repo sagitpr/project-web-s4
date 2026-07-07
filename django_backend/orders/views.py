@@ -194,9 +194,11 @@ class CartListView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         # Lock product row — guarantees stock snapshot is race-condition free
-        product_id = serializer.validated_data.get('product')
-        if product_id:
-            product = Product.objects.select_for_update().get(id=product_id)
+        # DRF PrimaryKeyRelatedField deserializes FK to the model instance
+        product = serializer.validated_data.get('product')
+        if product and isinstance(product, Product):
+            # Re-fetch with lock for race-condition-free stock check
+            product = Product.objects.select_for_update().get(id=product.id)
             requested_qty = serializer.validated_data.get('qty', 0)
             if requested_qty > product.available_stock:
                 raise ValidationError({

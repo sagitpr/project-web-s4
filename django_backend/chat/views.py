@@ -3,6 +3,7 @@ Chat views for Warungio Marketplace.
 Conversation management and messaging API.
 """
 
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
@@ -30,6 +31,7 @@ class ConversationCreateView(generics.CreateAPIView):
     serializer_class = ConversationDetailSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def perform_create(self, serializer):
         conversation = serializer.save()
         conversation.participants.add(self.request.user)
@@ -93,6 +95,7 @@ class StartConversationView(views.APIView):
     """Start or get existing conversation with another user."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         receiver_id = request.data.get('receiver_id')
         message = request.data.get('message', '')

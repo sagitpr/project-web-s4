@@ -941,25 +941,17 @@ class TokenRefreshView(views.APIView):
 
 
 class RootView(views.APIView):
-    """Root view redirecting logged-in users based on role, rendering landing for guests.
+    """Root view — always renders the public Landing Page.
     
-    Unverified users (missing OTP) are redirected to the OTP verification page
-    instead of the dashboard, regardless of role.
+    The Landing Page is the main public entry point and is accessible to everyone,
+    including authenticated users. No automatic redirects are performed here.
+    Authenticated users who want their dashboard navigate there explicitly.
+    
+    Unverified users (missing OTP) also see the Landing Page — OTP reminders
+    are handled via banners or the login flow, not forced redirects.
     """
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        from django.shortcuts import redirect, render
-        if request.user.is_authenticated:
-            # If user is not verified, redirect to OTP page
-            if not request.user.is_verified:
-                return redirect(f'/auth/otp/?email={request.user.email}&purpose=registration')
-            
-            role = getattr(request.user, 'role', 'buyer')
-            if role == 'seller':
-                return redirect('/seller/dashboard/')
-            elif role == 'admin' or request.user.is_superuser:
-                return redirect('/admin/')
-            else:
-                return redirect('/buyer/dashboard/')
+        from django.shortcuts import render
         return render(request, 'landing/index.html')

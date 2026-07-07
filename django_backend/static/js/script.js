@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         if (window.WarungioAuth) {
           window.WarungioAuth.logout();
-          window.location.href = '/home/';
+          // logout() already redirects to '/', no need to override
         }
       });
     }
@@ -718,7 +718,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Handle Add to Cart API Call ──
   async function handleQuickAddToCart(productId) {
     if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-      window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+      window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
       return;
     }
     
@@ -868,7 +868,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btn.addEventListener('click', async () => {
       if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-        window.location.href = '/auth/login/';
+        window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
         return;
       }
 

@@ -530,7 +530,7 @@
 
             var logoutBtn = document.getElementById('btnLogout');
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) { e.preventDefault(); if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; } });
+                logoutBtn.addEventListener('click', function(e) { e.preventDefault(); if (window.WarungioAuth) { WarungioAuth.logout(); } });
             }
 
             // Load categories and initial products

@@ -102,17 +102,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Helper: handle auth response and redirect ──
+  // ── Helper: handle auth response — redirect based on user role ──
+  // Social login (Google, Facebook, Apple) returns the user's role in the API response.
+  // Use it to redirect to the correct entry point:
+  //   buyer  → /buyer/home/
+  //   seller → /seller/dashboard/
+  //   admin  → /admin/
+  //   no role → / (Landing Page — the only public homepage)
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    const role = data.user.role;
-    if (role === 'buyer') {
-      window.location.href = '/buyer/dashboard/';
-    } else if (role === 'seller') {
-      window.location.href = '/seller/dashboard/';
-    } else {
-      window.location.href = '/';
+
+    // Use centralized helper to get role-appropriate dashboard URL
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+      window.location.href = window.WarungioAuth.getRoleDashboardUrl(data.user ? data.user.role : null);
+      return;
     }
+
+    // Fallback: manual role check
+    const role = data.user ? data.user.role : null;
+    if (role === 'buyer') { window.location.href = '/buyer/home/'; return; }
+    if (role === 'seller') { window.location.href = '/seller/dashboard/'; return; }
+    if (role === 'admin') { window.location.href = '/admin/'; return; }
+    window.location.href = '/';
   }
 
   if (eyeBtn && passwordInput) {

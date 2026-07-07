@@ -6,7 +6,7 @@
   'use strict';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -32,7 +32,6 @@
     e.preventDefault();
     if (window.WarungioAuth) {
       window.WarungioAuth.logout();
-      window.location.href = '/';
     }
   });
 

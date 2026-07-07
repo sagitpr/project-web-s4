@@ -22,5 +22,5 @@ urlpatterns = [
     path('ai/quick/', views.AIQuickInsightView.as_view(), name='ai-quick-insights'),
     path('ai/growth-tips/', views.AIGrowthTipsView.as_view(), name='ai-growth-tips'),
     path('ai/admin-overview/', views.AdminAIBusinessOverviewView.as_view(), name='ai-admin-overview'),
-    path('ai/mock/', views.MockAIBusinessInsightView.as_view(), name='ai-mock-insights'),
+    # Mock endpoint removed for production — use real AI insights endpoint only
 ]

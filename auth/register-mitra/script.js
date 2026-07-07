@@ -260,10 +260,10 @@ document.addEventListener('DOMContentLoaded', () => {
         account_holder: data.accountHolder,
       });
 
-      setMsg('Pendaftaran mitra berhasil! Mengarahkan ke dashboard...', 'success');
+      setMsg('Pendaftaran mitra berhasil!', 'success');
       localStorage.removeItem(storageKey);
       setTimeout(() => {
-        window.location.href = '../seller/dashboard/index.html';
+        window.location.href = '../auth/otp/index.html?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
       }, 2000);
     } catch (err) {
       setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');

@@ -3,6 +3,7 @@ Loyalty & Reward Points views for Warungio Marketplace.
 Complete CRUD with Flutter-ready JSON responses.
 """
 
+from django.db import transaction
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
@@ -79,6 +80,7 @@ class EarnPointsView(views.APIView):
     """Manually add points to account (for testing/admin)."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         points = request.data.get('points', 0)
         description = request.data.get('description', '')
@@ -100,6 +102,7 @@ class RedeemPointsView(views.APIView):
     """Redeem points for a custom amount (for admin)."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         points = int(request.data.get('points', 0))
         description = request.data.get('description', '')
@@ -190,6 +193,7 @@ class RedeemRewardView(views.APIView):
     """Redeem a reward using points."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request, pk):
         reward = LoyaltyReward.objects.filter(is_active=True, pk=pk).first()
         if not reward:
@@ -319,6 +323,7 @@ class ClaimReferralView(views.APIView):
     """Claim referral bonus when referred user registers."""
     permission_classes = (permissions.IsAuthenticated,)
 
+    @transaction.atomic
     def post(self, request):
         code = request.data.get('referral_code', '')
         

@@ -422,7 +422,7 @@
 
           setMsg('Pendaftaran mitra berhasil!', 'success');
           localStorage.removeItem(storageKey);
-          setTimeout(function() { window.location.href = '/seller/dashboard/'; }, 2000);
+          setTimeout(function() { window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration'; }, 2000);
         } catch (err) {
           setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
           if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }

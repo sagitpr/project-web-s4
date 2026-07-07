@@ -7,20 +7,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
     const next = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = '/auth/login/?next=' + next;
+    window.location.href = '/?next=' + next;
     return;
   }
 
-  // ── Helper: redirect to role-appropriate dashboard (WarungioAuth confirmed available at this point) ──
-  function redirectToDashboard() {
-    window.WarungioAuth.redirectToDashboard();
+  // ── Helper: redirect to Buyer Home (this is a Buyer page) ──
+  function redirectToBuyerHome() {
+    window.location.href = '/buyer/home/';
   }
 
   // ── Extract Product ID ──
   const pathParts = window.location.pathname.split('/').filter(Boolean);
   const productId = pathParts[pathParts.length - 1];
   if (!productId || isNaN(productId)) {
-    redirectToDashboard();
+    redirectToBuyerHome();
     return;
   }
 
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) { /* ignore */ }
     } catch (err) {
       console.error('Failed to load product:', err);
-      redirectToDashboard();
+      redirectToBuyerHome();
     }
   }
 

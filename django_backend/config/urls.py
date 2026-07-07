@@ -9,7 +9,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework_simplejwt.views import (
@@ -131,16 +131,21 @@ urlpatterns += [
     path('seller/ulasan/', login_required(TemplateView.as_view(template_name='seller/ulasan/index.html')), name='page-seller-ulasan'),
     path('seller/supplier/', login_required(TemplateView.as_view(template_name='seller/supplier/index.html')), name='page-seller-supplier'),
     path('seller/stock-prediction/', login_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html')), name='page-seller-stock-prediction'),
-    # Home / Landing
-    # Landing page (public) is served at root (/) by RootView.
-    # This /home/ route is the MARKETPLACE HOME — requires login.
-    path('home/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-landing'),
-    path('products/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-products'),
-    path('orders/', login_required(TemplateView.as_view(template_name='buyer/orders/index.html')), name='page-orders'),
-    path('promo/', login_required(TemplateView.as_view(template_name='buyer/promo/index.html')), name='page-promo'),
-    path('favorites/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-favorites'),
-    path('wallet/', login_required(TemplateView.as_view(template_name='buyer/wallet/index.html')), name='page-wallet'),
-    path('settings/', login_required(TemplateView.as_view(template_name='buyer/settings/index.html')), name='page-settings'),
+    # ── DUPLICATE SHORTHAND ROUTES → CANONICAL PERMANENT REDIRECTS ──
+    # These shorthand paths (without /buyer/ prefix) duplicate the canonical /buyer/* routes.
+    # Keeping them as direct routes creates multiple entry points and inconsistent redirects.
+    # Converting to permanent (301) redirects preserves existing bookmarks while funneling
+    # all traffic through canonical paths.
+    #
+    # The template engine {% url 'page-products' %} will still generate '/products/',
+    # which then 301-redirects to '/buyer/products/'. This is transparent to the user.
+    path('home/', RedirectView.as_view(url='/buyer/home/', permanent=True), name='page-landing'),
+    path('products/', RedirectView.as_view(url='/buyer/products/', permanent=True), name='page-products'),
+    path('orders/', RedirectView.as_view(url='/buyer/orders/', permanent=True), name='page-orders'),
+    path('promo/', RedirectView.as_view(url='/buyer/promo/', permanent=True), name='page-promo'),
+    path('favorites/', RedirectView.as_view(url='/buyer/favorites/', permanent=True), name='page-favorites'),
+    path('wallet/', RedirectView.as_view(url='/buyer/wallet/', permanent=True), name='page-wallet'),
+    path('settings/', RedirectView.as_view(url='/buyer/settings/', permanent=True), name='page-settings'),
     path('buyer/chat/', login_required(TemplateView.as_view(template_name='buyer/chat/index.html')), name='page-buyer-chat'),
     # Buyer Refund pages
     path('buyer/refunds/', login_required(TemplateView.as_view(template_name='buyer/refunds/index.html')), name='page-buyer-refunds'),
@@ -152,7 +157,8 @@ urlpatterns += [
 ]
 
 # ── Admin Panel Pages (staff-only) ──
-staff = staff_member_required(login_url='/auth/login/')
+# Use settings.LOGIN_URL (/) so unauthenticated users are redirected to the Landing Page
+staff = staff_member_required(login_url=settings.LOGIN_URL)
 
 urlpatterns += [
     path('admin-panel/', staff(TemplateView.as_view(template_name='admin/dashboard/index.html')), name='admin-dashboard'),
@@ -192,7 +198,6 @@ urlpatterns += [
 urlpatterns += [path('bantuan/', include('support.page_urls'))]
 
 # Alias: page-bantuan → redirect to the actual bantuan page
-from django.views.generic import RedirectView
 urlpatterns += [
     path('info/bantuan/', RedirectView.as_view(url='/bantuan/', permanent=True), name='page-bantuan'),
 ]

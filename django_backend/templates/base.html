@@ -82,9 +82,23 @@
                 <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
             </div>
         </div>
+        <style>
+          /* Seller button hover states — match brand tone without clashing */
+          .btn-seller-login { color:var(--color-primary-700); border-color:var(--color-primary-700); }
+          .btn-seller-login:hover { background:var(--color-primary-50); color:var(--color-primary-800); }
+          .btn-seller-mitra { background:var(--color-primary-800); color:white; border-color:var(--color-primary-800); box-shadow:0 4px 12px rgba(22,101,52,0.3); }
+          .btn-seller-mitra:hover { background:var(--color-primary-900); transform:translateY(-1px); box-shadow:0 6px 20px rgba(22,101,52,0.4); }
+        </style>
         <div id="guestButtons" class="flex items-center gap-2">
+            <!-- ── Buyer Actions ── -->
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide" style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;">Pembeli</span>
             <a href="/auth/login/" class="btn btn-ghost btn-sm">Masuk</a>
             <a href="/auth/register/" class="btn btn-primary btn-sm">Daftar</a>
+            <span class="text-xs text-slate-300" style="margin:0 4px;">|</span>
+            <!-- ── Seller Actions (visually distinct: darker greens from the brand palette) ── -->
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide" style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;">Mitra</span>
+            <a href="/auth/login/?role=seller" class="btn btn-ghost btn-sm btn-seller-login">Login Seller</a>
+            <a href="/auth/register-mitra/" class="btn btn-sm btn-seller-mitra">Daftar Mitra</a>
         </div>
     </div>
 </nav>
@@ -102,7 +116,7 @@
 <!-- Mobile Bottom Nav -->
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-        <a href="/home/">
+        <a href="/">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             <span>Home</span>
         </a>
@@ -182,7 +196,24 @@ function showToast(message, type) {
 <script src="{% static 'js/utils/asset-loader.js' %}"></script>
 <script src="{% static 'js/utils/auth-ui.js' %}"></script>
 <script>
+// ── BFCACHE / PAGE BACK GUARD ──
+// When a page is restored from bfcache (e.g., pressing Back after logout),
+// DOMContentLoaded does NOT fire again. We must catch it here.
+// This runs on EVERY pageshow event, not just bfcache restores, which is fine.
+window.addEventListener('pageshow', function(event) {
+  if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated()) {
+    // Use replace() so the stale protected page is removed from history entirely
+    window.location.replace('/');
+  }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
+    // ── BFCACHE / PAGE BACK GUARD (supplement — catches non-bfcache cases) ──
+    if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated()) {
+      window.location.replace('/');
+      return;
+    }
+
     // Profile dropdown
     var profileBox = document.getElementById('profileBox');
     var dropdown = document.getElementById('dropdownMenu');
@@ -261,14 +292,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch(e) {}
     }
 
-    // Logout
+    // Logout — WarungioAuth.logout() handles everything (clear, redirect), no extra steps needed
     var logoutBtn = document.getElementById('btnLogout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (window.WarungioAuth) {
                 window.WarungioAuth.logout();
-                window.location.href = '/';
             }
         });
     }

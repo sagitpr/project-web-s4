@@ -102,21 +102,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Helper: handle auth response and redirect based on role ──
-  // Uses centralized WarungioAuth.redirectToDashboard() for role-appropriate redirect
+  // ── Helper: handle auth response — redirect based on user role ──
+  // Social login (Google, Facebook, Apple) returns the user's role in the API response.
+  // Use it to redirect to the correct entry point:
+  //   buyer  → /buyer/home/
+  //   seller → /seller/dashboard/
+  //   admin  → /admin/
+  //   no role → / (Landing Page — the only public homepage)
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    const role = data.user.role;
 
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    // Only allow next parameter if it matches the user's role
-    if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, role)) {
+    // Only allow next parameter if it's a safe relative redirect
+    if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://') && nextUrl.startsWith('/buyer/')) {
       window.location.href = nextUrl;
       return;
     }
 
-    window.WarungioAuth.redirectToDashboard();
+    // Use centralized helper to get role-appropriate dashboard URL
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+      window.location.href = window.WarungioAuth.getRoleDashboardUrl(data.user ? data.user.role : null);
+      return;
+    }
+
+    // Fallback: manual role check
+    const role = data.user ? data.user.role : null;
+    if (role === 'buyer') { window.location.href = '/buyer/home/'; return; }
+    if (role === 'seller') { window.location.href = '/seller/dashboard/'; return; }
+    if (role === 'admin') { window.location.href = '/admin/'; return; }
+    window.location.href = '/';
   }
 
   if (eyeBtn && passwordInput) {

@@ -42,13 +42,22 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       localStorage.setItem(USER_KEY, JSON.stringify(user));
     },
 
-    /** Clear all auth data and redirect to landing page */
+    /**
+     * Full logout — clears ALL client-side state, destroys server session,
+     * and always redirects to the Landing Page.
+     *
+     * - Calls server logout API to blacklist JWT + destroy Django session
+     * - Clears ALL localStorage (auth tokens, user data, search history, prefs, drafts)
+     * - Clears ALL sessionStorage
+     * - Clears Django auth cookies (csrftoken, sessionid)
+     * - Clears service worker caches
+     * - Replaces history to block browser back from restoring protected pages
+     * - Always redirects to Landing Page (/)
+     */
     logout() {
       const refresh = this.getRefreshToken();
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_KEY);
-      localStorage.removeItem(USER_KEY);
-      // Try to blacklist refresh token on server
+
+      // 1. Fire server logout (fire-and-forget — clear client regardless of response)
       if (refresh) {
         var headers = {
           'Content-Type': 'application/json',
@@ -57,14 +66,48 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         if (csrfToken) {
           headers['X-CSRFToken'] = csrfToken;
         }
-        fetch(API_BASE + '/token/blacklist/', {
+        // Try the dedicated auth/logout/ endpoint first (destroys Django session too)
+        fetch(API_BASE + '/auth/logout/', {
           method: 'POST',
           headers: headers,
           credentials: 'same-origin',
           body: JSON.stringify({ refresh }),
-        }).catch(function () {});
+        }).catch(function() {
+          // Fallback: token blacklist endpoint only
+          fetch(API_BASE + '/token/blacklist/', {
+            method: 'POST',
+            headers: headers,
+            credentials: 'same-origin',
+            body: JSON.stringify({ refresh }),
+          }).catch(function() {});
+        });
       }
-      window.location.href = '/';
+
+      // 2. Clear ALL localStorage (auth tokens, user data, search history, prefs, drafts)
+      localStorage.clear();
+
+      // 3. Clear ALL sessionStorage
+      sessionStorage.clear();
+
+      // 4. Clear Django auth cookies
+      document.cookie = 'csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+      document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+
+      // 5. Clear service worker caches
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          names.forEach(function(name) {
+            caches.delete(name);
+          });
+        }).catch(function() {});
+      }
+
+      // 6. Replace history to prevent browser back from restoring protected pages
+      try { window.history.replaceState(null, '', '/'); } catch(e) {}
+
+      // 7. Always redirect to Landing Page — use replace() to remove the stale protected page
+      //    from the browser's session history entirely, so Back button can't restore it.
+      window.location.replace('/');
     },
 
     /** Get access token */
@@ -100,6 +143,12 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
 
     /**
      * Get the correct dashboard URL for the given role.
+     * Maps role to its designated entry point:
+     *   buyer  → /buyer/home/  (Buyer Home)
+     *   seller → /seller/dashboard/  (Seller Dashboard)
+     *   admin  → /admin/       (Admin Dashboard)
+     *   null/other → /         (Landing Page — never auto-redirect to Buyer Home)
+     *
      * @param {string} [role] - User role. Reads from cached user if omitted.
      * @returns {string} Dashboard URL path
      */
@@ -108,14 +157,17 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         const user = this.getUser();
         role = user ? user.role : null;
       }
+      if (role === 'buyer') return '/buyer/home/';
       if (role === 'seller') return '/seller/dashboard/';
       if (role === 'admin') return '/admin/';
-      // Default for buyers and unknown roles
-      return '/buyer/home/';
+      // Default: Landing Page — the only public homepage. Never redirect to Buyer Home
+      // unless the user explicitly logged in with ?role=buyer.
+      return '/';
     },
 
     /**
      * Redirect user to their role-appropriate dashboard.
+     * Uses getRoleDashboardUrl() which maps roles to correct entry points.
      * Optionally fetches fresh user data from API first.
      * @param {boolean} [forceFresh=false] - Whether to fetch fresh user role from API
      */
@@ -140,6 +192,23 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       }
 
       doRedirect();
+    },
+
+    /**
+     * Get the correct login redirect URL for a given role from query param.
+     * Delegates to getRoleDashboardUrl() which has the single source of truth
+     * for role→URL mapping. Both map to the same destinations:
+     *   buyer  → /buyer/home/
+     *   seller → /seller/dashboard/
+     *   admin  → /admin/
+     *   null   → / (Landing Page)
+     *
+     * @param {string|null} role - Role from query param
+     * @returns {string} Redirect URL
+     */
+    getRoleLoginRedirect(role) {
+      // Delegate to the canonical role→URL mapping to avoid code duplication
+      return this.getRoleDashboardUrl(role);
     },
 
     /**

@@ -138,7 +138,7 @@
             }
             document.getElementById('btnLogout')?.addEventListener('click', function(e) {
                 e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); window.location.href = '/'; }
+                if (window.WarungioAuth) { WarungioAuth.logout(); }
             });
 
             await loadCheckoutData();

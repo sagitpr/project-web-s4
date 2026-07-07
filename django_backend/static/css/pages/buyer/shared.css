@@ -200,6 +200,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .btn-mitra-premium:hover { background: #0f3f22; transform: translateY(-1px); }
 
+.btn-seller-premium {
+  padding: 10px 20px; border-radius: var(--radius-xl, 14px);
+  background: transparent; color: #7c3aed;
+  font-weight: 700; font-size: 13px;
+  border: 1.5px solid #7c3aed;
+  transition: all 0.2s;
+}
+.btn-seller-premium:hover { background: #7c3aed; color: #fff; transform: translateY(-1px); }
+
 /* ── Page Header ── */
 .page-header-section {
   display: flex; flex-direction: column; gap: 4px;
