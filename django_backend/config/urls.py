@@ -93,6 +93,7 @@ urlpatterns = [
 urlpatterns += [
     # Auth pages
     path('auth/login/', TemplateView.as_view(template_name='auth/login/index.html'), name='page-login'),
+    path('auth/login-seller/', TemplateView.as_view(template_name='auth/login/index.html', extra_context={'entry': 'seller'}), name='page-login-seller'),
     path('auth/register/', TemplateView.as_view(template_name='auth/register/index.html'), name='page-register'),
     path('auth/otp/', TemplateView.as_view(template_name='auth/otp/index.html'), name='page-otp'),
     path('auth/reset-password/', TemplateView.as_view(template_name='auth/reset-password/index.html'), name='page-reset-password'),

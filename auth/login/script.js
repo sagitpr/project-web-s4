@@ -21,9 +21,14 @@
   const formMessage = document.getElementById('formMessage');
   const emailInput = document.getElementById('email');
 
-  // ── Read explicit role from query param ──
+  // ── Read redirect-related query params (next only, NOT role) ──
   const loginParams = new URLSearchParams(window.location.search);
-  const loginRole = loginParams.get('role');       // 'seller' | 'buyer' | null
+  
+  // ── Detect login entry point from URL path ──
+  var loginEntry = 'buyer';
+  if (window.location.pathname.indexOf('login-seller') !== -1) {
+    loginEntry = 'seller';
+  }
 
   // ── Password toggle ──
   if (eyeBtn && pwdInput && eyeOpen && eyeClosed) {
@@ -100,29 +105,34 @@
   /**
    * Determine the redirect URL after successful login.
    * Priority:
-   *   1. ?next= param (only relative paths to prevent open redirect)
-   *   2. ?role= param → role-specific entry point (buyer→/buyer/home/, seller→/seller/dashboard/, admin→/admin/)
-   *   3. Default → / (Landing Page — the only public homepage)
+   *   1. ?next= param if it matches the user's role prefix
+   *   2. Role-based redirect from API response (source of truth)
+   *   3. Default → / (Landing Page)
    */
-  function getRedirectUrl() {
+  function getRedirectUrl(apiRole) {
     const nextUrl = loginParams.get('next');
     if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://')) {
-      return nextUrl;
+      if (window.WarungioAuth && typeof window.WarungioAuth.isRoleAllowedRedirect === 'function') {
+        if (window.WarungioAuth.isRoleAllowedRedirect(nextUrl, apiRole)) {
+          return nextUrl;
+        }
+      } else {
+        return nextUrl;
+      }
     }
-    // Delegate role-based redirect to the centralized helper
-    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleLoginRedirect === 'function') {
-      return window.WarungioAuth.getRoleLoginRedirect(loginRole);
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+      return window.WarungioAuth.getRoleDashboardUrl(apiRole);
     }
-    // Fallback (should not be reached if auth.js is loaded)
-    if (loginRole === 'seller') return '/seller/dashboard/';
-    if (loginRole === 'buyer') return '/buyer/home/';
-    if (loginRole === 'admin') return '/admin/';
+    if (apiRole === 'seller') return '/seller/dashboard/';
+    if (apiRole === 'buyer') return '/buyer/home/';
+    if (apiRole === 'admin') return '/admin/';
     return '/';
   }
 
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    window.location.href = getRedirectUrl();
+    var actualRole = data.user ? data.user.role : null;
+    window.location.href = getRedirectUrl(actualRole);
   }
 
   // ── Login submit ──
@@ -150,7 +160,7 @@
       }
 
       try {
-        const data = await WarungioAPI.login(email, password);
+        const data = await WarungioAPI.login(email, password, loginEntry);
         handleAuthResponse(data);
       } catch (err) {
         // Check if the error indicates the account needs OTP verification
@@ -208,7 +218,8 @@
             googleBtn.innerHTML = '<span class="spinner"></span> Memproses...';
             try {
               const data = await WarungioAPI.socialLogin('google', {
-                credential: response.credential
+                credential: response.credential,
+                login_entry: loginEntry
               });
               handleAuthResponse(data);
             } catch (err) {
@@ -241,7 +252,8 @@
           fbBtn.innerHTML = '<span class="spinner"></span> Memproses...';
           try {
             const data = await WarungioAPI.socialLogin('facebook', {
-              access_token: accessToken
+              access_token: accessToken,
+              login_entry: loginEntry
             });
             handleAuthResponse(data);
           } catch (err) {
@@ -308,6 +320,7 @@
             identity_token: idToken,
             authorization_code: authCode,
             user: userData ? JSON.parse(decodeURIComponent(userData)) : {},
+            login_entry: loginEntry,
           });
           handleAuthResponse(data);
         } catch (err) {

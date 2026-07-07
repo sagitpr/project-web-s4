@@ -58,12 +58,17 @@
           });
 
           window.WarungioAuth.login(data.access, data.refresh, data.user);
-          // Use centralized role-based redirect to canonical Django URLs
+          // Role-based redirect using the user's actual role from API (database).
+          // The redirect is determined by getRoleDashboardUrl() which maps:
+          //   buyer  → /buyer/home/
+          //   seller → /seller/dashboard/
+          //   admin  → /admin/
+          //   null   → / (Landing Page)
           if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
             window.location.href = window.WarungioAuth.getRoleDashboardUrl(data.user.role);
           } else {
-            // Fallback: manual role check with absolute Django paths
-            const role = data.user.role;
+            // Fallback: manual role check (should not be reached if auth.js loaded)
+            var role = data.user.role;
             if (role === 'seller') window.location.href = '/seller/dashboard/';
             else if (role === 'buyer') window.location.href = '/buyer/home/';
             else window.location.href = '/';

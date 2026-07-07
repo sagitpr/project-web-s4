@@ -63,7 +63,7 @@
     </div>
     <nav class="flex items-center gap-2" id="desktopNav">
         <a href="/" class="btn btn-ghost btn-sm">Beranda</a>
-        <a href="/home/" class="btn btn-ghost btn-sm">Marketplace</a>
+        <a href="/buyer/home/" class="btn btn-ghost btn-sm">Marketplace</a>
         <a href="/bantuan/" class="btn btn-ghost btn-sm">Bantuan</a>
     </nav>
     <div class="flex items-center gap-3" id="authSection">
@@ -97,7 +97,7 @@
             <span class="text-xs text-slate-300" style="margin:0 4px;">|</span>
             <!-- ── Seller Actions (visually distinct: darker greens from the brand palette) ── -->
             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide" style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;">Mitra</span>
-            <a href="/auth/login/?role=seller" class="btn btn-ghost btn-sm btn-seller-login">Login Seller</a>
+            <a href="{% url 'page-login-seller' %}" class="btn btn-ghost btn-sm btn-seller-login">Login Seller</a>
             <a href="/auth/register-mitra/" class="btn btn-sm btn-seller-mitra">Daftar Mitra</a>
         </div>
     </div>
@@ -201,15 +201,17 @@ function showToast(message, type) {
 // DOMContentLoaded does NOT fire again. We must catch it here.
 // This runs on EVERY pageshow event, not just bfcache restores, which is fine.
 window.addEventListener('pageshow', function(event) {
-  if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated()) {
+  if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated() && window.location.pathname !== '/') {
     // Use replace() so the stale protected page is removed from history entirely
+    // Skip guard on the landing page (/) — never auto-redirect from a public page.
     window.location.replace('/');
   }
 });
 
 document.addEventListener('DOMContentLoaded', function() {
     // ── BFCACHE / PAGE BACK GUARD (supplement — catches non-bfcache cases) ──
-    if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated()) {
+    // Skip guard on the landing page (/) — never auto-redirect from a public page.
+    if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated() && window.location.pathname !== '/') {
       window.location.replace('/');
       return;
     }

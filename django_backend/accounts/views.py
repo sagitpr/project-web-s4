@@ -228,13 +228,15 @@ class LoginView(views.APIView):
     def post(self, request):
         ip = request.META.get('REMOTE_ADDR', 'unknown')
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+        login_entry = request.data.get('login_entry')
         
         # ── INSTRUMENTATION: Log incoming payload ──
         raw_payload = dict(request.data.items())
         logger.info(
-            'LOGIN REQUEST — IP: %s | User-Agent: %s | Complete payload: %s',
+            'LOGIN REQUEST — IP: %s | User-Agent: %s | Complete payload: %s | login_entry: %s',
             ip, user_agent,
             _mask_payload(raw_payload),
+            login_entry or '(none)',
         )
         
         serializer = LoginSerializer(data=request.data, context={'request': request})
@@ -285,6 +287,21 @@ class LoginView(views.APIView):
                 'error': 'Akun belum diverifikasi. Silakan verifikasi OTP terlebih dahulu.',
                 'needs_verification': True,
                 'email': user.email,
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # ── Role-gate: validate login_entry against the user's actual role ──
+        login_entry = serializer.validated_data.get('login_entry')
+        if login_entry and user.role != login_entry:
+            role_label = 'Mitra Penjual' if login_entry == 'seller' else 'Pembeli'
+            logger.warning(
+                'LOGIN BLOCKED — Role mismatch | Email: %s | User role: %s | Login entry: %s | IP: %s',
+                user.email, user.role, login_entry, ip,
+            )
+            return Response({
+                'error': f'Akun ini tidak terdaftar sebagai {role_label}.',
+                'code': 'role_mismatch',
+                'user_role': user.role,
+                'login_entry': login_entry,
             }, status=status.HTTP_403_FORBIDDEN)
         
         # Generate JWT tokens
@@ -616,7 +633,7 @@ class OTPVerifyView(views.APIView):
                             'registration_completed_at': timezone.now(),
                         }
                         next_step = 'complete'
-                        next_endpoint = '/auth/login/?role=seller'
+                        next_endpoint = '/auth/login-seller/'
                     else:
                         # Buyer workflow: mark complete, redirect to Buyer Login
                         update_fields = {
@@ -626,7 +643,7 @@ class OTPVerifyView(views.APIView):
                             'registration_completed_at': timezone.now(),
                         }
                         next_step = 'complete'
-                        next_endpoint = '/auth/login/?role=buyer'
+                        next_endpoint = '/auth/login/'
                     
                     User.objects.filter(id=user_obj.id).update(**update_fields)
                     _log_db_operation('user_activate', {'user_id': user_obj.id, 'role': user_obj.role})

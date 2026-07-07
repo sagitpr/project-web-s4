@@ -2,12 +2,15 @@
  * Login page - Warungio
  * JWT authentication via Django REST API.
  * Supports email/password login + social login (Google, Facebook, Apple).
- * Uses explicit ?role= query parameter to determine redirect target
- * instead of automatic role detection from cached user data.
- *   ?role=buyer  → /buyer/home/
- *   ?role=seller → /seller/dashboard/
- *   ?role=admin  → /admin/
- *   no role      → / (Landing Page)
+ *
+ * After successful authentication, the redirect target is determined by the
+ * user's ACTUAL role returned by the API (from the database), NOT from the
+ * ?role= query parameter. This prevents role spoofing via URL manipulation.
+ *
+ * Redirect priority:
+ *   1. ?next= param if it matches the user's role prefix (cross-role guard)
+ *   2. Role-based redirect using the API response's user.role (the source of truth)
+ *   3. Default → / (Landing Page — never auto-redirect to Buyer Home)
  */
 (function () {
   'use strict';
@@ -21,9 +24,15 @@
   const formMessage = document.getElementById('formMessage');
   const emailInput = document.getElementById('email');
 
-  // ── Read explicit role from query param ──
+  // ── Read redirect-related query params (next only, NOT role) ──
   const loginParams = new URLSearchParams(window.location.search);
-  const loginRole = loginParams.get('role');       // 'seller' | 'buyer' | null
+  
+  // ── Detect login entry point: 'seller' or 'buyer' (default) ──
+  // Determined from the URL path: /auth/login-seller/ → seller, /auth/login/ → buyer
+  var loginEntry = 'buyer';
+  if (window.location.pathname.indexOf('login-seller') !== -1) {
+    loginEntry = 'seller';
+  }
 
   // ── Password toggle ──
   if (eyeBtn && pwdInput && eyeOpen && eyeClosed) {
@@ -99,35 +108,49 @@
 
   /**
    * Determine the redirect URL after successful login.
+   * Uses the user's ACTUAL role from the API response (database), NOT query params.
    * Priority:
-   *   1. ?next= param (only relative paths to prevent open redirect)
-   *   2. ?role= param → role-specific entry point (buyer→/buyer/home/, seller→/seller/dashboard/, admin→/admin/)
+   *   1. ?next= param if it matches the user's role prefix (prevents cross-role redirects)
+   *   2. Role-based redirect from the API response (single source of truth)
    *   3. Default → / (Landing Page — the only public homepage)
+   *
+   * @param {string|null} apiRole - The user's actual role from the API response
    */
-  function getRedirectUrl() {
+  function getRedirectUrl(apiRole) {
     const nextUrl = loginParams.get('next');
+    // Only allow ?next= if it belongs to the authenticated user's role
     if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://')) {
-      return nextUrl;
+      if (window.WarungioAuth && typeof window.WarungioAuth.isRoleAllowedRedirect === 'function') {
+        // Cross-role guard: Seller cannot be redirected to /buyer/* and vice versa
+        if (window.WarungioAuth.isRoleAllowedRedirect(nextUrl, apiRole)) {
+          return nextUrl;
+        }
+      } else {
+        // Fallback: basic safety check
+        return nextUrl;
+      }
     }
-    // Delegate role-based redirect to the centralized helper
-    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleLoginRedirect === 'function') {
-      return window.WarungioAuth.getRoleLoginRedirect(loginRole);
+    // Use the API-provided role (source of truth from database)
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+      return window.WarungioAuth.getRoleDashboardUrl(apiRole);
     }
-    // Fallback (should not be reached if auth.js is loaded)
-    if (loginRole === 'seller') return '/seller/dashboard/';
-    if (loginRole === 'buyer') return '/buyer/home/';
-    if (loginRole === 'admin') return '/admin/';
+    // Hard fallback (should not be reached if auth.js is loaded)
+    if (apiRole === 'seller') return '/seller/dashboard/';
+    if (apiRole === 'buyer') return '/buyer/home/';
+    if (apiRole === 'admin') return '/admin/';
     return '/';
   }
 
   /**
    * Handle login response: store tokens and redirect explicitly.
-   * Does NOT rely on automatic role detection from cached user data.
-   * Uses the ?role= query param (or ?next=) to determine where to go.
+   * Uses the user's ACTUAL role from the API response (database) for redirect.
+   * NEVER relies on query params or localStorage for role determination.
    */
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    window.location.href = getRedirectUrl();
+    // Use the API-provided role (from database) — not query params, not localStorage
+    var actualRole = data.user ? data.user.role : null;
+    window.location.href = getRedirectUrl(actualRole);
   }
 
   // ── Login submit ──
@@ -159,11 +182,12 @@
           setMessage('Gagal memuat API. Periksa koneksi internet atau coba refresh halaman.');
           if (loginBtn) {
             loginBtn.disabled = false;
-            loginBtn.textContent = 'Masuk';
+            loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk';
           }
           return;
         }
-        const data = await WarungioAPI.login(email, password);
+        // Send login_entry to backend for role validation
+        const data = await WarungioAPI.login(email, password, loginEntry);
         handleAuthResponse(data);
       } catch (err) {
         // Network errors (server down) show "Failed to fetch" — replace with friendlier message
@@ -174,7 +198,7 @@
         setMessage(msg);
         if (loginBtn) {
           loginBtn.disabled = false;
-          loginBtn.textContent = 'Masuk';
+          loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk';
         }
       }
     });
@@ -251,7 +275,7 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
-    WarungioAPI.socialLogin('google', { credential: response.credential })
+    WarungioAPI.socialLogin('google', { credential: response.credential, login_entry: loginEntry })
       .then(function (data) { handleAuthResponse(data); })
       .catch(function (err) {
         setMessage(err.message);
@@ -300,7 +324,8 @@
           fbBtn.innerHTML = '<span class="spinner"></span> Memproses...';
           try {
             const data = await WarungioAPI.socialLogin('facebook', {
-              access_token: accessToken
+              access_token: accessToken,
+              login_entry: loginEntry
             });
             handleAuthResponse(data);
           } catch (err) {
@@ -368,6 +393,7 @@
             identity_token: idToken,
             authorization_code: authCode,
             user: userData ? JSON.parse(decodeURIComponent(userData)) : {},
+            login_entry: loginEntry,
           });
           handleAuthResponse(data);
         } catch (err) {
@@ -375,7 +401,21 @@
         }
       })();
     }
-  })();
+  })();  // ── Update UI for Seller Login mode ──
+  if (loginEntry === 'seller') {
+    // Change form title
+    var formTitle = document.querySelector('.form-title');
+    var formSubtitle = document.querySelector('.form-subtitle');
+    if (formTitle) formTitle.textContent = 'Masuk sebagai Mitra';
+    if (formSubtitle) formSubtitle.textContent = 'Masuk untuk mengelola toko dan pesanan mitra Warungio';
+    // Change submit button text
+    if (loginBtn) loginBtn.textContent = 'Masuk sebagai Mitra';
+    // Change hero panel heading
+    var heroHeading = document.querySelector('.hero-copy h1');
+    if (heroHeading) heroHeading.innerHTML = 'Selamat datang kembali, <span>Mitra Warungio!</span>';
+    var heroText = document.querySelector('.hero-copy .hero-text');
+    if (heroText) heroText.textContent = 'Kelola tokomu, pantau pesanan, dan tingkatkan penjualan.';
+  }
 
   // ── Pre-fill email from query param (after OTP verification redirect) ──
   const params = new URLSearchParams(window.location.search);
@@ -387,7 +427,10 @@
   
   // ── Show success message when redirected from OTP verification ──
   if (params.get('verified') === '1') {
-    setMessage('Akun berhasil diverifikasi! Silakan masuk dengan email dan password Anda.', 'success');
+    var successMsg = loginEntry === 'seller'
+      ? 'Akun Mitra berhasil diverifikasi! Silakan masuk dengan email dan password Anda.'
+      : 'Akun berhasil diverifikasi! Silakan masuk dengan email dan password Anda.';
+    setMessage(successMsg, 'success');
   }
 
   // ── Auto-redirect if already authenticated via SESSION (not JWT) ──
@@ -401,7 +444,7 @@
   //
   // Fix: Make a fetch to /api/auth/check/ WITHOUT JWT Authorization header.
   //      - SessionAuthentication checks the session cookie.
-  //      - If session valid → 200 → redirect to dashboard.
+  //      - If session valid → 200 → redirect using API role.
   //      - If session invalid → 401 → stay on login page (no loop!).
   //
   (async function checkExistingSession() {
@@ -435,18 +478,22 @@
         return;
       }
       
-      // Session exists! Redirect explicitly using ?role= param (not role detection)
+      // Session exists! Redirect using the user's ACTUAL role from the API response.
       const data = await resp.json();
       if (!data || !data.authenticated || !data.user) {
         return;  // Safety check
       }
       
-      const nextUrl = loginParams.get('next');
-      if (nextUrl && isValidRedirect(nextUrl)) {
+      // Use the API-provided role (from database) — never from query params or localStorage
+      var sessionRole = data.user.role;
+      
+      var nextUrl = loginParams.get('next');
+      // Only allow ?next= if it matches the user's role (cross-role guard)
+      if (nextUrl && window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, sessionRole)) {
         window.location.href = nextUrl;
       } else {
-        // Use explicit role-based redirect via getRedirectUrl()
-        window.location.href = getRedirectUrl();
+        // Use role from API (database) — not query params
+        window.location.href = getRedirectUrl(sessionRole);
       }
     } catch (e) {
       // Network error — stay on login page, don't redirect

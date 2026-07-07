@@ -23,10 +23,12 @@
       });
     },
 
-    async login(email, password) {
+    async login(email, password, loginEntry) {
+      var body = { email, password };
+      if (loginEntry) body.login_entry = loginEntry;
       return auth.api('/auth/login/', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
     },
 

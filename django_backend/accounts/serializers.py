@@ -73,10 +73,18 @@ class LoginSerializer(serializers.Serializer):
     
     Accepts `email` OR `phone` as the identifier field.
     The backend (EmailBackend) supports both email and Indonesian phone lookup.
+    
+    The optional `login_entry` field distinguishes the entry point:
+      - 'buyer'  → only buyer accounts may log in
+      - 'seller' → only seller accounts may log in
+      - None     → any role allowed (backward-compatible)
     """
     email = serializers.CharField(required=False, max_length=254)
     phone = serializers.CharField(required=False)
     password = serializers.CharField(required=True, write_only=True)
+    login_entry = serializers.ChoiceField(
+        choices=['buyer', 'seller'], required=False, write_only=True
+    )
 
     def validate(self, attrs):
         email = attrs.get('email')

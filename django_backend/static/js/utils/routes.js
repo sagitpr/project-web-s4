@@ -8,7 +8,7 @@
   var ROUTES = {
     LANDING: '/',
     LOGIN: '/auth/login/',
-    LOGIN_SELLER: '/auth/login/?role=seller',
+    LOGIN_SELLER: '/auth/login-seller/',
     REGISTER: '/auth/register/',
     REGISTER_MITRA: '/auth/register-mitra/',
     OTP: '/auth/otp/',

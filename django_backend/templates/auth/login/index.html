@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="id" data-theme="Light">
   <head>
-    <title>Login - Warungio</title>
+    <title>{% if entry == 'seller' %}Login Mitra{% else %}Login{% endif %} - Warungio</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,8 +48,13 @@
             </div>
           </div>
           <div class="hero-copy">
+            {% if entry == 'seller' %}
+            <h1>Selamat datang kembali, <span>Mitra Warungio!</span></h1>
+            <p class="hero-text">Kelola tokomu, pantau pesanan, dan tingkatkan penjualan.</p>
+            {% else %}
             <h1>Selamat datang kembali di <span>Warungio!</span></h1>
             <p class="hero-text">Kelola tokomu dengan mudah dan tingkatkan penjualan setiap hari.</p>
+            {% endif %}
           </div>
           <div class="download-apps">
             <div class="store-visual">
@@ -75,8 +80,13 @@
           <div class="form-header">
             <a href="{% url 'page-register' %}" class="top-link">Belum punya akun? <strong>Daftar</strong></a>
             <div>
+              {% if entry == 'seller' %}
+              <p class="form-title">Masuk sebagai Mitra</p>
+              <p class="form-subtitle">Masuk untuk mengelola toko dan pesanan mitra Warungio</p>
+              {% else %}
               <p class="form-title">Masuk ke Akun Anda</p>
               <p class="form-subtitle">Masuk untuk mengakses dashboard dan kelola tokomu</p>
+              {% endif %}
             </div>
           </div>
           <form id="loginForm" class="login-form" novalidate>
@@ -127,7 +137,7 @@
               </label>
             </div>
             <div id="formMessage" class="form-message" style="display:none;"></div>
-            <button type="submit" id="loginBtn" class="login-button">Masuk Sekarang</button>
+            <button type="submit" id="loginBtn" class="login-button">{% if entry == 'seller' %}Masuk sebagai Mitra{% else %}Masuk Sekarang{% endif %}</button>
           </form>
           <div class="social-divider">
             <span></span>

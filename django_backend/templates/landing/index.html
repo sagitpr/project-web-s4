@@ -6,24 +6,42 @@
 {% block styles %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}" />
-<style>
-  /* Neutralise landing.css .header rules so they don't conflict with base.html's .header navbar.
-     The base.html navbar uses inline styles (position: sticky, top: 12px) which take precedence
-     over fixed positioning, but we reset other inherited properties explicitly. */
-  nav.header {
-    padding: 0 !important;
-    background: transparent !important;
-    transition: none !important;
-    left: auto !important;
-    right: auto !important;
-  }
-  nav.header.scrolled {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-  }
-</style>
+{% endblock %}
+
+{% block navbar %}
+<header class="header">
+    <div class="header-container">
+        <a href="/" class="logo">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo">
+            <span class="brand-label">
+                <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
+            </span>
+        </a>
+        <nav class="nav">
+            <a href="#beranda" class="active">Beranda</a>
+            <a href="#fitur">Fitur</a>
+            <a href="#tentang">Tentang</a>
+            <a href="#cara-kerja">Cara Kerja</a>
+            <a href="#testimoni">Testimoni</a>
+            <a href="#faq">FAQ</a>
+        </nav>
+        <div class="header-right">
+            <div class="auth-buttons">
+                <div class="auth-group">
+                    <span class="auth-group-label">Pembeli</span>
+                    <a href="{% url 'page-login' %}" class="btn-masuk">Masuk</a>
+                    <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
+                </div>
+                <span class="auth-group-divider"></span>
+                <div class="auth-group">
+                    <span class="auth-group-label">Mitra</span>
+                    <a href="{% url 'page-login-seller' %}" class="btn-seller-login">Login Seller</a>
+                    <a href="{% url 'page-register-mitra' %}" class="btn-mitra">Daftar Mitra</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
 {% endblock %}
 
 {% block content %}

@@ -102,9 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Helper: handle auth response — redirect based on user role ──
+  // ── Helper: handle auth response — redirect based on user role from API ──
   // Social login (Google, Facebook, Apple) returns the user's role in the API response.
-  // Use it to redirect to the correct entry point:
+  // The role is the SINGLE SOURCE OF TRUTH (from database, not query params or localStorage).
+  // Uses centralized getRoleDashboardUrl() which maps role→URL:
   //   buyer  → /buyer/home/
   //   seller → /seller/dashboard/
   //   admin  → /admin/
@@ -114,23 +115,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    // Only allow next parameter if it's a safe relative redirect
-    if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://') && nextUrl.startsWith('/buyer/')) {
+    
+    // Determine the user's actual role from the API response (database)
+    var actualRole = data.user ? data.user.role : null;
+    
+    // Only allow ?next= if it matches the user's role (cross-role guard)
+    if (nextUrl && window.WarungioAuth && typeof window.WarungioAuth.isValidRedirect === 'function' && typeof window.WarungioAuth.isRoleAllowedRedirect === 'function') {
+      if (window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, actualRole)) {
+        window.location.href = nextUrl;
+        return;
+      }
+    } else if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://') && nextUrl.startsWith('/buyer/')) {
+      // Legacy fallback (only if auth.js not loaded)
       window.location.href = nextUrl;
       return;
     }
 
-    // Use centralized helper to get role-appropriate dashboard URL
+    // Use centralized helper with the API-provided role (source of truth)
     if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
-      window.location.href = window.WarungioAuth.getRoleDashboardUrl(data.user ? data.user.role : null);
+      window.location.href = window.WarungioAuth.getRoleDashboardUrl(actualRole);
       return;
     }
 
-    // Fallback: manual role check
-    const role = data.user ? data.user.role : null;
-    if (role === 'buyer') { window.location.href = '/buyer/home/'; return; }
-    if (role === 'seller') { window.location.href = '/seller/dashboard/'; return; }
-    if (role === 'admin') { window.location.href = '/admin/'; return; }
+    // Hard fallback (should not be reached if auth.js is loaded)
+    if (actualRole === 'buyer') { window.location.href = '/buyer/home/'; return; }
+    if (actualRole === 'seller') { window.location.href = '/seller/dashboard/'; return; }
+    if (actualRole === 'admin') { window.location.href = '/admin/'; return; }
     window.location.href = '/';
   }
 

@@ -132,19 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
         showMsg('Verifikasi berhasil! Mengarahkan ke halaman login...', 'success');
         
         setTimeout(() => {
-          // After OTP verification, redirect to the correct login flow with role
-          // Pass ?role= from the API response's next_endpoint if available
+          // After OTP verification, redirect to login page.
+          // Do NOT pass ?role= — the login page now uses the user's actual role
+          // from the API response (database), not from query params.
           const nextUrl = params.get('next');
           var loginUrl = '/auth/login/?verified=1&email=' + encodeURIComponent(email);
-          
-          // Extract role from the backend's next_endpoint (e.g. '/auth/login/?role=seller')
-          if (data.next_endpoint) {
-            var endpointParams = new URLSearchParams(data.next_endpoint.split('?')[1] || '');
-            var roleParam = endpointParams.get('role');
-            if (roleParam) {
-              loginUrl += '&role=' + encodeURIComponent(roleParam);
-            }
-          }
           
           if (nextUrl) {
             loginUrl += '&next=' + encodeURIComponent(nextUrl);

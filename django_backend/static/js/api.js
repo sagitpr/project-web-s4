@@ -28,9 +28,11 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/auth/register/', { method: 'POST', body: JSON.stringify(data) });
   };
-  RealAPI.login = function (email, password) {
+  RealAPI.login = function (email, password, loginEntry) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
-    return auth.api('/auth/login/', { method: 'POST', body: JSON.stringify({ email: email, password: password }) });
+    var body = { email: email, password: password };
+    if (loginEntry) body.login_entry = loginEntry;
+    return auth.api('/auth/login/', { method: 'POST', body: JSON.stringify(body) });
   };
   RealAPI.requestOTP = function (email, purpose) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });

@@ -94,6 +94,25 @@ class SocialLoginBase:
             account.save(update_fields=['extra_data'])
         return account
 
+    def validate_login_entry(self, user, login_entry):
+        """
+        Validate that the user's role matches the login entry point.
+        Returns an error Response if mismatch, or None if valid.
+        """
+        if login_entry and user.role != login_entry:
+            role_label = 'Mitra Penjual' if login_entry == 'seller' else 'Pembeli'
+            logger.warning(
+                'SOCIAL LOGIN BLOCKED — Role mismatch | Email: %s | User role: %s | Login entry: %s',
+                user.email, user.role, login_entry,
+            )
+            return Response({
+                'error': f'Akun ini tidak terdaftar sebagai {role_label}.',
+                'code': 'role_mismatch',
+                'user_role': user.role,
+                'login_entry': login_entry,
+            }, status=status.HTTP_403_FORBIDDEN)
+        return None
+
     def generate_jwt_tokens(self, user, request):
         """Generate JWT tokens for the user."""
         login(request, user, backend='accounts.backends.EmailBackend')
@@ -161,6 +180,7 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
             provider_id = id_info.get('sub', '')
             # Optional: allow role override for new users (seller signup via social)
             role = request.data.get('role', 'buyer')
+            login_entry = request.data.get('login_entry')
 
             user, is_new = self.get_or_create_user(
                 email=email,
@@ -173,6 +193,11 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
                 },
                 role=role,
             )
+
+            # Role gate: validate login_entry against existing user's role
+            role_check = self.validate_login_entry(user, login_entry)
+            if role_check:
+                return role_check
 
             result = self.generate_jwt_tokens(user, request)
             result['is_new_user'] = is_new
@@ -256,6 +281,7 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
 
             # Optional: allow role override for new users (seller signup via social)
             role = request.data.get('role', 'buyer')
+            login_entry = request.data.get('login_entry')
 
             user, is_new = self.get_or_create_user(
                 email=email,
@@ -267,6 +293,11 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
                 },
                 role=role,
             )
+
+            # Role gate: validate login_entry against existing user's role
+            role_check = self.validate_login_entry(user, login_entry)
+            if role_check:
+                return role_check
 
             result = self.generate_jwt_tokens(user, request)
             result['is_new_user'] = is_new
@@ -383,6 +414,11 @@ class AppleLoginView(views.APIView, SocialLoginBase):
                 },
                 role=request.data.get('role', 'buyer'),
             )
+
+            # Role gate: validate login_entry against existing user's role
+            role_check = self.validate_login_entry(user, request.data.get('login_entry'))
+            if role_check:
+                return role_check
 
             result = self.generate_jwt_tokens(user, request)
             result['is_new_user'] = is_new
