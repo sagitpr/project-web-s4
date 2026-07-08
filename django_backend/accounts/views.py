@@ -42,6 +42,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, OTP, LoginAttempt
 from .services.whatsapp_service import _whatsapp_configured
+
+# Celery task imports — wrapped so registration doesn't fail if Celery/Redis is down
+try:
+    from .tasks import send_otp_task, send_whatsapp_only_otp_task
+except ImportError:
+    send_otp_task = None
+    send_whatsapp_only_otp_task = None
+    logger.warning('Celery tasks unavailable — OTP will skip async delivery')
+
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserUpdateSerializer, ChangePasswordSerializer,
@@ -62,9 +71,11 @@ def get_client_ip(request):
 
 
 def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
-   
-    from .tasks import send_otp_task, send_whatsapp_only_otp_task
-    
+
+    if send_otp_task is None:
+        logger.warning('OTP delivery skipped — Celery tasks not available (import failed at module load)')
+        return []
+
     channels = []
     
     def safe_delay(task_func, **kwargs):
@@ -109,6 +120,7 @@ class RegisterView(generics.CreateAPIView):
     """User registration endpoint."""
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
+    authentication_classes = ()  # No auth required — prevents JWTAuthentication from rejecting stale tokens
     serializer_class = RegisterSerializer
     
     @transaction.atomic
@@ -642,7 +654,7 @@ class OTPVerifyView(views.APIView):
                             'registration_completed_at': timezone.now(),
                         }
                         next_step = 'complete'
-                        next_endpoint = '/auth/login-seller/'
+                        next_endpoint = '/seller/pengaturan/'
                     else:
                         # Buyer workflow: mark complete, redirect to Buyer Login
                         update_fields = {

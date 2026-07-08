@@ -240,9 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setMsg('Pendaftaran mitra berhasil!', 'success');
       localStorage.removeItem(storageKey);
-      setTimeout(() => {
-        window.location.href = '../auth/otp/index.html?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
-      }, 2000);
+      window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
     } catch (err) {
       setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
       if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }

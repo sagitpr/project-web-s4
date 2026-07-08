@@ -155,10 +155,12 @@ document.addEventListener('DOMContentLoaded', function() {
             var userRole = null;
             var userData = window.WarungioAuth.getUser();
             if (userData) userRole = userData.role;
-            if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+            if (userRole === 'seller') {
+              window.location.href = '/seller/pengaturan/';
+            } else if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
               window.location.href = window.WarungioAuth.getRoleDashboardUrl(userRole);
             } else {
-              if (userRole === 'seller') window.location.href = '/seller/dashboard/';
+              if (userRole === 'buyer') window.location.href = '/buyer/home/';
               else if (userRole === 'buyer') window.location.href = '/buyer/home/';
               else window.location.href = '/';
             }

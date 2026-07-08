@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 sessionStorage.removeItem('warungio_partner_registration_data');
               }
-              window.location.href = '/seller/dashboard/';
+              window.location.href = '/seller/pengaturan/';
             } else if (userRole === 'buyer') {
               window.location.href = '/buyer/home/';
             } else {
