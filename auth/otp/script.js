@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto login if tokens are present in the response
         if (data.access && data.user) {
           window.WarungioAuth.login(data.access, data.refresh, data.user);
+          sessionStorage.removeItem('register_password');
         } else {
           // Attempt client-side auto login
           const savedPassword = sessionStorage.getItem('register_password');

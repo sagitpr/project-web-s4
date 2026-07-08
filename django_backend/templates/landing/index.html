@@ -28,13 +28,11 @@
         <div class="header-right">
             <div class="auth-buttons">
                 <div class="auth-group">
-                    <span class="auth-group-label">Pembeli</span>
                     <a href="{% url 'page-login' %}" class="btn-masuk">Masuk</a>
                     <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
                 </div>
-                <span class="auth-group-divider"></span>
+                <span class="auth-group-separator" aria-hidden="true">|</span>
                 <div class="auth-group">
-                    <span class="auth-group-label">Mitra</span>
                     <a href="{% url 'page-login-seller' %}" class="btn-seller-login">Login Seller</a>
                     <a href="{% url 'page-register-mitra' %}" class="btn-mitra">Daftar Mitra</a>
                 </div>

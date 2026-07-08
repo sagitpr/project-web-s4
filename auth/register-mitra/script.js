@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Store JWT tokens
-      if (registerData.access && registerData.refresh) {
+      if (registerData.access && registerData.refresh && window.WarungioAuth) {
         window.WarungioAuth.login(registerData.access, registerData.refresh, registerData.user);
       }
 
@@ -259,6 +259,9 @@ document.addEventListener('DOMContentLoaded', () => {
         account_number: data.accountNumber,
         account_holder: data.accountHolder,
       });
+
+      // Save password for auto-login after OTP verification
+      sessionStorage.setItem('register_password', data.ownerPassword);
 
       setMsg('Pendaftaran mitra berhasil!', 'success');
       localStorage.removeItem(storageKey);

@@ -259,7 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
               setMessage(err.message);
               googleBtn.disabled = false;
-              googleBtn.innerHTML = `<img src="${WarungioAssets.img('google-logo.png')}" alt="Google" /><span>Google</span>`;
+                var googleImgSrc = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img)
+                ? WarungioAssets.img('google-logo.png')
+                : '/static/images/google-logo.png';
+              googleBtn.innerHTML = '<img src="' + googleImgSrc + '" alt="Google" /><span>Google</span>';
             }
           }
         },
@@ -292,7 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (err) {
             setMessage(err.message);
             fbBtn.disabled = false;
-            fbBtn.innerHTML = `<img src="${WarungioAssets.img('facebook-1.png')}" alt="Facebook" /><span>Facebook</span>`;
+              var fbImgSrc = (typeof WarungioAssets !== 'undefined' && WarungioAssets.img)
+                ? WarungioAssets.img('facebook-1.png')
+                : '/static/images/facebook-1.png';
+              fbBtn.innerHTML = '<img src="' + fbImgSrc + '" alt="Facebook" /><span>Facebook</span>';
           }
         } else {
           setMessage('Login Facebook dibatalkan.');

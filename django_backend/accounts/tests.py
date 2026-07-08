@@ -255,6 +255,71 @@ class AuthStateTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['user']['role'], 'seller')
 
+    def test_seller_login_full_flow(self):
+        """Test dedicated seller login: JWT tokens, session, profile, cross-role guard."""
+        # Login as seller
+        response = self.client.post(self.login_url, {
+            'email': 'seller@warungio.com',
+            'password': 'TestPass123!',
+            'login_entry': 'seller',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user']['role'], 'seller')
+        self.assertEqual(response.data['user']['email'], 'seller@warungio.com')
+        token = response.data['access']
+
+        # Verify JWT token works for protected endpoints
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        
+        # Check auth returns seller data
+        check = self.client.get(self.check_auth_url)
+        self.assertEqual(check.status_code, status.HTTP_200_OK)
+        self.assertTrue(check.data['authenticated'])
+        self.assertEqual(check.data['user']['role'], 'seller')
+        
+        # Profile returns seller role
+        profile = self.client.get(self.profile_url)
+        self.assertEqual(profile.status_code, status.HTTP_200_OK)
+        self.assertEqual(profile.data['role'], 'seller')
+
+        # Cross-role guard: buyer login_entry for seller account should fail
+        buyer_login = self.client.post(self.login_url, {
+            'email': 'seller@warungio.com',
+            'password': 'TestPass123!',
+            'login_entry': 'buyer',
+        }, format='json')
+        self.assertEqual(buyer_login.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(buyer_login.data.get('code'), 'role_mismatch')
+
+        # Session cookie should be set
+        session_cookie_set = any(
+            k.startswith('sessionid') for k in response.cookies.keys()
+        )
+        self.assertTrue(session_cookie_set, 'Django session cookie should be set')
+
+    def test_seller_login_rejects_wrong_password(self):
+        """Test seller login with wrong password."""
+        response = self.client.post(self.login_url, {
+            'email': 'seller@warungio.com',
+            'password': 'WrongPass999!',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('access', response.data)
+
+    def test_seller_login_rejects_buyer_role_mismatch(self):
+        """Test that a buyer user cannot login as seller."""
+        response = self.client.post(self.login_url, {
+            'email': 'verified@warungio.com',
+            'password': 'TestPass123!',
+            'login_entry': 'seller',
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data.get('code'), 'role_mismatch')
+        self.assertEqual(response.data.get('user_role'), 'buyer')
+
 
 # =============================================================================
 # SOCIAL AUTHENTICATION TESTS
@@ -1128,7 +1193,7 @@ class SellerE2EFlowTests(TestCase):
         self.assertIn('next_step', verify_response.data)
         self.assertEqual(verify_response.data['next_step'], 'complete')
         self.assertIn('next_endpoint', verify_response.data)
-        self.assertEqual(verify_response.data['next_endpoint'], '/auth/login/?role=seller')
+        self.assertEqual(verify_response.data['next_endpoint'], '/auth/login-seller/')
 
         # Verify User record after activation
         user.refresh_from_db()

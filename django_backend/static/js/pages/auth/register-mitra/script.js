@@ -420,6 +420,9 @@
             account_holder: data.accountHolder,
           });
 
+          // Save password for auto-login after OTP verification
+          sessionStorage.setItem('register_password', data.ownerPassword);
+          
           setMsg('Pendaftaran mitra berhasil!', 'success');
           localStorage.removeItem(storageKey);
           setTimeout(function() { window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration'; }, 2000);

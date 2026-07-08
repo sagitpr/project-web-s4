@@ -4,7 +4,6 @@ Warungio Marketplace - Hybrid Django + PHP.
 """
 
 import uuid
-import random
 import hashlib
 from datetime import timedelta
 
@@ -221,8 +220,9 @@ class OTP(models.Model):
 
     @staticmethod
     def generate_otp(length=6):
-        """Generate a secure random OTP code."""
-        return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+        """Generate a cryptographically secure random OTP code."""
+        import secrets
+        return ''.join([str(secrets.randbelow(10)) for _ in range(length)])
 
     @staticmethod
     def hash_otp(otp_code):

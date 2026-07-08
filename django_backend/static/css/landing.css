@@ -290,20 +290,14 @@ button {
     flex-shrink: 0;
 }
 
-.auth-group-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #94a3b8;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.auth-group-divider {
-    display: inline-block;
-    width: 1px;
-    height: 24px;
-    background: #e2e8f0;
+.auth-group-separator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 300;
+    color: #cbd5e1;
+    user-select: none;
+    line-height: 1;
     margin: 0 6px;
     flex-shrink: 0;
 }
@@ -355,13 +349,13 @@ button {
 }
 
 .btn-seller-login {
-    padding: 9px 18px;
+    padding: 9px 20px;
     background: transparent;
-    color: var(--primary-dark);
-    border: 2px solid var(--primary-dark);
+    color: var(--primary);
+    border: 2px solid var(--primary);
     border-radius: 10px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     transition: all 0.25s ease;
     text-decoration: none;
     display: inline-flex;
@@ -370,19 +364,19 @@ button {
 }
 
 .btn-seller-login:hover {
-    background: var(--primary-dark);
+    background: var(--primary);
     color: var(--surface);
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(20, 83, 45, 0.25);
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.2);
 }
 
 .btn-mitra {
-    padding: 9px 18px;
-    background: var(--primary-dark);
+    padding: 9px 20px;
+    background: var(--primary);
     color: var(--surface);
     border-radius: 10px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     transition: all 0.25s ease;
     text-decoration: none;
     display: inline-flex;
@@ -391,9 +385,9 @@ button {
 }
 
 .btn-mitra:hover {
-    background: #0f3f22;
+    background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(20, 83, 45, 0.25);
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.2);
 }
 
 /* ── Mobile Drawer ── */
@@ -1417,10 +1411,7 @@ button {
         font-size: 12px;
         border-radius: 8px;
     }
-    .auth-group-label {
-        display: none;
-    }
-    .auth-group-divider {
+    .auth-group-separator {
         display: none;
     }
 

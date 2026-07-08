@@ -37,13 +37,6 @@ def _log_db_operation(op_name, details, duration_ms=None):
     logger.debug('DB: %s | %s', op_name, details)
     return log_data
 
-def _make_field_error(field, message, code):
-    """Build a structured field-specific error response."""
-    return Response(
-        {'field': field, 'message': message, 'code': code},
-        status=status.HTTP_400_BAD_REQUEST
-    )
-
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -438,6 +431,7 @@ class OTPRequestView(views.APIView):
         if recent_count >= 3:
             logger.warning('OTP RATE LIMIT EXCEEDED — Email: %s | IP: %s', email or phone, ip)
             return Response({
+                'detail': 'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
                 'field': 'email',
                 'message': 'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
                 'code': 'otp_rate_limited',
@@ -543,7 +537,13 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY FAILED — No OTP found | Email: %s | Phone: %s | Purpose: %s | IP: %s',
                 email, phone, purpose, ip,
             )
-            return _make_field_error('otp_code', 'Kode OTP tidak valid atau sudah digunakan.', 'otp_not_found')
+            # Return a top-level 'detail' key so the frontend's auth.js api()
+            # can parse it via data.detail || data.message || data.error
+            return Response({
+                'detail': 'Kode OTP tidak valid atau sudah digunakan.',
+                'field': 'otp_code',
+                'code': 'otp_not_found',
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         logger.info('OTP VERIFY FOUND — OTP ID: %d | Attempts: %d/%d | Expires: %s',
                      otp.id, otp.attempts, otp.max_attempts, otp.expires_at)
@@ -552,12 +552,17 @@ class OTPVerifyView(views.APIView):
             otp.is_valid = False
             otp.save()
             logger.warning('OTP VERIFY EXPIRED — OTP ID: %d | Email: %s', otp.id, email)
-            return _make_field_error('otp_code', 'Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.', 'otp_expired')
+            return Response({
+                'detail': 'Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.',
+                'field': 'otp_code',
+                'code': 'otp_expired',
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         if otp.is_locked():
             logger.warning('OTP VERIFY LOCKED — OTP ID: %d | Attempts: %d/%d | Email: %s',
                            otp.id, otp.attempts, otp.max_attempts, email)
             return Response({
+                'detail': 'Terlalu banyak percobaan. Silakan minta OTP baru.',
                 'field': 'otp_code',
                 'message': 'Terlalu banyak percobaan. Silakan minta OTP baru.',
                 'code': 'otp_locked',
@@ -575,7 +580,11 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY WRONG CODE — OTP ID: %d | Attempts: %d/%d | Remaining: %d | Email: %s',
                 otp.id, otp.attempts, otp.max_attempts, max(remaining, 0), email,
             )
-            return _make_field_error('otp_code', 'Kode OTP tidak valid.', 'otp_invalid')
+            return Response({
+                'detail': 'Kode OTP tidak valid.',
+                'field': 'otp_code',
+                'code': 'otp_invalid',
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Step 3: Code is correct — verify OTP
         otp.is_used = True
@@ -681,11 +690,42 @@ class OTPVerifyView(views.APIView):
         if next_endpoint:
             response_data['next_endpoint'] = next_endpoint
         
+        # ── Generate JWT tokens for auto-login ──
+        # After successful OTP verification, return tokens so the frontend
+        # can stay authenticated without requiring the user to log in again.
+        # This is critical for the Seller registration wizard flow where the
+        # user must remain authenticated after OTP verification.
+        # Reuse user_obj from the lookup above if available, otherwise look up again.
+        user_for_token = user_obj if purpose in ('registration', 'email_change') and user_obj else None
+        if not user_for_token:
+            if email:
+                user_for_token = User.objects.filter(email=email).first()
+            elif phone:
+                user_for_token = User.objects.filter(phone=phone).first()
+
+        if user_for_token and user_for_token.is_active:
+            try:
+                refresh_token = RefreshToken.for_user(user_for_token)
+                access_token = str(refresh_token.access_token)
+                response_data['access'] = access_token
+                response_data['refresh'] = str(refresh_token)
+                response_data['user'] = UserSerializer(user_for_token).data
+
+                # Set Django session cookie so session-based auth also works
+                # login() is already imported at the top of this module
+                # Must specify backend because multiple auth backends are configured
+                login(request, user_for_token, backend='django.contrib.auth.backends.ModelBackend')
+            except Exception as token_err:
+                logger.error('Failed to generate JWT after OTP verify: %s', token_err)
+
         # ── INSTRUMENTATION: Log response ──
-        logger.info(
-            'OTP VERIFY RESPONSE — HTTP 200 | Email: %s | Next: %s',
-            email, next_step or '(none)',
-        )
+        log_data = {
+            'status': 'success',
+            'email': email,
+            'next': next_step or '(none)',
+            'has_tokens': 'access' in response_data,
+        }
+        logger.info('OTP VERIFY RESPONSE — HTTP 200 | %s', log_data)
         
         return Response(response_data)
 
@@ -736,11 +776,7 @@ class ResendOTPView(views.APIView):
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         # ── INSTRUMENTATION: Invalidate old OTPs (by email AND/OR phone) ──
-        identifier_filter = Q()
-        if email:
-            identifier_filter |= Q(email=email)
-        if phone:
-            identifier_filter |= Q(phone=phone)
+        # Reuse the same identifier_filter from the cooldown check above
         invalidated = OTP.objects.filter(identifier_filter, purpose=purpose, is_valid=True).update(is_valid=False)
         _log_db_operation('otp_invalidate_old', {'email': email, 'phone': phone, 'purpose': purpose, 'count': invalidated})
 
@@ -879,13 +915,21 @@ class ResetPasswordView(views.APIView):
         
         if not otp:
             logger.warning('RESET PASSWORD FAILED — No OTP found | Email: %s', email)
-            return _make_field_error('otp_code', 'Kode OTP tidak valid atau sudah digunakan.', 'otp_not_found')
+            return Response({
+                'detail': 'Kode OTP tidak valid atau sudah digunakan.',
+                'field': 'otp_code',
+                'code': 'otp_not_found',
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         if otp.is_expired():
             otp.is_valid = False
             otp.save()
             logger.warning('RESET PASSWORD EXPIRED — OTP ID: %d | Email: %s', otp.id, email)
-            return _make_field_error('otp_code', 'Kode OTP sudah kadaluwarsa. Silakan minta ulang.', 'otp_expired')
+            return Response({
+                'detail': 'Kode OTP sudah kadaluwarsa. Silakan minta ulang.',
+                'field': 'otp_code',
+                'code': 'otp_expired',
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Update password
         user = User.objects.filter(email=email).first()

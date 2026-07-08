@@ -182,7 +182,7 @@
           setMessage('Gagal memuat API. Periksa koneksi internet atau coba refresh halaman.');
           if (loginBtn) {
             loginBtn.disabled = false;
-            loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk';
+            loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
           }
           return;
         }
@@ -198,7 +198,7 @@
         setMessage(msg);
         if (loginBtn) {
           loginBtn.disabled = false;
-          loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk';
+          loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
         }
       }
     });
@@ -401,21 +401,7 @@
         }
       })();
     }
-  })();  // ── Update UI for Seller Login mode ──
-  if (loginEntry === 'seller') {
-    // Change form title
-    var formTitle = document.querySelector('.form-title');
-    var formSubtitle = document.querySelector('.form-subtitle');
-    if (formTitle) formTitle.textContent = 'Masuk sebagai Mitra';
-    if (formSubtitle) formSubtitle.textContent = 'Masuk untuk mengelola toko dan pesanan mitra Warungio';
-    // Change submit button text
-    if (loginBtn) loginBtn.textContent = 'Masuk sebagai Mitra';
-    // Change hero panel heading
-    var heroHeading = document.querySelector('.hero-copy h1');
-    if (heroHeading) heroHeading.innerHTML = 'Selamat datang kembali, <span>Mitra Warungio!</span>';
-    var heroText = document.querySelector('.hero-copy .hero-text');
-    if (heroText) heroText.textContent = 'Kelola tokomu, pantau pesanan, dan tingkatkan penjualan.';
-  }
+  })();
 
   // ── Pre-fill email from query param (after OTP verification redirect) ──
   const params = new URLSearchParams(window.location.search);

@@ -129,19 +129,42 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const data = await WarungioAPI.verifyOTP(email, otpValue, purpose);
       if (data.verified) {
-        showMsg('Verifikasi berhasil! Mengarahkan ke halaman login...', 'success');
+        showMsg('Verifikasi berhasil! Mengarahkan...', 'success');
+        
+        // Auto-login: if backend returns JWT tokens, store them directly
+        if (data.access && data.user) {
+          window.WarungioAuth.login(data.access, data.refresh, data.user);
+          sessionStorage.removeItem('register_password');
+        } else {
+          // Fallback: attempt client-side auto-login with saved password
+          const savedPassword = sessionStorage.getItem('register_password');
+          if (savedPassword) {
+            try {
+              const loginData = await WarungioAPI.login(email, savedPassword);
+              window.WarungioAuth.login(loginData.access, loginData.refresh, loginData.user);
+              sessionStorage.removeItem('register_password');
+            } catch (loginErr) {
+              console.warn('Auto login failed:', loginErr);
+            }
+          }
+        }
         
         setTimeout(() => {
-          // After OTP verification, redirect to login page.
-          // Do NOT pass ?role= — the login page now uses the user's actual role
-          // from the API response (database), not from query params.
-          const nextUrl = params.get('next');
-          var loginUrl = '/auth/login/?verified=1&email=' + encodeURIComponent(email);
-          
-          if (nextUrl) {
-            loginUrl += '&next=' + encodeURIComponent(nextUrl);
+          // If authenticated after auto-login, redirect directly to role dashboard
+          if (window.WarungioAuth.isAuthenticated()) {
+            var userData = window.WarungioAuth.getUser();
+            var userRole = userData ? userData.role : null;
+            if (userRole === 'seller') {
+              window.location.href = '/seller/dashboard/';
+            } else if (userRole === 'buyer') {
+              window.location.href = '/buyer/home/';
+            } else {
+              window.location.href = '/';
+            }
+          } else {
+            // Otherwise gracefully redirect to appropriate login page
+            window.location.href = '/auth/login/?email=' + encodeURIComponent(email) + '&verified=1';
           }
-          window.location.href = loginUrl;
         }, 1500);
       }
     } catch (err) {
