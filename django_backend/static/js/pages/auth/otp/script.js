@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                   var savedData = JSON.parse(savedRaw);
                   // Update the auto-created store with rich registration data
+                  // Field names must match StoreUpdateSerializer exactly
                   await WarungioAPI.updateStore(0, {
                     store_name: savedData.storeName,
                     category: savedData.category,
@@ -174,16 +175,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     postal_code: savedData.postalCode,
                     latitude: parseFloat(savedData.latitude),
                     longitude: parseFloat(savedData.longitude),
-                    phone: savedData.storePhone,
-                    email: savedData.storeEmail,
                     open_time: savedData.openTime,
                     close_time: savedData.closeTime,
-                    minimum_order: parseInt(savedData.minimumOrder) || 0,
-                    delivery_services: savedData.deliveryServices || [],
+                    delivery_type: (savedData.deliveryServices || []).join(','),
                     service_area: savedData.serviceArea,
                     bank_name: savedData.bankName,
-                    account_number: savedData.accountNumber,
-                    account_holder: savedData.accountHolder,
+                    bank_account: savedData.accountNumber,
+                    bank_owner: savedData.accountHolder,
                   });
                 } catch (e) {
                   console.warn('Store update failed (non-blocking):', e);

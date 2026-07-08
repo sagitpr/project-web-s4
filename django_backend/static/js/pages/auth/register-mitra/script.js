@@ -385,7 +385,7 @@
             email: data.ownerEmail,
             phone: data.ownerPhone,
             password: data.ownerPassword,
-            password2: data.ownerPassword,
+            password2: data.ownerPassword2,
             address: data.address,
             role: 'seller',
           });

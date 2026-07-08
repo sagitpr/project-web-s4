@@ -25,16 +25,15 @@
             <a href="#testimoni">Testimoni</a>
             <a href="#faq">FAQ</a>
         </nav>
-        <div class="header-right">
-            <div class="auth-buttons">
+        <div class="header-right">                <div class="auth-buttons">
                 <div class="auth-group">
                     <a href="{% url 'page-login' %}" class="btn-masuk">Masuk</a>
                     <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
                 </div>
-                <span class="auth-group-separator" aria-hidden="true">|</span>
+                <span class="auth-group-separator" aria-hidden="true"></span>
                 <div class="auth-group">
-                    <a href="{% url 'page-login-seller' %}" class="btn-seller-login">Login Seller</a>
-                    <a href="{% url 'page-register-mitra' %}" class="btn-mitra">Daftar Mitra</a>
+                    <a href="{% url 'page-login-seller' %}" class="btn-masuk">Login</a>
+                    <a href="{% url 'page-register-mitra' %}" class="btn-daftar">Daftar Mitra</a>
                 </div>
             </div>
         </div>
