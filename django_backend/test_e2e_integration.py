@@ -114,7 +114,7 @@ class TestCompleteBuyerSellerJourney(TestCase):
         }, format='json')
         self.assertEqual(resp.status_code, 200, f'OTP verify failed: {resp.data}')
         self.assertTrue(resp.data['verified'])
-        self.assertEqual(resp.data['next_endpoint'], '/auth/login/?role=seller')
+        self.assertEqual(resp.data['next_endpoint'], '/auth/login-seller/')
 
         # Verify user activated
         seller_user.refresh_from_db()

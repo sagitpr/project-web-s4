@@ -163,13 +163,10 @@ document.addEventListener('DOMContentLoaded', function() {
               else window.location.href = '/';
             }
           } else {
-            // Otherwise gracefully redirect to appropriate login page
-            var loginRedirectUrl = '/auth/login/?email=' + encodeURIComponent(email) + '&verified=1';
-            if (data.next_endpoint) {
-              var epBase = data.next_endpoint.split('?')[0];
-              loginRedirectUrl = epBase + '?email=' + encodeURIComponent(email) + '&verified=1';
-            }
-            window.location.href = loginRedirectUrl;
+            // Use next_endpoint from backend response for role-appropriate redirect
+            var loginBase = data.next_endpoint || '/auth/login/';
+            var epBase = loginBase.split('?')[0];
+            window.location.href = epBase + '?email=' + encodeURIComponent(email) + '&verified=1';
           }
         }, 1500);
       }

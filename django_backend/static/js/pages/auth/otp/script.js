@@ -149,12 +149,47 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
         
-        setTimeout(() => {
-          // If authenticated after auto-login, redirect directly to role dashboard
+        setTimeout(async function() {
+          // If authenticated after auto-login, complete setup and redirect
           if (window.WarungioAuth.isAuthenticated()) {
             var userData = window.WarungioAuth.getUser();
             var userRole = userData ? userData.role : null;
+            
+            // If seller with saved registration data, finish store setup now
             if (userRole === 'seller') {
+              var savedRaw = sessionStorage.getItem('warungio_partner_registration_data');
+              if (savedRaw) {
+                try {
+                  var savedData = JSON.parse(savedRaw);
+                  // Update the auto-created store with rich registration data
+                  await WarungioAPI.updateStore(0, {
+                    store_name: savedData.storeName,
+                    category: savedData.category,
+                    description: savedData.description,
+                    address: savedData.address,
+                    province: savedData.province,
+                    city: savedData.city,
+                    district: savedData.district,
+                    village: savedData.village,
+                    postal_code: savedData.postalCode,
+                    latitude: parseFloat(savedData.latitude),
+                    longitude: parseFloat(savedData.longitude),
+                    phone: savedData.storePhone,
+                    email: savedData.storeEmail,
+                    open_time: savedData.openTime,
+                    close_time: savedData.closeTime,
+                    minimum_order: parseInt(savedData.minimumOrder) || 0,
+                    delivery_services: savedData.deliveryServices || [],
+                    service_area: savedData.serviceArea,
+                    bank_name: savedData.bankName,
+                    account_number: savedData.accountNumber,
+                    account_holder: savedData.accountHolder,
+                  });
+                } catch (e) {
+                  console.warn('Store update failed (non-blocking):', e);
+                }
+                sessionStorage.removeItem('warungio_partner_registration_data');
+              }
               window.location.href = '/seller/dashboard/';
             } else if (userRole === 'buyer') {
               window.location.href = '/buyer/home/';
@@ -162,8 +197,10 @@ document.addEventListener('DOMContentLoaded', function() {
               window.location.href = '/';
             }
           } else {
-            // Otherwise gracefully redirect to appropriate login page
-            window.location.href = '/auth/login/?email=' + encodeURIComponent(email) + '&verified=1';
+            // Use next_endpoint from backend response for role-appropriate redirect
+            var loginBase = data.next_endpoint || '/auth/login/';
+            var epBase = loginBase.split('?')[0];
+            window.location.href = epBase + '?email=' + encodeURIComponent(email) + '&verified=1';
           }
         }, 1500);
       }

@@ -390,38 +390,11 @@
             role: 'seller',
           });
 
-          // Store JWT tokens
-          if (registerData.access && registerData.refresh && window.WarungioAuth) {
-            window.WarungioAuth.login(registerData.access, registerData.refresh, registerData.user);
-          }
-
-          // Step 2: Create store with region text data
-          var storeData = await WarungioAPI.createStore({
-            store_name: data.storeName,
-            category: data.category,
-            description: data.description,
-            address: data.address,
-            province: data.province,
-            city: data.city,
-            district: data.district,
-            village: data.village,
-            postal_code: data.postalCode,
-            latitude: parseFloat(data.latitude),
-            longitude: parseFloat(data.longitude),
-            phone: data.storePhone,
-            email: data.storeEmail,
-            open_time: data.openTime,
-            close_time: data.closeTime,
-            minimum_order: parseInt(data.minimumOrder) || 0,
-            delivery_services: data.deliveryServices || [],
-            service_area: data.serviceArea,
-            bank_name: data.bankName,
-            account_number: data.accountNumber,
-            account_holder: data.accountHolder,
-          });
-
-          // Save password for auto-login after OTP verification
+          // Store is auto-created by the backend after OTP verification.
+          // Do NOT call createStore here — the backend handles it in OTPVerifyView.
+          // Save all form data + password for auto-login and store setup after OTP
           sessionStorage.setItem('register_password', data.ownerPassword);
+          sessionStorage.setItem('warungio_partner_registration_data', JSON.stringify(data));
           
           setMsg('Pendaftaran mitra berhasil!', 'success');
           localStorage.removeItem(storageKey);

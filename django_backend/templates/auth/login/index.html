@@ -78,7 +78,7 @@
         </aside>
         <main class="form-panel">
           <div class="form-header">
-            <a href="{% url 'page-register' %}" class="top-link">Belum punya akun? <strong>Daftar</strong></a>
+            <a href="{% if entry == 'seller' %}{% url 'page-register-mitra' %}{% else %}{% url 'page-register' %}{% endif %}" class="top-link">Belum punya akun? <strong>Daftar</strong></a>
             <div>
               {% if entry == 'seller' %}
               <p class="form-title">Masuk sebagai Mitra</p>
