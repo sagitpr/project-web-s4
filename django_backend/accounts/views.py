@@ -282,17 +282,66 @@ class LoginView(views.APIView):
             user.email, user.id, user.role, user.is_verified, ip,
         )
         
-        # Check OTP verification
+        # ── Auto-OTP Flow for unverified accounts ──
         if not user.is_verified:
             logger.warning(
-                'LOGIN BLOCKED — Unverified user | Email: %s | IP: %s',
+                'LOGIN BLOCKED — Unverified user | Email: %s | IP: %s — Auto-generating OTP',
                 user.email, ip,
             )
-            return Response({
-                'error': 'Akun belum diverifikasi. Silakan verifikasi OTP terlebih dahulu.',
+
+            email = user.email
+            phone = str(user.phone) if user.phone else None
+            user_full_name = user.full_name or None
+
+            # 1. Invalidate any previous unused OTPs for this email (purpose='registration')
+            stale_count = OTP.objects.filter(
+                email=email, purpose='registration', is_valid=True, is_used=False
+            ).update(is_valid=False)
+            if stale_count:
+                _log_db_operation('login_otp_invalidate_old', {
+                    'email': email, 'purpose': 'registration', 'count': stale_count
+                })
+
+            # 2. Create a fresh OTP with a new expiration time
+            otp = OTP.objects.create(
+                user=user,
+                email=email,
+                phone=phone,
+                purpose='registration',
+                ip_address=ip,
+                user_agent=user_agent,
+            )
+            _log_db_operation('login_otp_create', {
+                'id': otp.id, 'email': email, 'purpose': 'registration'
+            })
+
+            # 3. Dispatch OTP delivery asynchronously via configured providers
+            channels = _dispatch_otp_async(
+                email=email,
+                phone=phone,
+                otp_code=otp.otp_code,
+                purpose='registration',
+                user_full_name=user_full_name,
+            )
+
+            # 4. Return enhanced response with redirect information
+            response_data = {
                 'needs_verification': True,
-                'email': user.email,
-            }, status=status.HTTP_403_FORBIDDEN)
+                'email': email,
+                'message': 'Akun belum diverifikasi. Kode OTP baru telah dikirim ke email Anda.',
+                'otp_channels': list(set(channels)),
+                'expires_in_minutes': settings.OTP_EXPIRE_MINUTES,
+            }
+
+            if settings.DEBUG:
+                response_data['otp_code'] = otp.otp_code
+
+            logger.info(
+                'LOGIN AUTO-OTP — Email: %s | OTP ID: %d | Channels: %s | IP: %s',
+                email, otp.id, channels or '(none)', ip,
+            )
+
+            return Response(response_data, status=status.HTTP_403_FORBIDDEN)
         
         # ── Role-gate: validate login_entry against the user's actual role ──
         login_entry = serializer.validated_data.get('login_entry')
@@ -729,6 +778,19 @@ class OTPVerifyView(views.APIView):
                 login(request, user_for_token, backend='django.contrib.auth.backends.ModelBackend')
             except Exception as token_err:
                 logger.error('Failed to generate JWT after OTP verify: %s', token_err)
+
+        # ── Cleanup: Delete expired OTPs for this user after successful verification ──
+        try:
+            deleted_count = OTP.objects.filter(
+                Q(email=email) | (Q(phone=phone) if phone else Q()),
+                expires_at__lt=timezone.now()
+            ).delete()[0]
+            if deleted_count:
+                _log_db_operation('otp_cleanup_expired', {
+                    'email': email, 'phone': phone or '(none)', 'deleted': deleted_count
+                })
+        except Exception as cleanup_err:
+            logger.warning('OTP cleanup error (non-blocking): %s', cleanup_err)
 
         # ── INSTRUMENTATION: Log response ──
         log_data = {

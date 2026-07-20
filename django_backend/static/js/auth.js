@@ -343,7 +343,23 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
           (data.email ? data.email.join(', ') : null) ||
           (data.password ? data.password.join(', ') : null) ||
           'Terjadi kesalahan. Silakan coba lagi.';
-        throw new Error(msg);
+        
+        // Pass through additional fields for the frontend to handle
+        // (e.g., needs_verification, email for OTP auto-redirect flow)
+        var enhancedErr = new Error(msg);
+        if (data.needs_verification !== undefined) {
+          enhancedErr.needs_verification = data.needs_verification;
+        }
+        if (data.email !== undefined) {
+          enhancedErr.email = data.email;
+        }
+        if (data.otp_channels !== undefined) {
+          enhancedErr.otp_channels = data.otp_channels;
+        }
+        if (data.expires_in_minutes !== undefined) {
+          enhancedErr.expires_in_minutes = data.expires_in_minutes;
+        }
+        throw enhancedErr;
       }
 
       return data;

@@ -3,60 +3,1011 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Warungio</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Admin Login — Warungio</title>
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
-        body { background: var(--color-gray-900); display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; }
-        .admin-login-container { width:100%; max-width:400px; padding:24px; }
-        .admin-login-card { background:var(--color-surface); border-radius:var(--radius-xl); border:1px solid var(--color-border); padding:40px 32px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
-        .admin-logo { text-align:center; margin-bottom:32px; }
-        .admin-logo img { height:36px; filter:brightness(0) invert(1); }
-        .admin-logo h1 { font-size:20px; font-weight:800; color:white; margin:12px 0 4px; }
-        .admin-logo h1 span { color:var(--color-brand); }
-        .admin-logo p { font-size:12px; color:rgba(255,255,255,0.4); margin:0; letter-spacing:0.06em; text-transform:uppercase; }
-        .form-group { margin-bottom:20px; }
-        .form-group label { display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px; }
-        .form-group input { width:100%; padding:12px 14px; border:1px solid var(--color-border); border-radius:var(--radius-lg); font-size:14px; background:var(--color-surface); color:var(--color-text-primary); outline:none; transition:border-color 0.15s; box-sizing:border-box; }
-        .form-group input:focus { border-color:var(--color-brand); }
-        .form-group input::placeholder { color:var(--color-text-tertiary); }
-        .btn-admin-login { width:100%; padding:12px; border:none; border-radius:var(--radius-lg); background:var(--color-brand); color:white; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
-        .btn-admin-login:hover { opacity:0.9; transform:translateY(-1px); }
-        .btn-admin-login:disabled { opacity:0.5; cursor:not-allowed; }
-        .error-msg { color:#ef4444; font-size:13px; text-align:center; margin-bottom:16px; display:none; padding:10px; background:#fef2f2; border-radius:var(--radius-lg); }
-        .info-msg { color:var(--color-text-tertiary); font-size:12px; text-align:center; margin-top:16px; }
-        .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:8px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
+        /* ═══════════════════════════════════════════════════════════════
+           WARUNGIO ADMIN LOGIN — Enterprise Authentication Interface
+           Glassmorphism · Premium Branding · Dark Mode · Responsive
+           ═══════════════════════════════════════════════════════════════ */
+
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-primary);
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+            background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 30%, #e8f5e9 60%, #f0fdf4 100%);
+        }
+
+        /* ── Dark Mode Overrides ── */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(160deg, #0a0f0b 0%, #0d1a10 30%, #0f1f12 60%, #0a0f0b 100%);
+                color: var(--color-text-inverse);
+            }
+        }
+
+        /* ── Animated Background Pattern (pure CSS) ── */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 15% 25%, rgba(22, 163, 74, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 85% 75%, rgba(22, 163, 74, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.03) 0%, transparent 60%);
+        }
+
+        .bg-pattern::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(22, 163, 74, 0.015) 40px,
+                    rgba(22, 163, 74, 0.015) 41px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(22, 163, 74, 0.015) 40px,
+                    rgba(22, 163, 74, 0.015) 41px
+                );
+        }
+
+        /* Floating geometric orbs for depth */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            opacity: 0.35;
+        }
+
+        .bg-orb--1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(22, 163, 74, 0.12) 0%, transparent 70%);
+            top: -150px;
+            right: -100px;
+            animation: orbFloat 20s ease-in-out infinite alternate;
+        }
+
+        .bg-orb--2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+            bottom: -100px;
+            left: -80px;
+            animation: orbFloat 25s ease-in-out infinite alternate-reverse;
+        }
+
+        .bg-orb--3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(22, 163, 74, 0.06) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+            100% { transform: translate(15px, -10px) scale(1.02); }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .bg-pattern::before {
+                background-image:
+                    radial-gradient(circle at 15% 25%, rgba(22, 163, 74, 0.10) 0%, transparent 50%),
+                    radial-gradient(circle at 85% 75%, rgba(22, 163, 74, 0.07) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.05) 0%, transparent 60%);
+            }
+            .bg-pattern::after { opacity: 0.3; }
+            .bg-orb--1 { background: radial-gradient(circle, rgba(22, 163, 74, 0.20) 0%, transparent 70%); }
+            .bg-orb--2 { background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%); }
+            .bg-orb--3 { background: radial-gradient(circle, rgba(22, 163, 74, 0.12) 0%, transparent 70%); }
+        }
+
+        /* ── Noise Texture Overlay ── */
+        .bg-noise {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: var(--grain-opacity, 0.015);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        /* ── Main Layout ── */
+        .login-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 440px;
+            margin: auto;
+            padding: 20px 0;
+        }
+
+        /* ── Glassmorphism Card (Double-Bezel Architecture) ── */
+
+        /* Outer Shell — the "bezel" */
+        .login-card-outer {
+            position: relative;
+            padding: 2px;
+            border-radius: 24px;
+            background: linear-gradient(
+                135deg,
+                rgba(22, 163, 74, 0.15) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(22, 163, 74, 0.10) 100%
+            );
+            box-shadow:
+                0 0 0 1px rgba(22, 163, 74, 0.06),
+                0 20px 60px -12px rgba(0, 0, 0, 0.12),
+                0 8px 24px -6px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.3s var(--ease-smooth);
+        }
+
+        .login-card-outer:hover {
+            box-shadow:
+                0 0 0 1px rgba(22, 163, 74, 0.10),
+                0 24px 72px -12px rgba(0, 0, 0, 0.16),
+                0 8px 28px -6px rgba(0, 0, 0, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .login-card-outer {
+                background: linear-gradient(
+                    135deg,
+                    rgba(22, 163, 74, 0.25) 0%,
+                    rgba(255, 255, 255, 0.03) 50%,
+                    rgba(22, 163, 74, 0.18) 100%
+                );
+                box-shadow:
+                    0 0 0 1px rgba(22, 163, 74, 0.10),
+                    0 20px 60px -12px rgba(0, 0, 0, 0.35),
+                    0 8px 24px -6px rgba(0, 0, 0, 0.20);
+            }
+            .login-card-outer:hover {
+                box-shadow:
+                    0 0 0 1px rgba(22, 163, 74, 0.18),
+                    0 24px 72px -12px rgba(0, 0, 0, 0.40),
+                    0 8px 28px -6px rgba(0, 0, 0, 0.25);
+            }
+        }
+
+        /* Inner Core — the glass card */
+        .login-card {
+            position: relative;
+            border-radius: 22px;
+            padding: 44px 36px 36px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--color-brand), #4ade80, var(--color-brand), transparent);
+            opacity: 0.6;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .login-card {
+                background: rgba(15, 23, 42, 0.82);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            }
+        }
+
+        /* ── Logo & Branding ── */
+        .login-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .login-logo {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 2px 8px rgba(22, 163, 74, 0.15));
+            transition: transform 0.3s var(--ease-spring);
+        }
+
+        .login-logo:hover {
+            transform: scale(1.04);
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            color: var(--color-text-primary);
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .login-title .brand-highlight {
+            color: var(--color-brand);
+        }
+
+        .login-subtitle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--color-text-tertiary);
+            letter-spacing: 0.02em;
+        }
+
+        .login-subtitle svg {
+            flex-shrink: 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .login-title { color: #f1f5f9; }
+            .login-logo { filter: drop-shadow(0 2px 12px rgba(22, 163, 74, 0.25)); }
+        }
+
+        /* ── Security Badge ── */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px 5px 10px;
+            margin-bottom: 28px;
+            border-radius: var(--radius-full);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-brand-dark);
+            background: rgba(22, 163, 74, 0.08);
+            border: 1px solid rgba(22, 163, 74, 0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .security-badge {
+                color: var(--color-brand-light);
+                background: rgba(22, 163, 74, 0.12);
+                border-color: rgba(22, 163, 74, 0.18);
+            }
+        }
+
+        /* ── Error Alert ── */
+        .error-alert {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            border-radius: var(--radius-lg);
+            font-size: 0.8125rem;
+            line-height: 1.5;
+            color: #991b1b;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .error-alert.is-visible {
+            display: flex;
+            animation: errorSlideIn 0.35s var(--ease-out);
+        }
+
+        .error-alert svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        @keyframes errorSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .error-alert {
+                color: #fca5a5;
+                background: rgba(239, 68, 68, 0.10);
+                border-color: rgba(239, 68, 68, 0.18);
+            }
+        }
+
+        /* ── Form ── */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            letter-spacing: 0.01em;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .form-label { color: #cbd5e1; }
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-tertiary);
+            pointer-events: none;
+            transition: color 0.2s var(--ease-out);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 14px 13px 44px;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-xl, 16px);
+            font-family: inherit;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            outline: none;
+            transition: all 0.2s var(--ease-out);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-input::placeholder {
+            color: var(--color-text-disabled);
+            font-weight: 400;
+        }
+
+        .form-input:hover {
+            border-color: var(--color-primary-300, #86efac);
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .form-input:focus {
+            border-color: var(--color-brand);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow:
+                0 0 0 3px rgba(22, 163, 74, 0.08),
+                0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .form-input:focus ~ .input-icon,
+        .form-input:focus-within ~ .input-icon {
+            color: var(--color-brand);
+        }
+
+        .form-input.error {
+            border-color: var(--color-danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .form-input {
+                background: rgba(30, 41, 59, 0.7);
+                border-color: rgba(148, 163, 184, 0.15);
+                color: #f1f5f9;
+            }
+            .form-input::placeholder { color: rgba(148, 163, 184, 0.4); }
+            .form-input:hover {
+                border-color: rgba(22, 163, 74, 0.3);
+                background: rgba(30, 41, 59, 0.85);
+            }
+            .form-input:focus {
+                border-color: var(--color-brand);
+                background: rgba(30, 41, 59, 0.95);
+                box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+            }
+        }
+
+        /* ── Form Options Row (Remember Me + Forgot Password) ── */
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1.5px solid var(--color-border);
+            background: var(--color-surface);
+            cursor: pointer;
+            accent-color: var(--color-brand);
+            flex-shrink: 0;
+            transition: all 0.15s var(--ease-out);
+        }
+
+        .remember-me input[type="checkbox"]:hover {
+            border-color: var(--color-brand-light);
+        }
+
+        .remember-me input[type="checkbox"]:focus-visible {
+            outline: 2px solid var(--color-brand);
+            outline-offset: 2px;
+        }
+
+        .remember-label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .remember-label { color: #94a3b8; }
+            .remember-me input[type="checkbox"] {
+                background: rgba(30, 41, 59, 0.7);
+                border-color: rgba(148, 163, 184, 0.2);
+            }
+        }
+
+        .forgot-link {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-text-link);
+            text-decoration: none;
+            transition: all 0.2s var(--ease-out);
+            position: relative;
+        }
+
+        .forgot-link::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: currentColor;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.2s var(--ease-out);
+        }
+
+        .forgot-link:hover::after,
+        .forgot-link:focus-visible::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .forgot-link:hover {
+            color: var(--color-brand-dark);
+        }
+
+        .forgot-link:focus-visible {
+            outline: 2px solid var(--color-brand);
+            outline-offset: 4px;
+            border-radius: 2px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .forgot-link { color: var(--color-brand-light); }
+            .forgot-link:hover { color: var(--color-brand); }
+        }
+
+        /* ── Submit Button ── */
+        .btn-submit {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px 24px;
+            border: none;
+            border-radius: var(--radius-xl, 16px);
+            font-family: inherit;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: white;
+            background: linear-gradient(135deg, var(--color-brand) 0%, #1a8a4a 100%);
+            cursor: pointer;
+            transition: all 0.25s var(--ease-out);
+            box-shadow:
+                0 4px 14px rgba(22, 163, 74, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            -webkit-appearance: none;
+            appearance: none;
+            min-height: 52px;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1.5px);
+            box-shadow:
+                0 8px 24px rgba(22, 163, 74, 0.30),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            background: linear-gradient(135deg, var(--color-brand-dark) 0%, #0d7a3d 100%);
+        }
+
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow:
+                0 2px 8px rgba(22, 163, 74, 0.20),
+                inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        }
+
+        .btn-submit:focus-visible {
+            outline: 3px solid rgba(22, 163, 74, 0.3);
+            outline-offset: 2px;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .btn-submit {
+                background: linear-gradient(135deg, var(--color-brand) 0%, #15803d 100%);
+                box-shadow:
+                    0 4px 14px rgba(22, 163, 74, 0.20),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+            }
+            .btn-submit:hover:not(:disabled) {
+                box-shadow:
+                    0 8px 24px rgba(22, 163, 74, 0.25),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            }
+        }
+
+        /* ── Button Loading State ── */
+        .btn-loading .btn-text {
+            opacity: 0;
+        }
+
+        .btn-loading .btn-spinner {
+            display: flex;
+        }
+
+        .btn-spinner {
+            display: none;
+            position: absolute;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .spinner-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: white;
+            animation: dotBounce 1.2s var(--ease-in-out) infinite;
+        }
+
+        .spinner-dot:nth-child(1) { animation-delay: 0s; }
+        .spinner-dot:nth-child(2) { animation-delay: 0.15s; }
+        .spinner-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-icon-arrow {
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.25s var(--ease-out);
+        }
+
+        .btn-submit:hover:not(:disabled) .btn-icon-arrow {
+            transform: translateX(3px);
+        }
+
+        /* ── Secure Access Panel ── */
+        .access-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 24px;
+            padding: 12px 16px;
+            border-radius: var(--radius-lg);
+            background: rgba(22, 163, 74, 0.04);
+            border: 1px solid rgba(22, 163, 74, 0.08);
+        }
+
+        .access-panel-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-text-tertiary);
+        }
+
+        .access-panel-item svg {
+            flex-shrink: 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .access-panel {
+                background: rgba(22, 163, 74, 0.06);
+                border-color: rgba(22, 163, 74, 0.10);
+            }
+            .access-panel-item { color: rgba(148, 163, 184, 0.7); }
+        }
+
+        /* ── Footer ── */
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .login-footer p {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-text-tertiary);
+            letter-spacing: 0.01em;
+        }
+
+        .login-footer a {
+            color: var(--color-text-link);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s var(--ease-out);
+        }
+
+        .login-footer a:hover {
+            color: var(--color-brand-dark);
+        }
+
+        .login-footer a:focus-visible {
+            outline: 2px solid var(--color-brand);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .login-footer { border-top-color: rgba(255, 255, 255, 0.04); }
+            .login-footer p { color: rgba(148, 163, 184, 0.5); }
+            .login-footer a { color: var(--color-brand-light); }
+            .login-footer a:hover { color: var(--color-brand); }
+        }
+
+        /* ── Mobile break utility ── */
+        .mobile-break { display: none; }
+
+        @media (max-width: 480px) {
+            .mobile-break { display: inline; }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .login-card { padding: 32px 24px 28px; }
+            .login-title { font-size: 1.375rem; }
+            .login-logo { width: 48px; height: 48px; }
+            .login-header { margin-bottom: 28px; }
+            .login-form { gap: 16px; }
+            .form-input { padding: 12px 14px 12px 40px; font-size: 0.875rem; }
+            .btn-submit { padding: 14px 20px; font-size: 0.875rem; min-height: 48px; }
+            .access-panel { flex-direction: column; gap: 8px; }
+            .form-options { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .login-footer p { line-height: 1.6; }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .login-card { padding: 40px 32px 32px; }
+        }
+
+        @media (min-width: 769px) {
+            .login-card { padding: 44px 40px 36px; }
+        }
+
+        /* ── Accessibility: Skip link ── */
+        .skip-link {
+            position: fixed;
+            top: -100%;
+            left: 16px;
+            z-index: 9999;
+            padding: 10px 20px;
+            border-radius: var(--radius-lg);
+            background: var(--color-brand);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: top 0.2s var(--ease-out);
+        }
+
+        .skip-link:focus {
+            top: 16px;
+        }
+
+        /* ── Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .bg-orb { animation: none !important; }
+        }
+
+        /* ── Focus visible utility ── */
+        :focus-visible {
+            outline: 2px solid var(--color-brand);
+            outline-offset: 2px;
+        }
+
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
     </style>
 </head>
 <body>
-    <div class="admin-login-container">
-        <div class="admin-login-card">
-            <div class="admin-logo">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio">
-                <h1><span>Warung</span>io</h1>
-                <p>Admin Panel</p>
+    <!-- Skip to content link for keyboard users -->
+    <a href="#login-form-content" class="skip-link">Lompat ke form login</a>
+
+    <!-- Background layers -->
+    <div class="bg-pattern" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--1" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--2" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--3" aria-hidden="true"></div>
+    <div class="bg-noise" aria-hidden="true"></div>
+
+    <!-- Main Login Card -->
+    <main class="login-wrapper" id="login-form-content" role="main">
+        <div class="login-card-outer" role="region" aria-label="Form Login Admin Warungio">
+            <div class="login-card">
+
+                <!-- Header -->
+                <div class="login-header">
+                    <img
+                        src="{% static 'images/Warungio L.png' %}"
+                        alt="Warungio Logo"
+                        class="login-logo"
+                        width="56"
+                        height="56"
+                        loading="eager"
+                    >
+                    <h1 class="login-title">
+                        <span class="brand-highlight">Warung</span>io
+                        <span aria-label="Admin">Admin</span>
+                    </h1>
+                    <div class="login-subtitle">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span>Secure Administration Panel</span>
+                    </div>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="security-badge" role="status">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>Akses Terbatas — Hanya Administrator</span>
+                </div>
+
+                <!-- Error Alert -->
+                <div id="loginError" class="error-alert" role="alert" aria-live="assertive">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <span id="errorMessage"></span>
+                </div>
+
+                <!-- Login Form -->
+                <form id="adminLoginForm" class="login-form" autocomplete="off" novalidate aria-label="Login Admin Warungio">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Admin</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                            </svg>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-input"
+                                placeholder="admin@warungio.com"
+                                required
+                                autocomplete="email"
+                                aria-required="true"
+                                aria-describedby="email-desc"
+                                autocapitalize="off"
+                                spellcheck="false"
+                            >
+                        </div>
+                        <span id="email-desc" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+                            Masukkan alamat email admin Warungio
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <label for="password" class="form-label">Password</label>
+                        </div>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-input"
+                                placeholder="Masukkan password"
+                                required
+                                autocomplete="current-password"
+                                aria-required="true"
+                                aria-describedby="password-desc"
+                            >
+                        </div>
+                        <span id="password-desc" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+                            Masukkan password akun admin Warungio Anda
+                        </span>
+                    </div>
+
+                    <!-- Form Options -->
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe" name="remember" aria-label="Ingat saya di perangkat ini">
+                            <span class="remember-label">Ingat Saya</span>
+                        </label>
+                        <a href="javascript:void(0)" class="forgot-link" id="forgotPassword" aria-label="Lupa password admin">
+                            Lupa Password?
+                        </a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit" id="loginBtn">
+                        <span class="btn-text">
+                            Login Administrator
+                            <span class="btn-icon-arrow" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                    <polyline points="12 5 19 12 12 19"/>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="btn-spinner" aria-hidden="true">
+                            <span class="spinner-dot"></span>
+                            <span class="spinner-dot"></span>
+                            <span class="spinner-dot"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Secure Access Panel -->
+                <div class="access-panel" role="group" aria-label="Informasi keamanan akses">
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span>SSL Encrypted</span>
+                    </span>
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>256-bit Security</span>
+                    </span>
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>2FA Ready</span>
+                    </span>
+                </div>
+
+                <!-- Footer -->
+                <footer class="login-footer" role="contentinfo">
+                    <p>
+                        &copy; 2026 <a href="https://warungio.com" target="_blank" rel="noopener noreferrer">Warungio</a>.
+                        All rights reserved.
+                        <br class="mobile-break">
+                        Hanya untuk administrator yang berwenang.
+                    </p>
+                </footer>
+
             </div>
-            <div id="loginError" class="error-msg"></div>
-            <form id="adminLoginForm" autocomplete="off">
-                <div class="form-group">
-                    <label for="email">Email Admin</label>
-                    <input type="email" id="email" name="email" placeholder="admin@warungio.com" required autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Masukkan password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn-admin-login" id="loginBtn">Masuk ke Admin Panel</button>
-            </form>
-            <p class="info-msg">Hanya untuk administrator Warungio</p>
         </div>
-    </div>
+    </main>
+
     <script src="{% static 'js/auth.js' %}"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // If already authenticated as admin, redirect immediately
+    (function() {
+        'use strict';
+
+        // ── If already authenticated as admin, redirect immediately ──
         if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
             var user = window.WarungioAuth.getUser();
             if (user && (user.role === 'admin' || user.is_staff)) {
@@ -65,30 +1016,105 @@
             }
         }
 
+        // ── DOM References ──
         var form = document.getElementById('adminLoginForm');
+        var emailInput = document.getElementById('email');
+        var passwordInput = document.getElementById('password');
         var btn = document.getElementById('loginBtn');
         var errorEl = document.getElementById('loginError');
+        var errorMessageEl = document.getElementById('errorMessage');
+        var rememberMe = document.getElementById('rememberMe');
+        var forgotLink = document.getElementById('forgotPassword');
 
+        // ── Restore email from localStorage (remember me) ──
+        try {
+            var savedEmail = localStorage.getItem('warungio_admin_email');
+            if (savedEmail) {
+                emailInput.value = savedEmail;
+                rememberMe.checked = true;
+            }
+        } catch (e) {
+            // localStorage not available — silently continue
+        }
+
+        // ── Helper: Show user-friendly error ──
+        function showError(message) {
+            // Always show the user-friendly Indonesian message
+            var userMessage = 'Email atau password yang Anda masukkan salah. Silakan periksa kembali dan coba lagi.';
+            errorMessageEl.textContent = userMessage;
+            errorEl.classList.add('is-visible');
+            emailInput.classList.add('error');
+            passwordInput.classList.add('error');
+
+            // Log the actual error for debugging
+            if (message && message !== userMessage) {
+                console.warn('[AdminLogin] Original error:', message);
+            }
+        }
+
+        // ── Helper: Clear error state ──
+        function clearError() {
+            errorEl.classList.remove('is-visible');
+            emailInput.classList.remove('error');
+            passwordInput.classList.remove('error');
+        }
+
+        // ── Helper: Set loading state ──
+        function setLoading(isLoading) {
+            btn.disabled = isLoading;
+            btn.classList.toggle('btn-loading', isLoading);
+            if (isLoading) {
+                btn.setAttribute('aria-busy', 'true');
+            } else {
+                btn.removeAttribute('aria-busy');
+            }
+        }
+
+        // ── Helper: Reset button to default state ──
+        function resetButton() {
+            setLoading(false);
+        }
+
+        // ── Form Submit Handler ──
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            var email = document.getElementById('email').value.trim();
-            var password = document.getElementById('password').value;
+            clearError();
 
+            var email = emailInput.value.trim();
+            var password = passwordInput.value;
+
+            // Client-side validation
             if (!email || !password) {
                 showError('Email dan password harus diisi.');
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Memproses...';
-            errorEl.style.display = 'none';
+            // Basic email format check
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Format email tidak valid.');
+                return;
+            }
+
+            setLoading(true);
 
             try {
-                // Use the dedicated admin login endpoint
+                // Call the dedicated admin login endpoint
                 var data = await window.WarungioAuth.api('/auth/admin-login/', {
                     method: 'POST',
                     body: JSON.stringify({ email: email, password: password }),
                 });
+
+                // Save email to localStorage if "remember me" is checked
+                try {
+                    if (rememberMe.checked) {
+                        localStorage.setItem('warungio_admin_email', email);
+                    } else {
+                        localStorage.removeItem('warungio_admin_email');
+                    }
+                } catch (e) {
+                    // localStorage not available
+                }
 
                 // Store tokens
                 window.WarungioAuth.login(data.access, data.refresh, data.user);
@@ -101,17 +1127,54 @@
                 }
 
             } catch (err) {
-                showError(err.message || 'Login gagal. Periksa email dan password.');
-                btn.disabled = false;
-                btn.textContent = 'Masuk ke Admin Panel';
+                // Show user-friendly error for any authentication failure
+                showError(err.message || null);
+                resetButton();
+
+                // Focus the first input for re-entry
+                emailInput.focus();
             }
         });
 
-        function showError(msg) {
-            errorEl.textContent = msg;
-            errorEl.style.display = 'block';
+        // ── Clear errors on input ──
+        emailInput.addEventListener('input', function() {
+            if (this.classList.contains('error')) {
+                this.classList.remove('error');
+                passwordInput.classList.remove('error');
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            if (this.classList.contains('error')) {
+                this.classList.remove('error');
+                emailInput.classList.remove('error');
+            }
+        });
+
+        // ── Forgot Password Handler ──
+        forgotLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Optional: redirect to a forgot password page
+            // For now, show a helpful message
+            showError('Fitur reset password admin sedang dalam pengembangan. Hubungi administrator sistem.');
+        });
+
+        // ── Keyboard shortcut: Ctrl+Enter to submit ──
+        form.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                form.requestSubmit();
+            }
+        });
+
+        // ── Auto-focus email field on load ──
+        // Only focus if not already filled
+        if (!emailInput.value) {
+            emailInput.focus();
+        } else {
+            passwordInput.focus();
         }
-    });
+
+    })();
     </script>
 </body>
 </html>

@@ -190,6 +190,26 @@
         const data = await WarungioAPI.login(email, password, loginEntry);
         handleAuthResponse(data);
       } catch (err) {
+        // ── Check if the account is unverified → redirect to OTP verification ──
+        if (err.needs_verification) {
+          var verificationEmail = err.email || email;
+          
+          // Reset button state before redirect
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
+          }
+          
+          // Reset button state and redirect immediately to OTP verification page
+          // The OTP has already been sent by the backend — user just needs to enter it
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
+          }
+          window.location.href = '/auth/otp/?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
+          return;
+        }
+
         // Network errors (server down) show "Failed to fetch" — replace with friendlier message
         var msg = err.message;
         if (!msg || msg === 'Failed to fetch' || msg === 'NetworkError' || msg.indexOf('NetworkError') !== -1 || msg.indexOf('Failed to fetch') !== -1) {
