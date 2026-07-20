@@ -55,6 +55,7 @@ class RegencySerializer(serializers.ModelSerializer):
         return obj.province.code
 
     @extend_schema_field(OpenApiTypes.STR)
+    @extend_schema_field(str)
     def get_display_name(self, obj):
         prefix = 'Kota ' if obj.type == 'kota' else 'Kab. '
         return f"{prefix}{obj.name}"
@@ -87,6 +88,7 @@ class RegencyDetailSerializer(serializers.ModelSerializer):
         return obj.province.name
 
     @extend_schema_field(OpenApiTypes.STR)
+    @extend_schema_field(str)
     def get_display_name(self, obj):
         prefix = 'Kota ' if obj.type == 'kota' else 'Kab. '
         return f"{prefix}{obj.name}"
@@ -114,6 +116,7 @@ class DistrictSerializer(serializers.ModelSerializer):
 
     regency_code = serializers.CharField(source='regency.code', read_only=True)
 
+    @extend_schema_field(str)
     def get_display_name(self, obj):
         return f"Kec. {obj.name}"
 
@@ -138,6 +141,7 @@ class DistrictDetailSerializer(serializers.ModelSerializer):
 
     regency_code = serializers.CharField(source='regency.code', read_only=True)
 
+    @extend_schema_field(str)
     def get_display_name(self, obj):
         return f"Kec. {obj.name}"
 
@@ -161,6 +165,7 @@ class VillageSerializer(serializers.ModelSerializer):
 
     district_code = serializers.CharField(source='district.code', read_only=True)
 
+    @extend_schema_field(str)
     def get_display_name(self, obj):
         prefix = 'Kel. ' if obj.type == 'kelurahan' else 'Desa '
         return f"{prefix}{obj.name}"

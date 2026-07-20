@@ -24,6 +24,9 @@ urlpatterns = [
     # Public API Configuration (safe frontend keys)
     path('config/public/', views.PublicApiConfigView.as_view(), name='public-api-config'),
 
+    # Merchant Status (dynamic seller activation)
+    path('merchant-status/', views.MidtransMerchantStatusView.as_view(), name='midtrans-merchant-status'),
+
     # Wallet Endpoints (database-driven, not device_info)
     path('wallet/balance/', views.WalletBalanceView.as_view(), name='wallet-balance'),
     path('wallet/transactions/', views.WalletTransactionListView.as_view(), name='wallet-transactions'),

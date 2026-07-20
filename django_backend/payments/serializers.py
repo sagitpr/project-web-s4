@@ -31,9 +31,6 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = ('transaction_code', 'payment_status', 'paid_at',
                            'created_at', 'payment_details')
 
-    @extend_schema_field(OpenApiTypes.STR)
-
-
     def get_order_number(self, obj):
         return obj.order.order_number if obj.order else None
 
@@ -102,6 +99,7 @@ class PaymentHistorySerializer(serializers.ModelSerializer):
         fields = ('id', 'order_number', 'payment_type', 'payment_status',
                   'amount', 'transaction_code', 'paid_at', 'created_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_order_number(self, obj):
         return obj.order.order_number if obj.order else None
 

@@ -177,6 +177,7 @@ class RemoveStoreImageView(views.APIView):
             return Response({'message': 'Banner toko berhasil dihapus.'})
 
 
+@extend_schema(exclude=True)
 class MyFollowedStoresView(generics.ListAPIView):
     """List stores the current user follows."""
     serializer_class = StoreListSerializer

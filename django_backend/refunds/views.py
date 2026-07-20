@@ -114,6 +114,7 @@ class BuyerCancelRefundView(views.APIView):
 # ─── Seller Views ──────────────────────────────────────────────────────────
 
 
+@extend_schema(exclude=True)
 class StoreRefundListView(generics.ListAPIView):
     """Seller lists refund requests for their store."""
     serializer_class = RefundListSerializer

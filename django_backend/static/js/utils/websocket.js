@@ -251,10 +251,20 @@
   window.WarungioWS = WS;
   console.info('WarungioWS: Client initialized');
 
-  // Also set the Snap base URL for Midtrans based on current protocol
-  if (window.location.protocol === 'https:' || window.location.hostname !== 'localhost') {
-    window.WARUNGIO_SNAP_BASE_URL = 'https://app.midtrans.com';
+  // Set Snap JS URL from backend payment config (NOT hardcoded)
+  // Loads dynamically based on MIDTRANS_IS_PRODUCTION env var from backend.
+  // Falls back to protocol-based detection if backend is unreachable.
+  if (window.WarungioAPI && typeof window.WarungioAPI.getPaymentConfig === 'function') {
+    window.WarungioAPI.getPaymentConfig().then(function(config) {
+      if (config && config.snap_js_url) {
+        window.WARUNGIO_SNAP_JS_URL = config.snap_js_url;
+        window.WARUNGIO_SNAP_BASE_URL = config.snap_url;
+      }
+    }).catch(function() {
+      // Fallback: default to production (safe default for production deployments)
+      window.WARUNGIO_SNAP_BASE_URL = 'https://app.midtrans.com';
+    });
   } else {
-    window.WARUNGIO_SNAP_BASE_URL = 'https://app.sandbox.midtrans.com';
+    window.WARUNGIO_SNAP_BASE_URL = 'https://app.midtrans.com';
   }
 })();

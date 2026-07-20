@@ -606,6 +606,7 @@ class FEFOCheckView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class InventoryTransactionListView(generics.ListAPIView):
     """List stock transactions for the seller's store.
 
@@ -782,6 +783,7 @@ class ExpiryCheckTriggerView(APIView):
         })
 
 
+@extend_schema(exclude=True)
 class ExpiryNotificationListView(generics.ListAPIView):
     """List expiry notifications for the seller's store."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -798,6 +800,7 @@ class ExpiryNotificationListView(generics.ListAPIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class StockAlertListCreateView(generics.ListCreateAPIView):
     """List and create stock threshold alerts."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)

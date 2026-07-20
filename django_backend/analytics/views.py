@@ -388,6 +388,7 @@ class DeviceAnalyticsView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class UserActivityView(generics.ListAPIView):
     """Get recent user activities."""
     serializer_class = UserActivitySerializer

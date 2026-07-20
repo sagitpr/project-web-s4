@@ -761,10 +761,74 @@ SPECTACULAR_SETTINGS = {
         'drf_spectacular.hooks.postprocess_schema_enums',
     ],
     # Schema uses 'Bearer' only (SIMPLE_JWT also uses 'Bearer' only)
-    # Fix enum naming collisions for fields used across multiple models
+    # COMPONENT_SPLIT_REQUEST scopes enum schemas per request/response
+    # component, preventing global enum name collisions across models.
+    'COMPONENT_SPLIT_REQUEST': True,
+    # ENUM_NAME_OVERRIDES resolves enum naming collisions by explicitly naming
+    # shared enum values that appear under the same field name but with
+    # different choice sets across multiple models/components.
     'ENUM_NAME_OVERRIDES': {
-        # Field names that appear in multiple models with different choices
-        # Each entry maps component_name -> { field_name: named_enum_class }
+        # Priority collisions: Notification/NotificationTemplate use str,
+        # NotificationQueue/EngagementSignal use int with different sets
+        'NotificationPriorityEnum': [
+            ('low', 'Low'),
+            ('medium', 'Medium'),
+            ('high', 'High'),
+            ('urgent', 'Urgent'),
+        ],
+        'QueuePriorityEnum': [
+            (0, 'Low'),
+            (1, 'Normal'),
+            (2, 'High'),
+            (3, 'Urgent'),
+        ],
+        # Reason collision: Refund.reason (8 values with labels) vs
+        # CancelOrderSerializer.reason (6 plain string values)
+        'RefundReasonEnum': [
+            ('wrong_product', 'Produk Tidak Sesuai'),
+            ('product_damaged', 'Produk Rusak/Cacat'),
+            ('not_as_described', 'Tidak Sesuai Deskripsi'),
+            ('expired', 'Produk Kadaluarsa'),
+            ('missing_items', 'Barang Kurang'),
+            ('defective', 'Produk Cacat'),
+            ('change_mind', 'Berubah Pikiran'),
+            ('other', 'Lainnya'),
+        ],
+        'BuyerCancelReasonEnum': [
+            'change_mind',
+            'found_cheaper',
+            'delivery_too_long',
+            'wrong_address',
+            'duplicate_order',
+            'other',
+        ],
+        # Status collisions: Store vs Supplier have different status options
+        'StoreStatusEnum': [
+            ('pending', 'Pending'),
+            ('active', 'Active'),
+            ('rejected', 'Rejected'),
+            ('suspended', 'Suspended'),
+        ],
+        'SupplierStatusEnum': [
+            ('pending', 'Pending'),
+            ('active', 'Active'),
+            ('suspended', 'Suspended'),
+            ('blacklisted', 'Blacklisted'),
+            ('inactive', 'Inactive'),
+        ],
+        # Channel collision: Campaign channel vs other channel fields
+        'CampaignChannelEnum': [
+            ('push', 'Push Notification'),
+            ('email', 'Email'),
+            ('in_app', 'In-App Notification'),
+            ('whatsapp', 'WhatsApp'),
+            ('sms', 'SMS'),
+        ],
+        # Type collision: Regency type vs Village type
+        'RegencyTypeEnum': [
+            ('kabupaten', 'Kabupaten'),
+            ('kota', 'Kota'),
+        ],
     },
 }
 

@@ -354,8 +354,12 @@
                 if (!window.snap || !window.snap.pay) {
                     await new Promise((resolve, reject) => {
                         const s = document.createElement('script');
-                        const baseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
-                        s.src = baseUrl + '/snap/snap.js';
+                        // Load Snap JS from backend-provided URL (NEVER fall back to sandbox in production)
+                        // Uses window.WARUNGIO_SNAP_JS_URL if set by websocket.js config fetch
+                        var snapJsUrl = window.WARUNGIO_SNAP_JS_URL || (
+                          window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com'
+                        ) + '/snap/snap.js';
+                        s.src = snapJsUrl;
                         s.setAttribute('data-client-key', config.client_key);
                         s.onload = resolve;
                         s.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));

@@ -537,7 +537,9 @@ class DetectedItemListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        session_id = self.kwargs.get('session_id')
+        if getattr(self, "swagger_fake_view", False):
+            return DetectedItem.objects.none()
+        session_id = self.kwargs.get('session_id', 0)
         return DetectedItem.objects.filter(
             session_id=session_id,
             session__store=self.request.user.store,

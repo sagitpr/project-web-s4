@@ -22,7 +22,7 @@ from .serializers import (
     FlutterSupplierDTO, FlutterSupplierProductDTO, FlutterSupplierOrderDTO,
 )
 from accounts.permissions import IsSeller, IsAdmin
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 # =============================================================================
@@ -92,6 +92,9 @@ class SupplierTopRatedView(generics.ListAPIView):
         ).select_related('category').order_by('-rating_avg')[:20]
 
 
+@extend_schema_view(
+    get=extend_schema(operation_id='retrieve_supplier_by_pk'),
+)
 class SupplierDetailView(generics.RetrieveAPIView):
     """Get supplier detail with full info."""
     queryset = Supplier.objects.filter(is_active=True)
@@ -107,6 +110,7 @@ class SupplierBySlugView(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
 
+@extend_schema(exclude=True)
 class SupplierProductsView(generics.ListAPIView):
     """List products for a specific supplier."""
     serializer_class = SupplierProductListSerializer
@@ -122,6 +126,7 @@ class SupplierProductsView(generics.ListAPIView):
         ).select_related('supplier')
 
 
+@extend_schema(exclude=True)
 class SupplierReviewsView(generics.ListCreateAPIView):
     """List and create reviews for a supplier."""
     serializer_class = SupplierReviewSerializer
@@ -137,6 +142,7 @@ class SupplierReviewsView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user, supplier=supplier)
 
 
+@extend_schema(exclude=True)
 class SupplierContractsView(generics.ListAPIView):
     """List active contracts for a supplier."""
     serializer_class = SupplierContractSerializer
@@ -183,6 +189,7 @@ class SupplierProductDetailView(generics.RetrieveAPIView):
 # PURCHASE ORDERS
 # =============================================================================
 
+@extend_schema(exclude=True)
 class SupplierOrderListCreateView(generics.ListCreateAPIView):
     """List and create purchase orders."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -246,6 +253,7 @@ class SupplierOrderStatusView(views.APIView):
 # SUPPLIER MANAGEMENT (for sellers)
 # =============================================================================
 
+@extend_schema(exclude=True)
 class MySupplierListView(generics.ListAPIView):
     """List suppliers used by the current seller."""
     serializer_class = SupplierListSerializer

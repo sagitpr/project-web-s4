@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from channels.layers import get_channel_layer
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
@@ -27,6 +28,9 @@ from .serializers import (
     PaymentMethodSerializer, PaymentSerializer, MidtransSnapRequest,
     MidtransNotificationSerializer, PaymentHistorySerializer, BankAccountSerializer
 )
+from .services.midtrans import create_snap_token, get_snap_js_url, process_webhook_notification, is_configured
+from .services.wallet import get_wallet, debit_wallet, get_transactions_paginated
+from notifications.models import Notification
 from orders.models import Order
 from drf_spectacular.utils import extend_schema
 
@@ -80,7 +84,6 @@ class CreateSnapTransactionView(views.APIView):
                           status=status.HTTP_400_BAD_REQUEST)
 
         # Create Snap token synchronously -- frontend expects immediate token
-        from .services.midtrans import create_snap_token
         result = create_snap_token(order)
 
         if not result.get('success'):
@@ -89,7 +92,6 @@ class CreateSnapTransactionView(views.APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Save payment & Midtrans transaction records
-        from .models import Payment, MidtransTransaction
         payment, _ = Payment.objects.get_or_create(
             order=order,
             defaults={
@@ -125,7 +127,19 @@ class CreateSnapTransactionView(views.APIView):
 
 @extend_schema(exclude=True)
 class MidtransNotificationView(views.APIView):
-    """Handle Midtrans payment notification callback."""
+    """
+    Handle Midtrans payment notification callback.
+
+    Production-grade webhook handler with:
+    - SHA512 signature verification (timing-attack safe via hmac.compare_digest)
+    - Replay attack prevention via transaction_time recency check (120s window)
+    - Cache-based idempotent dedup (2-minute sliding window)
+    - Monotonic state machine: late pending/cancel never overwrites paid/refunded
+    - Fraud/challenge handling with challenge_review state
+    - Chargeback detection and auto-status update
+    - Sensitive data masking in stored logs
+    - Orphan webhook logging for reconciliation
+    """
     permission_classes = (permissions.AllowAny,)
 
     @transaction.atomic
@@ -134,167 +148,35 @@ class MidtransNotificationView(views.APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        order_id = data['order_id']
-        transaction_status = data['transaction_status']
-        transaction_id = data.get('transaction_id', '')
-        payment_type = data.get('payment_type', '')
-        gross_amount = data.get('gross_amount', '0')
-        fraud_status = data.get('fraud_status', 'accept')
+        order_id = data.get('order_id', '')
+        signature_key = data.get('signature_key', '')
 
-        # Verify signature
+        # Signature verification
         if not self._verify_signature(data):
+            logger.error('INVALID SIGNATURE order=%s, sig=%s',
+                         order_id, signature_key[:20] if signature_key else 'MISSING')
             return Response({'error': 'Invalid signature.'},
                           status=status.HTTP_400_BAD_REQUEST)
 
-        # Find the Midtrans transaction
-        midtrans_tx = MidtransTransaction.objects.filter(
-            order_id=order_id
-        ).first()
+        # Delegate all processing to the shared service function.
+        # This handles: replay prevention, dedup, orphan webhooks,
+        # monotonic state machine, fraud/chargeback/refund, settlement,
+        # top-up detection, wallet credit, notifications.
+        result = process_webhook_notification(data)
 
-        if not midtrans_tx:
-            return Response({'error': 'Transaction not found.'},
-                          status=status.HTTP_404_NOT_FOUND)
-
-        payment = midtrans_tx.payment
-        order = payment.order
-
-        # Update Midtrans transaction
-        midtrans_tx.transaction_id = transaction_id
-        midtrans_tx.transaction_status = transaction_status
-        midtrans_tx.payment_type = payment_type
-        midtrans_tx.transaction_time = data.get('transaction_time')
-        midtrans_tx.status_code = data.get('status_code', '')
-        midtrans_tx.status_message = data.get('status_message', '')
-        midtrans_tx.fraud_status = fraud_status
-
-        if data.get('va_number'):
-            midtrans_tx.va_number = data['va_number']
-            payment.va_number = data['va_number']
-            payment.bank_name = data.get('bank', '')
-
-        if data.get('settlement_time'):
-            midtrans_tx.settlement_time = data['settlement_time']
-
-        midtrans_tx.raw_response = data
-        midtrans_tx.save()
-
-        # Idempotency guard: skip if already paid/refunded
-        if payment.payment_status in ('paid', 'refunded') and transaction_status in ('deny', 'cancel', 'expire'):
-            logger.warning('Ignoring %s webhook for payment %s — already in %s',
-                          transaction_status, payment.id, payment.payment_status)
-            return Response({'status': 'ignored', 'message': 'Already processed'})
-
-        # Handle transaction status
-        if transaction_status == 'settlement' or transaction_status == 'capture':
-            if fraud_status == 'accept':
-                payment.mark_as_paid()
-
-                # Deteksi top-up: order.notes == 'TOPUP' (WalletTopUpView), 
-                # atau midtrans_order_id mengandung 'TOP-'
-                is_topup = (order and order.notes == 'TOPUP') or (order_id and 'TOP-' in order_id)
-                if is_topup:
-                    user = payment.user
-                    if user:
-                        # Gunakan wallet service atomik — bukan lagi device_info
-                        from .services.wallet import credit_wallet
-                        try:
-                            result = credit_wallet(
-                                user=user,
-                                amount=float(gross_amount),
-                                tx_type='topup',
-                                description=f'Top Up saldo Warungio sebesar Rp {float(gross_amount):,}',
-                                reference_type='midtrans',
-                                reference_id=order_id,
-                            )
-                            new_balance = result['balance_after']
-                        except Exception as e:
-                            logger.error('Wallet credit failed for top-up %s: %s', order_id, str(e))
-                            new_balance = None
-
-                    notify_payment_update(
-                        user_id=payment.user_id,
-                        order_id=order.id if order else 0,
-                        order_number=order.order_number if order else 'TOPUP',
-                        payment_status='paid',
-                        message=f'Top Up saldo Warungio sebesar Rp {float(gross_amount):,} berhasil! Saldo Anda telah diperbarui.',
-                    )
-                else:
-                    # ── Notify BUYER via Notification DB record + WebSocket ──
-                    from notifications.models import Notification as Notif
-                    Notif.objects.create(
-                        user_id=order.user_id,
-                        notification_type='payment',
-                        priority='high',
-                        title='Pembayaran Berhasil',
-                        description=f'Pembayaran untuk pesanan {order.order_number} berhasil! Pesanan akan segera diproses.',
-                        action_url=f'/buyer/order-detail/?id={order.id}',
-                        action_text='Lihat Pesanan',
-                    )
-                    notify_payment_update(
-                        user_id=order.user_id,
-                        order_id=order.id,
-                        order_number=order.order_number,
-                        payment_status='paid',
-                        message=f'Pembayaran untuk pesanan {order.order_number} berhasil! Pesanan akan segera diproses.',
-                    )
-
-                    # ── Notify SELLER via WebSocket order_update (real-time orders list refresh) ──
-                    # Signal on_order_status_change already creates the Notification DB record.
-                    # Only broadcast WebSocket event to trigger auto-refresh on seller orders page.
-                    if order.store and order.store.user_id:
-                        try:
-                            channel_layer = get_channel_layer()
-                            if channel_layer:
-                                async_to_sync(channel_layer.group_send)(
-                                    f'notifications_{order.store.user_id}',
-                                    {
-                                        'type': 'order_update',
-                                        'order_id': order.id,
-                                        'order_number': order.order_number,
-                                        'status': 'paid',
-                                        'message': f'Pembayaran untuk pesanan {order.order_number} telah dikonfirmasi!',
-                                    }
-                                )
-                        except Exception as exc:
-                            logger.warning('Failed to send order_update WS to seller %s: %s', order.store.user_id, exc)
-
-                # Update Midtrans settlement
-                midtrans_tx.settlement_time = timezone.now()
-                midtrans_tx.save(update_fields=['settlement_time'])
-
-        elif transaction_status in ['deny', 'cancel', 'expire']:
-            payment.payment_status = 'failed' if transaction_status == 'deny' else transaction_status
-            payment.save()
-            order.order_status = 'cancelled'
-            order.save()
-
-            # Notify buyer about failed payment
-            notify_payment_update(
-                user_id=order.user_id,
-                order_id=order.id,
-                order_number=order.order_number,
-                payment_status='failed',
-                message=f'Pembayaran untuk pesanan {order.order_number} gagal. Silakan coba lagi.',
-            )
-
-        elif transaction_status == 'refund':
-            payment.payment_status = 'refunded'
-            payment.save()
-            order.order_status = 'refunded'
-            order.save()
-
-            notify_payment_update(
-                user_id=order.user_id,
-                order_id=order.id,
-                order_number=order.order_number,
-                payment_status='refunded',
-                message=f'Pembayaran pesanan {order.order_number} telah direfund.',
-            )
-
-        return Response({'status': 'OK'})
+        if result['status'] == 'OK':
+            return Response({'status': 'OK'})
+        else:
+            return Response(result)
 
     def _verify_signature(self, data):
-        """Verify Midtrans notification signature using hmac.compare_digest."""
+        """Verify Midtrans notification signature using hmac.compare_digest.
+        
+        Classic Snap/Core API signature:
+            SHA512(order_id + status_code + gross_amount + serverKey)
+        
+        Uses hmac.compare_digest for timing-attack-safe comparison.
+        """
         order_id = data.get('order_id', '')
         status_code = data.get('status_code', '')
         gross_amount = str(data.get('gross_amount', '0'))
@@ -336,7 +218,6 @@ class PaymentConfigView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        from .services.midtrans import get_snap_js_url
         return Response({
             'client_key': settings.MIDTRANS_CLIENT_KEY,
             'snap_url': settings.MIDTRANS_SNAP_URL,
@@ -386,7 +267,6 @@ class WalletTopUpView(views.APIView):
     @transaction.atomic
     def post(self, request):
         # Ensure wallet exists before proceeding
-        from .services.wallet import get_wallet
         get_wallet(request.user, lock=False)
         amount = request.data.get('amount')
         if not amount:
@@ -417,7 +297,6 @@ class WalletTopUpView(views.APIView):
         )
 
         # Create Snap token synchronously -- frontend expects immediate token
-        from .services.midtrans import create_snap_token
         result = create_snap_token(order)
 
         if not result.get('success'):
@@ -426,7 +305,6 @@ class WalletTopUpView(views.APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Save payment & Midtrans transaction records
-        from .models import Payment, MidtransTransaction
         payment, _ = Payment.objects.get_or_create(
             order=order,
             defaults={
@@ -464,6 +342,7 @@ class WalletTopUpView(views.APIView):
 # FINANCE & REPORTS WORKFLOW ENDPOINTS (SELLER WORKSPACE)
 # =============================================================================
 
+@extend_schema(exclude=True)
 class BankAccountListView(generics.ListCreateAPIView):
     """List and create bank accounts for the seller's store."""
     serializer_class = BankAccountSerializer
@@ -810,7 +689,6 @@ class WithdrawBalanceView(views.APIView):
 
         # 5. Debit seller wallet atomically
         try:
-            from .services.wallet import debit_wallet
             result = debit_wallet(
                 user=user,
                 amount=amount,
@@ -826,7 +704,6 @@ class WithdrawBalanceView(views.APIView):
 
         # 6. Notify seller via notification
         try:
-            from notifications.models import Notification
             Notification.objects.create(
                 user=user,
                 notification_type='withdrawal',
@@ -842,6 +719,61 @@ class WithdrawBalanceView(views.APIView):
         return Response({
             'message': 'Permintaan penarikan dana berhasil diajukan dan sedang diproses.',
             'transaction': PaymentSerializer(withdrawal_tx).data,
+        })
+
+
+
+# =============================================================================
+# MIDTRANS MERCHANT STATUS (Dynamic seller activation)
+# =============================================================================
+
+@extend_schema(exclude=True)
+class MidtransMerchantStatusView(views.APIView):
+    """
+    Return the merchant's Midtrans onboarding status dynamically.
+
+    This replaces the old hardcoded "Registration under review" page.
+    Status is determined from environment variables:
+      - not_configured: No MIDTRANS_SERVER_KEY set
+      - pending_activation: MIDTRANS_IS_PRODUCTION=False (sandbox mode)
+      - active: MIDTRANS_IS_PRODUCTION=True and keys configured
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        configured = is_configured()
+        is_production = settings.MIDTRANS_IS_PRODUCTION
+        merchant_id = getattr(settings, 'MIDTRANS_MERCHANT_ID', '')
+
+        if not configured:
+            status = 'not_configured'
+            label = 'Belum Dikonfigurasi'
+            message = 'Pembayaran online belum dikonfigurasi. Silakan hubungi admin.'
+        elif not is_production:
+            status = 'pending_activation'
+            label = 'Menunggu Aktivasi'
+            message = 'Akun merchant sedang dalam proses aktivasi. Estimasi 1-2 hari kerja.'
+        else:
+            status = 'active'
+            label = 'Aktif'
+            message = 'Pembayaran online aktif dan siap digunakan.'
+
+        if merchant_id and is_production and configured:
+            status = 'active'
+            label = 'Aktif'
+            message = 'Pembayaran online aktif dan siap digunakan.'
+
+        return Response({
+            'status': status,
+            'label': label,
+            'message': message,
+            'is_production': is_production,
+            'merchant_id': merchant_id if merchant_id else None,
+            'onboarding_progress': {
+                'configured': configured,
+                'production': is_production,
+                'merchant_registered': bool(merchant_id),
+            }
         })
 
 
@@ -862,7 +794,6 @@ class WalletBalanceView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        from .services.wallet import get_balance, get_wallet
         wallet = get_wallet(request.user, lock=False)
         return Response({
             'balance': float(wallet.balance),
@@ -883,8 +814,6 @@ class WalletTransactionListView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        from .services.wallet import get_transactions_paginated
-        
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
         tx_type = request.query_params.get('type', 'all')

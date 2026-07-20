@@ -155,6 +155,7 @@ class LoyaltyTransactionListView(generics.ListAPIView):
         return qs[:100]
 
 
+@extend_schema(exclude=True)
 class RecentTransactionsView(generics.ListAPIView):
     """Get recent loyalty transactions."""
     serializer_class = LoyaltyTransactionSerializer
@@ -170,6 +171,7 @@ class RecentTransactionsView(generics.ListAPIView):
 # REWARDS
 # =============================================================================
 
+@extend_schema(exclude=True)
 class LoyaltyRewardListView(generics.ListAPIView):
     """List available rewards for current user's tier."""
     serializer_class = LoyaltyRewardSerializer
@@ -265,6 +267,7 @@ class RedeemRewardView(views.APIView):
 # REDEMPTIONS
 # =============================================================================
 
+@extend_schema(exclude=True)
 class MyRedemptionsView(generics.ListAPIView):
     """List user's redemptions."""
     serializer_class = LoyaltyRedemptionSerializer

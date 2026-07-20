@@ -357,7 +357,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       var script = document.createElement('script');
       // Use the snap_js_url from payment config, fallback to sandbox
-      var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
+      // Use backend-provided Snap URL; production is the source of truth.
+      // NEVER fall back to sandbox — in production, this exposes sandbox URLs.
+      var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com';
       script.src = snapBaseUrl + '/snap/snap.js';
       script.setAttribute('data-client-key', clientKey);
       script.onload = function() {

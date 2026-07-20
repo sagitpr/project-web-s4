@@ -976,8 +976,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!window.snap || !window.snap.pay) {
             await new Promise((resolve, reject) => {
               const script = document.createElement('script');
-              var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
-              script.src = snapBaseUrl + '/snap/snap.js';
+              // Load Snap JS from backend-provided URL (NEVER fall back to sandbox)
+              // Uses window.WARUNGIO_SNAP_JS_URL if set by websocket.js config fetch
+              var snapJsUrl = window.WARUNGIO_SNAP_JS_URL || (
+                window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com'
+              ) + '/snap/snap.js';
+              script.src = snapJsUrl;
               script.setAttribute('data-client-key', midtransClientKey);
               script.onload = resolve;
               script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));

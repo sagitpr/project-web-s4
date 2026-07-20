@@ -333,8 +333,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         resolve();
         return;
       }
+      // Get Snap JS URL from backend config (NOT hardcoded)
+      // Uses the backend-provided snap_js_url which automatically switches
+      // between sandbox and production based on MIDTRANS_IS_PRODUCTION env var.
+      // Load Snap JS from backend-provided URL (NEVER fall back to sandbox in production)
+      // Uses window.WARUNGIO_SNAP_JS_URL if set by websocket.js config fetch
+      var jsUrl = window.WARUNGIO_SNAP_JS_URL || (
+        window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com'
+      ) + '/snap/snap.js';
       var script = document.createElement('script');
-      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+      script.src = jsUrl;
       script.setAttribute('data-client-key', clientKey);
       script.onload = function() {
         snapScriptLoaded = true;

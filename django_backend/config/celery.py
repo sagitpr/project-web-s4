@@ -144,6 +144,23 @@ def setup_periodic_tasks(sender, **kwargs):
         name='Clean old behavior events (weekly)',
     )
 
+    # ── Payment Reconciliation Tasks ──
+    from payments.tasks import reconcile_orphan_webhooks_task, verify_pending_payments_task
+
+    # Reconcile orphan webhooks every 15 minutes
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        reconcile_orphan_webhooks_task.s(),
+        name='Reconcile orphan Midtrans webhooks (15min)',
+    )
+
+    # Verify pending payments every 30 minutes
+    sender.add_periodic_task(
+        crontab(minute='*/30'),
+        verify_pending_payments_task.s(),
+        name='Verify pending payment status (30min)',
+    )
+
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):

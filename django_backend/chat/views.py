@@ -67,7 +67,9 @@ class MessageListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        conv_id = self.kwargs['conversation_id']
+        if getattr(self, "swagger_fake_view", False):
+            return Message.objects.none()
+        conv_id = self.kwargs.get('conversation_id', 0)
         return Message.objects.filter(
             conversation_id=conv_id,
             conversation__participants=self.request.user

@@ -25,7 +25,7 @@ from accounts.permissions import IsSeller, IsStoreOwner
 from .services.smart_scan import process_scan
 from .services.stock_prediction import StockPredictor, ReorderOptimizer
 from notifications.models import Notification
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 # =============================================================================
@@ -105,6 +105,9 @@ class ProductFeaturedView(generics.ListAPIView):
         ).select_related('store', 'category')[:20]
 
 
+@extend_schema_view(
+    get=extend_schema(operation_id='retrieve_product_by_pk'),
+)
 class ProductDetailView(generics.RetrieveAPIView):
     """Get product detail."""
     queryset = Product.objects.filter(is_active=True)
@@ -213,6 +216,8 @@ class ReviewListView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Review.objects.none()
         return Review.objects.filter(
             product_id=self.kwargs['product_id']
         ).select_related('user', 'product')
@@ -259,6 +264,7 @@ class FavoriteView(views.APIView):
         return Response({'is_favorite': is_favorite})
 
 
+@extend_schema(exclude=True)
 class MyFavoritesView(generics.ListAPIView):
     """List user's favorite products."""
     serializer_class = FavoriteSerializer
@@ -268,6 +274,7 @@ class MyFavoritesView(generics.ListAPIView):
         return Favorite.objects.filter(user=self.request.user).select_related('product')
 
 
+@extend_schema(exclude=True)
 class MyReviewsView(generics.ListAPIView):
     """List reviews written by the authenticated user."""
     serializer_class = ReviewSerializer
@@ -317,6 +324,7 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
+@extend_schema(exclude=True)
 class SellerStoreReviewListView(generics.ListAPIView):
     """List all reviews for the seller's store products."""
     serializer_class = ReviewSerializer
@@ -335,6 +343,7 @@ class PromoListView(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
 
+@extend_schema(exclude=True)
 class SellerPromoListCreateView(generics.ListCreateAPIView):
     """List and create promos for the seller's store."""
     serializer_class = PromoSerializer
@@ -373,6 +382,7 @@ class QualityCheckListView(generics.ListCreateAPIView):
         return qs
 
 
+@extend_schema(exclude=True)
 class ProductQualityCheckView(generics.ListAPIView):
     """List quality checks for a specific product."""
     serializer_class = QualityCheckSerializer

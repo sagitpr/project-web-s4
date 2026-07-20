@@ -68,6 +68,7 @@ class UserEngagementProfileView(views.APIView):
         return Response(data)
 
 
+@extend_schema(exclude=True)
 class UserBehaviorEventsView(generics.ListAPIView):
     """List the current user's behavior events."""
     serializer_class = BehaviorEventSerializer
@@ -139,6 +140,7 @@ class RefreshEngagementScoresView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class UserActivityLogView(generics.ListAPIView):
     """Get the current user's activity logs."""
     serializer_class = ActivityLogSerializer
@@ -201,6 +203,7 @@ class DeviceTokenView(views.APIView):
         return Response({'status': 'unregistered'})
 
 
+@extend_schema(exclude=True)
 class DeviceTokenListView(generics.ListAPIView):
     """List the current user's registered device tokens."""
     serializer_class = DeviceTokenSerializer
@@ -273,6 +276,7 @@ class AIEnqueueNotificationView(views.APIView):
 # NOTIFICATION QUEUE
 # ═══════════════════════════════════════════════════════════════
 
+@extend_schema(exclude=True)
 class UserNotificationQueueView(generics.ListAPIView):
     """List the current user's queued notifications."""
     serializer_class = NotificationQueueSerializer

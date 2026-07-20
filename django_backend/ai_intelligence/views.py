@@ -149,6 +149,8 @@ class ShoppingInsightsView(generics.ListAPIView):
     serializer_class = PersonalShoppingInsightSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return PersonalShoppingInsight.objects.none()
         return PersonalShoppingInsight.objects.filter(
             user=self.request.user, is_dismissed=False
         ).order_by('-computed_at')[:20]
@@ -260,6 +262,8 @@ class UserChallengesView(generics.ListAPIView):
     serializer_class = UserChallengeProgressSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return UserChallengeProgress.objects.none()
         return UserChallengeProgress.objects.filter(
             user=self.request.user
         ).select_related('challenge').order_by('-is_completed', '-updated_at')[:20]

@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import F, Sum
 from django.utils import timezone
 from channels.layers import get_channel_layer
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse
 from rest_framework import serializers as drf_serializers, status, generics, permissions, views, filters
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -278,12 +278,22 @@ class CartCountView(views.APIView):
         tags=['Orders'],
         request=OrderCreateSerializer,
         responses={
-            201: OpenApiExample(
-                'Order Created',
-                value={'message': 'Pesanan berhasil dibuat.', 'orders': []},
-                response_only=True,
+            201: OpenApiResponse(
+                description='Pesanan berhasil dibuat',
+                examples=[
+                    OpenApiExample(
+                        'Order Created',
+                        value={'message': 'Pesanan berhasil dibuat.', 'orders': []},
+                        response_only=True,
+                    ),
+                ],
             ),
-            400: OpenApiExample('Validation Error', value={'error': 'Keranjang kosong.'}, response_only=True),
+            400: OpenApiResponse(
+                description='Validation Error',
+                examples=[
+                    OpenApiExample('Validation Error', value={'error': 'Keranjang kosong.'}, response_only=True),
+                ],
+            ),
         },
     ),
 )
@@ -447,6 +457,7 @@ class OrderCreateView(views.APIView):
         ],
     ),
 )
+@extend_schema(exclude=True)
 class MyOrdersView(generics.ListAPIView):
     """List current user's orders."""
     serializer_class = OrderListSerializer
@@ -472,6 +483,7 @@ class OrderDetailView(generics.RetrieveAPIView):
         ).prefetch_related('items')
 
 
+@extend_schema(exclude=True)
 class SellerOrdersView(generics.ListAPIView):
     """List orders for seller's store."""
     serializer_class = OrderListSerializer
@@ -497,9 +509,22 @@ class SellerOrdersView(generics.ListAPIView):
         tags=['Orders'],
         request=OrderStatusSerializer,
         responses={
-            200: OrderDetailSerializer,
-            400: OpenApiExample('Bad Request', value={'error': 'Pesan error'}, response_only=True),
-            404: OpenApiExample('Not Found', value={'error': 'Pesanan tidak ditemukan.'}, response_only=True),
+            200: OpenApiResponse(
+                description='Order updated successfully',
+                response=OrderDetailSerializer,
+            ),
+            400: OpenApiResponse(
+                description='Bad Request',
+                examples=[
+                    OpenApiExample('Bad Request', value={'error': 'Pesan error'}, response_only=True),
+                ],
+            ),
+            404: OpenApiResponse(
+                description='Not Found',
+                examples=[
+                    OpenApiExample('Not Found', value={'error': 'Pesanan tidak ditemukan.'}, response_only=True),
+                ],
+            ),
         },
     ),
 )
@@ -702,26 +727,36 @@ class OrderStatusUpdateView(views.APIView):
                     'Termasuk milestones status, info driver, kode pickup, dan estimasi waktu.',
         tags=['Delivery'],
         responses={
-            200: OpenApiExample(
-                'Tracking Data',
-                value={
-                    'courier': 'GoSend',
-                    'delivery_status': 'dalam_perjalanan',
-                    'delivery_status_label': 'Dalam Perjalanan',
-                    'status': 'on_delivery',
-                    'milestones': [
-                        {'status': 'Pesanan dikonfirmasi penjual', 'icon': 'package', 'time': '2026-01-01T10:00:00', 'is_current': False},
-                        {'status': 'Pesanan dalam perjalanan', 'icon': 'truck', 'time': '2026-01-01T11:00:00', 'is_current': True},
-                    ],
-                    'driver_name': 'Budi',
-                    'driver_phone': '08123456789',
-                    'pickup_code': '123456',
-                    'estimated_time': '15 menit lagi',
-                    'source': 'hyperlocal',
-                },
-                response_only=True,
+            200: OpenApiResponse(
+                description='Tracking Data',
+                examples=[
+                    OpenApiExample(
+                        'Tracking Data',
+                        value={
+                            'courier': 'GoSend',
+                            'delivery_status': 'dalam_perjalanan',
+                            'delivery_status_label': 'Dalam Perjalanan',
+                            'status': 'on_delivery',
+                            'milestones': [
+                                {'status': 'Pesanan dikonfirmasi penjual', 'icon': 'package', 'time': '2026-01-01T10:00:00', 'is_current': False},
+                                {'status': 'Pesanan dalam perjalanan', 'icon': 'truck', 'time': '2026-01-01T11:00:00', 'is_current': True},
+                            ],
+                            'driver_name': 'Budi',
+                            'driver_phone': '08123456789',
+                            'pickup_code': '123456',
+                            'estimated_time': '15 menit lagi',
+                            'source': 'hyperlocal',
+                        },
+                        response_only=True,
+                    ),
+                ],
             ),
-            404: OpenApiExample('Not Found', value={'error': 'Pesanan tidak ditemukan.'}, response_only=True),
+            404: OpenApiResponse(
+                description='Not Found',
+                examples=[
+                    OpenApiExample('Not Found', value={'error': 'Pesanan tidak ditemukan.'}, response_only=True),
+                ],
+            ),
         },
     ),
 )
@@ -805,8 +840,16 @@ class DeliveryTrackingView(views.APIView):
         tags=['Orders'],
         request=CancelOrderSerializer,
         responses={
-            200: OrderDetailSerializer,
-            400: OpenApiExample('Bad Request', value={'error': 'Pesanan tidak dapat dibatalkan pada status saat ini.'}, response_only=True),
+            200: OpenApiResponse(
+                description='Order cancelled successfully',
+                response=OrderDetailSerializer,
+            ),
+            400: OpenApiResponse(
+                description='Bad Request',
+                examples=[
+                    OpenApiExample('Bad Request', value={'error': 'Pesanan tidak dapat dibatalkan pada status saat ini.'}, response_only=True),
+                ],
+            ),
         },
     ),
 )
@@ -884,6 +927,7 @@ class BuyerCancelOrderView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class OrderHistoryView(generics.ListAPIView):
     """Order history with status filter."""
     serializer_class = OrderListSerializer
@@ -1413,6 +1457,7 @@ class POSOfflineCreateView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class OfflineSaleListView(generics.ListAPIView):
     """Daftar penjualan offline untuk seller."""
     serializer_class = OfflineSaleListSerializer
