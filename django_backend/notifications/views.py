@@ -6,6 +6,7 @@ from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
 from .models import Notification, NotificationPreference
+from drf_spectacular.utils import extend_schema
 from .serializers import (
     NotificationSerializer, NotificationMarkReadSerializer,
     NotificationPreferenceSerializer, NotificationCountSerializer
@@ -18,6 +19,9 @@ class NotificationListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Notification.objects.none()
+
         qs = Notification.objects.filter(user=self.request.user)
         
         # Filter by type
@@ -35,6 +39,7 @@ class NotificationListView(generics.ListAPIView):
         return qs.order_by('-created_at')[:50]
 
 
+@extend_schema(exclude=True)
 class NotificationMarkReadView(views.APIView):
     """Mark notifications as read."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -59,6 +64,7 @@ class NotificationMarkReadView(views.APIView):
         return Response({'message': f'{len(notification_ids)} notifikasi ditandai sudah dibaca.'})
 
 
+@extend_schema(exclude=True)
 class NotificationUnreadCountView(views.APIView):
     """Get unread notification count."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -81,6 +87,7 @@ class NotificationUnreadCountView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class NotificationDeleteView(views.APIView):
     """Delete a single notification."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -109,6 +116,7 @@ class NotificationPreferenceView(generics.RetrieveUpdateAPIView):
         return obj
 
 
+@extend_schema(exclude=True)
 class CreateNotificationView(views.APIView):
     """Create notification (system use)."""
     permission_classes = (permissions.IsAdminUser,)

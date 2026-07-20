@@ -51,6 +51,8 @@ except ImportError:
     send_whatsapp_only_otp_task = None
     logger.warning('Celery tasks unavailable — OTP will skip async delivery')
 
+from drf_spectacular.utils import extend_schema
+
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserUpdateSerializer, ChangePasswordSerializer,
@@ -224,6 +226,7 @@ class RegisterView(generics.CreateAPIView):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(exclude=True)
 class LoginView(views.APIView):
     """User login with JWT token response."""
     permission_classes = (permissions.AllowAny,)
@@ -405,6 +408,7 @@ class LoginView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class LogoutView(views.APIView):
     """User logout - blacklist refresh token."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -439,6 +443,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return Response(UserSerializer(request.user).data)
 
 
+@extend_schema(exclude=True)
 class ChangePasswordView(views.APIView):
     """Change password for authenticated user."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -456,6 +461,7 @@ class ChangePasswordView(views.APIView):
         return Response({'message': 'Password berhasil diubah.'})
 
 
+@extend_schema(exclude=True)
 class OTPRequestView(views.APIView):
     """Request OTP code for verification."""
     permission_classes = (permissions.AllowAny,)
@@ -558,6 +564,7 @@ class OTPRequestView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class OTPVerifyView(views.APIView):
     """Verify OTP code."""
     permission_classes = (permissions.AllowAny,)
@@ -804,6 +811,7 @@ class OTPVerifyView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class ResendOTPView(views.APIView):
     """Resend OTP code with cooldown check."""
     permission_classes = (permissions.AllowAny,)
@@ -896,6 +904,7 @@ class ResendOTPView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class ForgotPasswordView(views.APIView):
     """Forgot password - send OTP."""
     permission_classes = (permissions.AllowAny,)
@@ -955,6 +964,7 @@ class ForgotPasswordView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class ResetPasswordView(views.APIView):
     """Reset password with OTP verification."""
     permission_classes = (permissions.AllowAny,)
@@ -1032,6 +1042,7 @@ class ResetPasswordView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class CheckAuthView(views.APIView):
     """Check if user is authenticated and return their info.
     
@@ -1054,6 +1065,7 @@ class CheckAuthView(views.APIView):
         return Response(response_data)
 
 
+@extend_schema(exclude=True)
 class TokenRefreshView(views.APIView):
     """Refresh JWT access token."""
     permission_classes = (permissions.AllowAny,)
@@ -1075,6 +1087,7 @@ class TokenRefreshView(views.APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
 
+@extend_schema(exclude=True)
 class CheckAvailabilityView(views.APIView):
     """Check if email or phone is already registered (no side effects, no record creation)."""
     permission_classes = (permissions.AllowAny,)
@@ -1111,6 +1124,7 @@ class CheckAvailabilityView(views.APIView):
         return Response(response)
 
 
+@extend_schema(exclude=True)
 class RootView(views.APIView):
     """Root view — multi-tenant entry point.
     
@@ -1155,6 +1169,7 @@ class RootView(views.APIView):
         return render(request, 'landing/index.html')
 
 
+@extend_schema(exclude=True)
 class AdminLoginView(views.APIView):
     """
     Dedicated admin login view.

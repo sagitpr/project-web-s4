@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 from .models import Conversation, Message
 from .serializers import (
@@ -21,6 +22,9 @@ class ConversationListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Conversation.objects.none()
+
         return Conversation.objects.filter(
             participants=self.request.user
         ).order_by('-last_message_at')
@@ -79,6 +83,7 @@ class MessageCreateView(generics.CreateAPIView):
         serializer.save(sender=self.request.user)
 
 
+@extend_schema(exclude=True)
 class UnreadCountView(views.APIView):
     """Get unread message count."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -91,6 +96,7 @@ class UnreadCountView(views.APIView):
         return Response({'unread_count': count})
 
 
+@extend_schema(exclude=True)
 class StartConversationView(views.APIView):
     """Start or get existing conversation with another user."""
     permission_classes = (permissions.IsAuthenticated,)

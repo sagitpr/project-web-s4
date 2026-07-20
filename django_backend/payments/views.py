@@ -28,6 +28,7 @@ from .serializers import (
     MidtransNotificationSerializer, PaymentHistorySerializer, BankAccountSerializer
 )
 from orders.models import Order
+from drf_spectacular.utils import extend_schema
 
 
 def notify_payment_update(user_id, order_id, order_number, payment_status, message=''):
@@ -56,6 +57,7 @@ class PaymentMethodListView(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
 
+@extend_schema(exclude=True)
 class CreateSnapTransactionView(views.APIView):
     """Create Midtrans Snap transaction (async via Celery)."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -121,6 +123,7 @@ class CreateSnapTransactionView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class MidtransNotificationView(views.APIView):
     """Handle Midtrans payment notification callback."""
     permission_classes = (permissions.AllowAny,)
@@ -304,6 +307,7 @@ class MidtransNotificationView(views.APIView):
         return hmac.compare_digest(expected, data.get('signature_key', ''))
 
 
+@extend_schema(exclude=True)
 class PaymentStatusView(views.APIView):
     """Check payment status for an order."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -326,6 +330,7 @@ class PaymentStatusView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class PaymentConfigView(views.APIView):
     """Return Midtrans payment configuration (client key, snap URL)."""
     permission_classes = (permissions.AllowAny,)
@@ -341,6 +346,7 @@ class PaymentConfigView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class PublicApiConfigView(views.APIView):
     """
     Public API configuration endpoint.
@@ -364,11 +370,15 @@ class PaymentHistoryView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Payment.objects.none()
+
         return Payment.objects.filter(
             user=self.request.user
         ).select_related('order').order_by('-created_at')[:20]
 
 
+@extend_schema(exclude=True)
 class WalletTopUpView(views.APIView):
     """Initiate a Midtrans Snap transaction for wallet top-up (async via Celery)."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -479,6 +489,7 @@ class BankAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
         return BankAccount.objects.filter(store=self.request.user.store)
 
 
+@extend_schema(exclude=True)
 class BankAccountSetPrimaryView(views.APIView):
     """Set a specific bank account as primary/default."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -491,6 +502,7 @@ class BankAccountSetPrimaryView(views.APIView):
         return Response({'message': 'Rekening bank utama berhasil diperbarui.', 'account': BankAccountSerializer(account).data})
 
 
+@extend_schema(exclude=True)
 class FinanceSummaryView(views.APIView):
     """Get dynamic finance summary calculations based on live order database.
     
@@ -597,6 +609,7 @@ class FinanceSummaryView(views.APIView):
         return Response(data)
 
 
+@extend_schema(exclude=True)
 class FinanceTransactionListView(views.APIView):
     """List financial history merged from order income, held balances, and withdrawals."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -709,6 +722,7 @@ class FinanceTransactionListView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class WithdrawBalanceView(views.APIView):
     """Initiate withdrawal process for the seller.
     
@@ -835,6 +849,7 @@ class WithdrawBalanceView(views.APIView):
 # WALLET ENDPOINTS (Database-driven, not device_info)
 # =============================================================================
 
+@extend_schema(exclude=True)
 class WalletBalanceView(views.APIView):
     """
     Get real-time wallet balance for the authenticated user.
@@ -856,6 +871,7 @@ class WalletBalanceView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class WalletTransactionListView(views.APIView):
     """
     Get paginated wallet transaction history.

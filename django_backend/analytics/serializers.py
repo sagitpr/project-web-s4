@@ -5,6 +5,8 @@ Dashboard real-time analytics.
 
 from rest_framework import serializers
 from .models import SalesAnalytics, DeviceAnalytics, UserActivity, DailyReport
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class SalesAnalyticsSerializer(serializers.ModelSerializer):
@@ -16,6 +18,7 @@ class SalesAnalyticsSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_revenue_formatted(self, obj):
         return f"Rp {obj.total_sales:,.0f}"
 

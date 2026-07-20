@@ -19,6 +19,7 @@ from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
 from .models import Province, Regency, District, Village
+from drf_spectacular.utils import extend_schema
 from .serializers import (
     ProvinceSerializer,
     ProvinceDetailSerializer,
@@ -254,6 +255,7 @@ class VillageListView(BinderbyteFallbackMixin, generics.ListAPIView):
         return normalized
 
 
+@extend_schema(exclude=True)
 class RegionSearchView(views.APIView):
     """
     Search across all region levels (province, regency, district, village).
@@ -374,6 +376,7 @@ class RegionSearchView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class RegionPathView(views.APIView):
     """
     Get full address path for a village/district/regency code.

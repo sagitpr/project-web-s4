@@ -4,6 +4,8 @@ Flutter-ready JSON response contracts.
 """
 
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 from .models import (
     LoyaltyTier, LoyaltyAccount, LoyaltyTransaction,
     LoyaltyReward, LoyaltyRedemption, LoyaltyReferral
@@ -37,6 +39,7 @@ class LoyaltyRewardSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['usage_count', 'created_at']
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_valid_tier_names(self, obj):
         return [t.get_name_display() for t in obj.valid_for_tiers.all()]
 
@@ -83,6 +86,9 @@ class LoyaltyAccountSerializer(serializers.ModelSerializer):
             'joined_at',
         ]
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_next_tier(self, obj):
         """Get next tier info."""
         if not obj.tier:
@@ -93,6 +99,7 @@ class LoyaltyAccountSerializer(serializers.ModelSerializer):
         ).order_by('sort_order').first()
         return LoyaltyTierSerializer(next_tier).data if next_tier else None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_points_to_next_tier(self, obj):
         """Points needed to reach next tier."""
         if not obj.tier:

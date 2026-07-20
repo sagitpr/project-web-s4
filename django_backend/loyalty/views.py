@@ -20,6 +20,7 @@ from .serializers import (
     FlutterLoyaltyDashboardDTO, FlutterPointsEarnDTO, FlutterRewardRedemptionDTO,
 )
 from accounts.permissions import IsBuyer, IsAdmin
+from drf_spectacular.utils import extend_schema
 
 
 # =============================================================================
@@ -42,6 +43,7 @@ def get_or_create_account(user):
     return account
 
 
+@extend_schema(exclude=True)
 class MyLoyaltyAccountView(views.APIView):
     """Get current user's loyalty account."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -52,6 +54,7 @@ class MyLoyaltyAccountView(views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(exclude=True)
 class CalculatePointsView(views.APIView):
     """Calculate how many points would be earned from an order."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -76,6 +79,7 @@ class CalculatePointsView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class EarnPointsView(views.APIView):
     """Manually add points to account (for testing/admin)."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -98,6 +102,7 @@ class EarnPointsView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class RedeemPointsView(views.APIView):
     """Redeem points for a custom amount (for admin)."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -131,6 +136,9 @@ class LoyaltyTransactionListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return LoyaltyTransaction.objects.none()
+
         qs = LoyaltyTransaction.objects.filter(user=self.request.user)
         
         # Filters
@@ -189,6 +197,7 @@ class LoyaltyRewardDetailView(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
 
+@extend_schema(exclude=True)
 class RedeemRewardView(views.APIView):
     """Redeem a reward using points."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -291,6 +300,7 @@ class LoyaltyTierListView(generics.ListAPIView):
 # REFERRAL
 # =============================================================================
 
+@extend_schema(exclude=True)
 class MyReferralView(views.APIView):
     """Get user's referral code and stats."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -319,6 +329,7 @@ class MyReferralView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class ClaimReferralView(views.APIView):
     """Claim referral bonus when referred user registers."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -379,6 +390,7 @@ class ClaimReferralView(views.APIView):
 # DASHBOARD (Flutter-ready)
 # =============================================================================
 
+@extend_schema(exclude=True)
 class LoyaltyDashboardView(views.APIView):
     """Complete loyalty dashboard for Flutter."""
     permission_classes = (permissions.IsAuthenticated,)

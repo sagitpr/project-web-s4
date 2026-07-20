@@ -5,6 +5,8 @@ Flutter-ready JSON for barcode scanning, batch entry, FEFO picking.
 
 from rest_framework import serializers
 from .models import MasterProduct, ProductBatch, InventoryStock, ExpiryNotification, StockAlert
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class MasterProductSerializer(serializers.ModelSerializer):
@@ -15,6 +17,7 @@ class MasterProductSerializer(serializers.ModelSerializer):
         model = MasterProduct
         fields = '__all__'
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_display_name(self, obj):
         if obj.brand:
             return f"{obj.brand} - {obj.product_name}"

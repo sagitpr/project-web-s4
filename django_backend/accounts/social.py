@@ -16,6 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, LoginAttempt
 from .serializers import UserSerializer
+from drf_spectacular.utils import extend_schema
 
 logger = logging.getLogger('django_backend')
 
@@ -139,6 +140,7 @@ class SocialLoginBase:
         }
 
 
+@extend_schema(exclude=True)
 class GoogleLoginView(views.APIView, SocialLoginBase):
     """
     Google Sign-In authentication.
@@ -217,6 +219,7 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
             )
 
 
+@extend_schema(exclude=True)
 class FacebookLoginView(views.APIView, SocialLoginBase):
     """
     Facebook Login authentication.
@@ -317,6 +320,7 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
             )
 
 
+@extend_schema(exclude=True)
 class AppleLoginView(views.APIView, SocialLoginBase):
     """
     Apple Sign-In authentication.
@@ -438,6 +442,7 @@ class AppleLoginView(views.APIView, SocialLoginBase):
             )
 
 
+@extend_schema(exclude=True)
 class SocialAccountStatusView(views.APIView):
     """
     Get the social accounts linked to the current user.
@@ -481,6 +486,7 @@ class SocialAccountStatusView(views.APIView):
         )
 
 
+@extend_schema(exclude=True)
 class GoogleAuthConfigView(views.APIView):
     """
     Returns the Google Client ID for the frontend.
@@ -493,6 +499,7 @@ class GoogleAuthConfigView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class FacebookAuthConfigView(views.APIView):
     """
     Returns the Facebook App ID for the frontend.

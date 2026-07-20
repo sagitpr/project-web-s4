@@ -3,6 +3,8 @@ Support / Help Center serializers for Warungio Marketplace API.
 """
 
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 from .models import (
     HelpCategory, HelpArticle, FAQ, BannerPromo,
     ContactInfo, SupportInfo, ChatQuickReply, SupportTicket
@@ -15,6 +17,9 @@ class HelpCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = HelpCategory
         fields = ('id', 'name', 'slug', 'icon', 'description', 'sort_order', 'article_count')
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_article_count(self, obj):
         return obj.articles.filter(is_published=True).count()
@@ -57,6 +62,9 @@ class BannerPromoSerializer(serializers.ModelSerializer):
         model = BannerPromo
         fields = ('id', 'title', 'subtitle', 'image_url', 'link_url', 'link_text',
                   'position', 'sort_order')
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_image_url(self, obj):
         if obj.image:

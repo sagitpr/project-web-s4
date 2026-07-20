@@ -4,6 +4,8 @@ Products serializers for Warungio Marketplace.
 
 from rest_framework import serializers
 from .models import Category, Product, ProductGallery, Review, Favorite, Promo, RecentlyViewed, Voucher, QualityCheck
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -34,11 +36,13 @@ class ProductListSerializer(serializers.ModelSerializer):
                   'store_slug', 'category_name', 'is_featured', 'is_active',
                   'created_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_product_photo_url(self, obj):
         if obj.product_photo:
             return obj.product_photo.url
         return None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_available_stock(self, obj):
         return obj.available_stock
 
@@ -54,6 +58,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_store(self, obj):
         return {
             'id': obj.store.id,
@@ -65,6 +70,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'follower_count': obj.store.follower_count,
         }
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_product_photo_url(self, obj):
         if obj.product_photo:
             return obj.product_photo.url
@@ -121,6 +127,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'user_name', 'user_photo', 'product', 'product_name',
                   'rating', 'comment', 'is_verified', 'seller_reply', 'seller_reply_at', 'created_at')
         read_only_fields = ('user', 'product', 'is_verified', 'created_at', 'seller_reply', 'seller_reply_at')
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_user_photo(self, obj):
         if obj.user and obj.user.profile_photo:

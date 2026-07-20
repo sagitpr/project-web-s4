@@ -21,8 +21,10 @@ from .models import (
     ErrorLog, ScheduledTask
 )
 from accounts.permissions import IsAdmin
+from drf_spectacular.utils import extend_schema
 
 
+@extend_schema(exclude=True)
 class HealthCheckView(views.APIView):
     """Comprehensive health check endpoint."""
     permission_classes = (permissions.AllowAny,)
@@ -89,6 +91,7 @@ class HealthCheckView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class MonitoringDashboardView(views.APIView):
     """Full monitoring dashboard with all metrics."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -186,6 +189,7 @@ class MonitoringDashboardView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class SystemHealthListView(generics.ListAPIView):
     """List system health records."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -205,6 +209,7 @@ class SystemHealthListView(generics.ListAPIView):
         } for h in queryset])
 
 
+@extend_schema(exclude=True)
 class LatestHealthView(views.APIView):
     """Get latest health status for all services."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -229,6 +234,7 @@ class LatestHealthView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class PerformanceMetricsView(views.APIView):
     """Get performance metrics."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -251,6 +257,7 @@ class PerformanceMetricsView(views.APIView):
         } for m in qs.order_by('recorded_at')[:500]])
 
 
+@extend_schema(exclude=True)
 class MetricDetailView(views.APIView):
     """Get detail for a specific metric type."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -281,6 +288,7 @@ class MetricDetailView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class MetricsSummaryView(views.APIView):
     """Summary of all metrics."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -300,6 +308,7 @@ class MetricsSummaryView(views.APIView):
         return Response(metrics)
 
 
+@extend_schema(exclude=True)
 class UptimeView(generics.ListAPIView):
     """Get uptime records."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -321,6 +330,7 @@ class UptimeView(generics.ListAPIView):
         } for r in queryset])
 
 
+@extend_schema(exclude=True)
 class CurrentMonthUptimeView(views.APIView):
     """Get current month uptime."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -340,6 +350,7 @@ class CurrentMonthUptimeView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class ErrorLogListView(generics.ListAPIView):
     """List error logs."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -370,6 +381,7 @@ class ErrorLogListView(generics.ListAPIView):
         } for e in queryset])
 
 
+@extend_schema(exclude=True)
 class ResolveErrorView(views.APIView):
     """Mark an error as resolved."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -385,6 +397,7 @@ class ResolveErrorView(views.APIView):
         return Response({'message': 'Error marked as resolved.'})
 
 
+@extend_schema(exclude=True)
 class RecentErrorsView(views.APIView):
     """Get recent critical errors."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -404,6 +417,7 @@ class RecentErrorsView(views.APIView):
         } for e in errors])
 
 
+@extend_schema(exclude=True)
 class ErrorStatsView(views.APIView):
     """Get error statistics."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -429,6 +443,7 @@ class ErrorStatsView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class ScheduledTaskListView(generics.ListAPIView):
     """List scheduled tasks."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -453,6 +468,7 @@ class ScheduledTaskListView(generics.ListAPIView):
         } for t in queryset])
 
 
+@extend_schema(exclude=True)
 class ScheduledTaskDetailView(views.APIView):
     """Get scheduled task detail."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -476,6 +492,7 @@ class ScheduledTaskDetailView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class FullStatusView(views.APIView):
     """Complete system status including all monitoring data."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -500,6 +517,7 @@ class FullStatusView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class AdminDashboardStatsView(views.APIView):
     """
     Admin dashboard statistics — real data from database.

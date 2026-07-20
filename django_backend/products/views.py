@@ -25,6 +25,7 @@ from accounts.permissions import IsSeller, IsStoreOwner
 from .services.smart_scan import process_scan
 from .services.stock_prediction import StockPredictor, ReorderOptimizer
 from notifications.models import Notification
+from drf_spectacular.utils import extend_schema
 
 
 # =============================================================================
@@ -198,6 +199,9 @@ class MyProductsView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Product.objects.none()
+
         return Product.objects.filter(
             store__user=self.request.user
         ).select_related('store', 'category')
@@ -227,6 +231,7 @@ class ReviewListView(generics.ListCreateAPIView):
         )
 
 
+@extend_schema(exclude=True)
 class FavoriteView(views.APIView):
     """Toggle favorite/wishlist for a product."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -379,6 +384,7 @@ class ProductQualityCheckView(generics.ListAPIView):
         ).select_related('product__store').order_by('-checked_at')
 
 
+@extend_schema(exclude=True)
 class SmartScanView(views.APIView):
     """
     Process a Smart Scan AI product analysis.
@@ -437,6 +443,7 @@ class SmartScanView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class RecentlyViewedView(views.APIView):
     """Record and list recently viewed products.
     
@@ -480,6 +487,7 @@ class RecentlyViewedView(views.APIView):
         return Response({'count': len(qs), 'results': serializer.data})
 
 
+@extend_schema(exclude=True)
 class SearchSuggestionsView(views.APIView):
     """Return autocomplete suggestions for the search bar.
     
@@ -547,6 +555,7 @@ class SearchSuggestionsView(views.APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class StockPredictionView(views.APIView):
     """Get stock prediction for a specific product (cached 15 min + sync fallback).
 
@@ -592,6 +601,7 @@ class StockPredictionView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class ReorderSuggestionView(views.APIView):
     """Get reorder suggestions for seller's store (cached 10 min + sync fallback).
 
@@ -616,6 +626,7 @@ class ReorderSuggestionView(views.APIView):
         return Response(suggestions)
 
 
+@extend_schema(exclude=True)
 class StoreStockForecastView(views.APIView):
     """Get comprehensive stock forecast for the entire store (cached 15 min + sync fallback).
 
@@ -653,6 +664,7 @@ class StoreStockForecastView(views.APIView):
 
 
 
+@extend_schema(exclude=True)
 class LowStockProductsView(views.APIView):
     """List low stock and out-of-stock products for the seller.
     
@@ -724,6 +736,7 @@ class LowStockProductsView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class VoucherCheckView(views.APIView):
     """Check if a voucher code is valid."""
     permission_classes = (permissions.IsAuthenticated,)

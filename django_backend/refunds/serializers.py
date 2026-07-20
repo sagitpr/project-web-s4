@@ -4,6 +4,8 @@ Refunds serializers for Warungio Marketplace.
 from rest_framework import serializers
 from .models import Refund, RefundTimelineEvent
 from orders.models import Order
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class RefundTimelineEventSerializer(serializers.ModelSerializer):
@@ -14,6 +16,9 @@ class RefundTimelineEventSerializer(serializers.ModelSerializer):
         fields = ('id', 'refund', 'event_type', 'description',
                   'created_by', 'created_by_name', 'created_by_role',
                   'metadata', 'created_at')
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_created_by_name(self, obj):
         if obj.created_by:
@@ -68,6 +73,7 @@ class RefundListSerializer(serializers.ModelSerializer):
                   'amount_approved', 'refund_status', 'status_display',
                   'is_escalated', 'created_at', 'resolved_at', 'buyer_name')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_buyer_name(self, obj):
         if obj.user:
             return obj.user.full_name or obj.user.email
@@ -92,15 +98,22 @@ class RefundDetailSerializer(serializers.ModelSerializer):
         model = Refund
         fields = '__all__'
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_store_logo(self, obj):
         if obj.store and obj.store.store_logo:
             return obj.store.store_logo.url
         return None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_buyer_name(self, obj):
         if obj.user:
             return obj.user.full_name or obj.user.email
         return 'Pembeli'
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_order_items(self, obj):
         items = obj.order.items.all()

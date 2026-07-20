@@ -4,6 +4,8 @@ Orders serializers for Warungio Marketplace.
 
 from rest_framework import serializers
 from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class ShippingMethodSerializer(serializers.ModelSerializer):
@@ -32,6 +34,7 @@ class CartSerializer(serializers.ModelSerializer):
                   'store_name', 'store_id', 'qty', 'subtotal', 'created_at')
         read_only_fields = ('user', 'created_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_product_photo(self, obj):
         if obj.product and obj.product.product_photo:
             return obj.product.product_photo.url
@@ -84,6 +87,7 @@ class OrderListSerializer(serializers.ModelSerializer):
                   'total_price', 'payment_method', 'order_status',
                   'item_count', 'created_at', 'completed_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_store_logo(self, obj):
         if obj.store and obj.store.store_logo:
             return obj.store.store_logo.url
@@ -104,11 +108,13 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('order_number', 'user', 'created_at', 'updated_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_shipping_method_name(self, obj):
         if obj.shipping_method:
             return obj.shipping_method.name
         return obj.courier or ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_delivery(self, obj):
         try:
             delivery = obj.delivery

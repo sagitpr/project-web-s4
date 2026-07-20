@@ -9,6 +9,8 @@ from .models import (
     SupplierOrderItem, SupplierReview, SupplierContract, SupplierPayment
 )
 from stores.serializers import StoreListSerializer
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class SupplierCategorySerializer(serializers.ModelSerializer):
@@ -20,6 +22,9 @@ class SupplierCategorySerializer(serializers.ModelSerializer):
         read_only_fields = ['supplier_count']
 
     supplier_count = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_supplier_count(self, obj):
         return obj.suppliers.filter(is_active=True).count()
@@ -41,6 +46,9 @@ class SupplierListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
     logo_url = serializers.SerializerMethodField()
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_logo_url(self, obj):
         if obj.logo:
             return obj.logo.url
@@ -59,8 +67,14 @@ class SupplierDetailSerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()
     banner = serializers.SerializerMethodField()
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_logo(self, obj):
         return obj.logo.url if obj.logo else None
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_banner(self, obj):
         return obj.banner.url if obj.banner else None
@@ -112,6 +126,9 @@ class SupplierOrderListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_item_count(self, obj):
         return obj.items.count()
 
@@ -150,6 +167,9 @@ class SupplierContractSerializer(serializers.ModelSerializer):
         model = SupplierContract
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_days_remaining(self, obj):
         from django.utils import timezone

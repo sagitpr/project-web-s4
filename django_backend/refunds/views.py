@@ -20,6 +20,7 @@ from .serializers import (
 )
 from accounts.permissions import IsSeller
 from orders.models import Order
+from drf_spectacular.utils import extend_schema
 
 
 def _add_timeline(refund, event_type, description, user=None, role=None, metadata=None):
@@ -61,6 +62,9 @@ class MyRefundListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Refund.objects.none()
+
         qs = Refund.objects.filter(user=self.request.user).select_related('store', 'order')
         status_filter = self.request.query_params.get('status')
         if status_filter:
@@ -86,6 +90,7 @@ class RefundDetailView(generics.RetrieveAPIView):
         return Refund.objects.filter(user=user)
 
 
+@extend_schema(exclude=True)
 class BuyerCancelRefundView(views.APIView):
     """Buyer cancels a pending refund request."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -122,6 +127,7 @@ class StoreRefundListView(generics.ListAPIView):
         return qs
 
 
+@extend_schema(exclude=True)
 class SellerRefundActionView(views.APIView):
     """Seller takes action on a refund request."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -213,6 +219,7 @@ class AdminRefundListView(generics.ListAPIView):
         return qs
 
 
+@extend_schema(exclude=True)
 class AdminRefundActionView(views.APIView):
     """Admin intervenes or resolves a refund dispute."""
     permission_classes = (permissions.IsAuthenticated, RefundAdminPermission)
@@ -301,6 +308,7 @@ class AdminRefundActionView(views.APIView):
 # ─── Refund Stats (for dashboard widgets) ─────────────────────────────
 
 
+@extend_schema(exclude=True)
 class RefundStatsView(views.APIView):
     """Get refund statistics for dashboard widgets."""
     permission_classes = (permissions.IsAuthenticated,)

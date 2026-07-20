@@ -4,6 +4,8 @@ Stores serializers for Warungio Marketplace.
 
 from rest_framework import serializers
 from .models import Store, StoreFollower, StoreCategory
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class StoreCategorySerializer(serializers.ModelSerializer):
@@ -37,6 +39,9 @@ class StoreDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('user', 'follower_count', 'product_count',
                            'rating_avg', 'total_sales', 'created_at', 'updated_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
+
+
     def get_owner(self, obj):
         return {
             'id': obj.user.id,
@@ -46,11 +51,13 @@ class StoreDetailSerializer(serializers.ModelSerializer):
             'profile_photo': obj.user.profile_photo.url if obj.user.profile_photo else None,
         }
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_store_logo_url(self, obj):
         if obj.store_logo:
             return obj.store_logo.url
         return None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_store_banner_url(self, obj):
         if obj.store_banner:
             return obj.store_banner.url

@@ -5,6 +5,8 @@ Real-time messaging between buyers and sellers.
 
 from rest_framework import serializers
 from .models import Conversation, Message
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -19,6 +21,7 @@ class MessageSerializer(serializers.ModelSerializer):
                   'read_at', 'created_at')
         read_only_fields = ('sender', 'is_read', 'read_at', 'created_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_sender_photo(self, obj):
         if obj.sender and obj.sender.profile_photo:
             return obj.sender.profile_photo.url
@@ -49,9 +52,11 @@ class ConversationListSerializer(serializers.ModelSerializer):
         fields = ('id', 'subject', 'last_message_preview', 'last_message_time',
                   'last_sender', 'unread_count', 'other_participant', 'created_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_last_message_preview(self, obj):
         return (obj.last_message[:100] + '...') if obj.last_message and len(obj.last_message) > 100 else obj.last_message
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_other_participant(self, obj):
         user = self.context['request'].user
         other = obj.get_other_participant(user)
@@ -75,6 +80,7 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
                   'last_message', 'last_message_at', 'unread_count', 'messages',
                   'created_at', 'updated_at')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_participants_info(self, obj):
         participants = obj.participants.all()
         return [{

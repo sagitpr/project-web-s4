@@ -1,0 +1,622 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}AI Engagement & Retention Engine — Warungio{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --eng-primary: #6C5CE7;
+    --eng-success: #00B894;
+    --eng-warning: #FDCB6E;
+    --eng-danger: #E17055;
+    --eng-info: #74B9FF;
+    --eng-dark: #2D3436;
+    --eng-light: #DFE6E9;
+    --eng-bg: #F8F9FA;
+    --eng-card: #FFFFFF;
+    --eng-text: #2D3436;
+    --eng-text-light: #636E72;
+    --eng-border: #E9ECEF;
+}
+
+.eng-dashboard {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--eng-text);
+    background: var(--eng-bg);
+    min-height: 100vh;
+    padding: 24px;
+}
+
+.eng-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--eng-border);
+}
+
+.eng-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, var(--eng-primary), #A29BFE);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.eng-header .eng-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--eng-text-light);
+}
+
+.eng-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--eng-success);
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* KPI Cards */
+.eng-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.eng-kpi-card {
+    background: var(--eng-card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.eng-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.eng-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.eng-kpi-card.primary::before { background: var(--eng-primary); }
+.eng-kpi-card.success::before { background: var(--eng-success); }
+.eng-kpi-card.warning::before { background: var(--eng-warning); }
+.eng-kpi-card.danger::before { background: var(--eng-danger); }
+.eng-kpi-card.info::before { background: var(--eng-info); }
+
+.eng-kpi-label {
+    font-size: 13px;
+    color: var(--eng-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.eng-kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.eng-kpi-trend {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eng-kpi-trend.up { color: var(--eng-success); }
+.eng-kpi-trend.down { color: var(--eng-danger); }
+
+/* Queue Health Cards */
+.eng-section {
+    background: var(--eng-card);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.eng-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eng-section h2 .badge {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--eng-light);
+    color: var(--eng-text-light);
+    font-weight: 500;
+}
+
+.eng-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .eng-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* Queue Status */
+.eng-queue-status {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.eng-queue-item {
+    text-align: center;
+    padding: 16px;
+    background: var(--eng-bg);
+    border-radius: 12px;
+}
+
+.eng-queue-item .count {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.eng-queue-item .label {
+    font-size: 12px;
+    color: var(--eng-text-light);
+    margin-top: 4px;
+}
+
+/* Risk Distribution */
+.eng-risk-bar {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 16px 0;
+}
+
+.eng-risk-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    transition: flex 0.3s ease;
+}
+
+/* Triggers Table */
+.eng-triggers-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.eng-triggers-table th {
+    text-align: left;
+    font-size: 12px;
+    color: var(--eng-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--eng-border);
+}
+
+.eng-triggers-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--eng-border);
+    font-size: 14px;
+}
+
+.eng-triggers-table tr:hover td {
+    background: var(--eng-bg);
+}
+
+.eng-trigger-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.eng-trigger-badge.psych { background: #E8E0FF; color: #6C5CE7; }
+.eng-trigger-badge.event { background: #E0F7FF; color: #0984E3; }
+.eng-trigger-badge.ai { background: #E0FFE8; color: #00B894; }
+
+/* Progress Bars */
+.eng-progress {
+    height: 6px;
+    background: var(--eng-light);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.eng-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+/* Auto-refresh indicator */
+.eng-auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--eng-text-light);
+    cursor: pointer;
+}
+
+.eng-auto-refresh:hover { color: var(--eng-primary); }
+
+/* Activity Timeline */
+.eng-timeline {
+    position: relative;
+    padding-left: 24px;
+}
+
+.eng-timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--eng-border);
+}
+
+.eng-timeline-item {
+    position: relative;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--eng-bg);
+    border-radius: 8px;
+}
+
+.eng-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--eng-primary);
+    border: 2px solid white;
+}
+
+.eng-timeline-time {
+    font-size: 11px;
+    color: var(--eng-text-light);
+    margin-bottom: 4px;
+}
+
+.eng-timeline-text {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Quick Actions */
+.eng-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.eng-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    background: var(--eng-bg);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--eng-text);
+}
+
+.eng-action-btn:hover {
+    border-color: var(--eng-primary);
+    background: #F0ECFF;
+    transform: translateY(-2px);
+}
+
+.eng-action-btn .icon {
+    font-size: 28px;
+}
+
+.eng-action-btn .text {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Heatmap placeholder */
+.eng-heatmap {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+    margin: 12px 0;
+}
+
+.eng-heatmap-hour {
+    height: 20px;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.eng-heatmap-hour:hover {
+    transform: scaleY(1.5);
+    z-index: 1;
+}
+
+.eng-heatmap-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--eng-text-light);
+    margin-top: 4px;
+}
+
+/* Loading State */
+.eng-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: var(--eng-text-light);
+}
+
+.eng-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--eng-light);
+    border-top-color: var(--eng-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.eng-error {
+    text-align: center;
+    padding: 40px;
+    color: var(--eng-danger);
+}
+
+.eng-error .icon { font-size: 48px; margin-bottom: 12px; }
+.eng-error .text { font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="eng-dashboard" id="engDashboard">
+    <!-- Header -->
+    <div class="eng-header">
+        <div>
+            <h1>🤖 AI Engagement &amp; Retention Engine</h1>
+            <p style="color: var(--eng-text-light); margin: 4px 0 0 0; font-size: 14px;">
+                Real-time engagement metrics · AI-powered notifications · Intelligent retention
+            </p>
+        </div>
+        <div class="eng-status">
+            <span class="eng-status-dot"></span>
+            <span id="engLastUpdate">Updating...</span>
+            <span class="eng-auto-refresh" onclick="engRefresh()">⟳ Refresh</span>
+        </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="eng-kpi-grid" id="engKpiGrid">
+        <div class="eng-kpi-card primary">
+            <div class="eng-kpi-label">Active Users</div>
+            <div class="eng-kpi-value" id="kpiActiveUsers">—</div>
+            <div class="eng-kpi-trend" id="kpiActiveUsersTrend"></div>
+        </div>
+        <div class="eng-kpi-card warning">
+            <div class="eng-kpi-label">At Risk Users</div>
+            <div class="eng-kpi-value" id="kpiAtRisk">—</div>
+            <div class="eng-kpi-trend" id="kpiAtRiskTrend"></div>
+        </div>
+        <div class="eng-kpi-card info">
+            <div class="eng-kpi-label">Avg Engagement</div>
+            <div class="eng-kpi-value" id="kpiAvgEngagement">—</div>
+            <div class="eng-progress"><div class="eng-progress-fill" id="kpiEngagementBar" style="width:0%;background:var(--eng-primary);"></div></div>
+        </div>
+        <div class="eng-kpi-card success">
+            <div class="eng-kpi-label">Avg Retention</div>
+            <div class="eng-kpi-value" id="kpiAvgRetention">—</div>
+            <div class="eng-progress"><div class="eng-progress-fill" id="kpiRetentionBar" style="width:0%;background:var(--eng-success);"></div></div>
+        </div>
+        <div class="eng-kpi-card danger">
+            <div class="eng-kpi-label">Avg Churn Risk</div>
+            <div class="eng-kpi-value" id="kpiAvgChurn">—</div>
+            <div class="eng-progress"><div class="eng-progress-fill" id="kpiChurnBar" style="width:0%;background:var(--eng-danger);"></div></div>
+        </div>
+        <div class="eng-kpi-card primary">
+            <div class="eng-kpi-label">Notifications Today</div>
+            <div class="eng-kpi-value" id="kpiNotificationsToday">—</div>
+            <div class="eng-kpi-trend" id="kpiNotifTrend"></div>
+        </div>
+    </div>
+
+    <!-- Queue Health + Risk Distribution -->
+    <div class="eng-grid-2">
+        <div class="eng-section">
+            <h2>📊 Queue Health <span class="badge" id="queueHealthBadge">loading...</span></h2>
+            <div class="eng-queue-status" id="queueHealth">
+                <div class="eng-queue-item"><div class="count" id="qQueued">—</div><div class="label">Queued</div></div>
+                <div class="eng-queue-item"><div class="count" id="qDelivering">—</div><div class="label">Delivering</div></div>
+                <div class="eng-queue-item"><div class="count" id="qFailed">—</div><div class="label">Failed</div></div>
+                <div class="eng-queue-item"><div class="count" id="qDelivered">—</div><div class="label">Delivered Today</div></div>
+                <div class="eng-queue-item"><div class="count" id="qRateLimited">—</div><div class="label">Rate Limited</div></div>
+                <div class="eng-queue-item"><div class="count" id="qQuietHours">—</div><div class="label">Quiet Hours</div></div>
+            </div>
+        </div>
+
+        <div class="eng-section">
+            <h2>🎯 Delivery Performance</h2>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:120px;">
+                    <div style="font-size:28px;font-weight:700;color:var(--eng-success);" id="kpiDeliveryRate">—</div>
+                    <div style="font-size:12px;color:var(--eng-text-light);">Delivery Rate</div>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <div style="font-size:28px;font-weight:700;color:var(--eng-info);" id="kpiOpenRate">—</div>
+                    <div style="font-size:12px;color:var(--eng-text-light);">Open Rate</div>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <div style="font-size:28px;font-weight:700;color:var(--eng-primary);" id="kpiCTR">—</div>
+                    <div style="font-size:12px;color:var(--eng-text-light);">Click-through Rate</div>
+                </div>
+            </div>
+            <div style="margin-top:20px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Notification Volume by Hour</div>
+                <div class="eng-heatmap" id="engHeatmap"></div>
+                <div class="eng-heatmap-label"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="eng-section">
+        <h2>⚡ Quick Actions</h2>
+        <div class="eng-actions">
+            <a class="eng-action-btn" href="/admin/engagement/userbehaviorprofile/">
+                <span class="icon">👥</span>
+                <span class="text">User Profiles</span>
+            </a>
+            <a class="eng-action-btn" href="/admin/engagement/notificationqueue/">
+                <span class="icon">📋</span>
+                <span class="text">Queue Monitor</span>
+            </a>
+            <a class="eng-action-btn" href="/admin/engagement/notificationcampaign/">
+                <span class="icon">📢</span>
+                <span class="text">Campaigns</span>
+            </a>
+            <a class="eng-action-btn" href="/admin/engagement/notificationtemplate/">
+                <span class="icon">📝</span>
+                <span class="text">Templates</span>
+            </a>
+            <a class="eng-action-btn" href="/admin/engagement/notificationabtest/">
+                <span class="icon">🧪</span>
+                <span class="text">A/B Tests</span>
+            </a>
+            <a class="eng-action-btn" href="/admin/engagement/engagementsignal/">
+                <span class="icon">📡</span>
+                <span class="text">Signals</span>
+            </a>
+            <a class="eng-action-btn" href="/api/engagement/admin/dashboard/" target="_blank">
+                <span class="icon">🔗</span>
+                <span class="text">API Data</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Engagement Dashboard JavaScript ──
+
+async function engFetchDashboard() {
+    const loading = document.getElementById('engLoading');
+    const error = document.getElementById('engError');
+
+    try {
+        const resp = await fetch('/api/engagement/admin/dashboard/', {
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        // Update KPIs
+        document.getElementById('kpiActiveUsers').textContent = data.total_active_users.toLocaleString();
+        document.getElementById('kpiAtRisk').textContent = data.total_at_risk_users.toLocaleString();
+        document.getElementById('kpiAvgEngagement').textContent = data.avg_engagement_score.toFixed(1);
+        document.getElementById('kpiAvgRetention').textContent = data.avg_retention_score.toFixed(1);
+        document.getElementById('kpiAvgChurn').textContent = data.avg_churn_risk.toFixed(1) + '%';
+        document.getElementById('kpiNotificationsToday').textContent = data.total_delivered_today.toLocaleString();
+
+        // Progress bars
+        document.getElementById('kpiEngagementBar').style.width = data.avg_engagement_score + '%';
+        document.getElementById('kpiRetentionBar').style.width = data.avg_retention_score + '%';
+        document.getElementById('kpiChurnBar').style.width = data.avg_churn_risk + '%';
+
+        // Delivery rates
+        document.getElementById('kpiDeliveryRate').textContent = (data.delivery_rate * 100).toFixed(1) + '%';
+        document.getElementById('kpiOpenRate').textContent = (data.open_rate * 100).toFixed(1) + '%';
+        document.getElementById('kpiCTR').textContent = (data.ctr * 100).toFixed(1) + '%';
+
+        // Queue health
+        if (data.queue_health) {
+            const qh = data.queue_health;
+            document.getElementById('qQueued').textContent = qh.queued || 0;
+            document.getElementById('qDelivering').textContent = qh.delivering || 0;
+            document.getElementById('qFailed').textContent = qh.failed || 0;
+            document.getElementById('qDelivered').textContent = data.total_delivered_today || 0;
+            document.getElementById('qRateLimited').textContent = qh.rate_limited || 0;
+            document.getElementById('qQuietHours').textContent = qh.quiet_hours || 0;
+
+            const totalItems = (qh.queued || 0) + (qh.delivering || 0) + (qh.failed || 0) + (qh.rate_limited || 0) + (qh.quiet_hours || 0);
+            document.getElementById('queueHealthBadge').textContent = totalItems + ' total';
+        }
+
+        // Update timestamp
+        const now = new Date();
+        document.getElementById('engLastUpdate').textContent = 
+            'Last updated: ' + now.toLocaleTimeString('id-ID');
+
+    } catch (err) {
+        console.error('Dashboard fetch failed:', err);
+        document.getElementById('engLastUpdate').textContent = '⚠️ Update failed';
+    }
+}
+
+function engRefresh() {
+    document.getElementById('engLastUpdate').textContent = '⟳ Refreshing...';
+    engFetchDashboard();
+}
+
+// Auto-refresh every 30 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    engFetchDashboard();
+    setInterval(engFetchDashboard, 30000);
+});
+</script>
+{% endblock %}

@@ -13,6 +13,7 @@ from .models import (
     HelpCategory, HelpArticle, FAQ, BannerPromo,
     ContactInfo, SupportInfo, ChatQuickReply, SupportTicket
 )
+from drf_spectacular.utils import extend_schema
 from .serializers import (
     HelpCategorySerializer, HelpArticleListSerializer, HelpArticleDetailSerializer,
     FAQSerializer, BannerPromoSerializer, ContactInfoSerializer,
@@ -148,6 +149,9 @@ class SupportTicketUserView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return SupportTicket.objects.none()
+
         qs = SupportTicket.objects.filter(user=self.request.user)
         status = self.request.query_params.get('status')
         if status:
@@ -227,6 +231,7 @@ class HelpSearchView(generics.ListAPIView):
         })
 
 
+@extend_schema(exclude=True)
 class AIChatView(generics.GenericAPIView):
     """
     AI-powered customer service chat endpoint.

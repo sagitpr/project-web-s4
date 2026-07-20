@@ -39,6 +39,7 @@ from .services.ocr_service import (
     process_ocr_text,
     process_detected_item_ocr,
 )
+from drf_spectacular.utils import extend_schema
 from .services.aggregator_service import (
     aggregate_scan_results,
     confirm_and_save_items,
@@ -54,6 +55,7 @@ from .services.aggregator_service import (
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class StartScanSessionView(APIView):
     """Start a new AI Smart Scan session.
 
@@ -88,6 +90,7 @@ class StartScanSessionView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(exclude=True)
 class SessionDetailView(APIView):
     """Get scan session details with aggregate items."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -115,11 +118,15 @@ class SessionListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return SmartScanSession.objects.none()
+
         return SmartScanSession.objects.filter(
             store=self.request.user.store
         ).order_by('-started_at')[:50]
 
 
+@extend_schema(exclude=True)
 class CancelSessionView(APIView):
     """Cancel an active scan session."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -152,6 +159,7 @@ class CancelSessionView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class SubmitFrameView(APIView):
     """Submit camera frame detections to an active scan session.
 
@@ -245,6 +253,7 @@ class SubmitFrameView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class BulkBarcodeScanView(APIView):
     """Submit bulk barcode scan for a session.
 
@@ -297,6 +306,7 @@ class BulkBarcodeScanView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class SessionAggregatedView(APIView):
     """Get aggregated scan results ready for review.
 
@@ -325,6 +335,7 @@ class SessionAggregatedView(APIView):
         return Response(data)
 
 
+@extend_schema(exclude=True)
 class UpdateDetectedItemView(APIView):
     """Update a detected item before confirming.
 
@@ -358,6 +369,7 @@ class UpdateDetectedItemView(APIView):
         )
 
 
+@extend_schema(exclude=True)
 class ConfirmAndSaveView(APIView):
     """Confirm detected items and save as inventory batches.
 
@@ -418,6 +430,7 @@ class ConfirmAndSaveView(APIView):
         }, status=status.HTTP_207_MULTI_STATUS)
 
 
+@extend_schema(exclude=True)
 class RejectAllPendingView(APIView):
     """Reject all pending items in a session."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -457,6 +470,7 @@ class RejectAllPendingView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class RegisterNewProductFromScanView(APIView):
     """Register a new MasterProduct from scan data.
 
@@ -535,6 +549,7 @@ class DetectedItemListView(generics.ListAPIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class ScanSummaryView(APIView):
     """Get AI scan summary for the seller's dashboard.
 
@@ -552,6 +567,7 @@ class ScanSummaryView(APIView):
         return Response(data)
 
 
+@extend_schema(exclude=True)
 class ActiveSessionView(APIView):
     """Get the current active scanning session if any."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)

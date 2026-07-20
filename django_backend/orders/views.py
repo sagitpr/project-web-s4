@@ -178,6 +178,9 @@ class CartListView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Cart.objects.none()
+
         return Cart.objects.filter(user=self.request.user).select_related(
             'product', 'product__store'
         )
@@ -247,6 +250,7 @@ class CartDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data)
 
 
+@extend_schema(exclude=True)
 class CartClearView(views.APIView):
     """Clear all cart items."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -256,6 +260,7 @@ class CartClearView(views.APIView):
         return Response({'message': 'Keranjang berhasil dikosongkan.'})
 
 
+@extend_schema(exclude=True)
 class CartCountView(views.APIView):
     """Get cart item count."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -896,6 +901,7 @@ class OrderHistoryView(generics.ListAPIView):
 # OFFLINE SALE — Pembelian langsung di toko
 # =============================================================================
 
+@extend_schema(exclude=True)
 class OfflineSaleCreateView(views.APIView):
     """
     [DEPRECATED] Gunakan POST /api/orders/pos/checkout/ untuk multi-item.
@@ -996,6 +1002,7 @@ class OfflineSaleCreateView(views.APIView):
 # PACKING SESSION — Scan barang untuk pesanan online
 # =============================================================================
 
+@extend_schema(exclude=True)
 class PackingStartView(views.APIView):
     """
     Mulai sesi packing untuk pesanan online.
@@ -1042,6 +1049,7 @@ class PackingStartView(views.APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(exclude=True)
 class PackingScanItemView(views.APIView):
     """
     Scan satu item saat packing.
@@ -1178,6 +1186,7 @@ class PackingScanItemView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class PackingCompleteView(views.APIView):
     """
     Selesaikan sesi packing.
@@ -1225,6 +1234,7 @@ class PackingCompleteView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class PackingStatusView(views.APIView):
     """
     Cek status packing terkini.
@@ -1268,6 +1278,7 @@ class PackingStatusView(views.APIView):
 # POS OFFLINE — Multi-item scan & pay
 # =============================================================================
 
+@extend_schema(exclude=True)
 class POSOfflineCreateView(views.APIView):
     """
     Mencatat penjualan offline dengan scan barcode (multi-item).

@@ -4,6 +4,8 @@ Notifications serializers for Warungio Marketplace.
 
 from rest_framework import serializers
 from .models import Notification, NotificationPreference
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -17,6 +19,7 @@ class NotificationSerializer(serializers.ModelSerializer):
                   'is_read', 'read_at', 'time_ago', 'created_at')
         read_only_fields = ('user', 'is_read', 'read_at', 'created_at', 'time_ago')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_time_ago(self, obj):
         from django.utils import timezone
         now = timezone.now()

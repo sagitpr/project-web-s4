@@ -5,6 +5,8 @@ Midtrans Snap payment integration.
 
 from rest_framework import serializers
 from .models import Payment, PaymentMethod, MidtransTransaction, BankAccount
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
@@ -28,6 +30,9 @@ class PaymentSerializer(serializers.ModelSerializer):
                   'paid_at', 'expired_at', 'created_at')
         read_only_fields = ('transaction_code', 'payment_status', 'paid_at',
                            'created_at', 'payment_details')
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_order_number(self, obj):
         return obj.order.order_number if obj.order else None

@@ -6,6 +6,8 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User, OTP
 from .services.indonesia_validators import normalize_indonesian_phone
 from .services.captcha_service import verify_captcha_token
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +163,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'business_name', 'business_type', 'business_scale', 'business_description')
         read_only_fields = ('id', 'is_verified', 'created_at', 'wallet_balance')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_wallet_balance(self, obj):
         """
         Read wallet balance from Wallet table (database-driven).
@@ -171,33 +174,43 @@ class UserSerializer(serializers.ModelSerializer):
         except Exception:
             return 0.0
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_gender(self, obj):
         return obj.device_info.get('gender', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_birth_date(self, obj):
         return obj.device_info.get('birth_date', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_job(self, obj):
         return obj.device_info.get('job', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_city(self, obj):
         return obj.device_info.get('city', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_province(self, obj):
         return obj.device_info.get('province', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_zip_code(self, obj):
         return obj.device_info.get('zip_code', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_business_name(self, obj):
         return obj.device_info.get('business_name', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_business_type(self, obj):
         return obj.device_info.get('business_type', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_business_scale(self, obj):
         return obj.device_info.get('business_scale', '') if obj.device_info else ''
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_business_description(self, obj):
         return obj.device_info.get('business_description', '') if obj.device_info else ''
 

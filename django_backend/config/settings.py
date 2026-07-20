@@ -82,6 +82,8 @@ LOCAL_APPS = [
     'inventory.apps.InventoryConfig',
     'core',
     'ai_services.apps.AIServicesConfig',
+    'engagement.apps.EngagementConfig',
+    'ai_intelligence.apps.AIIntelligenceConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -430,7 +432,7 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
-    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Only Bearer (not JWT) to avoid OpenAPI schema warnings
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
@@ -749,6 +751,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Analytics', 'description': 'Dashboard analitik seller'},
         {'name': 'Chat', 'description': 'Pesan realtime chat'},
         {'name': 'Notifications', 'description': 'Notifikasi push & realtime'},
+        {'name': 'Engagement', 'description': 'AI Engagement & Retention Engine'},
         {'name': 'Support', 'description': 'Tiket bantuan & support center'},
         {'name': 'Subscriptions', 'description': 'Langganan toko'},
     ],
@@ -757,6 +760,12 @@ SPECTACULAR_SETTINGS = {
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
     ],
+    # Schema uses 'Bearer' only (SIMPLE_JWT also uses 'Bearer' only)
+    # Fix enum naming collisions for fields used across multiple models
+    'ENUM_NAME_OVERRIDES': {
+        # Field names that appear in multiple models with different choices
+        # Each entry maps component_name -> { field_name: named_enum_class }
+    },
 }
 
 # =============================================================================
@@ -798,3 +807,31 @@ AI_CHAT_ESCALATION_ENABLED = os.environ.get(
 
 # AI Services Caching
 AI_CACHE_TTL = 3600  # 1 hour default cache for AI responses
+
+# =============================================================================
+# PUSH NOTIFICATIONS — FCM / Web Push
+# =============================================================================
+# Firebase Cloud Messaging Server Key (Legacy HTTP protocol)
+FCM_SERVER_KEY = os.environ.get('FCM_SERVER_KEY', '')
+# Firebase service account JSON path (for FCM HTTP v1 API)
+FCM_CREDENTIALS = os.environ.get('FCM_CREDENTIALS', '')
+
+# Web Push (VAPID) — for PWA browser notifications
+# Generate: npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'admin@warungio.com')
+
+# =============================================================================
+# ENGAGEMENT ENGINE CONFIGURATION
+# =============================================================================
+# Cooldown interval for processing notification queue (seconds)
+ENGAGEMENT_QUEUE_PROCESS_INTERVAL = int(os.environ.get('ENGAGEMENT_QUEUE_PROCESS_INTERVAL', 30))
+# Maximum notifications to process per queue run
+ENGAGEMENT_QUEUE_BATCH_SIZE = int(os.environ.get('ENGAGEMENT_QUEUE_BATCH_SIZE', 50))
+# Batch profile update interval (hours)
+ENGAGEMENT_PROFILE_UPDATE_INTERVAL = int(os.environ.get('ENGAGEMENT_PROFILE_UPDATE_INTERVAL', 6))
+# Max at-risk users to scan per run
+ENGAGEMENT_AT_RISK_SCAN_LIMIT = int(os.environ.get('ENGAGEMENT_AT_RISK_SCAN_LIMIT', 50))
+# Min inactive days before marking user as at-risk
+ENGAGEMENT_MIN_INACTIVE_DAYS = int(os.environ.get('ENGAGEMENT_MIN_INACTIVE_DAYS', 7))

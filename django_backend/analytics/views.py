@@ -23,8 +23,10 @@ from products.models import Product, Review
 from stores.models import StoreFollower
 from accounts.permissions import IsSeller, IsAdmin
 from .services.ai_insight import AISellerInsightService
+from drf_spectacular.utils import extend_schema
 
 
+@extend_schema(exclude=True)
 class DashboardSummaryView(views.APIView):
     """Get seller dashboard summary statistics (cached 2 min)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -288,10 +290,14 @@ class SalesAnalyticsView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return SalesAnalytics.objects.none()
+
         store = self.request.user.store
         return SalesAnalytics.objects.filter(store=store).order_by('-date')
 
 
+@extend_schema(exclude=True)
 class SalesTrendDataView(views.APIView):
     """Get sales trend data for charts."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -344,6 +350,7 @@ class SalesTrendDataView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class DeviceAnalyticsView(views.APIView):
     """Get device usage analytics."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -393,6 +400,7 @@ class UserActivityView(generics.ListAPIView):
         ).order_by('-created_at')[:50]
 
 
+@extend_schema(exclude=True)
 class DailyReportView(generics.ListAPIView):
     """Get daily reports."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -402,6 +410,7 @@ class DailyReportView(generics.ListAPIView):
         return DailyReport.objects.filter(store=store).order_by('-date')
 
 
+@extend_schema(exclude=True)
 class RealTimeAnalyticsView(views.APIView):
     """Get real-time analytics for WebSocket fallback."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -434,6 +443,7 @@ class RealTimeAnalyticsView(views.APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class AIBusinessInsightView(views.APIView):
     """Get AI-powered business insights for seller.
 
@@ -455,6 +465,7 @@ class AIBusinessInsightView(views.APIView):
         return Response(insights)
 
 
+@extend_schema(exclude=True)
 class AIQuickInsightView(views.APIView):
     """Get quick dashboard insights."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -465,6 +476,7 @@ class AIQuickInsightView(views.APIView):
         return Response(insights)
 
 
+@extend_schema(exclude=True)
 class AIGrowthTipsView(views.APIView):
     """Get AI-generated growth tips."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -475,6 +487,7 @@ class AIGrowthTipsView(views.APIView):
         return Response(tips)
 
 
+@extend_schema(exclude=True)
 class AdminAIBusinessOverviewView(views.APIView):
     """Admin overview of all AI business insights."""
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
@@ -504,6 +517,7 @@ class AdminAIBusinessOverviewView(views.APIView):
 
 
 
+@extend_schema(exclude=True)
 class SellerReportView(views.APIView):
     """Live seller report built from existing order, product, review, and analytics records."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -737,8 +751,6 @@ class SellerReportView(views.APIView):
 
 import csv as csv_lib
 from io import BytesIO
-
-
 def _format_rupiah(val):
     """Format a number to Indonesian Rupiah string."""
     return f'Rp {float(val or 0):,.0f}'
@@ -751,6 +763,7 @@ def _write_csv_metric_row(writer, label, current_val, previous_val, pct_fn):
     writer.writerow([label, current_val, previous_val, pct, trend])
 
 
+@extend_schema(exclude=True)
 class ReportExportView(views.APIView):
     """
     Server-side report export endpoint.

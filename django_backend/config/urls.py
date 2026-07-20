@@ -80,6 +80,12 @@ urlpatterns = [
     # AI Services
     path(f'{api_prefix}ai/', include('ai_services.urls')),
 
+    # Engagement & Retention Engine
+    path(f'{api_prefix}engagement/', include('engagement.urls')),
+
+    # AI Intelligence Platform
+    path(f'{api_prefix}intelligence/', include('ai_intelligence.urls')),
+
     # JWT Endpoints
     path(f'{api_prefix}token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
     path(f'{api_prefix}token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
@@ -182,6 +188,7 @@ urlpatterns += [
     path('admin-panel/reports/', staff(TemplateView.as_view(template_name='admin/reports/index.html')), name='admin-reports'),
     path('admin-panel/security/', staff(TemplateView.as_view(template_name='admin/security/index.html')), name='admin-security'),
     path('admin-panel/audit/', staff(TemplateView.as_view(template_name='admin/audit/index.html')), name='admin-audit'),
+    path('admin-panel/engagement/', staff(TemplateView.as_view(template_name='admin/engagement/index.html')), name='admin-engagement'),
     path('admin-panel/settings/', staff(TemplateView.as_view(template_name='admin/settings/index.html')), name='admin-settings'),
     path('admin-panel/refunds/', staff(TemplateView.as_view(template_name='admin/refunds/index.html')), name='admin-refunds'),
     path('admin-panel/refunds/<int:pk>/', staff(TemplateView.as_view(template_name='admin/refunds/detail.html')), name='admin-refund-detail'),

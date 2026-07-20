@@ -13,6 +13,7 @@ from .serializers import (
     StoreUpdateSerializer, StoreFollowerSerializer, StoreCategorySerializer
 )
 from accounts.permissions import IsSeller, IsStoreOwner
+from drf_spectacular.utils import extend_schema
 
 
 class StoreCategoryListView(generics.ListAPIView):
@@ -79,6 +80,7 @@ class StoreCreateView(generics.CreateAPIView):
         serializer.save(user=user)
 
 
+@extend_schema(exclude=True)
 class StoreFollowView(views.APIView):
     """Follow/unfollow a store."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -126,9 +128,13 @@ class StoreFollowersView(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return StoreFollower.objects.none()
+
         return StoreFollower.objects.filter(store_id=self.kwargs['store_id'])
 
 
+@extend_schema(exclude=True)
 class RemoveStoreImageView(views.APIView):
     """Remove store logo or banner image (set to null, delete file)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)

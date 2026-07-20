@@ -22,6 +22,7 @@ from .category_classifier import get_category_classifier
 from .fraud_detection import get_fraud_detection
 from .notification_generator import get_notification_generator
 from .dashboard_insights import get_dashboard_insights
+from drf_spectacular.utils import extend_schema
 
 # Celery task imports — wrapped so import doesn't fail if Celery/Redis is down
 try:
@@ -34,6 +35,7 @@ logger = logging.getLogger('django_backend.ai_services.views')
 
 # ── AI Health / Connection Verification ──
 
+@extend_schema(exclude=True)
 class AIHealthView(views.APIView):
     """Verify AI service connection and API key validity."""
     permission_classes = (permissions.AllowAny,)
@@ -74,6 +76,7 @@ class AIHealthView(views.APIView):
 
 # ── Product Recommendations ──
 
+@extend_schema(exclude=True)
 class AIRecommendationsView(views.APIView):
     """Get AI-powered personalized product recommendations."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -90,6 +93,7 @@ class AIRecommendationsView(views.APIView):
         return Response(recommendations)
 
 
+@extend_schema(exclude=True)
 class AISimilarProductsView(views.APIView):
     """Get AI-powered similar product recommendations."""
     permission_classes = (permissions.AllowAny,)
@@ -103,6 +107,7 @@ class AISimilarProductsView(views.APIView):
 
 # ── Smart Search ──
 
+@extend_schema(exclude=True)
 class AISmartSearchView(views.APIView):
     """AI-powered smart product search with natural language understanding."""
     permission_classes = (permissions.AllowAny,)
@@ -118,6 +123,7 @@ class AISmartSearchView(views.APIView):
         return Response(results)
 
 
+@extend_schema(exclude=True)
 class AISearchSuggestionsView(views.APIView):
     """Get real-time search suggestions."""
     permission_classes = (permissions.AllowAny,)
@@ -134,6 +140,7 @@ class AISearchSuggestionsView(views.APIView):
 
 # ── Vision Analysis ──
 
+@extend_schema(exclude=True)
 class AIProductVisionView(views.APIView):
     """Analyze product images with AI (freshness, OCR, quality).
     
@@ -205,6 +212,7 @@ class AIProductVisionView(views.APIView):
         })
 
 
+@extend_schema(exclude=True)
 class AIVisionTaskStatusView(views.APIView):
     """Get the status/result of an async vision analysis task."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -228,6 +236,7 @@ class AIVisionTaskStatusView(views.APIView):
         return Response(response)
 
 
+@extend_schema(exclude=True)
 class AIFreshnessDetectionView(views.APIView):
     """AI-powered freshness detection for produce.
     
@@ -278,6 +287,7 @@ class AIFreshnessDetectionView(views.APIView):
 
 # ── Product Description Generator ──
 
+@extend_schema(exclude=True)
 class AIProductDescriptionView(views.APIView):
     """Generate AI product descriptions."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -301,6 +311,7 @@ class AIProductDescriptionView(views.APIView):
 
 # ── Review Analyzer ──
 
+@extend_schema(exclude=True)
 class AIReviewAnalysisView(views.APIView):
     """Analyze product reviews with AI sentiment analysis."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -322,6 +333,7 @@ class AIReviewAnalysisView(views.APIView):
 
 # ── Seller Assistant ──
 
+@extend_schema(exclude=True)
 class AISellerAssistantView(views.APIView):
     """AI business insights and recommendations for sellers."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -342,6 +354,7 @@ class AISellerAssistantView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class AISellerStockView(views.APIView):
     """AI stock recommendations for sellers."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -364,6 +377,7 @@ class AISellerStockView(views.APIView):
 
 # ── Category Classification ──
 
+@extend_schema(exclude=True)
 class AICategoryClassifierView(views.APIView):
     """AI-powered product category classification."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -384,6 +398,7 @@ class AICategoryClassifierView(views.APIView):
 
 # ── Fraud Detection ──
 
+@extend_schema(exclude=True)
 class AIFraudOrderView(views.APIView):
     """AI fraud detection for a specific order."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -400,6 +415,7 @@ class AIFraudOrderView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class AIFraudUserView(views.APIView):
     """AI fraud analysis for a user account."""
     permission_classes = (permissions.IsAdminUser,)
@@ -418,6 +434,7 @@ class AIFraudUserView(views.APIView):
 
 # ── Notification Generator ──
 
+@extend_schema(exclude=True)
 class AINotificationGenerateView(views.APIView):
     """Generate AI-powered personalized notifications."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -443,6 +460,7 @@ class AINotificationGenerateView(views.APIView):
 
 # ── Dashboard Insights ──
 
+@extend_schema(exclude=True)
 class AIDashboardSellerView(views.APIView):
     """AI-generated dashboard insights for sellers."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -463,6 +481,7 @@ class AIDashboardSellerView(views.APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class AIDashboardAdminView(views.APIView):
     """AI-generated platform insights for administrators."""
     permission_classes = (permissions.IsAdminUser,)

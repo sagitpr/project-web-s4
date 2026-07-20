@@ -22,6 +22,7 @@ from .serializers import (
     FlutterSupplierDTO, FlutterSupplierProductDTO, FlutterSupplierOrderDTO,
 )
 from accounts.permissions import IsSeller, IsAdmin
+from drf_spectacular.utils import extend_schema
 
 
 # =============================================================================
@@ -112,6 +113,9 @@ class SupplierProductsView(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Product.objects.none()
+
         return SupplierProduct.objects.filter(
             supplier_id=self.kwargs['pk'],
             is_active=True, is_available=True
@@ -211,6 +215,7 @@ class SupplierOrderDetailView(generics.RetrieveAPIView):
         ).select_related('supplier', 'store').prefetch_related('items')
 
 
+@extend_schema(exclude=True)
 class SupplierOrderStatusView(views.APIView):
     """Update purchase order status."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -255,6 +260,7 @@ class MySupplierListView(generics.ListAPIView):
         return Supplier.objects.filter(id__in=supplier_ids, is_active=True)
 
 
+@extend_schema(exclude=True)
 class SupplierRegisterView(views.APIView):
     """Register a new supplier (for sellers/admin)."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -273,6 +279,7 @@ class SupplierRegisterView(views.APIView):
 # SEARCH
 # =============================================================================
 
+@extend_schema(exclude=True)
 class SupplierSearchView(views.APIView):
     """Search suppliers by name, city, category."""
     permission_classes = (permissions.AllowAny,)

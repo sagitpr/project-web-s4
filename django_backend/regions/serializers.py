@@ -6,6 +6,8 @@ Flutter-ready with consistent JSON structure.
 
 from rest_framework import serializers
 from .models import Province, Regency, District, Village
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
 
 
 class ProvinceSerializer(serializers.ModelSerializer):
@@ -16,6 +18,7 @@ class ProvinceSerializer(serializers.ModelSerializer):
         model = Province
         fields = ['code', 'name', 'latitude', 'longitude', 'regency_count', 'is_active']
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_regency_count(self, obj):
         return obj.regencies.filter(is_active=True).count()
 
@@ -28,6 +31,7 @@ class ProvinceDetailSerializer(serializers.ModelSerializer):
         model = Province
         fields = ['code', 'name', 'latitude', 'longitude', 'is_active', 'regencies']
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_regencies(self, obj):
         qs = obj.regencies.filter(is_active=True)
         return RegencySerializer(qs, many=True).data
@@ -46,13 +50,16 @@ class RegencySerializer(serializers.ModelSerializer):
             'type', 'latitude', 'longitude', 'district_count', 'is_active',
         ]
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_province_code(self, obj):
         return obj.province.code
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_display_name(self, obj):
         prefix = 'Kota ' if obj.type == 'kota' else 'Kab. '
         return f"{prefix}{obj.name}"
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_district_count(self, obj):
         return obj.districts.filter(is_active=True).count()
 
@@ -71,15 +78,21 @@ class RegencyDetailSerializer(serializers.ModelSerializer):
             'type', 'latitude', 'longitude', 'is_active', 'districts',
         ]
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_province_code(self, obj):
         return obj.province.code
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_province_name(self, obj):
         return obj.province.name
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_display_name(self, obj):
         prefix = 'Kota ' if obj.type == 'kota' else 'Kab. '
         return f"{prefix}{obj.name}"
+
+    @extend_schema_field(OpenApiTypes.STR)
+
 
     def get_districts(self, obj):
         qs = obj.districts.filter(is_active=True)
@@ -104,6 +117,7 @@ class DistrictSerializer(serializers.ModelSerializer):
     def get_display_name(self, obj):
         return f"Kec. {obj.name}"
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_village_count(self, obj):
         return obj.villages.filter(is_active=True).count()
 
@@ -127,6 +141,7 @@ class DistrictDetailSerializer(serializers.ModelSerializer):
     def get_display_name(self, obj):
         return f"Kec. {obj.name}"
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_villages(self, obj):
         qs = obj.villages.filter(is_active=True)
         return VillageSerializer(qs, many=True).data

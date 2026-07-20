@@ -35,6 +35,7 @@ from .serializers import (
 )
 from .services.barcode_lookup import lookup_barcode, validate_barcode_checksum
 from .services.fefo_engine import stock_in, stock_out, get_batch_summary, get_expiry_summary
+from drf_spectacular.utils import extend_schema
 
 # ── Cache TTLs ──
 LOW_STOCK_CACHE_TTL = 60 * 3  # 3 minutes
@@ -46,6 +47,7 @@ EXPIRY_CACHE_TTL = 60 * 5     # 5 minutes
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class InventoryRootView(APIView):
     """List available inventory API endpoints."""
     permission_classes = (permissions.IsAuthenticated,)
@@ -169,6 +171,7 @@ class MasterProductCreateView(generics.CreateAPIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class BarcodeLookupView(APIView):
     """Look up a product by barcode.
 
@@ -222,6 +225,7 @@ class BarcodeLookupView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class BatchCreateView(APIView):
     """Create a new batch with stock-in entry.
 
@@ -378,6 +382,7 @@ class BatchDetailView(generics.RetrieveAPIView):
     serializer_class = ProductBatchSerializer
 
 
+@extend_schema(exclude=True)
 class BatchDisposeView(APIView):
     """Dispose of a batch (mark as disposed, remove from inventory)."""
     permission_classes = (permissions.IsAuthenticated, IsSeller)
@@ -447,6 +452,7 @@ class BatchDisposeView(APIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class StockOutView(APIView):
     """Process stock outbound using FEFO.
 
@@ -539,6 +545,7 @@ class StockOutView(APIView):
         }, status=status.HTTP_409_CONFLICT)
 
 
+@extend_schema(exclude=True)
 class FEFOCheckView(APIView):
     """Check what batch(es) would be picked by FEFO for a given quantity.
 
@@ -642,6 +649,7 @@ class InventoryTransactionListView(generics.ListAPIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class BatchSummaryView(APIView):
     """Get batch summary for the seller's store.
 
@@ -678,6 +686,9 @@ class BatchListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return ProductBatch.objects.none()
+
         qs = ProductBatch.objects.filter(
             store=self.request.user.store,
             is_active=True,
@@ -708,6 +719,7 @@ class BatchListView(generics.ListAPIView):
 # =============================================================================
 
 
+@extend_schema(exclude=True)
 class ExpirySummaryView(APIView):
     """Get expiry dashboard for the seller's store (cached 5 min).
 
@@ -746,6 +758,7 @@ class ExpirySummaryView(APIView):
         return Response(result)
 
 
+@extend_schema(exclude=True)
 class ExpiryCheckTriggerView(APIView):
     """Manually trigger expiry check and notification for this store (async via Celery).
 
@@ -808,6 +821,7 @@ class StockAlertDetailView(generics.RetrieveUpdateDestroyAPIView):
         return StockAlert.objects.filter(store=self.request.user.store)
 
 
+@extend_schema(exclude=True)
 class LowStockReportView(APIView):
     """Get low stock report for the seller's store (cached 3 min).
 
