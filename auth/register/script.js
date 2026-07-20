@@ -194,12 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         role: 'buyer',
       });
 
-      console.log("REGISTER SUCCESS");
-      console.log(data);
-
-      // Save password for auto-login after OTP verification
-      sessionStorage.setItem('register_password', password);
-
+      // Password not stored client-side for security — OTP auto-login handles session
       showToastNotification(
         'Registrasi Berhasil',
         'Kode OTP telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam untuk melakukan verifikasi akun.'
@@ -209,8 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         '/auth/otp/?email=' +
         encodeURIComponent(email) +
         (data.otp_code ? '&otp=' + encodeURIComponent(data.otp_code) : '');
-
-      console.log("REDIRECT TO =", redirectUrl);
 
       setTimeout(() => {
         window.location.href = redirectUrl;
@@ -235,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = await WarungioAPI.getSocialAuthConfig('google');
         if (config.google_client_id) clientId = config.google_client_id;
       } catch (e) {
-        console.warn('Failed to fetch Google config:', e);
       }
 
       // Guard: block login if client ID is missing or still placeholder

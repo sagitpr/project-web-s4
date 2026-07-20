@@ -2,16 +2,19 @@
 Smart Scan AI Service for Warungio Marketplace.
 
 Server-side product scanning, freshness analysis, barcode/OCR metadata processing.
-Integrates with Vertex AI Gemini 1.5 Flash API for vision-based quality analysis.
+Integrates with unified GeminiClient for vision-based quality analysis.
+
+All legacy fallback/heuristic code has been removed — every scan uses the
+real Gemini Vision API via the centralized GeminiClient.
 """
 
 import base64
 import json
 import logging
-import random
-import requests
 from datetime import date
 from django.conf import settings
+
+from ai_services.gemini_client import get_gemini_client
 
 logger = logging.getLogger('django_backend.products.ai')
 
@@ -25,7 +28,10 @@ QUALITY_PENDING = 'pending'
 
 def call_gemini_vision_api(base64_image: str, prompt: str) -> dict:
     """
-    Call Vertex AI Gemini 1.5 Flash Vision API.
+    Call Gemini Vision API via the unified GeminiClient.
+    
+    This replaces the legacy Vertex AI SDK call that required GCP service accounts.
+    Uses the API key from settings.GEMINI_KEY instead.
     
     Returns:
         dict | None: The parsed JSON response from Gemini, or None on failure.
@@ -33,77 +39,30 @@ def call_gemini_vision_api(base64_image: str, prompt: str) -> dict:
     if not base64_image:
         return None
 
-    if ',' in base64_image:
-        base64_image = base64_image.split(',')[1]
-
-    # Get GCP credentials
-    try:
-        import google.auth
-        from google.auth.transport.requests import Request
-        
-        credentials, project_id = google.auth.default()
-        credentials.refresh(Request())
-        access_token = credentials.token
-    except Exception as e:
-        logger.warning(f"Failed to load GCP credentials: {str(e)}. Bypassing Gemini API.")
+    client = get_gemini_client()
+    if not client.api_key:
+        logger.warning("Gemini API key not configured. Vision API unavailable.")
         return None
 
-    # Retrieve settings or default parameters
-    region = getattr(settings, 'GCP_REGION', 'us-central1')
-    project_id = getattr(settings, 'GCP_PROJECT_ID', project_id)
-    if not project_id:
-        logger.warning("GCP_PROJECT_ID is empty. Bypassing Gemini API.")
-        return None
-
-    model_id = "gemini-1.5-flash"
-    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:generateContent"
-    
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt},
-                    {
-                        "inlineData": {
-                            "mimeType": "image/jpeg",
-                            "data": base64_image
-                        }
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "responseMimeType": "application/json"
-        }
-    }
-    
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
-        response.raise_for_status()
-        res_json = response.json()
-        
-        candidates = res_json.get('candidates', [])
-        if candidates:
-            parts = candidates[0].get('content', {}).get('parts', [])
-            if parts and 'text' in parts[0]:
-                content_text = parts[0]['text'].strip()
-                parsed_data = json.loads(content_text)
-                return parsed_data
-                
+        result = client.analyze_image(
+            image_data=base64_image,
+            prompt=prompt,
+            temperature=0.2,
+        )
+        return result
     except Exception as e:
-        logger.error(f"Error calling Vertex AI Gemini Vision API: {str(e)}")
-        
-    return None
+        logger.error(f"Error calling Gemini Vision API via unified client: {str(e)}")
+        return None
 
 
 def process_computer_vision(product_name, product_category='', image_base64=None):
     """
-    Analyze product freshness using Gemini Vision. Falls back to local heuristics if offline.
+    Analyze product freshness using Gemini Vision API.
+    
+    Returns a structured quality assessment. If image is provided, uses real
+    Gemini Vision inference. If no image, returns a minimal response without
+    hardcoded heuristics.
     """
     if image_base64:
         prompt = (
@@ -120,87 +79,43 @@ def process_computer_vision(product_name, product_category='', image_base64=None
             gemini_res['mode'] = 'computer_vision'
             return gemini_res
 
-    # Fallback to Local Heuristics
-    name_lower = (product_name or '').lower()
-    cat_lower = (product_category or '').lower()
-
-    leafy_keywords = ['bayam', 'selada', 'kangkung', 'sawi', 'kale', 'daun']
-    fragile_keywords = ['tomat', 'cabai', 'chili', 'strawberry', 'anggur']
-    spoiled_keywords = ['busuk', 'layu', 'rusak', 'bercak']
-
-    score = 95
-    status = QUALITY_FRESH
-    notes = []
-
-    if any(k in name_lower for k in spoiled_keywords):
-        score = random.randint(20, 40)
-        status = QUALITY_REJECTED
-        notes.append('Indikator kerusakan terdeteksi pada produk.')
-    elif any(k in name_lower for k in leafy_keywords):
-        score = random.randint(60, 90)
-        if score < 70:
-            status = QUALITY_WARNING
-            notes.append('Daun mulai menguning — disarankan segera dijual.')
-        else:
-            status = QUALITY_FRESH
-            notes.append('Produk terlihat segar dan layak jual.')
-    elif any(k in name_lower for k in fragile_keywords):
-        score = random.randint(65, 92)
-        if score < 75:
-            status = QUALITY_WARNING
-            notes.append('Tekstur produk mulai lunak — periksa kondisi.')
-        else:
-            status = QUALITY_FRESH
-            notes.append('Produk dalam kondisi baik untuk dijual.')
-    else:
-        score = random.randint(80, 98)
-        status = QUALITY_FRESH if score >= 80 else QUALITY_NORMAL
-        notes.append('Produk terdeteksi dalam kondisi baik.')
-
-    if 'sayur' in cat_lower or 'buah' in cat_lower:
-        score = max(score - random.randint(0, 5), 0)
-
-    confidence = round(random.uniform(0.85, 0.98), 2)
-    
-    if status == QUALITY_FRESH:
-        result_text = f'Produk terdeteksi dengan tingkat kesegaran {score}%. Produk layak dijual.'
-    elif status == QUALITY_WARNING:
-        result_text = f'Tingkat kesegaran: {score}%. Kesegaran menurun. Disarankan diskon.'
-    else:
-        result_text = f'Tingkat kesegaran: {score}%. Kualitas buruk, tidak layak jual.'
-
-    if notes:
-        result_text += ' ' + ' '.join(notes)
-
+    # No image provided or Gemini unavailable for this request
     return {
-        'freshness_score': score,
-        'quality_status': status,
-        'confidence': confidence,
-        'ai_result': result_text.strip(),
+        'freshness_score': None,
+        'quality_status': QUALITY_PENDING,
+        'confidence': None,
+        'ai_result': 'Tidak ada gambar untuk dianalisis. Silakan unggah gambar produk.',
         'mode': 'computer_vision',
     }
 
 
 def process_barcode(barcode=''):
-    """Verify barcode and return metadata."""
+    """Verify barcode format and return metadata."""
     if not barcode:
-        barcode = '8991234567890'
+        return {
+            'barcode': '',
+            'freshness_score': None,
+            'quality_status': QUALITY_PENDING,
+            'confidence': None,
+            'ai_result': 'Barcode tidak diberikan.',
+            'mode': 'barcode',
+        }
 
     is_valid = len(barcode) == 13 and barcode.isdigit()
     status = QUALITY_FRESH if is_valid else QUALITY_PENDING
 
     return {
         'barcode': barcode,
-        'freshness_score': 100 if is_valid else 0,
+        'freshness_score': 100 if is_valid else None,
         'quality_status': status,
-        'confidence': 0.98 if is_valid else 0.5,
+        'confidence': 0.98 if is_valid else None,
         'ai_result': f'Barcode terverifikasi: {barcode}.' if is_valid else f'Barcode {barcode} tidak valid.',
         'mode': 'barcode',
     }
 
 
 def process_ocr(barcode='', bpom_number='', expiration_date='', image_base64=None):
-    """Parse product packaging labels (BPOM, expiry) using Gemini Vision."""
+    """Parse product packaging labels (BPOM, expiry) using Gemini Vision API."""
     if image_base64:
         prompt = (
             "Perform OCR on this product packaging. "
@@ -220,71 +135,39 @@ def process_ocr(barcode='', bpom_number='', expiration_date='', image_base64=Non
             gemini_res['mode'] = 'ocr'
             return gemini_res
 
-    # Local Fallback
-    if not barcode:
-        barcode = '8991234567890'
-    if not bpom_number:
-        bpom_number = 'MD 231456789012'
-    if not expiration_date:
-        expiration_date = '2027-12-31'
-
-    is_expired = False
-    try:
-        exp = date.fromisoformat(expiration_date)
-        if exp < date.today():
-            is_expired = True
-    except (ValueError, TypeError):
-        pass
-
-    confidence = round(random.uniform(0.65, 0.85), 2)
-    confidence_uncertain = confidence < 0.80
-
-    if is_expired:
-        result_text = f'⚠️ KADALUWARSA! Barcode: {barcode}, Exp: {expiration_date}.'
-        score = 0
-        status = QUALITY_REJECTED
-    elif confidence_uncertain:
-        result_text = f'Deteksi OCR kurang yakin ({confidence}). Butuh konfirmasi manual.'
-        score = 50
-        status = QUALITY_PENDING
-    else:
-        result_text = f'Deteksi OCR berhasil. Barcode: {barcode}, BPOM: {bpom_number}, Exp: {expiration_date}.'
-        score = 95
-        status = QUALITY_FRESH
-
+    # No image or Gemini unavailable — return minimal response without hardcoded defaults
     return {
-        'barcode': barcode,
-        'bpom_number': bpom_number,
-        'expiration_date': expiration_date,
-        'is_expired': is_expired,
-        'freshness_score': score,
-        'quality_status': status,
-        'confidence': confidence,
-        'confidence_uncertain': confidence_uncertain,
-        'ai_result': result_text,
+        'barcode': barcode or '',
+        'bpom_number': bpom_number or '',
+        'expiration_date': expiration_date or '',
+        'is_expired': None,
+        'freshness_score': None,
+        'quality_status': QUALITY_PENDING,
+        'confidence': None,
+        'confidence_uncertain': None,
+        'ai_result': 'Tidak ada gambar untuk OCR. Silakan unggah gambar kemasan produk.',
         'mode': 'ocr',
     }
 
 
 def process_manual(barcode='', bpom_number='', expiration_date=''):
     """Process manually verified product metadata."""
-    if not barcode:
-        barcode = '8991234567890'
-    if not bpom_number:
-        bpom_number = 'MD 231456789012'
-    if not expiration_date:
-        expiration_date = '2027-12-31'
-
-    result_text = f'Metadata dikonfirmasi manual. Barcode: {barcode}, BPOM: {bpom_number}, Exp: {expiration_date}.'
+    result_text = 'Metadata dikonfirmasi manual.'
+    if barcode:
+        result_text += f' Barcode: {barcode}.'
+    if bpom_number:
+        result_text += f' BPOM: {bpom_number}.'
+    if expiration_date:
+        result_text += f' Exp: {expiration_date}.'
 
     return {
-        'barcode': barcode,
-        'bpom_number': bpom_number,
-        'expiration_date': expiration_date,
-        'freshness_score': 100,
-        'quality_status': QUALITY_FRESH,
-        'confidence': 1.0,
-        'confidence_uncertain': False,
+        'barcode': barcode or '',
+        'bpom_number': bpom_number or '',
+        'expiration_date': expiration_date or '',
+        'freshness_score': None,
+        'quality_status': QUALITY_PENDING,
+        'confidence': None,
+        'confidence_uncertain': None,
         'ai_result': result_text,
         'mode': 'manual',
     }
@@ -317,8 +200,8 @@ def process_scan(product, scan_type='computer_vision', options=None):
         return {
             'error': f'Scan type {scan_type} not supported.',
             'quality_status': QUALITY_PENDING,
-            'freshness_score': 0,
-            'confidence': 0,
+            'freshness_score': None,
+            'confidence': None,
             'ai_result': 'Mode scan tidak valid.',
             'mode': scan_type,
         }

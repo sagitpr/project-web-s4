@@ -24,9 +24,15 @@ urlpatterns = [
     path('otp/verify/', views.OTPVerifyView.as_view(), name='otp-verify'),
     path('otp/resend/', views.ResendOTPView.as_view(), name='otp-resend'),
     
+    # Registration availability check (no side effects, no record creation)
+    path('check-availability/', views.CheckAvailabilityView.as_view(), name='check-availability'),
+
     # Password Reset
     path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/', views.ResetPasswordView.as_view(), name='reset-password'),
+    
+    # Admin Login (separated from public auth)
+    path('admin-login/', views.AdminLoginView.as_view(), name='admin-login'),
     
     # Social Authentication
     path('social/google/', social_views.GoogleLoginView.as_view(), name='social-google'),

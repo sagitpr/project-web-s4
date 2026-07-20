@@ -237,12 +237,12 @@ async function syncOrders() {
   // Retrieve pending orders from IndexedDB and send them
   const cache = await caches.open('pending-orders');
   // Implementation depends on IndexedDB setup
-  console.log('Syncing pending orders...');
+  // Syncing pending orders implementation
 }
 
 async function syncMessages() {
   // Retrieve pending messages from IndexedDB and send them
-  console.log('Syncing pending messages...');
+  // Syncing pending messages implementation
 }
 
 // Periodic background sync (if supported)
@@ -254,5 +254,4 @@ self.addEventListener('periodicsync', (event) => {
 
 async function updateOrders() {
   // Periodically check for order updates
-  console.log('Checking for order updates...');
 }

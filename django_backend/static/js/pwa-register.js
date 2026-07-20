@@ -11,7 +11,7 @@
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('/assets/pwa/service-worker.js')
         .then(function (registration) {
-          console.log('✅ PWA Service Worker registered:', registration.scope);
+          // PWA Service Worker registered
 
           // Check for updates
           registration.addEventListener('updatefound', function () {
@@ -25,7 +25,7 @@
           });
         })
         .catch(function (error) {
-          console.log('❌ PWA Service Worker registration failed:', error);
+          // PWA Service Worker registration failed
         });
 
       // Listen for controller change (after update)
@@ -55,10 +55,8 @@
         // Wait for the user to respond to the prompt
         deferredPrompt.userChoice.then(function (choiceResult) {
           if (choiceResult.outcome === 'accepted') {
-            console.log('✅ User accepted PWA install');
             trackPWAEvent('installed');
           } else {
-            console.log('❌ User dismissed PWA install');
             trackPWAEvent('dismissed');
           }
           deferredPrompt = null;
@@ -69,7 +67,6 @@
 
   // Track when PWA is successfully installed
   window.addEventListener('appinstalled', function (event) {
-    console.log('✅ PWA was installed');
     trackPWAEvent('app_installed');
     if (installButton) {
       installButton.style.display = 'none';

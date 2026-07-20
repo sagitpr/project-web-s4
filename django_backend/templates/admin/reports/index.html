@@ -4,54 +4,65 @@
 {% block page_title %}Reports{% endblock %}
 
 {% block content %}
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Reports</option><option>Financial</option><option>Growth</option><option>Engagement</option><option>Compliance</option></select>
-        <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>This Month</option><option>Last Month</option><option>This Quarter</option><option>This Year</option><option>Custom Range</option></select>
-    </div>
-    <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary btn-sm" onclick="exportAdminReport('pdf')"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportAdminReport('csv')"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportAdminReport('xlsx')"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
-    </div>
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div><div class="stat-content"><div class="stat-label">Total Users</div><div class="stat-value" id="rptUsers"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-store"></i></div><div class="stat-content"><div class="stat-label">Active Stores</div><div class="stat-value" id="rptStores"><span class="skeleton" style="display:inline-block;width:50px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div><div class="stat-content"><div class="stat-label">Total Orders</div><div class="stat-value" id="rptOrders"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div><div class="stat-content"><div class="stat-label">Revenue (30d)</div><div class="stat-value" id="rptRevenue" style="font-size:16px;"><span class="skeleton" style="display:inline-block;width:80px;height:24px;"></span></div></div></div>
 </div>
 
 <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:24px;">
-    <div class="card" style="cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='var(--color-brand)'" onmouseout="this.style.borderColor='var(--color-border)'">
+    <div class="card">
         <div class="card-body" style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:28px 20px;">
             <div style="width:56px;height:56px;border-radius:var(--radius-xl);background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;"><i class="fa-solid fa-money-bill-trend-up fa-xl"></i></div>
-            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Financial Report</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">Revenue, fees, payouts, and settlement data</p></div>
-            <span style="font-size:11px;color:var(--color-text-tertiary);">Last generated: Jun 26, 2026</span>
+            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Financial Report</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">Revenue, fees, payouts</p></div>
+            <span style="font-size:11px;color:var(--color-text-tertiary);" id="rptFinanceDate">Loading...</span>
         </div>
     </div>
-    <div class="card" style="cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='var(--color-brand)'" onmouseout="this.style.borderColor='var(--color-border)'">
+    <div class="card">
         <div class="card-body" style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:28px 20px;">
             <div style="width:56px;height:56px;border-radius:var(--radius-xl);background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;"><i class="fa-solid fa-arrow-trend-up fa-xl"></i></div>
-            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Growth Report</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">User, store, and transaction growth metrics</p></div>
-            <span style="font-size:11px;color:var(--color-text-tertiary);">Last generated: Jun 25, 2026</span>
+            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Growth Report</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">User, store, transaction growth</p></div>
+            <span style="font-size:11px;color:var(--color-text-tertiary);" id="rptGrowthDate">Loading...</span>
         </div>
     </div>
-    <div class="card" style="cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='var(--color-brand)'" onmouseout="this.style.borderColor='var(--color-border)'">
+    <div class="card">
         <div class="card-body" style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:28px 20px;">
             <div style="width:56px;height:56px;border-radius:var(--radius-xl);background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;"><i class="fa-solid fa-users-gear fa-xl"></i></div>
-            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Engagement Report</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">User activity, session data, and feature usage</p></div>
-            <span style="font-size:11px;color:var(--color-text-tertiary);">Last generated: Jun 24, 2026</span>
+            <div><h3 style="font-size:15px;font-weight:700;margin:0;">Engagement</h3><p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0;">User activity, sessions</p></div>
+            <span style="font-size:11px;color:var(--color-text-tertiary);" id="rptEngDate">Loading...</span>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header"><h3>Report History</h3><div style="display:flex; gap:8px;"><div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search reports..." class="form-input" style="width:200px;min-height:38px;padding:8px 12px 8px 34px;"></div></div></div>
-    <div class="card-body" style="padding:0;">
-        <div class="table-wrap"><table class="w-table">
-            <thead><tr><th>Report</th><th>Type</th><th>Period</th><th>Generated</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
-            <tbody>
-                <tr><td><span style="font-weight:600;">Monthly Financial Summary</span></td><td><span class="badge badge-green">Financial</span></td><td>May 2026</td><td>Jun 1, 2026</td><td><span class="badge badge-green">Ready</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm"><i class="fa-solid fa-download"></i></button></td></tr>
-                <tr><td><span style="font-weight:600;">Q2 Growth Overview</span></td><td><span class="badge badge-blue">Growth</span></td><td>Q2 2026</td><td>Jun 15, 2026</td><td><span class="badge badge-green">Ready</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm"><i class="fa-solid fa-download"></i></button></td></tr>
-                <tr><td><span style="font-weight:600;">Weekly Engagement</span></td><td><span class="badge badge-yellow">Engagement</span></td><td>Jun 20-26</td><td>Jun 27, 2026</td><td><span class="badge badge-green">Ready</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm"><i class="fa-solid fa-download"></i></button></td></tr>
-                <tr><td><span style="font-weight:600;">Compliance Audit</span></td><td><span class="badge badge-purple">Compliance</span></td><td>May 2026</td><td>Jun 5, 2026</td><td><span class="badge badge-yellow">Pending</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Generate</button></td></tr>
-            </tbody>
-        </table></div>
-    </div>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+          ? window.WarungioAuth.getAccessToken() 
+          : localStorage.getItem('warungio_access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load');
+        const d = await res.json();
+
+        document.getElementById('rptUsers').textContent = d.total_users.toLocaleString('id-ID');
+        document.getElementById('rptStores').textContent = d.active_stores.toLocaleString('id-ID');
+        document.getElementById('rptOrders').textContent = d.total_orders.toLocaleString('id-ID');
+        document.getElementById('rptRevenue').textContent = d.revenue_30d_formatted;
+
+        const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+        document.getElementById('rptFinanceDate').textContent = 'Data: ' + now;
+        document.getElementById('rptGrowthDate').textContent = 'Data: ' + now;
+        document.getElementById('rptEngDate').textContent = 'Data: ' + now;
+    } catch (e) {
+        ['rptUsers','rptStores','rptOrders','rptRevenue'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = 'N/A';
+        });
+    }
+});
+</script>
 {% endblock %}

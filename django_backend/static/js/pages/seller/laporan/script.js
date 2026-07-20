@@ -95,7 +95,7 @@
     var period = filter ? filter.value : '30days';
     
     // Build export URL with auth token
-    var token = (window.WarungioAuth && window.WarungioAuth.getToken) ? WarungioAuth.getToken() : localStorage.getItem('access_token');
+    var token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) ? WarungioAuth.getAccessToken() : localStorage.getItem('warungio_access_token');
     var baseUrl = window.API_BASE_URL || '/api';
     var exportUrl = baseUrl + '/analytics/export/?format=' + apiFormat + '&period=' + period;
     

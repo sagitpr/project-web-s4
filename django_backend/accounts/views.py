@@ -654,7 +654,7 @@ class OTPVerifyView(views.APIView):
                             'registration_completed_at': timezone.now(),
                         }
                         next_step = 'complete'
-                        next_endpoint = '/seller/pengaturan/'
+                        next_endpoint = '/seller/dashboard/'
                     else:
                         # Buyer workflow: mark complete, redirect to Buyer Login
                         update_fields = {
@@ -1013,18 +1013,126 @@ class TokenRefreshView(views.APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
 
+class CheckAvailabilityView(views.APIView):
+    """Check if email or phone is already registered (no side effects, no record creation)."""
+    permission_classes = (permissions.AllowAny,)
+    authentication_classes = ()  # No auth required — anyone can check availability before registering
+
+    def post(self, request):
+        email = request.data.get('email', '').strip().lower()
+        phone = request.data.get('phone', '').strip()
+
+        response = {'available': True}
+
+        if email:
+            exists = User.objects.filter(email=email).exists()
+            if exists:
+                response = {
+                    'available': False,
+                    'field': 'email',
+                    'message': 'Email ini sudah terdaftar. Gunakan email lain atau masuk.',
+                    'code': 'email_taken',
+                }
+                return Response(response, status=status.HTTP_409_CONFLICT)
+
+        if phone and response.get('available', True):
+            exists = User.objects.filter(phone=phone).exists()
+            if exists:
+                response = {
+                    'available': False,
+                    'field': 'phone',
+                    'message': 'Nomor HP ini sudah terdaftar. Gunakan nomor lain atau masuk.',
+                    'code': 'phone_taken',
+                }
+                return Response(response, status=status.HTTP_409_CONFLICT)
+
+        return Response(response)
+
+
 class RootView(views.APIView):
-    """Root view — always renders the public Landing Page.
+    """Root view — multi-tenant entry point.
     
-    The Landing Page is the main public entry point and is accessible to everyone,
-    including authenticated users. No automatic redirects are performed here.
-    Authenticated users who want their dashboard navigate there explicitly.
+    Separates the Public Application from the Administration Application:
+    - Unauthenticated users → Public Landing Page
+    - Authenticated buyers → Redirect to /buyer/home/
+    - Authenticated sellers → Redirect to /seller/dashboard/
+    - Authenticated admins → Redirect to /admin-panel/
+    - Register Mitra users (unverified) → Continue public flow
     
-    Unverified users (missing OTP) also see the Landing Page — OTP reminders
-    are handled via banners or the login flow, not forced redirects.
+    Admins who access the root are redirected to the admin panel immediately,
+    bypassing the landing page entirely.
     """
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        from django.shortcuts import render
+        from django.shortcuts import render, redirect
+
+        user = request.user
+
+        # If authenticated, redirect to role-appropriate dashboard
+        if user.is_authenticated:
+            role = getattr(user, 'role', None)
+            is_staff = user.is_staff or user.is_superuser
+
+            if is_staff or role == 'admin':
+                # Admin users bypass landing page entirely
+                return redirect('/admin-panel/')
+
+            if role == 'seller' and user.is_verified:
+                # Verified sellers go to their dashboard
+                return redirect('/seller/dashboard/')
+
+            if role == 'buyer' and user.is_verified:
+                # Verified buyers go to their home
+                return redirect('/buyer/home/')
+
+            # Unverified users (including Register Mitra) continue public flow
+            return render(request, 'landing/index.html')
+
+        # Unauthenticated: always show landing page
         return render(request, 'landing/index.html')
+
+
+class AdminLoginView(views.APIView):
+    """
+    Dedicated admin login view.
+    
+    Only staff users (is_staff=True or role='admin') may log in here.
+    Uses AdminLoginSerializer which checks admin status BEFORE authenticating
+    to prevent leaking authentication success to non-admin users.
+    
+    Admin login has a tighter rate limit (5/minute) than public login (10/minute)
+    to prevent brute force attacks on admin accounts.
+    
+    Returns JWT tokens AND sets Django session for template-based navigation.
+    """
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'admin_login'
+
+    def post(self, request):
+        from .serializers_admin import AdminLoginSerializer
+
+        serializer = AdminLoginSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
+        # Set Django session cookie for template-based admin navigation
+        from django.contrib.auth import login
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        # Extract ?next= parameter for post-login redirect
+        next_url = request.GET.get('next', '/admin-panel/')
+
+        return Response({
+            'message': 'Login admin berhasil.',
+            'access': access_token,
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
+            'redirect': next_url,
+        })

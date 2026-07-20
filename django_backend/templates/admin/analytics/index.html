@@ -4,79 +4,97 @@
 {% block page_title %}Analytics{% endblock %}
 
 {% block content %}
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-    <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary btn-sm">7 Days</button>
-        <button class="btn btn-ghost btn-sm">30 Days</button>
-        <button class="btn btn-ghost btn-sm">90 Days</button>
-        <button class="btn btn-ghost btn-sm">Custom</button>
-    </div>
-    <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> Export Report</button>
-</div>
-
 <div class="stats-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px;">
-    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-eye"></i></div><div class="stat-content"><div class="stat-label">Page Views</div><div class="stat-value">847K</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 12.4%</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-plus"></i></div><div class="stat-content"><div class="stat-label">New Users</div><div class="stat-value">2,847</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 8.2%</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div><div class="stat-content"><div class="stat-label">Conversion</div><div class="stat-value">3.2%</div><div class="stat-trend down"><i class="fa-solid fa-arrow-down"></i> 0.4%</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Avg Session</div><div class="stat-value">4m 32s</div><div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> 2.1%</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fa-solid fa-bounce"></i></div><div class="stat-content"><div class="stat-label">Bounce Rate</div><div class="stat-value">38.4%</div><div class="stat-trend down"><i class="fa-solid fa-arrow-down"></i> 1.2%</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div><div class="stat-content"><div class="stat-label">Total Users</div><div class="stat-value" id="analyticsTotalUsers"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsUserGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-store"></i></div><div class="stat-content"><div class="stat-label">Active Stores</div><div class="stat-value" id="analyticsStores"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsStoreGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div><div class="stat-content"><div class="stat-label">Total Orders</div><div class="stat-value" id="analyticsOrders"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsOrderGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div><div class="stat-content"><div class="stat-label">Revenue (30d)</div><div class="stat-value" id="analyticsRevenue"><span class="skeleton" style="display:inline-block;width:80px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Pending Stores</div><div class="stat-value" id="analyticsPending"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
 </div>
 
 <div style="display:grid; grid-template-columns:2fr 1fr; gap:24px; margin-bottom:24px;">
     <div class="card">
-        <div class="card-header"><h3>Traffic Overview</h3></div>
-        <div class="card-body" style="height:260px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);">
-            <div style="text-align:center;"><i class="fa-solid fa-chart-area fa-3x" style="color:var(--color-gray-200);margin-bottom:12px;"></i><p>Traffic chart will render here</p></div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-header"><h3>Traffic Sources</h3></div>
-        <div class="card-body">
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Direct</span><span style="font-weight:600;">42%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:42%;height:100%;background:var(--color-brand);border-radius:99px;"></div></div></div>
-                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Organic Search</span><span style="font-weight:600;">28%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:28%;height:100%;background:#3b82f6;border-radius:99px;"></div></div></div>
-                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Social Media</span><span style="font-weight:600;">18%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:18%;height:100%;background:#f59e0b;border-radius:99px;"></div></div></div>
-                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Referral</span><span style="font-weight:600;">8%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:8%;height:100%;background:#8b5cf6;border-radius:99px;"></div></div></div>
-                <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Email</span><span style="font-weight:600;">4%</span></div><div style="height:6px;background:var(--color-gray-200);border-radius:99px;"><div style="width:4%;height:100%;background:#ec4899;border-radius:99px;"></div></div></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
-    <div class="card">
-        <div class="card-header"><h3>Device Breakdown</h3></div>
+        <div class="card-header"><h3>Platform Overview</h3></div>
         <div class="card-body" style="padding:0;">
             <div style="display:flex; flex-direction:column;">
                 <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-mobile-screen-button" style="width:20px;color:var(--color-brand);"></i><span style="font-size:13px;">Mobile</span></div>
-                    <span style="font-weight:700;font-size:14px;">68%</span>
+                    <span style="font-size:13px;font-weight:600;">Buyers</span>
+                    <span class="badge badge-green" id="analyticsBuyers">--</span>
                 </div>
                 <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-tablet-screen-button" style="width:20px;color:#3b82f6;"></i><span style="font-size:13px;">Tablet</span></div>
-                    <span style="font-weight:700;font-size:14px;">8%</span>
+                    <span style="font-size:13px;font-weight:600;">Sellers</span>
+                    <span class="badge badge-blue" id="analyticsSellers">--</span>
                 </div>
-                <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-desktop" style="width:20px;color:#8b5cf6;"></i><span style="font-size:13px;">Desktop</span></div>
-                    <span style="font-weight:700;font-size:14px;">24%</span>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:13px;font-weight:600;">New Users (30d)</span>
+                    <span class="badge badge-purple" id="analyticsNewUsers">--</span>
+                </div>
+                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:13px;font-weight:600;">New Stores (30d)</span>
+                    <span class="badge badge-yellow" id="analyticsNewStores">--</span>
+                </div>
+                <div style="padding:14px 20px; display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:13px;font-weight:600;">Orders (30d)</span>
+                    <span class="badge badge-green" id="analyticsOrders30d">--</span>
                 </div>
             </div>
         </div>
     </div>
     <div class="card">
-        <div class="card-header"><h3>Top Pages</h3></div>
+        <div class="card-header"><h3>Top Stores (30d)</h3></div>
         <div class="card-body" style="padding:0;">
             <div class="table-wrap"><table class="w-table">
-                <thead><tr><th>Page</th><th>Views</th><th>Avg Time</th></tr></thead>
-                <tbody>
-                    <tr><td>/home/</td><td>284K</td><td>2m 14s</td></tr>
-                    <tr><td>/products/</td><td>156K</td><td>3m 42s</td></tr>
-                    <tr><td>/buyer/cart/</td><td>89K</td><td>1m 08s</td></tr>
-                    <tr><td>/seller/dashboard/</td><td>67K</td><td>4m 56s</td></tr>
-                    <tr><td>/bantuan/</td><td>34K</td><td>2m 31s</td></tr>
+                <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
+                <tbody id="analyticsTopStoresBody">
+                    <tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Memuat data...</td></tr>
                 </tbody>
             </table></div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+          ? window.WarungioAuth.getAccessToken() 
+          : localStorage.getItem('warungio_access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load');
+        const d = await res.json();
+
+        document.getElementById('analyticsTotalUsers').textContent = d.total_users.toLocaleString('id-ID');
+        document.getElementById('analyticsStores').textContent = d.active_stores.toLocaleString('id-ID');
+        document.getElementById('analyticsOrders').textContent = d.total_orders.toLocaleString('id-ID');
+        document.getElementById('analyticsRevenue').textContent = d.revenue_30d_formatted;
+        document.getElementById('analyticsPending').textContent = d.pending_stores;
+        document.getElementById('analyticsBuyers').textContent = d.total_buyers.toLocaleString('id-ID');
+        document.getElementById('analyticsSellers').textContent = d.total_sellers.toLocaleString('id-ID');
+        document.getElementById('analyticsNewUsers').textContent = d.new_users_30d;
+        document.getElementById('analyticsNewStores').textContent = d.new_stores_30d;
+        document.getElementById('analyticsOrders30d').textContent = d.orders_30d;
+
+        document.getElementById('analyticsUserGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.new_users_30d + ' baru';
+        document.getElementById('analyticsStoreGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.new_stores_30d + ' baru';
+        document.getElementById('analyticsOrderGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.order_growth + '%';
+
+        const topBody = document.getElementById('analyticsTopStoresBody');
+        topBody.innerHTML = '';
+        if (d.top_stores && d.top_stores.length > 0) {
+            d.top_stores.forEach(s => {
+                topBody.innerHTML += '<tr><td><div style="font-weight:600;">' + s.store_name + '</div></td><td>' + s.order_count + '</td><td>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</td></tr>';
+            });
+        } else {
+            topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data toko</td></tr>';
+        }
+    } catch (e) {
+        document.querySelectorAll('#analyticsTotalUsers, #analyticsStores, #analyticsOrders, #analyticsRevenue').forEach(el => {
+            if (el) el.textContent = 'N/A';
+        });
+    }
+});
+</script>
 {% endblock %}

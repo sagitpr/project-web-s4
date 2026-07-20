@@ -36,7 +36,7 @@ SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000' if no
 ALLOWED_HOSTS = [
     h.strip() for h in os.environ.get(
         'DJANGO_ALLOWED_HOSTS',
-        'Warungio.web.id,www.Warungio.web.id,36.50.77.237,localhost,127.0.0.1,0.0.0.0,.run.app'
+        'localhost,127.0.0.1,0.0.0.0,.run.app'
     ).split(',')
     if h.strip()
 ]
@@ -81,6 +81,7 @@ LOCAL_APPS = [
     'regions.apps.RegionsConfig',
     'inventory.apps.InventoryConfig',
     'core',
+    'ai_services.apps.AIServicesConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -100,6 +101,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'accounts.middleware.RateLimitMiddleware',
+    'accounts.middleware.RoleBasedRedirectMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -411,6 +413,7 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
         'otp': '5/minute',
         'login': '10/minute',
+        'admin_login': '5/minute',  # Tighter throttle for admin login security
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -757,8 +760,24 @@ SPECTACULAR_SETTINGS = {
 }
 
 # =============================================================================
-# VERTEX AI — LLM for Customer Service
+# GEMINI / VERTEX AI — Unified AI Services
 # =============================================================================
+# Gemini API key — primary AI provider for all Warungio AI features
+# Supports multiple env var names for legacy compatibility (case-insensitive search):
+#   GEMINI_KEY (preferred), Gemini_key, GOOGLE_API_KEY, VERTEX_KEY, Vertex_key
+_GEMINI_KEY = os.environ.get('GEMINI_KEY', '')
+if not _GEMINI_KEY:
+    _GEMINI_KEY = os.environ.get('Gemini_key', '')
+if not _GEMINI_KEY:
+    _GEMINI_KEY = os.environ.get('GOOGLE_API_KEY', '')
+if not _GEMINI_KEY:
+    _GEMINI_KEY = os.environ.get('VERTEX_KEY', '')
+if not _GEMINI_KEY:
+    _GEMINI_KEY = os.environ.get('Vertex_key', '')
+GEMINI_KEY = _GEMINI_KEY
+# Vertex AI key — fallback/alternative AI provider
+VERTEX_KEY = _GEMINI_KEY
+
 GCP_PROJECT_ID = os.environ.get('GCP_PROJECT_ID', 'your-gcp-project')
 GCP_REGION = os.environ.get('GCP_REGION', 'us-central1')
 
@@ -776,3 +795,6 @@ AI_CHAT_ESCALATION_ENABLED = os.environ.get(
     'AI_CHAT_ESCALATION_ENABLED', 
     'True'
 ).lower() == 'true'
+
+# AI Services Caching
+AI_CACHE_TTL = 3600  # 1 hour default cache for AI responses

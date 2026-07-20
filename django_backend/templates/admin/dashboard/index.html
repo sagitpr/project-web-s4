@@ -101,8 +101,10 @@
 document.addEventListener('DOMContentLoaded', async function() {
     async function loadAdminDashboard() {
         try {
-            // Coba ambil token JWT dari localStorage
-            const token = localStorage.getItem('access_token');
+            // Coba ambil token JWT dari localStorage (via auth.js's consistent key)
+            const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+              ? window.WarungioAuth.getAccessToken() 
+              : localStorage.getItem('warungio_access_token');
             const headers = {};
             if (token) {
                 headers['Authorization'] = 'Bearer ' + token;

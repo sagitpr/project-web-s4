@@ -1193,7 +1193,7 @@ class SellerE2EFlowTests(TestCase):
         self.assertIn('next_step', verify_response.data)
         self.assertEqual(verify_response.data['next_step'], 'complete')
         self.assertIn('next_endpoint', verify_response.data)
-        self.assertEqual(verify_response.data['next_endpoint'], '/seller/pengaturan/')
+        self.assertEqual(verify_response.data['next_endpoint'], '/seller/dashboard/')
 
         # Verify User record after activation
         user.refresh_from_db()

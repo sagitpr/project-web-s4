@@ -1,10 +1,10 @@
 """
 AI Chat Service for Warungio Marketplace.
-Provides intelligent responses to customer queries using Vertex AI.
+Provides intelligent responses to customer queries using Gemini API.
 
 Features:
-- Automatic response generation
-- Confidence scoring
+- Automatic response generation via GeminiClient
+- Confidence scoring based on real AI response analysis
 - Escalation to human admin
 - Chat history memory
 - Context awareness
@@ -15,41 +15,15 @@ import json
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Union
 
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
-import google.auth
-from google.cloud import aiplatform
-from google.api_core import gapic_v1
+from ai_services.gemini_client import get_gemini_client
 
 logger = logging.getLogger('django_backend')
-
-
-class AIStreamingResponse:
-    """Wrapper for streaming AI responses."""
-    
-    def __init__(self, stream_generator):
-        self.stream = stream_generator
-        self.full_response = ""
-        
-    def __iter__(self):
-        """Iterate through streamed chunks."""
-        try:
-            for chunk in self.stream:
-                if hasattr(chunk, 'candidates') and chunk.candidates:
-                    for candidate in chunk.candidates:
-                        if hasattr(candidate, 'content') and candidate.content:
-                            for part in candidate.content.parts:
-                                if hasattr(part, 'text'):
-                                    text = part.text
-                                    self.full_response += text
-                                    yield text
-        except Exception as e:
-            logger.error(f"Error streaming AI response: {str(e)}")
-            yield f"\n\n[Error: Unable to continue response - {str(e)}]"
 
 
 class AIChatService:
@@ -75,26 +49,8 @@ class AIChatService:
     ]
     
     def __init__(self):
-        """Initialize Vertex AI client."""
-        self.project_id = settings.GCP_PROJECT_ID
-        self.region = getattr(settings, 'GCP_REGION', 'us-central1')
-        self.endpoint_id = getattr(settings, 'VERTEX_AI_ENDPOINT_ID', 'openapi')
-        self.model_name = getattr(
-            settings, 
-            'VERTEX_AI_MODEL', 
-            'meta/llama-3.3-70b-instruct-maas'
-        )
-        
-        # Initialize Vertex AI
-        try:
-            aiplatform.init(
-                project=self.project_id,
-                location=self.region
-            )
-            self.initialized = True
-        except Exception as e:
-            logger.error(f"Failed to initialize Vertex AI: {str(e)}")
-            self.initialized = False
+        """Initialize unified Gemini client."""
+        self.client = get_gemini_client()
     
     def get_chat_context(self, customer_id: int, max_messages: int = 10) -> str:
         """
@@ -178,7 +134,7 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
     
     def calculate_confidence_score(self, query: str, response: str) -> float:
         """
-        Calculate confidence score for AI response.
+        Calculate confidence score for AI response using real content analysis.
         
         Args:
             query: Customer query
@@ -187,20 +143,24 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
         Returns:
             Confidence score (0-1)
         """
+        if not response:
+            return 0.0
+        
         score = 0.8  # Default baseline
         
-        # Check for uncertainty indicators
+        # Check for uncertainty indicators in real response
         uncertain_phrases = [
             'mungkin', 'kemungkinan', 'sepertinya', 'tidak yakin',
-            'kurang tahu', 'i think', 'might', 'could be'
+            'kurang tahu', 'i think', 'might', 'could be', 'saya tidak tahu',
+            'saya kurang', 'maaf saya tidak'
         ]
         
         response_lower = response.lower()
         if any(phrase in response_lower for phrase in uncertain_phrases):
-            score -= 0.15
+            score -= 0.2
         
         # Check for complete answer indicators
-        if len(response) > 50:  # Substantive response
+        if len(response) > 80:  # Substantive response with detail
             score += 0.1
         
         if '?' in response:  # Question for clarification
@@ -210,6 +170,12 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
         query_lower = query.lower()
         if any(kw in query_lower for kw in self.ESCALATION_KEYWORDS):
             score -= 0.1
+        
+        # Check for actionable content (product names, order numbers, prices)
+        if re.search(r'\d{4,}', response):  # Contains numbers (order IDs, prices)
+            score += 0.05
+        if 'Rp' in response:  # Contains pricing info
+            score += 0.05
         
         return max(0, min(1, score))  # Clamp to 0-1
     
@@ -234,10 +200,17 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
         if confidence < self.MIN_CONFIDENCE_THRESHOLD:
             return True
         
+        # Escalate if no meaningful response
+        if not response or len(response.strip()) < 20:
+            return True
+        
         # Escalate if contains escalation keywords
         query_lower = query.lower()
         if any(kw in query_lower for kw in self.ESCALATION_KEYWORDS):
-            return True
+            # Check if AI response handles the issue well
+            handled_keywords = ['akan', 'sudah', 'diproses', 'dibantu', 'solusi']
+            if not any(hk in response.lower() for hk in handled_keywords):
+                return True
         
         # Escalate if asking for admin
         if any(phrase in query_lower for phrase in ['admin', 'manusia', 'orang', 'staff']):
@@ -252,19 +225,26 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
         stream: bool = False
     ) -> Tuple[str, float, bool]:
         """
-        Generate AI response to customer query.
+        Generate AI response to customer query using real Gemini API.
         
         Args:
             query: Customer query
             customer_id: ID of the customer (optional)
-            stream: Whether to stream response
+            stream: Whether to stream response (not yet supported)
             
         Returns:
             Tuple of (response, confidence_score, should_escalate)
+            
+        Raises:
+            Returns fallback escalation tuple if AI is unavailable
         """
-        if not self.initialized:
-            logger.warning("Vertex AI not initialized, using fallback response")
-            return self._get_fallback_response(query)
+        if not self.client.api_key:
+            logger.warning("Gemini API key not configured, returning escalation prompt")
+            return (
+                "Maaf, layanan AI sedang tidak tersedia. Silakan hubungi admin untuk bantuan lebih lanjut.",
+                0.3,
+                True
+            )
         
         try:
             # Build prompt
@@ -277,67 +257,27 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
             else:
                 full_prompt = f"{system_prompt}\n\nPelanggan: {query}"
             
-            # Call Vertex AI endpoint
-            if stream:
-                return self._generate_streaming_response(
-                    full_prompt, customer_id
-                )
-            else:
-                return self._generate_direct_response(
-                    full_prompt, customer_id
-                )
-        
-        except Exception as e:
-            logger.error(f"Error generating AI response: {str(e)}")
-            return self._get_fallback_response(query)
-    
-    def _generate_direct_response(
-        self, 
-        prompt: str, 
-        customer_id: Optional[int] = None
-    ) -> Tuple[str, float, bool]:
-        """Generate direct (non-streaming) response."""
-        try:
-            client = aiplatform.gapic.PredictionServiceClient()
-            
-            endpoint_name = client.endpoint_path(
-                project=self.project_id,
-                location=self.region,
-                endpoint=self.endpoint_id
+            # Call Gemini API via unified client
+            response_text = self.client.generate_text(
+                prompt=full_prompt,
+                temperature=0.7,
+                max_output_tokens=1024,
             )
             
-            request = {
-                'endpoint': endpoint_name,
-                'instances': [
-                    {
-                        'messages': [
-                            {'role': 'user', 'content': prompt}
-                        ]
-                    }
-                ],
-                'parameters': {
-                    'temperature': 0.7,
-                    'max_output_tokens': 1024,
-                    'top_p': 0.95,
-                }
-            }
-            
-            response = client.predict(request=request)
-            
-            # Parse response
-            response_text = ""
-            if response.predictions:
-                pred = response.predictions[0]
-                if isinstance(pred, dict) and 'content' in pred:
-                    response_text = pred['content']
-                elif hasattr(pred, 'get'):
-                    response_text = pred.get('content', '')
+            if not response_text:
+                logger.warning("Gemini returned empty response for chat query")
+                return (
+                    "Maaf, saya tidak dapat memproses pertanyaan Anda saat ini. "
+                    "Silakan coba lagi atau hubungi admin.",
+                    0.3,
+                    True
+                )
             
             # Calculate confidence
-            confidence = self.calculate_confidence_score(prompt, response_text)
+            confidence = self.calculate_confidence_score(query, response_text)
             
             # Determine escalation
-            should_escalate = self.should_escalate(prompt, response_text, confidence)
+            should_escalate = self.should_escalate(query, response_text, confidence)
             
             # Store in chat history
             if customer_id and response_text:
@@ -352,54 +292,12 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
             return response_text, confidence, should_escalate
         
         except Exception as e:
-            logger.error(f"Error in direct response: {str(e)}")
-            return self._get_fallback_response(prompt)
-    
-    def _generate_streaming_response(
-        self, 
-        prompt: str, 
-        customer_id: Optional[int] = None
-    ) -> Tuple[AIStreamingResponse, float, bool]:
-        """Generate streaming response."""
-        try:
-            client = aiplatform.gapic.PredictionServiceClient()
-            
-            endpoint_name = client.endpoint_path(
-                project=self.project_id,
-                location=self.region,
-                endpoint=self.endpoint_id
+            logger.error(f"Error generating AI response: {str(e)}")
+            return (
+                "Maaf, terjadi kesalahan teknis. Silakan coba lagi atau hubungi admin.",
+                0.2,
+                True
             )
-            
-            request = {
-                'endpoint': endpoint_name,
-                'instances': [
-                    {
-                        'messages': [
-                            {'role': 'user', 'content': prompt}
-                        ]
-                    }
-                ],
-                'parameters': {
-                    'temperature': 0.7,
-                    'max_output_tokens': 1024,
-                    'top_p': 0.95,
-                    'stream': True,
-                }
-            }
-            
-            stream = client.predict(request=request)
-            streaming_response = AIStreamingResponse(stream)
-            
-            # Confidence will be calculated after stream completes
-            confidence = 0.7  # Default for streaming
-            should_escalate = False
-            
-            return streaming_response, confidence, should_escalate
-        
-        except Exception as e:
-            logger.error(f"Error in streaming response: {str(e)}")
-            response_text, conf, esc = self._get_fallback_response(prompt)
-            return response_text, conf, esc
     
     def _save_chat_message(
         self, 
@@ -419,38 +317,6 @@ Jika pelanggan menunjukkan kemarahan/frustasi, prioritaskan empati dan penyelesa
             )
         except Exception as e:
             logger.error(f"Error saving chat message: {str(e)}")
-    
-    def _get_fallback_response(
-        self, 
-        query: str
-    ) -> Tuple[str, float, bool]:
-        """
-        Get fallback response when AI is unavailable.
-        
-        Returns:
-            Tuple of (response, confidence, should_escalate)
-        """
-        fallback_responses = {
-            'refund': "Terima kasih telah menghubungi Warungio. Untuk pertanyaan tentang refund, silakan hubungi tim customer service kami yang siap membantu Anda 24/7. Confidence: 0.5",
-            'order': "Untuk cek status pesanan Anda, silakan buka menu 'Pesanan Saya' di aplikasi. Confidence: 0.6",
-            'product': "Kami menyediakan ribuan produk berkualitas dari warung-warung terpercaya. Ada yang bisa kami bantu? Confidence: 0.7",
-            'default': "Terima kasih atas pertanyaannya. Tim kami sedang memproses, silakan hubungi admin jika perlu bantuan lebih lanjut. Confidence: 0.5"
-        }
-        
-        query_lower = query.lower()
-        
-        # Match fallback responses
-        for keyword, response in fallback_responses.items():
-            if keyword != 'default' and keyword in query_lower:
-                confidence = float(response.split(': ')[-1])
-                should_escalate = confidence < self.MIN_CONFIDENCE_THRESHOLD
-                return response.replace(f". Confidence: {confidence}", ""), confidence, should_escalate
-        
-        # Default response
-        response = fallback_responses['default']
-        confidence = float(response.split(': ')[-1])
-        should_escalate = confidence < self.MIN_CONFIDENCE_THRESHOLD
-        return response.replace(f". Confidence: {confidence}", ""), confidence, should_escalate
 
 
 # Create singleton instance

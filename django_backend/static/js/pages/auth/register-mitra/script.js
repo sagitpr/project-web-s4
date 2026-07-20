@@ -356,13 +356,90 @@
       });
     }
 
+    // ── Availability tracking flags ──
+    var _emailAvailable = true;
+    var _phoneAvailable = true;
+
+    // ── Real-time email/phone availability check on blur ──
+    var checkFieldAvailability = async function(field, value) {
+      if (!value || value.length < 3) return;
+      var fieldName = field.name;
+      var fieldContainer = field.closest('.field');
+      if (!fieldContainer) return;
+
+      // Remove any existing availability error
+      var existingError = fieldContainer.querySelector('.availability-error');
+      if (existingError) existingError.remove();
+      fieldContainer.classList.remove('invalid');
+
+      try {
+        var payload = fieldName === 'ownerEmail' ? { email: value } : { phone: value };
+        var result = await WarungioAPI.checkAvailability(payload);
+        if (result && result.available === false) {
+          if (fieldName === 'ownerEmail') _emailAvailable = false;
+          else _phoneAvailable = false;
+          fieldContainer.classList.add('invalid');
+          var errorEl = document.createElement('span');
+          errorEl.className = 'availability-error';
+          errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;';
+          errorEl.textContent = result.message || 'Sudah terdaftar.';
+          fieldContainer.appendChild(errorEl);
+        } else {
+          if (fieldName === 'ownerEmail') _emailAvailable = true;
+          else _phoneAvailable = true;
+        }
+      } catch (err) {
+        if (err && (err.available === false || err.code === 'email_taken' || err.code === 'phone_taken')) {
+          if (fieldName === 'ownerEmail') _emailAvailable = false;
+          else _phoneAvailable = false;
+          fieldContainer.classList.add('invalid');
+          var errorEl = document.createElement('span');
+          errorEl.className = 'availability-error';
+          errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;';
+          errorEl.textContent = err.message || (fieldName === 'ownerEmail' ? 'Email ini sudah terdaftar.' : 'Nomor HP ini sudah terdaftar.');
+          fieldContainer.appendChild(errorEl);
+          return;
+        }
+        // Network error — silently ignore, allow submission to proceed
+        console.warn('Availability check failed:', err);
+      }
+    };
+
+    // Attach blur listeners to email and phone fields
+    if (form) {
+      var emailField = form.elements.ownerEmail;
+      var phoneField = form.elements.ownerPhone;
+      if (emailField) {
+        emailField.addEventListener('blur', function() { checkFieldAvailability(emailField, emailField.value); });
+      }
+      if (phoneField) {
+        phoneField.addEventListener('blur', function() { checkFieldAvailability(phoneField, phoneField.value); });
+      }
+    }
+
+    // ── Duplicate submission guard ──
+    var _submitting = false;
+
     // ── Submit ──
     if (form) {
       form.addEventListener('submit', async function(event) {
         event.preventDefault();
+
+        // Guard: prevent duplicate submissions
+        if (_submitting) return;
         if (!validatePanel(panels[currentStep])) return;
+        // Guard: block submission if email or phone is already taken
+        if (!_emailAvailable) {
+          setMsg('Email ini sudah terdaftar. Gunakan email lain atau masuk.', 'error');
+          return;
+        }
+        if (!_phoneAvailable) {
+          setMsg('Nomor HP ini sudah terdaftar. Gunakan nomor lain atau masuk.', 'error');
+          return;
+        }
 
         var data = collectFormData();
+        _submitting = true;
         if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Mendaftarkan...'; }
         setMsg('Mendaftarkan mitra toko...', 'success');
 
@@ -370,17 +447,20 @@
           // Validate passwords match
           if (data.ownerPassword !== data.ownerPassword2) {
             setMsg('Kata sandi dan konfirmasi tidak sama.', 'error');
+            _submitting = false;
             if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Kirim Pendaftaran'; }
             return;
           }
           if (!data.ownerPassword || data.ownerPassword.length < 8) {
             setMsg('Kata sandi minimal 8 karakter.', 'error');
+            _submitting = false;
             if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Kirim Pendaftaran'; }
             return;
           }
 
           // Step 1: Register user as seller
-          var registerData = await WarungioAPI.register({
+          // Backend RegisterView automatically creates and sends the OTP
+          await WarungioAPI.register({
             full_name: data.ownerName,
             email: data.ownerEmail,
             phone: data.ownerPhone,
@@ -401,6 +481,7 @@
           window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
         } catch (err) {
           setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
+          _submitting = false;
           if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }
         }
       });

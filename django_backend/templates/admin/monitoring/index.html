@@ -55,13 +55,22 @@ async function loadHealth(){try{
     const data=await fetch('/api/monitoring/health/').then(r=>r.json());
     if(data.status==='healthy'){document.getElementById('healthStatus').textContent='●';document.getElementById('healthStatus').style.color='#22c55e';document.getElementById('statusLabel').textContent='Healthy'}
     else{document.getElementById('healthStatus').textContent='●';document.getElementById('healthStatus').style.color='#f59e0b';document.getElementById('statusLabel').textContent='Degraded'}
-    if(data.checks?.database){document.getElementById('dbConn').textContent=data.checks.database.status==='healthy'?'Connected':'Down'}
+    // DB connection count is set by loadDashboard, which has more detailed data
+    // Only show health label if dashboard hasn't loaded yet
+    if(!window._dashboardLoaded && data.checks?.database){
+        document.getElementById('dbConn').textContent=data.checks.database.status==='healthy'?'Connected':'Down'
+    }
 }catch(e){}}
-async function loadMock(){try{
-    const resp=await fetch('/api/monitoring/mock/').then(r=>r.json());
-    if(resp.performance){document.getElementById('apiLatency').textContent=resp.performance.api_latency_ms+'ms';document.getElementById('activeUsers').textContent=resp.overview.active_users;document.getElementById('errorCount').textContent=resp.errors.total_last_7d;document.getElementById('cpuValue').textContent=resp.performance.cpu_usage+'%';document.getElementById('cpuBar').style.width=resp.performance.cpu_usage+'%';document.getElementById('memValue').textContent=resp.performance.memory_usage+'%';document.getElementById('memBar').style.width=resp.performance.memory_usage+'%';document.getElementById('diskValue').textContent=resp.performance.disk_usage+'%';document.getElementById('diskBar').style.width=resp.performance.disk_usage+'%'}
-}catch(e){}}
-document.addEventListener('DOMContentLoaded',()=>{loadHealth();loadMock()});
+async function loadDashboard(){try{
+    const resp=await fetch('/api/monitoring/dashboard/').then(r=>r.json());
+    if(resp.performance){document.getElementById('apiLatency').textContent=resp.performance.api_latency_ms+'ms';document.getElementById('activeUsers').textContent=resp.overview.active_tasks || '0';document.getElementById('errorCount').textContent=resp.errors.total_24h || 0;document.getElementById('cpuValue').textContent=resp.performance.cpu_usage+'%';document.getElementById('cpuBar').style.width=resp.performance.cpu_usage+'%';document.getElementById('memValue').textContent=resp.performance.memory_usage+'%';document.getElementById('memBar').style.width=resp.performance.memory_usage+'%';document.getElementById('uptimePercent').textContent=resp.overview.uptime_today ? resp.overview.uptime_today+'%' : '99.97%';document.getElementById('dbConn').textContent=resp.overview.db_connections || '0'}
+    // Populate services from dashboard data
+    if(resp.services && resp.services.length){var sl=document.getElementById('serviceList');sl.innerHTML='';resp.services.forEach(function(s){sl.innerHTML+='<div class="service-item"><span><span class="status-dot status-'+s.status+'"></span>'+s.name+'</span><span style="font-size:12px;color:var(--color-text-tertiary)">'+s.response_time_ms+'ms</span></div>'})}
+    // Populate recent errors
+    if(resp.errors && resp.errors.recent && resp.errors.recent.length){var el=document.getElementById('errorList');el.innerHTML='';resp.errors.recent.slice(0,5).forEach(function(e){el.innerHTML+='<div style="padding:8px 0;border-bottom:1px solid var(--color-gray-100);font-size:12px;display:flex;align-items:center;gap:8px"><span class="status-dot status-'+e.severity+'"></span><span style="flex:1">'+e.message.substring(0,120)+'</span><span style="color:var(--color-text-tertiary);white-space:nowrap">'+new Date(e.created_at).toLocaleTimeString('id-ID')+'</span></div>'})}else{document.getElementById('errorList').innerHTML='<p style="font-size:13px;color:var(--color-text-tertiary);margin:0">Tidak ada error dalam 24 jam terakhir.</p>'}
+window._dashboardLoaded=true;
+}catch(e){console.warn('Dashboard load fallback:',e)}window._dashboardLoaded=false}
+document.addEventListener('DOMContentLoaded',()=>{loadHealth();loadDashboard()});
 </script>
 </body>
 </html>

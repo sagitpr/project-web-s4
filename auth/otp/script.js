@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const messageEl = document.getElementById('otpMessage');
 
   let timeLeft = 55;
+  let _verifying = false;
 
   function showMsg(text, type) {
     if (!messageEl) return;
@@ -113,6 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Form submit - verify OTP via Django API
   otpForm.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    // Guard: prevent duplicate submissions
+    if (_verifying) return;
+
     const otpValue = Array.from(otpInputs).map(inp => inp.value.trim()).join('');
     if (otpValue.length !== otpInputs.length) {
       showMsg('Isi semua angka OTP terlebih dahulu.', 'error');
@@ -123,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
+    _verifying = true;
     const submitBtn = otpForm.querySelector('button[type="submit"]');
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Memverifikasi...'; }
 
@@ -152,15 +158,14 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
           // If authenticated after auto-login, redirect directly to role dashboard
           if (window.WarungioAuth.isAuthenticated()) {
-            var userRole = null;
             var userData = window.WarungioAuth.getUser();
-            if (userData) userRole = userData.role;
-            if (userRole === 'seller') {
-              window.location.href = '/seller/pengaturan/';
-            } else if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+            var userRole = userData ? userData.role : null;
+            // Use centralized getRoleDashboardUrl() for all roles (single source of truth)
+            if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
               window.location.href = window.WarungioAuth.getRoleDashboardUrl(userRole);
             } else {
-              if (userRole === 'buyer') window.location.href = '/buyer/home/';
+              // Hard fallback (should not be reached if auth.js is loaded)
+              if (userRole === 'seller') window.location.href = '/seller/dashboard/';
               else if (userRole === 'buyer') window.location.href = '/buyer/home/';
               else window.location.href = '/';
             }
@@ -174,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (err) {
       showMsg(err.message || 'Kode OTP salah atau sudah kadaluwarsa.', 'error');
+      _verifying = false;
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verifikasi'; }
     }
   });

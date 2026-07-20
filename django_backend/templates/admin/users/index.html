@@ -3,24 +3,52 @@
 {% block title %}Users - Warungio Admin{% endblock %}
 {% block page_title %}User Management{% endblock %}
 {% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div><div class="stat-content"><div class="stat-label">Total Users</div><div class="stat-value" id="usersTotal"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-tie"></i></div><div class="stat-content"><div class="stat-label">Sellers</div><div class="stat-value" id="usersSellers"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-user"></i></div><div class="stat-content"><div class="stat-label">Buyers</div><div class="stat-value" id="usersBuyers"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-user-plus"></i></div><div class="stat-content"><div class="stat-label">New (30d)</div><div class="stat-value" id="usersNew"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
+</div>
+
 <div class="card">
     <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+        <h3>User Overview</h3>
         <div style="display:flex; gap:10px;">
             <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search users..." class="form-input" style="width:260px;min-height:38px;padding:8px 12px 8px 34px;"></div>
             <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Roles</option><option>Buyer</option><option>Seller</option><option>Admin</option></select>
-            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Status</option><option>Active</option><option>Inactive</option></select>
         </div>
-        <button class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add User</button>
     </div>
-    <div class="card-body" style="padding:0;">
-        <div class="table-wrap"><table class="w-table">
-            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Store</th><th>Status</th><th>Joined</th><th style="text-align:right;">Actions</th></tr></thead>
-            <tbody>
-                <tr><td><div style="display:flex;align-items:center;gap:10px;"><img alt=""  src="{% static 'images/av-siti.png' %}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"><div style="font-weight:600;">Siti Rahma</div></div></td><td>siti@email.com</td><td><span class="badge badge-blue">Seller</span></td><td>Warung Bu Sari</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
-                <tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--color-gray-200);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">B</div><div style="font-weight:600;">Budi Santoso</div></div></td><td>budi@email.com</td><td><span class="badge badge-green">Buyer</span></td><td>-</td><td><span class="badge badge-green">Active</span></td><td>Mar 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
-                <tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--color-gray-200);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">A</div><div style="font-weight:600;">Admin Warungio</div></div></td><td>admin@warungio.com</td><td><span class="badge badge-purple">Admin</span></td><td>-</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
-            </tbody>
-        </table></div>
+    <div class="card-body">
+        <p style="font-size:13px;color:var(--color-text-tertiary);text-align:center;padding:20px;">
+            <i class="fa-solid fa-database"></i> Untuk manajemen pengguna detail, gunakan 
+            <a href="/admin/" target="_blank" style="color:var(--color-brand);font-weight:600;">Django Admin Panel</a>
+        </p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+          ? window.WarungioAuth.getAccessToken() 
+          : localStorage.getItem('warungio_access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load');
+        const d = await res.json();
+
+        document.getElementById('usersTotal').textContent = d.total_users.toLocaleString('id-ID');
+        document.getElementById('usersSellers').textContent = d.total_sellers.toLocaleString('id-ID');
+        document.getElementById('usersBuyers').textContent = d.total_buyers.toLocaleString('id-ID');
+        document.getElementById('usersNew').textContent = d.new_users_30d;
+    } catch (e) {
+        ['usersTotal','usersSellers','usersBuyers','usersNew'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = 'N/A';
+        });
+    }
+});
+</script>
 {% endblock %}

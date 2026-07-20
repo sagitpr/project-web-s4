@@ -99,15 +99,16 @@
       });
     },
 
+    async checkAvailability(data) {
+      // Check if email or phone is already registered (no side effects)
+      return auth.api('/auth/check-availability/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
     async getSocialAuthConfig(provider) {
-      try {
-        const baseUrl = window.API_BASE_URL || '/api';
-        const res = await fetch(`${baseUrl}/auth/social/config/${provider}/`);
-        if (!res.ok) return {};
-        return await res.json();
-      } catch {
-        return {};
-      }
+      return auth.api(`/auth/social/config/${provider}/`);
     },
 
     async getSocialAccounts() {
@@ -512,16 +513,11 @@
       return auth.api('/inventory/ai-scan/start/', {
         method: 'POST',
         body: JSON.stringify({ scan_mode: deviceType === 'mobile' ? 'single' : 'multi' })
-      }).catch(() => ({
-        session_id: 'smartscan-session-' + Math.random().toString(36).substr(2, 9),
-        device_type: deviceType,
-        created_at: new Date().toISOString()
-      }));
+      });
     },
 
     async endSmartScanSession(sessionId) {
-      return auth.api(`/inventory/ai-scan/${sessionId}/cancel/`, { method: 'POST' })
-        .catch(() => ({ message: 'Sesi Smart Scan berakhir.', session_id: sessionId }));
+      return auth.api(`/inventory/ai-scan/${sessionId}/cancel/`, { method: 'POST' });
     },
 
     async processSmartScan(imageData, productId, scanType, options = {}) {
@@ -538,9 +534,6 @@
         }),
       }).then(function (result) {
         result.mode = result.mode || scanType;
-        result.confidence = result.confidence || 0.94;
-        result.confidence_uncertain = result.confidence_uncertain || false;
-        result.eligible_for_sale = result.eligible_for_sale !== false;
         result.product_type = result.product?.product_name || 'Produk';
         return result;
       });

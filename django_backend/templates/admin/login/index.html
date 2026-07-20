@@ -1,0 +1,117 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Warungio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body { background: var(--color-gray-900); display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; }
+        .admin-login-container { width:100%; max-width:400px; padding:24px; }
+        .admin-login-card { background:var(--color-surface); border-radius:var(--radius-xl); border:1px solid var(--color-border); padding:40px 32px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+        .admin-logo { text-align:center; margin-bottom:32px; }
+        .admin-logo img { height:36px; filter:brightness(0) invert(1); }
+        .admin-logo h1 { font-size:20px; font-weight:800; color:white; margin:12px 0 4px; }
+        .admin-logo h1 span { color:var(--color-brand); }
+        .admin-logo p { font-size:12px; color:rgba(255,255,255,0.4); margin:0; letter-spacing:0.06em; text-transform:uppercase; }
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block; font-size:13px; font-weight:600; color:var(--color-text-primary); margin-bottom:6px; }
+        .form-group input { width:100%; padding:12px 14px; border:1px solid var(--color-border); border-radius:var(--radius-lg); font-size:14px; background:var(--color-surface); color:var(--color-text-primary); outline:none; transition:border-color 0.15s; box-sizing:border-box; }
+        .form-group input:focus { border-color:var(--color-brand); }
+        .form-group input::placeholder { color:var(--color-text-tertiary); }
+        .btn-admin-login { width:100%; padding:12px; border:none; border-radius:var(--radius-lg); background:var(--color-brand); color:white; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+        .btn-admin-login:hover { opacity:0.9; transform:translateY(-1px); }
+        .btn-admin-login:disabled { opacity:0.5; cursor:not-allowed; }
+        .error-msg { color:#ef4444; font-size:13px; text-align:center; margin-bottom:16px; display:none; padding:10px; background:#fef2f2; border-radius:var(--radius-lg); }
+        .info-msg { color:var(--color-text-tertiary); font-size:12px; text-align:center; margin-top:16px; }
+        .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:8px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="admin-login-card">
+            <div class="admin-logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio">
+                <h1><span>Warung</span>io</h1>
+                <p>Admin Panel</p>
+            </div>
+            <div id="loginError" class="error-msg"></div>
+            <form id="adminLoginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="email">Email Admin</label>
+                    <input type="email" id="email" name="email" placeholder="admin@warungio.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Masukkan password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-admin-login" id="loginBtn">Masuk ke Admin Panel</button>
+            </form>
+            <p class="info-msg">Hanya untuk administrator Warungio</p>
+        </div>
+    </div>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // If already authenticated as admin, redirect immediately
+        if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
+            var user = window.WarungioAuth.getUser();
+            if (user && (user.role === 'admin' || user.is_staff)) {
+                window.location.href = '/admin-panel/';
+                return;
+            }
+        }
+
+        var form = document.getElementById('adminLoginForm');
+        var btn = document.getElementById('loginBtn');
+        var errorEl = document.getElementById('loginError');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var email = document.getElementById('email').value.trim();
+            var password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showError('Email dan password harus diisi.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Memproses...';
+            errorEl.style.display = 'none';
+
+            try {
+                // Use the dedicated admin login endpoint
+                var data = await window.WarungioAuth.api('/auth/admin-login/', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: email, password: password }),
+                });
+
+                // Store tokens
+                window.WarungioAuth.login(data.access, data.refresh, data.user);
+
+                // Redirect to admin dashboard
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.href = '/admin-panel/';
+                }
+
+            } catch (err) {
+                showError(err.message || 'Login gagal. Periksa email dan password.');
+                btn.disabled = false;
+                btn.textContent = 'Masuk ke Admin Panel';
+            }
+        });
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+    });
+    </script>
+</body>
+</html>

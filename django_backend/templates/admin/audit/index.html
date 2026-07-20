@@ -4,72 +4,64 @@
 {% block page_title %}Audit Logs{% endblock %}
 
 {% block content %}
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-clipboard-list"></i></div><div class="stat-content"><div class="stat-label">Errors (24h)</div><div class="stat-value" id="auditErrors24h"><span class="skeleton" style="display:inline-block;width:30px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="stat-content"><div class="stat-label">Critical</div><div class="stat-value" id="auditCritical" style="color:#dc2626;"><span class="skeleton" style="display:inline-block;width:30px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-check-circle"></i></div><div class="stat-content"><div class="stat-label">Active Tasks</div><div class="stat-value" id="auditTasks"><span class="skeleton" style="display:inline-block;width:30px;height:24px;"></span></div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-database"></i></div><div class="stat-content"><div class="stat-label">DB Status</div><div class="stat-value" id="auditDb" style="font-size:14px;"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div></div></div>
+</div>
+
 <div class="card">
-    <div class="card-header" style="flex-wrap:wrap; gap:12px;">
-        <h3>Activity Log</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search logs..." class="form-input" style="width:200px;min-height:38px;padding:8px 12px 8px 34px;"></div>
-            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Actions</option><option>Create</option><option>Update</option><option>Delete</option><option>Login</option><option>Export</option></select>
-            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Users</option><option>Admin</option><option>Seller</option><option>Buyer</option></select>
-            <input type="date" class="form-input" style="width:auto;min-height:38px;padding:8px 12px;" value="2026-06-01">
-            <input type="date" class="form-input" style="width:auto;min-height:38px;padding:8px 12px;" value="2026-06-27">
-        </div>
-    </div>
+    <div class="card-header"><h3>Recent Errors & Activity</h3></div>
     <div class="card-body" style="padding:0;">
-        <div style="display:flex; flex-direction:column;">
-            <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;flex-shrink:0;"><i class="fa-solid fa-plus"></i></div>
-                <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Store Created</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">User <strong>siti@email.com</strong> created store <strong>Warung Bu Sari</strong></p></div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">2 min ago</p>
-                    <span style="font-size:11px;font-family:monospace;color:var(--color-text-tertiary);">192.168.1.45</span>
-                </div>
-            </div>
-            <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;flex-shrink:0;"><i class="fa-solid fa-pen"></i></div>
-                <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Order Updated</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">Order <strong>#ORD-28471</strong> status changed from <em>Pending</em> to <em>Processing</em></p></div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">15 min ago</p>
-                    <span style="font-size:11px;font-family:monospace;color:var(--color-text-tertiary);">10.0.0.12</span>
-                </div>
-            </div>
-            <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;"><i class="fa-solid fa-user-plus"></i></div>
-                <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">User Registered</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">New user <strong>dewi@email.com</strong> registered as <strong>Buyer</strong></p></div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">1 hour ago</p>
-                    <span style="font-size:11px;font-family:monospace;color:var(--color-text-tertiary);">45.33.32.156</span>
-                </div>
-            </div>
-            <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#fce7f3;display:flex;align-items:center;justify-content:center;color:#db2777;flex-shrink:0;"><i class="fa-solid fa-trash"></i></div>
-                <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Product Deleted</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">Product <strong>Sayur Bayam Segar</strong> deleted by store <strong>Toko Segar</strong></p></div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">3 hours ago</p>
-                    <span style="font-size:11px;font-family:monospace;color:var(--color-text-tertiary);">172.16.0.8</span>
-                </div>
-            </div>
-            <div style="padding:14px 20px; display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;color:#7c3aed;flex-shrink:0;"><i class="fa-solid fa-download"></i></div>
-                <div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">Report Exported</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">Admin exported <strong>Financial Report</strong> as PDF</p></div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">5 hours ago</p>
-                    <span style="font-size:11px;font-family:monospace;color:var(--color-text-tertiary);">192.168.1.1</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div style="padding:14px 20px; border-top:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between; font-size:13px;">
-        <span style="color:var(--color-text-tertiary);">Showing 5 of 2,847 logs</span>
-        <div style="display:flex; gap:4px;">
-            <button class="btn btn-ghost btn-sm" disabled><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="btn btn-primary btn-sm" style="width:32px;padding:0;">1</button>
-            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">2</button>
-            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">3</button>
-            <span style="display:flex;align-items:center;padding:0 4px;color:var(--color-text-tertiary);">...</span>
-            <button class="btn btn-ghost btn-sm" style="width:32px;padding:0;">95</button>
-            <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-right"></i></button>
+        <div id="auditErrorList">
+            <p style="font-size:13px;color:var(--color-text-tertiary);text-align:center;padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    async function loadData() {
+        try {
+            const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+              ? window.WarungioAuth.getAccessToken() 
+              : localStorage.getItem('warungio_access_token');
+            const headers = {};
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            const [dashRes, errorsRes] = await Promise.all([
+                fetch('/api/monitoring/dashboard/', { headers, credentials: 'include' }),
+                fetch('/api/monitoring/errors/?hours=24', { headers, credentials: 'include' })
+            ]);
+
+            if (dashRes.ok) {
+                const d = await dashRes.json();
+                document.getElementById('auditErrors24h').textContent = d.errors?.total_24h || 0;
+                document.getElementById('auditCritical').textContent = d.errors?.critical || 0;
+                document.getElementById('auditTasks').textContent = d.overview?.active_tasks || 0;
+                document.getElementById('auditDb').textContent = d.overview?.db_connections ? d.overview.db_connections + ' conn' : 'Connected';
+            }
+
+            if (errorsRes.ok) {
+                const errors = await errorsRes.json();
+                const el = document.getElementById('auditErrorList');
+                if (errors.length === 0) {
+                    el.innerHTML = '<p style="font-size:13px;color:var(--color-text-tertiary);text-align:center;padding:40px;">Tidak ada error dalam 24 jam terakhir.</p>';
+                } else {
+                    el.innerHTML = errors.map(e => 
+                        '<div style="padding:14px 20px;border-bottom:1px solid var(--color-border-light);display:flex;align-items:flex-start;gap:12px;">' +
+                        '<div style="width:36px;height:36px;border-radius:50%;background:' + (e.severity==='critical'?'#fce7f3':e.severity==='error'?'#fef3c7':'#dbeafe') + ';display:flex;align-items:center;justify-content:center;color:' + (e.severity==='critical'?'#db2777':e.severity==='error'?'#d97706':'#2563eb') + ';flex-shrink:0;"><i class="fa-solid fa-' + (e.severity==='critical'?'bolt':e.severity==='error'?'exclamation':'info') + '"></i></div>' +
+                        '<div style="flex:1;"><p style="font-size:13px;font-weight:600;margin:0;">' + (e.service || 'System') + '</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0;">' + (e.message || '').substring(0,150) + '</p></div>' +
+                        '<div style="text-align:right;flex-shrink:0;"><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">' + new Date(e.created_at).toLocaleString('id-ID') + '</p></div></div>'
+                    ).join('');
+                }
+            }
+        } catch (e) {
+            document.getElementById('auditErrorList').innerHTML = '<p style="font-size:13px;color:#dc2626;text-align:center;padding:40px;">Gagal memuat data audit.</p>';
+        }
+    }
+    loadData();
+});
+</script>
 {% endblock %}

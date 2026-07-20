@@ -102,12 +102,20 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         }).catch(function() {});
       }
 
-      // 6. Replace history to prevent browser back from restoring protected pages
-      try { window.history.replaceState(null, '', '/'); } catch(e) {}
+      // 6. Determine post-logout redirect based on role
+      //    Admin users go to admin login page; all others go to public landing page.
+      var user = this.getUser();
+      var postLogoutUrl = '/';
+      if (user && (user.role === 'admin' || user.is_staff || user.is_superuser)) {
+        postLogoutUrl = '/admin-panel/login/';
+      }
 
-      // 7. Always redirect to Landing Page — use replace() to remove the stale protected page
-      //    from the browser's session history entirely, so Back button can't restore it.
-      window.location.replace('/');
+      // 7. Replace history to prevent browser back from restoring protected pages
+      try { window.history.replaceState(null, '', postLogoutUrl); } catch(e) {}
+
+      // 8. Redirect to role-appropriate post-logout page — use replace() to remove
+      //    the stale protected page from the browser's session history entirely.
+      window.location.replace(postLogoutUrl);
     },
 
     /** Get access token */
@@ -135,6 +143,12 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       return !!this.getAccessToken();
     },
 
+    /** Check if user is verified (OTP completed) */
+    isVerified() {
+      const user = this.getUser();
+      return user && user.is_verified === true;
+    },
+
     /** Check if user is a seller */
     isSeller() {
       const user = this.getUser();
@@ -144,10 +158,10 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
     /**
      * Get the correct dashboard URL for the given role.
      * Maps role to its designated entry point:
-     *   buyer  → /buyer/home/  (Buyer Home)
-     *   seller → /seller/dashboard/  (Seller Dashboard)
-     *   admin  → /admin/       (Admin Dashboard)
-     *   null/other → /         (Landing Page — never auto-redirect to Buyer Home)
+     *   buyer  → /buyer/home/       (Buyer Home)
+     *   seller → /seller/dashboard/ (Seller Dashboard)
+     *   admin  → /admin-panel/      (Admin Dashboard — separate app entry point)
+     *   null/other → /              (Landing Page — never auto-redirect to Buyer Home)
      *
      * @param {string} [role] - User role. Reads from cached user if omitted.
      * @returns {string} Dashboard URL path
@@ -159,7 +173,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       }
       if (role === 'buyer') return '/buyer/home/';
       if (role === 'seller') return '/seller/dashboard/';
-      if (role === 'admin') return '/admin/';
+      if (role === 'admin') return '/admin-panel/';
       // Default: Landing Page — the only public homepage. Never redirect to Buyer Home
       // unless the user explicitly logged in with ?role=buyer.
       return '/';
@@ -223,7 +237,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
 
     /**
      * Check if a redirect URL matches the user's role prefix.
-     * Buyer → /buyer/*, Seller → /seller/*, Admin → /admin/*
+     * Buyer → /buyer/*, Seller → /seller/*, Admin → /admin-panel/* or /admin/*
      * @param {string} nextUrl
      * @param {string} role
      * @returns {boolean}
@@ -232,7 +246,7 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
       if (!nextUrl || !role) return false;
       if (role === 'buyer') return nextUrl.startsWith('/buyer/');
       if (role === 'seller') return nextUrl.startsWith('/seller/');
-      if (role === 'admin') return nextUrl.startsWith('/admin/');
+      if (role === 'admin') return nextUrl.startsWith('/admin-panel/') || nextUrl.startsWith('/admin/');
       return false;
     },
 

@@ -19,6 +19,7 @@ from drf_spectacular.views import (
     SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 )
 from accounts import views as accounts_views
+from accounts.decorators import buyer_required, seller_required, admin_required
 
 
 @require_GET
@@ -76,6 +77,9 @@ urlpatterns = [
     path(f'{api_prefix}regions/', include('regions.urls')),
     path(f'{api_prefix}inventory/', include('inventory.urls')),
 
+    # AI Services
+    path(f'{api_prefix}ai/', include('ai_services.urls')),
+
     # JWT Endpoints
     path(f'{api_prefix}token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
     path(f'{api_prefix}token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
@@ -99,39 +103,38 @@ urlpatterns += [
     path('auth/reset-password/', TemplateView.as_view(template_name='auth/reset-password/index.html'), name='page-reset-password'),
     path('auth/register-mitra/', TemplateView.as_view(template_name='auth/register-mitra/index.html'), name='page-register-mitra'),
     path('social-callback/apple.html', TemplateView.as_view(template_name='auth/social-callback/apple.html'), name='page-apple-callback'),
-    # Buyer pages
-    path('buyer/home/', login_required(TemplateView.as_view(template_name='home/index.html')), name='page-buyer-home'),
-    # New dedicated buyer pages
-    path('buyer/products/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-buyer-products'),
-    path('buyer/favorites/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-buyer-favorites'),
-    path('buyer/promo/', login_required(TemplateView.as_view(template_name='buyer/promo/index.html')), name='page-buyer-promo'),
-    path('buyer/settings/', login_required(TemplateView.as_view(template_name='buyer/settings/index.html')), name='page-buyer-settings'),
-    path('buyer/loyalty/', login_required(TemplateView.as_view(template_name='buyer/loyalty/index.html')), name='page-buyer-loyalty'),
-    path('buyer/wallet/', login_required(TemplateView.as_view(template_name='buyer/wallet/index.html')), name='page-buyer-wallet'),
-    path('buyer/reviews/', login_required(TemplateView.as_view(template_name='buyer/reviews/index.html')), name='page-buyer-reviews'),
-    path('buyer/dashboard/', login_required(TemplateView.as_view(template_name='buyer/dashboard/index.html')), name='page-buyer-dashboard'),
-    path('buyer/orders/', login_required(TemplateView.as_view(template_name='buyer/orders/index.html')), name='page-buyer-orders'),
-    path('buyer/cart/', login_required(TemplateView.as_view(template_name='buyer/cart/index.html')), name='page-buyer-cart'),
-    path('buyer/checkout/', login_required(TemplateView.as_view(template_name='buyer/checkout/index.html')), name='page-buyer-checkout'),
-    path('buyer/order-detail/', login_required(TemplateView.as_view(template_name='buyer/order-detail/index.html')), name='page-buyer-order-detail'),
-    path('buyer/order-success/', login_required(TemplateView.as_view(template_name='buyer/order-success/index.html')), name='page-buyer-order-success'),
-    path('buyer/profile/', login_required(TemplateView.as_view(template_name='buyer/profile/index.html')), name='page-buyer-profile'),
-    path('products/<int:pk>/', login_required(TemplateView.as_view(template_name='buyer/product-detail/index.html')), name='page-product-detail'),
-    # Seller pages (all protected with login_required)
-    path('seller/dashboard/', login_required(TemplateView.as_view(template_name='seller/dashboard/index.html')), name='page-seller-dashboard'),
-    path('seller/pengiriman/', login_required(TemplateView.as_view(template_name='seller/pengiriman/index.html')), name='page-seller-pengiriman'),
-    path('seller/products/', login_required(TemplateView.as_view(template_name='seller/products/index.html')), name='page-seller-products'),
-    path('seller/orders/', login_required(TemplateView.as_view(template_name='seller/orders/index.html')), name='page-seller-orders'),
-    path('seller/order-detail/', login_required(TemplateView.as_view(template_name='seller/order-detail/index.html')), name='page-seller-order-detail'),
-    path('seller/partner-guide/', login_required(TemplateView.as_view(template_name='seller/partner-guide/index.html')), name='page-seller-partner-guide'),
-    path('seller/laporan/', login_required(TemplateView.as_view(template_name='seller/laporan/index.html')), name='page-seller-laporan'),
-    path('seller/keuangan/', login_required(TemplateView.as_view(template_name='seller/keuangan/index.html')), name='page-seller-keuangan'),
-    path('seller/pelanggan/', login_required(TemplateView.as_view(template_name='seller/pelanggan/index.html')), name='page-seller-pelanggan'),
-    path('seller/pengaturan/', login_required(TemplateView.as_view(template_name='seller/pengaturan/index.html')), name='page-seller-pengaturan'),
-    path('seller/promo-diskon/', login_required(TemplateView.as_view(template_name='seller/promo-diskon/index.html')), name='page-seller-promo-diskon'),
-    path('seller/ulasan/', login_required(TemplateView.as_view(template_name='seller/ulasan/index.html')), name='page-seller-ulasan'),
-    path('seller/supplier/', login_required(TemplateView.as_view(template_name='seller/supplier/index.html')), name='page-seller-supplier'),
-    path('seller/stock-prediction/', login_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html')), name='page-seller-stock-prediction'),
+    # Buyer pages (protected with buyer_required decorator + login_required fallback)
+    path('buyer/home/', login_required(buyer_required(TemplateView.as_view(template_name='home/index.html'))), name='page-buyer-home'),
+    path('buyer/products/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/products/index.html'))), name='page-buyer-products'),
+    path('buyer/favorites/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/favorites/index.html'))), name='page-buyer-favorites'),
+    path('buyer/promo/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/promo/index.html'))), name='page-buyer-promo'),
+    path('buyer/settings/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/settings/index.html'))), name='page-buyer-settings'),
+    path('buyer/loyalty/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/loyalty/index.html'))), name='page-buyer-loyalty'),
+    path('buyer/wallet/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/wallet/index.html'))), name='page-buyer-wallet'),
+    path('buyer/reviews/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/reviews/index.html'))), name='page-buyer-reviews'),
+    path('buyer/dashboard/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/dashboard/index.html'))), name='page-buyer-dashboard'),
+    path('buyer/orders/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/orders/index.html'))), name='page-buyer-orders'),
+    path('buyer/cart/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/cart/index.html'))), name='page-buyer-cart'),
+    path('buyer/checkout/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/checkout/index.html'))), name='page-buyer-checkout'),
+    path('buyer/order-detail/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/order-detail/index.html'))), name='page-buyer-order-detail'),
+    path('buyer/order-success/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/order-success/index.html'))), name='page-buyer-order-success'),
+    path('buyer/profile/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/profile/index.html'))), name='page-buyer-profile'),
+    path('products/<int:pk>/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/product-detail/index.html'))), name='page-product-detail'),
+    # Seller pages (protected with seller_required decorator + login_required fallback)
+    path('seller/dashboard/', login_required(seller_required(TemplateView.as_view(template_name='seller/dashboard/index.html'))), name='page-seller-dashboard'),
+    path('seller/pengiriman/', login_required(seller_required(TemplateView.as_view(template_name='seller/pengiriman/index.html'))), name='page-seller-pengiriman'),
+    path('seller/products/', login_required(seller_required(TemplateView.as_view(template_name='seller/products/index.html'))), name='page-seller-products'),
+    path('seller/orders/', login_required(seller_required(TemplateView.as_view(template_name='seller/orders/index.html'))), name='page-seller-orders'),
+    path('seller/order-detail/', login_required(seller_required(TemplateView.as_view(template_name='seller/order-detail/index.html'))), name='page-seller-order-detail'),
+    path('seller/partner-guide/', login_required(seller_required(TemplateView.as_view(template_name='seller/partner-guide/index.html'))), name='page-seller-partner-guide'),
+    path('seller/laporan/', login_required(seller_required(TemplateView.as_view(template_name='seller/laporan/index.html'))), name='page-seller-laporan'),
+    path('seller/keuangan/', login_required(seller_required(TemplateView.as_view(template_name='seller/keuangan/index.html'))), name='page-seller-keuangan'),
+    path('seller/pelanggan/', login_required(seller_required(TemplateView.as_view(template_name='seller/pelanggan/index.html'))), name='page-seller-pelanggan'),
+    path('seller/pengaturan/', login_required(seller_required(TemplateView.as_view(template_name='seller/pengaturan/index.html'))), name='page-seller-pengaturan'),
+    path('seller/promo-diskon/', login_required(seller_required(TemplateView.as_view(template_name='seller/promo-diskon/index.html'))), name='page-seller-promo-diskon'),
+    path('seller/ulasan/', login_required(seller_required(TemplateView.as_view(template_name='seller/ulasan/index.html'))), name='page-seller-ulasan'),
+    path('seller/supplier/', login_required(seller_required(TemplateView.as_view(template_name='seller/supplier/index.html'))), name='page-seller-supplier'),
+    path('seller/stock-prediction/', login_required(seller_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html'))), name='page-seller-stock-prediction'),
     # ── DUPLICATE SHORTHAND ROUTES → CANONICAL PERMANENT REDIRECTS ──
     # These shorthand paths (without /buyer/ prefix) duplicate the canonical /buyer/* routes.
     # Keeping them as direct routes creates multiple entry points and inconsistent redirects.
@@ -157,11 +160,14 @@ urlpatterns += [
     path('seller/refunds/<int:pk>/', login_required(TemplateView.as_view(template_name='seller/refunds/detail.html')), name='page-seller-refund-detail'),
 ]
 
-# ── Admin Panel Pages (staff-only) ──
-# Use settings.LOGIN_URL (/) so unauthenticated users are redirected to the Landing Page
-staff = staff_member_required(login_url=settings.LOGIN_URL)
+# ── Admin Panel Pages (staff-only, with dedicated admin login) ──
+# Unauthenticated users are redirected to the dedicated admin login page.
+# Admins never see the public landing page.
+staff = staff_member_required(login_url='/admin-panel/login/')
 
 urlpatterns += [
+    # Dedicated admin login page (separated from public /auth/login/)
+    path('admin-panel/login/', TemplateView.as_view(template_name='admin/login/index.html'), name='admin-login-page'),
     path('admin-panel/', staff(TemplateView.as_view(template_name='admin/dashboard/index.html')), name='admin-dashboard'),
     path('admin-panel/users/', staff(TemplateView.as_view(template_name='admin/users/index.html')), name='admin-users'),
     path('admin-panel/marketplace/', staff(TemplateView.as_view(template_name='admin/marketplace/index.html')), name='admin-marketplace'),

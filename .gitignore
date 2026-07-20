@@ -7,6 +7,34 @@
 .env.development
 
 # =============================================================================
+# Credentials & Service Accounts (must never be committed)
+# =============================================================================
+*service-account*.json
+*credentials*.json
+*credential*.json
+*.pem
+*.key
+*.cert
+firebase*.json
+*.secrets.*
+secrets/
+
+# =============================================================================
+# Database Backups & Dumps (may contain user data)
+# =============================================================================
+# NOTE: *.sql is intentionally NOT globally ignored because reference schemas
+# like database/warungio_full_schema.sql should remain trackable.
+# Backup/dump files use these specific extensions instead:
+*.sql.gz
+*.sql.zip
+*.sql.bak
+*.dump
+*.backup
+backups/
+db_backups/
+db_dump/
+
+# =============================================================================
 # Python (Django Backend)
 # =============================================================================
 venv/

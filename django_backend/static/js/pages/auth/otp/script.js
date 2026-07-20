@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const messageEl = document.getElementById('otpMessage');
 
   let timeLeft = 55;
+  let _verifying = false;
 
   function showMsg(text, type) {
     if (!messageEl) return;
@@ -113,6 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Form submit - verify OTP via Django API
   otpForm.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    // Guard: prevent duplicate submissions
+    if (_verifying) return;
+
     const otpValue = Array.from(otpInputs).map(inp => inp.value.trim()).join('');
     if (otpValue.length !== otpInputs.length) {
       showMsg('Isi semua angka OTP terlebih dahulu.', 'error');
@@ -123,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
+    _verifying = true;
     const submitBtn = otpForm.querySelector('button[type="submit"]');
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Memverifikasi...'; }
 
@@ -188,11 +194,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 sessionStorage.removeItem('warungio_partner_registration_data');
               }
-              window.location.href = '/seller/pengaturan/';
-            } else if (userRole === 'buyer') {
-              window.location.href = '/buyer/home/';
+            }
+            // Role-based redirect using centralized getRoleDashboardUrl() (single source of truth)
+            if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+              window.location.href = window.WarungioAuth.getRoleDashboardUrl(userRole);
             } else {
-              window.location.href = '/';
+              // Hard fallback (should not be reached if auth.js is loaded)
+              window.location.href = userRole === 'seller' ? '/seller/dashboard/' : userRole === 'buyer' ? '/buyer/home/' : '/';
             }
           } else {
             // Use next_endpoint from backend response for role-appropriate redirect
@@ -204,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (err) {
       showMsg(err.message || 'Kode OTP salah atau sudah kadaluwarsa.', 'error');
+      _verifying = false;
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verifikasi'; }
     }
   });
