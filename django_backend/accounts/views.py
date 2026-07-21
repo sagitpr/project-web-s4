@@ -40,6 +40,7 @@ def _log_db_operation(op_name, details, duration_ms=None):
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .response_utils import success_response, error_response
 from .models import User, OTP, LoginAttempt
 from .services.email_service import send_otp_email
 from .services.whatsapp_service import _whatsapp_configured
@@ -434,8 +435,12 @@ class LoginView(views.APIView):
                 email, otp.id, channels or '(none)', ip, redirect_url,
             )
 
-            return Response(response_data, status=status.HTTP_403_FORBIDDEN)
-        
+            return error_response(
+                message='Akun belum diverifikasi. Kode OTP baru telah dikirim ke email Anda.',
+                status_code=status.HTTP_403_FORBIDDEN,
+                **{k: v for k, v in response_data.items() if k != 'message'},
+            )
+
         # ── Role-gate: validate login_entry against the user's actual role ──
         login_entry = serializer.validated_data.get('login_entry')
         if login_entry and user.role != login_entry:
@@ -444,12 +449,13 @@ class LoginView(views.APIView):
                 'LOGIN BLOCKED — Role mismatch | Email: %s | User role: %s | Login entry: %s | IP: %s',
                 user.email, user.role, login_entry, ip,
             )
-            return Response({
-                'error': f'Akun ini tidak terdaftar sebagai {role_label}.',
-                'code': 'role_mismatch',
-                'user_role': user.role,
-                'login_entry': login_entry,
-            }, status=status.HTTP_403_FORBIDDEN)
+            return error_response(
+                message=f'Akun ini tidak terdaftar sebagai {role_label}.',
+                status_code=status.HTTP_403_FORBIDDEN,
+                code='role_mismatch',
+                user_role=user.role,
+                login_entry=login_entry,
+            )
         
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
@@ -477,20 +483,26 @@ class LoginView(views.APIView):
         )
         _log_db_operation('login_attempt_create', {'email': user.email, 'success': True})
         
-        response_data = {
-            'message': 'Login berhasil.',
-            'access': access_token,
-            'refresh': str(refresh),
-            'user': UserSerializer(user).data,
-        }
+        # Compute role-based redirect URL for verified users
+        if user.role == 'seller':
+            verified_redirect_url = '/seller/dashboard/'
+        elif user.role == 'buyer':
+            verified_redirect_url = '/buyer/home/'
+        elif user.role == 'admin':
+            verified_redirect_url = '/admin-panel/'
+        else:
+            verified_redirect_url = '/'
         
-        if settings.DEBUG:
-            logger.info(
-                'LOGIN SUCCESS — Email: %s | Role: %s | IP: %s',
-                user.email, user.role, ip,
-            )
-        
-        return Response(response_data)
+        log_user_info = f'Email: {user.email} | Role: {user.role} | IP: {ip}'
+        logger.info('LOGIN SUCCESS — %s', log_user_info)
+
+        return success_response(
+            message='Login berhasil.',
+            access=access_token,
+            refresh=str(refresh),
+            user=UserSerializer(user).data,
+            redirect_url=verified_redirect_url,
+        )
 
 
 @extend_schema(exclude=True)
@@ -505,10 +517,10 @@ class LogoutView(views.APIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
             logout(request)
-            return Response({'message': 'Logout berhasil.'})
+            return success_response(message='Logout berhasil.')
         except Exception as e:
             logger.warning('Logout error (non-blocking): %s', str(e))
-            return Response({'message': 'Logout berhasil.'})
+            return success_response(message='Logout berhasil.')
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -543,8 +555,7 @@ class ChangePasswordView(views.APIView):
         user = request.user
         user.set_password(serializer.validated_data['new_password'])
         user.save()
-        
-        return Response({'message': 'Password berhasil diubah.'})
+        return success_response(message='Password berhasil diubah.')
 
 
 @extend_schema(exclude=True)
@@ -575,12 +586,12 @@ class OTPRequestView(views.APIView):
         
         if recent_count >= 3:
             logger.warning('OTP RATE LIMIT EXCEEDED — Email: %s | IP: %s', email or phone, ip)
-            return Response({
-                'detail': 'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
-                'field': 'email',
-                'message': 'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
-                'code': 'otp_rate_limited',
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return error_response(
+                message='Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                field='email',
+                code='otp_rate_limited',
+            )
         
         # ── INSTRUMENTATION: Invalidate old OTPs (by email AND/OR phone) ──
         identifier_filter = Q()
@@ -626,19 +637,22 @@ class OTPRequestView(views.APIView):
         # Return OTP in debug mode
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
-
-        if settings.DEBUG:
             response_log = {
                 'status': 'success',
                 'user_email': email,
                 'purpose': purpose,
-                'channels': list(set(channels)) if email else [],
+                'channels': response_data.get('otp_channels', []),
                 'otp_id': otp.id,
                 'otp_code': otp.otp_code,
             }
             logger.info('OTP REQUEST RESPONSE — HTTP 200 | Response: %s', response_log)
 
-        return Response(response_data)
+        return success_response(
+            message=response_data.get('message', 'Kode OTP telah dikirim.'),
+            expires_in_minutes=response_data.get('expires_in_minutes'),
+            otp_channels=response_data.get('otp_channels'),
+            otp_code=response_data.get('otp_code'),
+        )
 
 
 @extend_schema(exclude=True)
@@ -697,11 +711,12 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY FAILED — No OTP found | Email: %s | Phone: %s | Purpose: %s | IP: %s',
                 email, phone, purpose, ip,
             )
-            return Response({
-                'detail': 'Kode OTP tidak valid atau sudah digunakan.',
-                'field': 'otp_code',
-                'code': 'otp_not_found',
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message='Kode OTP tidak valid atau sudah digunakan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_not_found',
+            )
         
         logger.info(
             'OTP VERIFY — Found OTP ID: %d | Attempts: %d/%d | Expires: %s | Email: %s',
@@ -718,12 +733,13 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY EXPIRED — OTP ID: %d | Email: %s | IP: %s',
                 otp.id, email, ip,
             )
-            return Response({
-                'detail': 'Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.',
-                'field': 'otp_code',
-                'code': 'otp_expired',
-                'needs_new_otp': True,
-            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return error_response(
+                message='Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.',
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                field='otp_code',
+                code='otp_expired',
+                needs_new_otp=True,
+            )
         
         # ────────────────────────────────────────────────────────────────────
         #  STEP 3: Check attempt lockout
@@ -733,13 +749,13 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY LOCKED — OTP ID: %d | Attempts: %d/%d | Email: %s | IP: %s',
                 otp.id, otp.attempts, otp.max_attempts, email, ip,
             )
-            return Response({
-                'detail': 'Terlalu banyak percobaan. Silakan minta OTP baru.',
-                'field': 'otp_code',
-                'message': 'Terlalu banyak percobaan. Silakan minta OTP baru.',
-                'code': 'otp_locked',
-                'needs_new_otp': True,
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return error_response(
+                message='Terlalu banyak percobaan. Silakan minta OTP baru.',
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                field='otp_code',
+                code='otp_locked',
+                needs_new_otp=True,
+            )
         
         # ────────────────────────────────────────────────────────────────────
         #  STEP 4: Verify code against stored hash
@@ -754,12 +770,13 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY WRONG CODE — OTP ID: %d | Attempts: %d/%d | Remaining: %d | Email: %s | IP: %s',
                 otp.id, otp.attempts, otp.max_attempts, max(remaining, 0), email, ip,
             )
-            return Response({
-                'detail': 'Kode OTP tidak valid.',
-                'field': 'otp_code',
-                'code': 'otp_invalid',
-                'remaining_attempts': max(remaining, 0),
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message='Kode OTP tidak valid.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_invalid',
+                remaining_attempts=max(remaining, 0),
+            )
         
         # ────────────────────────────────────────────────────────────────────
         #  STEP 5: Code is correct — verify OTP and activate account
@@ -789,10 +806,11 @@ class OTPVerifyView(views.APIView):
                     'OTP VERIFY — User not found for email: %s | phone: %s',
                     email, phone,
                 )
-                return Response({
-                    'detail': 'Pengguna tidak ditemukan.',
-                    'code': 'user_not_found',
-                }, status=status.HTTP_404_NOT_FOUND)
+                return error_response(
+                    message='Pengguna tidak ditemukan.',
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code='user_not_found',
+                )
             
             # Activate user: is_verified=True, is_active=True
             user_obj.is_verified = True
@@ -888,6 +906,7 @@ class OTPVerifyView(views.APIView):
             next_endpoint = redirect_url
             
             response_data = {
+                'success': True,
                 'verified': True,
                 'message': 'Verifikasi OTP berhasil.',
                 'access': access_token,
@@ -902,6 +921,7 @@ class OTPVerifyView(views.APIView):
             logger.error('Failed to generate JWT after OTP verify: %s', token_err)
             # Still return success for verification, but requires manual login
             response_data = {
+                'success': True,
                 'verified': True,
                 'message': 'Verifikasi OTP berhasil. Silakan login.',
                 'redirect_url': '/auth/login/?email=' + (email or '') + '&verified=1',
@@ -991,12 +1011,13 @@ class ResendOTPView(views.APIView):
                 'OTP RESEND COOLDOWN — Email: %s | Phone: %s | Wait: %ds | IP: %s',
                 email, phone, wait_seconds, ip,
             )
-            return Response({
-                'field': 'email',
-                'message': f'Silakan tunggu {wait_seconds} detik sebelum meminta ulang.',
-                'code': 'otp_cooldown',
-                'cooldown_seconds': wait_seconds,
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return error_response(
+                message=f'Silakan tunggu {wait_seconds} detik sebelum meminta ulang.',
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                field='email',
+                code='otp_cooldown',
+                cooldown_seconds=wait_seconds,
+            )
         
         # Use atomic transaction to ensure consistency
         with transaction.atomic():
@@ -1043,7 +1064,12 @@ class ResendOTPView(views.APIView):
             email, phone, otp.id,
         )
 
-        return Response(response_data)
+        return success_response(
+            message=response_data.get('message', 'Kode OTP telah dikirim ulang.'),
+            expires_in_minutes=response_data.get('expires_in_minutes'),
+            otp_channels=response_data.get('otp_channels'),
+            otp_code=response_data.get('otp_code'),
+        )
 
 
 @extend_schema(exclude=True)
@@ -1103,7 +1129,17 @@ class ForgotPasswordView(views.APIView):
             email, otp.id if user_exists else 'N/A',
         )
 
-        return Response(response_data)
+        # Include redirect_url to OTP verification page when user exists
+        if user_exists:
+            response_data['redirect_url'] = f'/auth/otp/?email={email}&purpose=password_reset'
+            response_data['requires_otp'] = True
+            response_data['next_action'] = 'verify_otp'
+
+        return success_response(
+            message=response_data['message'],
+            status_code=status.HTTP_200_OK,
+            **{k: v for k, v in response_data.items() if k != 'message'},
+        )
 
 
 @extend_schema(exclude=True)
@@ -1141,31 +1177,34 @@ class ResetPasswordView(views.APIView):
         
         if not otp:
             logger.warning('RESET PASSWORD FAILED — No OTP found | Email: %s', email)
-            return Response({
-                'detail': 'Kode OTP tidak valid atau sudah digunakan.',
-                'field': 'otp_code',
-                'code': 'otp_not_found',
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message='Kode OTP tidak valid atau sudah digunakan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_not_found',
+            )
         
         if otp.is_expired():
             otp.is_valid = False
             otp.save()
             logger.warning('RESET PASSWORD EXPIRED — OTP ID: %d | Email: %s', otp.id, email)
-            return Response({
-                'detail': 'Kode OTP sudah kadaluwarsa. Silakan minta ulang.',
-                'field': 'otp_code',
-                'code': 'otp_expired',
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message='Kode OTP sudah kadaluwarsa. Silakan minta ulang.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_expired',
+            )
         
         # Update password
         user = User.objects.filter(email=email).first()
         if not user:
             logger.error('RESET PASSWORD USER NOT FOUND — Email: %s but OTP existed', email)
-            return Response({
-                'field': 'email',
-                'message': 'Pengguna tidak ditemukan.',
-                'code': 'user_not_found',
-            }, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                message='Pengguna tidak ditemukan.',
+                status_code=status.HTTP_404_NOT_FOUND,
+                field='email',
+                code='user_not_found',
+            )
         
         user.set_password(new_password)
         user.save(update_fields=['password'])
@@ -1178,10 +1217,13 @@ class ResetPasswordView(views.APIView):
         
         # ── INSTRUMENTATION: Log success ──
         logger.info('RESET PASSWORD SUCCESS — Email: %s | OTP ID: %d', email, otp.id)
-        
-        return Response({
-            'message': 'Password berhasil direset. Silakan login dengan password baru.'
-        })
+
+        return success_response(
+            message='Password berhasil direset. Silakan login dengan password baru.',
+            status_code=status.HTTP_200_OK,
+            redirect_url='/auth/login/',
+            next_action='login',
+        )
 
 
 @extend_schema(exclude=True)
@@ -1189,7 +1231,7 @@ class CheckAuthView(views.APIView):
     """Check if user is authenticated and return their info.
     
     If the user is not verified (OTP), returns needs_verification flag
-    so the frontend can redirect to the OTP verification page.
+    with redirect_url so the frontend can redirect to the OTP verification page.
     """
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -1201,10 +1243,20 @@ class CheckAuthView(views.APIView):
         }
         
         if not user.is_verified:
+            # Detect OTP state: unverified user needs to complete OTP
+            redirect_url = f'/auth/otp/?email={user.email}&purpose=registration'
+            if user.role == 'seller':
+                redirect_url += '&role=seller'
             response_data['needs_verification'] = True
+            response_data['requires_otp'] = True
+            response_data['redirect_url'] = redirect_url
             response_data['email'] = user.email
         
-        return Response(response_data)
+        return success_response(
+            message='Autentikasi valid.' if user.is_verified else 'Akun belum diverifikasi.',
+            status_code=status.HTTP_200_OK,
+            **response_data,
+        )
 
 
 @extend_schema(exclude=True)
@@ -1215,18 +1267,23 @@ class TokenRefreshView(views.APIView):
     def post(self, request):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
-            return Response({
-                'error': 'Refresh token diperlukan.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message='Refresh token diperlukan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
         
         try:
             refresh = RefreshToken(refresh_token)
             access = str(refresh.access_token)
-            return Response({'access': access})
+            return success_response(
+                message='Token berhasil diperbarui.',
+                access=access,
+            )
         except Exception:
-            return Response({
-                'error': 'Refresh token tidak valid.'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return error_response(
+                message='Refresh token tidak valid.',
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
 
 
 @extend_schema(exclude=True)
@@ -1250,7 +1307,11 @@ class CheckAvailabilityView(views.APIView):
                     'message': 'Email ini sudah terdaftar. Gunakan email lain atau masuk.',
                     'code': 'email_taken',
                 }
-                return Response(response, status=status.HTTP_409_CONFLICT)
+                return error_response(
+                    message=response['message'],
+                    status_code=status.HTTP_409_CONFLICT,
+                    errors=response,
+                )
 
         if phone and response.get('available', True):
             exists = User.objects.filter(phone=phone).exists()
@@ -1261,9 +1322,16 @@ class CheckAvailabilityView(views.APIView):
                     'message': 'Nomor HP ini sudah terdaftar. Gunakan nomor lain atau masuk.',
                     'code': 'phone_taken',
                 }
-                return Response(response, status=status.HTTP_409_CONFLICT)
+                return error_response(
+                    message=response['message'],
+                    status_code=status.HTTP_409_CONFLICT,
+                    errors=response,
+                )
 
-        return Response(response)
+        return success_response(
+            message='Email dan nomor HP tersedia.',
+            available=True,
+        )
 
 
 @extend_schema(exclude=True)
@@ -1348,10 +1416,10 @@ class AdminLoginView(views.APIView):
         # Extract ?next= parameter for post-login redirect
         next_url = request.GET.get('next', '/admin-panel/')
 
-        return Response({
-            'message': 'Login admin berhasil.',
-            'access': access_token,
-            'refresh': str(refresh),
-            'user': UserSerializer(user).data,
-            'redirect': next_url,
-        })
+        return success_response(
+            message='Login admin berhasil.',
+            access=access_token,
+            refresh=str(refresh),
+            user=UserSerializer(user).data,
+            redirect_url=next_url,
+        )

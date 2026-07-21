@@ -669,6 +669,15 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@warungio.com')
 
 # =============================================================================
+# IMAP (Inbox Audit — email delivery verification)
+# =============================================================================
+IMAP_HOST = os.environ.get('IMAP_HOST', '')
+IMAP_PORT = int(os.environ.get('IMAP_PORT', 993))
+IMAP_USER = os.environ.get('IMAP_USER', '')
+IMAP_PASSWORD = os.environ.get('IMAP_PASSWORD', '')
+IMAP_SSL = os.environ.get('IMAP_SSL', 'True').lower() == 'true'
+
+# =============================================================================
 # LOGGING
 # =============================================================================
 

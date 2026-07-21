@@ -98,7 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await WarungioAPI.resetPassword(identifier, otpCode, newPass);
       setMessage('Password berhasil direset! Mengarahkan ke login...', 'success');
-      setTimeout(() => { window.location.href = '../auth/login/index.html'; }, 2000);
+      // CRITICAL: Use absolute path from backend redirect_url when available
+      // Fallback to /auth/login/ (not relative path which breaks on subdirectory deployments)
+      var loginUrl = '/auth/login/';
+      if (data.redirect_url) {
+        loginUrl = data.redirect_url;
+      }
+      setTimeout(() => { window.location.href = loginUrl; }, 2000);
     } catch (err) {
       setMessage(err.message, 'error');
       btn.disabled = false; btn.innerHTML = 'Ubah Kata Sandi';

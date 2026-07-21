@@ -3,19 +3,17 @@ Social Authentication Views for Warungio Marketplace.
 Handles Google, Facebook, and Apple Sign-In via client-side OAuth tokens.
 """
 
-import json
 import logging
 import requests
 from django.conf import settings
 from django.contrib.auth import login
-from django.utils import timezone
 from django.db import transaction
 from rest_framework import status, views, permissions
-from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, LoginAttempt
 from .serializers import UserSerializer
+from .response_utils import success_response, error_response
 from drf_spectacular.utils import extend_schema
 
 logger = logging.getLogger('django_backend')
@@ -106,12 +104,13 @@ class SocialLoginBase:
                 'SOCIAL LOGIN BLOCKED — Role mismatch | Email: %s | User role: %s | Login entry: %s',
                 user.email, user.role, login_entry,
             )
-            return Response({
-                'error': f'Akun ini tidak terdaftar sebagai {role_label}.',
-                'code': 'role_mismatch',
-                'user_role': user.role,
-                'login_entry': login_entry,
-            }, status=status.HTTP_403_FORBIDDEN)
+            return error_response(
+                message=f'Akun ini tidak terdaftar sebagai {role_label}.',
+                status_code=status.HTTP_403_FORBIDDEN,
+                code='role_mismatch',
+                user_role=user.role,
+                login_entry=login_entry,
+            )
         return None
 
     def generate_jwt_tokens(self, user, request):
@@ -151,10 +150,13 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
 
     def post(self, request):
         id_token = request.data.get('id_token') or request.data.get('credential')
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+
         if not id_token:
-            return Response(
-                {'error': 'Token Google tidak ditemukan.'},
-                status=status.HTTP_400_BAD_REQUEST
+            logger.warning('GOOGLE LOGIN — Token missing | IP: %s', ip)
+            return error_response(
+                message='Token Google tidak ditemukan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -173,14 +175,14 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
 
             email = id_info.get('email')
             if not email:
-                return Response(
-                    {'error': 'Email tidak ditemukan dari akun Google.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                logger.warning('GOOGLE LOGIN — No email in token | IP: %s', ip)
+                return error_response(
+                    message='Email tidak ditemukan dari akun Google.',
+                    status_code=status.HTTP_400_BAD_REQUEST,
                 )
 
             full_name = id_info.get('name', '')
             provider_id = id_info.get('sub', '')
-            # Optional: allow role override for new users (seller signup via social)
             role = request.data.get('role', 'buyer')
             login_entry = request.data.get('login_entry')
 
@@ -196,26 +198,45 @@ class GoogleLoginView(views.APIView, SocialLoginBase):
                 role=role,
             )
 
+            logger.info(
+                'GOOGLE LOGIN — Email: %s | Role: %s | New user: %s | IP: %s',
+                email, user.role, is_new, ip,
+            )
+
             # Role gate: validate login_entry against existing user's role
             role_check = self.validate_login_entry(user, login_entry)
             if role_check:
                 return role_check
 
-            result = self.generate_jwt_tokens(user, request)
-            result['is_new_user'] = is_new
-            return Response(result)
+            tokens = self.generate_jwt_tokens(user, request)
+
+            redirect_url = '/seller/dashboard/' if user.role == 'seller' else '/buyer/home/'
+
+            logger.info(
+                'GOOGLE LOGIN SUCCESS — Email: %s | Role: %s | Redirect: %s',
+                email, user.role, redirect_url,
+            )
+
+            return success_response(
+                message='Login berhasil.',
+                access=tokens['access'],
+                refresh=tokens['refresh'],
+                user=tokens['user'],
+                is_new_user=is_new,
+                redirect_url=redirect_url,
+            )
 
         except ValueError as e:
-            logger.warning(f"Google token verification failed: {str(e)}")
-            return Response(
-                {'error': 'Token Google tidak valid.'},
-                status=status.HTTP_401_UNAUTHORIZED
+            logger.warning('GOOGLE LOGIN — Token verification failed: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Token Google tidak valid.',
+                status_code=status.HTTP_401_UNAUTHORIZED,
             )
         except Exception as e:
-            logger.error(f"Google login error: {str(e)}")
-            return Response(
-                {'error': 'Terjadi kesalahan saat memproses login Google.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            logger.error('GOOGLE LOGIN — Error: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Terjadi kesalahan saat memproses login Google.',
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -229,10 +250,13 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
 
     def post(self, request):
         access_token = request.data.get('access_token')
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+
         if not access_token:
-            return Response(
-                {'error': 'Token Facebook tidak ditemukan.'},
-                status=status.HTTP_400_BAD_REQUEST
+            logger.warning('FACEBOOK LOGIN — Token missing | IP: %s', ip)
+            return error_response(
+                message='Token Facebook tidak ditemukan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -250,9 +274,10 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
             verify_data = verify_resp.json()
 
             if 'error' in verify_data or not verify_data.get('data', {}).get('is_valid'):
-                return Response(
-                    {'error': 'Token Facebook tidak valid.'},
-                    status=status.HTTP_401_UNAUTHORIZED
+                logger.warning('FACEBOOK LOGIN — Invalid token | IP: %s', ip)
+                return error_response(
+                    message='Token Facebook tidak valid.',
+                    status_code=status.HTTP_401_UNAUTHORIZED,
                 )
 
             # Get user info from Graph API
@@ -265,9 +290,10 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
             user_data = user_resp.json()
 
             if 'error' in user_data:
-                return Response(
-                    {'error': 'Gagal mengambil data pengguna dari Facebook.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                logger.warning('FACEBOOK LOGIN — Failed to fetch user data | IP: %s', ip)
+                return error_response(
+                    message='Gagal mengambil data pengguna dari Facebook.',
+                    status_code=status.HTTP_400_BAD_REQUEST,
                 )
 
             email = user_data.get('email')
@@ -275,14 +301,12 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
             full_name = user_data.get('name', '')
 
             if not email:
-                # Facebook might not return email for some accounts
-                # Try to get email from the linked accounts
-                return Response(
-                    {'error': 'Email tidak ditemukan dari akun Facebook. Pastikan email Anda publik di Facebook.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                logger.warning('FACEBOOK LOGIN — No email returned | IP: %s', ip)
+                return error_response(
+                    message='Email tidak ditemukan dari akun Facebook. Pastikan email Anda publik di Facebook.',
+                    status_code=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Optional: allow role override for new users (seller signup via social)
             role = request.data.get('role', 'buyer')
             login_entry = request.data.get('login_entry')
 
@@ -297,26 +321,45 @@ class FacebookLoginView(views.APIView, SocialLoginBase):
                 role=role,
             )
 
+            logger.info(
+                'FACEBOOK LOGIN — Email: %s | Role: %s | New user: %s | IP: %s',
+                email, user.role, is_new, ip,
+            )
+
             # Role gate: validate login_entry against existing user's role
             role_check = self.validate_login_entry(user, login_entry)
             if role_check:
                 return role_check
 
-            result = self.generate_jwt_tokens(user, request)
-            result['is_new_user'] = is_new
-            return Response(result)
+            tokens = self.generate_jwt_tokens(user, request)
+
+            redirect_url = '/seller/dashboard/' if user.role == 'seller' else '/buyer/home/'
+
+            logger.info(
+                'FACEBOOK LOGIN SUCCESS — Email: %s | Role: %s | Redirect: %s',
+                email, user.role, redirect_url,
+            )
+
+            return success_response(
+                message='Login berhasil.',
+                access=tokens['access'],
+                refresh=tokens['refresh'],
+                user=tokens['user'],
+                is_new_user=is_new,
+                redirect_url=redirect_url,
+            )
 
         except requests.RequestException as e:
-            logger.error(f"Facebook API error: {str(e)}")
-            return Response(
-                {'error': 'Gagal terhubung ke Facebook. Silakan coba lagi.'},
-                status=status.HTTP_502_BAD_GATEWAY
+            logger.error('FACEBOOK LOGIN — API error: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Gagal terhubung ke Facebook. Silakan coba lagi.',
+                status_code=status.HTTP_502_BAD_GATEWAY,
             )
         except Exception as e:
-            logger.error(f"Facebook login error: {str(e)}")
-            return Response(
-                {'error': 'Terjadi kesalahan saat memproses login Facebook.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            logger.error('FACEBOOK LOGIN — Error: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Terjadi kesalahan saat memproses login Facebook.',
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -332,11 +375,13 @@ class AppleLoginView(views.APIView, SocialLoginBase):
         identity_token = request.data.get('identity_token')
         authorization_code = request.data.get('authorization_code')
         user_data = request.data.get('user', {})  # Initial user data from Apple (first name, last name)
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
 
         if not identity_token and not authorization_code:
-            return Response(
-                {'error': 'Token Apple tidak ditemukan.'},
-                status=status.HTTP_400_BAD_REQUEST
+            logger.warning('APPLE LOGIN — Token missing | IP: %s', ip)
+            return error_response(
+                message='Token Apple tidak ditemukan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -362,15 +407,16 @@ class AppleLoginView(views.APIView, SocialLoginBase):
                         issuer='https://appleid.apple.com',
                     )
                 except pyjwt.ExpiredSignatureError:
-                    return Response(
-                        {'error': 'Token Apple sudah kadaluwarsa.'},
-                        status=status.HTTP_401_UNAUTHORIZED
+                    logger.warning('APPLE LOGIN — Token expired | IP: %s', ip)
+                    return error_response(
+                        message='Token Apple sudah kadaluwarsa.',
+                        status_code=status.HTTP_401_UNAUTHORIZED,
                     )
                 except pyjwt.InvalidTokenError as e:
-                    logger.warning(f"Apple token verification failed: {str(e)}")
-                    return Response(
-                        {'error': 'Token Apple tidak valid.'},
-                        status=status.HTTP_401_UNAUTHORIZED
+                    logger.warning('APPLE LOGIN — Invalid token: %s | IP: %s', str(e), ip)
+                    return error_response(
+                        message='Token Apple tidak valid.',
+                        status_code=status.HTTP_401_UNAUTHORIZED,
                     )
 
                 email = decoded.get('email')
@@ -388,16 +434,17 @@ class AppleLoginView(views.APIView, SocialLoginBase):
                     if social_account:
                         email = social_account.user.email
                     else:
-                        return Response(
-                            {'error': 'Email tidak tersedia dari Apple. Silakan masuk menggunakan email untuk akun yang sudah terdaftar.'},
-                            status=status.HTTP_400_BAD_REQUEST
+                        logger.warning('APPLE LOGIN — Email not available and no linked account | Apple sub: %s | IP: %s', apple_sub, ip)
+                        return error_response(
+                            message='Email tidak tersedia dari Apple. Silakan masuk menggunakan email untuk akun yang sudah terdaftar.',
+                            status_code=status.HTTP_400_BAD_REQUEST,
                         )
             else:
                 # No identity token, try to use the authorization code
-                # This is a fallback - exchange the code for tokens
-                return Response(
-                    {'error': 'Identity token diperlukan untuk autentikasi Apple.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                logger.warning('APPLE LOGIN — No identity token, only auth code provided | IP: %s', ip)
+                return error_response(
+                    message='Identity token diperlukan untuk autentikasi Apple.',
+                    status_code=status.HTTP_400_BAD_REQUEST,
                 )
 
             # Extract name from Apple's response (only provided on first sign-in)
@@ -419,26 +466,45 @@ class AppleLoginView(views.APIView, SocialLoginBase):
                 role=request.data.get('role', 'buyer'),
             )
 
+            logger.info(
+                'APPLE LOGIN — Email: %s | Role: %s | New user: %s | IP: %s',
+                email, user.role, is_new, ip,
+            )
+
             # Role gate: validate login_entry against existing user's role
             role_check = self.validate_login_entry(user, request.data.get('login_entry'))
             if role_check:
                 return role_check
 
-            result = self.generate_jwt_tokens(user, request)
-            result['is_new_user'] = is_new
-            return Response(result)
+            tokens = self.generate_jwt_tokens(user, request)
+
+            redirect_url = '/seller/dashboard/' if user.role == 'seller' else '/buyer/home/'
+
+            logger.info(
+                'APPLE LOGIN SUCCESS — Email: %s | Role: %s | Redirect: %s',
+                email, user.role, redirect_url,
+            )
+
+            return success_response(
+                message='Login berhasil.',
+                access=tokens['access'],
+                refresh=tokens['refresh'],
+                user=tokens['user'],
+                is_new_user=is_new,
+                redirect_url=redirect_url,
+            )
 
         except requests.RequestException as e:
-            logger.error(f"Apple API error: {str(e)}")
-            return Response(
-                {'error': 'Gagal terhubung ke Apple. Silakan coba lagi.'},
-                status=status.HTTP_502_BAD_GATEWAY
+            logger.error('APPLE LOGIN — API error: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Gagal terhubung ke Apple. Silakan coba lagi.',
+                status_code=status.HTTP_502_BAD_GATEWAY,
             )
         except Exception as e:
-            logger.error(f"Apple login error: {str(e)}")
-            return Response(
-                {'error': 'Terjadi kesalahan saat memproses login Apple.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            logger.error('APPLE LOGIN — Error: %s | IP: %s', str(e), ip)
+            return error_response(
+                message='Terjadi kesalahan saat memproses login Apple.',
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -452,8 +518,13 @@ class SocialAccountStatusView(views.APIView):
     def get(self, request):
         from .models import SocialAccount
         accounts = SocialAccount.objects.filter(user=request.user)
-        return Response({
-            'accounts': [
+        logger.info(
+            'SOCIAL ACCOUNTS VIEW — User: %s | Count: %d',
+            request.user.email, accounts.count(),
+        )
+        return success_response(
+            message='Daftar akun sosial.',
+            accounts=[
                 {
                     'provider': acc.provider,
                     'provider_id': acc.provider_id,
@@ -461,15 +532,15 @@ class SocialAccountStatusView(views.APIView):
                 }
                 for acc in accounts
             ]
-        })
+        )
 
     def delete(self, request):
         """Unlink a social account."""
         provider = request.data.get('provider')
         if not provider:
-            return Response(
-                {'error': 'Provider harus diisi.'},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                message='Provider harus diisi.',
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         from .models import SocialAccount
@@ -479,10 +550,16 @@ class SocialAccountStatusView(views.APIView):
         ).delete()
 
         if deleted:
-            return Response({'message': f'Akun {provider} berhasil diputuskan.'})
-        return Response(
-            {'error': 'Akun tidak ditemukan.'},
-            status=status.HTTP_404_NOT_FOUND
+            logger.info(
+                'SOCIAL ACCOUNT UNLINKED — User: %s | Provider: %s',
+                request.user.email, provider,
+            )
+            return success_response(
+                message=f'Akun {provider} berhasil diputuskan.',
+            )
+        return error_response(
+            message='Akun tidak ditemukan.',
+            status_code=status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -494,9 +571,10 @@ class GoogleAuthConfigView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        return Response({
-            'google_client_id': settings.GOOGLE_CLIENT_ID,
-        })
+        return success_response(
+            message='Konfigurasi Google Auth.',
+            google_client_id=settings.GOOGLE_CLIENT_ID,
+        )
 
 
 @extend_schema(exclude=True)
@@ -507,6 +585,7 @@ class FacebookAuthConfigView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
-        return Response({
-            'facebook_app_id': settings.FACEBOOK_APP_ID,
-        })
+        return success_response(
+            message='Konfigurasi Facebook Auth.',
+            facebook_app_id=settings.FACEBOOK_APP_ID,
+        )

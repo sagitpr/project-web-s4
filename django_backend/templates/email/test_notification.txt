@@ -1,0 +1,52 @@
+============================================
+WARUNGIO - TEST NOTIFICATION
+Sistem Notifikasi Email Berhasil Dikonfigurasi
+============================================
+
+Hai {{ sender_name }},
+
+Email ini dikirim untuk memberitahukan bahwa sistem notifikasi email Warungio
+telah berhasil dikonfigurasi dan seluruh pipeline pengiriman berfungsi dengan baik.
+
+STATUS: ✅ Sistem Email Siap Digunakan
+========================================
+
+Seluruh fitur yang bergantung pada pengiriman email (OTP, Reset Password,
+Registrasi, Notifikasi Pembayaran, Status Pesanan) telah siap beroperasi.
+
+INFORMASI PENGUJIAN:
+--------------------
+Test ID:         {{ test_id }}
+Waktu:           {{ timestamp }}
+Server Pengirim: {{ email_host }}:{{ email_port }}
+Email Backend:   {{ email_backend }}
+TLS Enabled:     {{ email_tls }}
+Debug Mode:      {{ django_debug }}
+Penerima:        {{ recipient }}
+
+FITUR YANG SIAP DIGUNAKAN:
+--------------------------
+✓ OTP Verifikasi Registrasi
+✓ OTP Login & Autentikasi Dua Faktor
+✓ Reset Password
+✓ Notifikasi Pembayaran
+✓ Status & Tracking Pesanan
+✓ Notifikasi Sistem & Keamanan
+
+---
+Email ini adalah hasil dari uji coba sistem notifikasi Warungio. Apabila Anda
+menerima email ini, berarti seluruh konfigurasi SMTP, template email, dan
+pipeline pengiriman telah berfungsi dengan benar dari awal hingga akhir.
+
+Terima kasih telah menggunakan Warungio - Belanja kebutuhan sehari-hari
+langsung dari warung terdekat.
+
+---
+(c) {{ current_year }} Warungio. Hak cipta dilindungi undang-undang.
+Email ini dikirim secara otomatis oleh sistem Warungio untuk keperluan
+uji coba notifikasi. Mohon tidak membalas email ini secara langsung.
+
+Warungio - Hyperlocal Marketplace
+warungio.com | {{ support_email }}
+Test ID: {{ test_id }}
+
