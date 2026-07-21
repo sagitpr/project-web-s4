@@ -191,7 +191,8 @@
         handleAuthResponse(data);
       } catch (err) {
         // ── Check if the account is unverified → redirect to OTP verification ──
-        if (err.needs_verification) {
+        // Backend returns HTTP 403 with requires_otp=true and redirect_url
+        if (err.requires_otp || err.needs_verification) {
           var verificationEmail = err.email || email;
           
           // Reset button state before redirect
@@ -200,13 +201,14 @@
             loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
           }
           
-          // Reset button state and redirect immediately to OTP verification page
-          // The OTP has already been sent by the backend — user just needs to enter it
-          if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
+          // CRITICAL: Use backend-provided redirect_url when available.
+          // The backend ensures the correct OTP page with proper parameters.
+          if (err.redirect_url) {
+            window.location.href = err.redirect_url;
+          } else {
+            // Fallback: construct redirect manually
+            window.location.href = '/auth/otp/?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
           }
-          window.location.href = '/auth/otp/?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
           return;
         }
 

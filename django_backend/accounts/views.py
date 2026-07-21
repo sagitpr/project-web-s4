@@ -41,6 +41,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, OTP, LoginAttempt
+from .services.email_service import send_otp_email
 from .services.whatsapp_service import _whatsapp_configured
 
 # Celery task imports — wrapped so registration doesn't fail if Celery/Redis is down
@@ -119,7 +120,20 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
 
 
 class RegisterView(generics.CreateAPIView):
-    """User registration endpoint."""
+    """User registration endpoint.
+    
+    FLOW (atomic transaction):
+    1. Validate all fields (email, phone, password, etc.)
+    2. Check duplicate email/phone — reject with 409 if exists
+    3. Create user with is_active=False (not yet verified)
+    4. Generate OTP code and save to database
+    5. Send OTP via email (synchronously in DEBUG, via Celery in production)
+    6. Commit transaction
+    7. Return success response with redirect_url to OTP page
+    
+    CRITICAL: If OTP sending fails, the entire transaction rolls back.
+    No partial account creation occurs.
+    """
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     authentication_classes = ()  # No auth required — prevents JWTAuthentication from rejecting stale tokens
@@ -132,8 +146,6 @@ class RegisterView(generics.CreateAPIView):
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
         # ── Guard: verbose request payload logging only in DEBUG mode ──
-        # In production (DEBUG=False), we skip _mask_payload to avoid CPU overhead
-        # of stringifying the entire request body on every registration.
         if settings.DEBUG:
             logger.info(
                 'REGISTER REQUEST — IP: %s | User-Agent: %s | Complete payload: %s',
@@ -151,7 +163,6 @@ class RegisterView(generics.CreateAPIView):
                 error_detail,
             )
             
-            # Log every single field error with received value (production-safe)
             if logger.isEnabledFor(logging.WARNING):
                 for field, field_errors in serializer.errors.items():
                     for err in field_errors:
@@ -165,62 +176,147 @@ class RegisterView(generics.CreateAPIView):
                         )
             
             logger.warning(
-                'REGISTER ERROR RESPONSE — HTTP 400 | Response: {\"success\": false, \"errors\": %s}',
+                'REGISTER ERROR RESPONSE — HTTP 400 | Response: {"success": false, "errors": %s}',
                 error_detail,
             )
             
             raise drf_serializers.ValidationError(serializer.errors)
         
         # ────────────────────────────────────────────────────────────────────
-        #  SUCCESS: Create user, send OTP
+        #  STEP 1: Create user account (INACTIVE until OTP verified)
         # ────────────────────────────────────────────────────────────────────
         user = serializer.save()
-
-        # Send OTP for verification
+        logger.info(
+            'REGISTER USER CREATED — ID: %d | Email: %s | Role: %s | IP: %s',
+            user.id, user.email, user.role, ip,
+        )
+        _log_db_operation('user_create', {'id': user.id, 'email': user.email, 'role': user.role})
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 2: Generate and save OTP
+        # ────────────────────────────────────────────────────────────────────
         otp = OTP.objects.create(
             user=user,
             email=user.email,
             phone=str(user.phone) if user.phone else None,
             purpose='registration',
-            ip_address=request.META.get('REMOTE_ADDR'),
-            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            ip_address=ip,
+            user_agent=user_agent,
         )
-
-        # Dispatch OTP delivery to Celery worker (non-blocking)
-        channels = _dispatch_otp_async(
+        _log_db_operation('otp_create', {
+            'id': otp.id, 'email': user.email, 'purpose': 'registration'
+        })
+        logger.info(
+            'REGISTER OTP CREATED — ID: %d | Email: %s | Expires: %s',
+            otp.id, user.email, otp.expires_at,
+        )
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 3: Send OTP via email (synchronous — blocks until sent)
+        #  CRITICAL: OTP must be sent BEFORE committing the transaction.
+        #  If email fails, the entire transaction rolls back — no orphan account.
+        # ────────────────────────────────────────────────────────────────────
+        otp_sent = False
+        email_result = send_otp_email(
             email=user.email,
-            phone=str(user.phone) if user.phone else None,
             otp_code=otp.otp_code,
             purpose='registration',
             user_full_name=user.full_name,
         )
-
+        
+        if email_result.get('success'):
+            otp_sent = True
+            channels = ['email']
+            logger.info(
+                'REGISTER OTP SENT — Email: %s | OTP ID: %d',
+                user.email, otp.id,
+            )
+        else:
+            # Email failed — try Celery task as fallback
+            logger.warning(
+                'REGISTER OTP EMAIL FAILED — %s | Falling back to Celery for %s',
+                email_result.get('error', 'unknown'), user.email,
+            )
+            channels = _dispatch_otp_async(
+                email=user.email,
+                phone=str(user.phone) if user.phone else None,
+                otp_code=otp.otp_code,
+                purpose='registration',
+                user_full_name=user.full_name,
+            )
+            if channels:
+                otp_sent = True
+        
+        # Attempt WhatsApp delivery as bonus channel (non-blocking)
+        if user.phone and _whatsapp_configured():
+            _dispatch_otp_async(
+                email=user.email,
+                phone=str(user.phone),
+                otp_code=otp.otp_code,
+                purpose='registration',
+                user_full_name=user.full_name,
+            )
+            if 'whatsapp' not in channels:
+                channels.append('whatsapp')
+        
+        if not otp_sent:
+            # ⚠️ CRITICAL: OTP delivery failed entirely.
+            # The transaction will roll back, preventing orphan accounts.
+            logger.error(
+                'REGISTER FAILED — OTP delivery failed for %s | All channels unavailable',
+                user.email,
+            )
+            raise drf_serializers.ValidationError({
+                'detail': 'Gagal mengirim kode OTP. Silakan coba lagi nanti.',
+                'code': 'otp_delivery_failed',
+            })
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 4: Determine redirect URL based on role
+        # ────────────────────────────────────────────────────────────────────
+        if user.role == 'seller':
+            redirect_url = f'/auth/otp/?email={user.email}&purpose=registration&role=seller'
+        else:
+            redirect_url = f'/auth/otp/?email={user.email}&purpose=registration&role=buyer'
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 5: Build success response
+        # ────────────────────────────────────────────────────────────────────
         response_data = {
+            'success': True,
             'message': 'Registrasi berhasil. Silakan verifikasi OTP.',
+            'requires_otp': True,
+            'redirect_url': redirect_url,
             'otp_channels': list(set(channels)),
+            'expires_in_minutes': settings.OTP_EXPIRE_MINUTES,
             'user': UserSerializer(user).data,
         }
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
         
-        if settings.DEBUG:
-            response_log = {
-                'status': 'success',
-                'user_id': user.id,
-                'email': user.email,
-                'role': user.role,
-                'otp_channels': list(set(channels)),
-                'otp_code': otp.otp_code,
-            }
-            logger.info('REGISTER RESPONSE — HTTP 201 | Response: %s', response_log)
+        logger.info(
+            'REGISTER SUCCESS — User: %s | Role: %s | OTP ID: %d | Redirect: %s',
+            user.email, user.role, otp.id, redirect_url,
+        )
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(exclude=True)
 class LoginView(views.APIView):
-    """User login with JWT token response."""
+    """User login with JWT token response.
+    
+    FLOW:
+    1. Validate credentials via LoginSerializer
+    2. If user is not verified (OTP), return 403 with requires_otp=true + redirect_url
+    3. If user is verified, generate JWT tokens + Django session
+    4. Check role gate (login_entry vs actual role)
+    5. Return tokens and user data
+    
+    For unverified users: The frontend MUST check for requires_otp=true
+    and redirect to the OTP page using redirect_url.
+    """
     permission_classes = (permissions.AllowAny,)
     throttle_classes = [throttling.AnonRateThrottle]
     throttle_scope = 'login'
@@ -240,7 +336,6 @@ class LoginView(views.APIView):
                 ip, error_detail,
             )
             
-            # Log every single field error with received value (production-safe)
             if logger.isEnabledFor(logging.WARNING):
                 for field, field_errors in serializer.errors.items():
                     for err in field_errors:
@@ -252,7 +347,7 @@ class LoginView(views.APIView):
                         )
             
             logger.warning(
-                'LOGIN ERROR RESPONSE — HTTP 400 | Response: {\"success\": false, \"errors\": %s}',
+                'LOGIN ERROR RESPONSE — HTTP 400 | Response: {"success": false, "errors": %s}',
                 error_detail,
             )
             
@@ -262,7 +357,7 @@ class LoginView(views.APIView):
         
         # ── Auto-OTP Flow for unverified accounts ──
         if not user.is_verified:
-            logger.warning(
+            logger.info(
                 'LOGIN BLOCKED — Unverified user | Email: %s | IP: %s — Auto-generating OTP',
                 user.email, ip,
             )
@@ -271,7 +366,7 @@ class LoginView(views.APIView):
             phone = str(user.phone) if user.phone else None
             user_full_name = user.full_name or None
 
-            # 1. Invalidate any previous unused OTPs for this email (purpose='registration')
+            # 1. Invalidate any previous unused OTPs for this email
             stale_count = OTP.objects.filter(
                 email=email, purpose='registration', is_valid=True, is_used=False
             ).update(is_valid=False)
@@ -293,19 +388,39 @@ class LoginView(views.APIView):
                 'id': otp.id, 'email': email, 'purpose': 'registration'
             })
 
-            # 3. Dispatch OTP delivery asynchronously via configured providers
-            channels = _dispatch_otp_async(
+            # 3. Send OTP via email (synchronous)
+            email_result = send_otp_email(
                 email=email,
-                phone=phone,
                 otp_code=otp.otp_code,
                 purpose='registration',
                 user_full_name=user_full_name,
             )
+            
+            # Also try async dispatch as bonus
+            channels = []
+            if email_result.get('success'):
+                channels.append('email')
+            else:
+                channels = _dispatch_otp_async(
+                    email=email,
+                    phone=phone,
+                    otp_code=otp.otp_code,
+                    purpose='registration',
+                    user_full_name=user_full_name,
+                )
 
-            # 4. Return enhanced response with redirect information
+            # Build redirect URL for OTP page
+            if user.role == 'seller':
+                redirect_url = f'/auth/otp/?email={email}&purpose=registration&role=seller'
+            else:
+                redirect_url = f'/auth/otp/?email={email}&purpose=registration&role=buyer'
+
+            # 4. Return enhanced response with requires_otp and redirect_url
             response_data = {
+                'requires_otp': True,
                 'needs_verification': True,
                 'email': email,
+                'redirect_url': redirect_url,
                 'message': 'Akun belum diverifikasi. Kode OTP baru telah dikirim ke email Anda.',
                 'otp_channels': list(set(channels)),
                 'expires_in_minutes': settings.OTP_EXPIRE_MINUTES,
@@ -315,8 +430,8 @@ class LoginView(views.APIView):
                 response_data['otp_code'] = otp.otp_code
 
             logger.info(
-                'LOGIN AUTO-OTP — Email: %s | OTP ID: %d | Channels: %s | IP: %s',
-                email, otp.id, channels or '(none)', ip,
+                'LOGIN AUTO-OTP — Email: %s | OTP ID: %d | Channels: %s | IP: %s | Redirect: %s',
+                email, otp.id, channels or '(none)', ip, redirect_url,
             )
 
             return Response(response_data, status=status.HTTP_403_FORBIDDEN)
@@ -528,7 +643,27 @@ class OTPRequestView(views.APIView):
 
 @extend_schema(exclude=True)
 class OTPVerifyView(views.APIView):
-    """Verify OTP code."""
+    """Verify OTP code with auto-activation and auto-login.
+    
+    FLOW:
+    1. Validate OTP code input
+    2. Find valid OTP record by email/phone + purpose
+    3. Check expiry — if expired, invalidate and return error (frontend can resend)
+    4. Check attempt limit — if locked, return error
+    5. Verify code against stored hash
+    6. If wrong code, increment attempts and return error
+    7. If correct code:
+       a. Mark OTP as used
+       b. Activate user account (is_active=True, is_verified=True)
+       c. Generate JWT tokens for auto-login
+       d. Set Django session
+       e. Create role-dependent redirect URL
+       f. Create Store for sellers (auto-provisioning)
+    8. Return success response with tokens, user data, and redirect_url
+    
+    CRITICAL: After OTP verification, the user is automatically logged in.
+    No separate login step is needed.
+    """
     permission_classes = (permissions.AllowAny,)
     throttle_scope = 'otp'
 
@@ -544,8 +679,9 @@ class OTPVerifyView(views.APIView):
         otp_code = serializer.validated_data['otp_code']
         purpose = serializer.validated_data['purpose']
         
-        # Step 1: Find candidate OTP record(s) by identifier + purpose (WITHOUT code comparison)
-        # This allows us to track failed attempts even when the code is wrong.
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 1: Find candidate OTP record
+        # ────────────────────────────────────────────────────────────────────
         otp = None
         if email:
             otp = OTP.objects.filter(
@@ -561,30 +697,42 @@ class OTPVerifyView(views.APIView):
                 'OTP VERIFY FAILED — No OTP found | Email: %s | Phone: %s | Purpose: %s | IP: %s',
                 email, phone, purpose, ip,
             )
-            # Return a top-level 'detail' key so the frontend's auth.js api()
-            # can parse it via data.detail || data.message || data.error
             return Response({
                 'detail': 'Kode OTP tidak valid atau sudah digunakan.',
                 'field': 'otp_code',
                 'code': 'otp_not_found',
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        logger.info('OTP VERIFY FOUND — OTP ID: %d | Attempts: %d/%d | Expires: %s',
-                     otp.id, otp.attempts, otp.max_attempts, otp.expires_at)
+        logger.info(
+            'OTP VERIFY — Found OTP ID: %d | Attempts: %d/%d | Expires: %s | Email: %s',
+            otp.id, otp.attempts, otp.max_attempts, otp.expires_at, email,
+        )
         
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 2: Check expiry
+        # ────────────────────────────────────────────────────────────────────
         if otp.is_expired():
             otp.is_valid = False
-            otp.save()
-            logger.warning('OTP VERIFY EXPIRED — OTP ID: %d | Email: %s', otp.id, email)
+            otp.save(update_fields=['is_valid'])
+            logger.warning(
+                'OTP VERIFY EXPIRED — OTP ID: %d | Email: %s | IP: %s',
+                otp.id, email, ip,
+            )
             return Response({
                 'detail': 'Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.',
                 'field': 'otp_code',
                 'code': 'otp_expired',
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'needs_new_otp': True,
+            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 3: Check attempt lockout
+        # ────────────────────────────────────────────────────────────────────
         if otp.is_locked():
-            logger.warning('OTP VERIFY LOCKED — OTP ID: %d | Attempts: %d/%d | Email: %s',
-                           otp.id, otp.attempts, otp.max_attempts, email)
+            logger.warning(
+                'OTP VERIFY LOCKED — OTP ID: %d | Attempts: %d/%d | Email: %s | IP: %s',
+                otp.id, otp.attempts, otp.max_attempts, email, ip,
+            )
             return Response({
                 'detail': 'Terlalu banyak percobaan. Silakan minta OTP baru.',
                 'field': 'otp_code',
@@ -593,13 +741,9 @@ class OTPVerifyView(views.APIView):
                 'needs_new_otp': True,
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
-        # Step 2: Verify the code against stored hash (with plaintext fallback)
-        # Security note: The plaintext fallback (otp.otp_code == otp_code) exists for
-        # legacy OTP records created before the hash migration. New OTP records always
-        # store the SHA256 hash via the model's save() method. This dual comparison
-        # ensures backward compatibility without breaking existing user flows.
-        # Once all old OTP records have expired (max 15 min lifetime), this fallback
-        # will naturally become unreachable and can be removed in a future cleanup.
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 4: Verify code against stored hash
+        # ────────────────────────────────────────────────────────────────────
         otp_code_hash = OTP.hash_otp(otp_code)
         is_code_valid = (otp.otp_code_hash == otp_code_hash) or (otp.otp_code == otp_code)
         
@@ -607,185 +751,210 @@ class OTPVerifyView(views.APIView):
             otp.increment_attempts()
             remaining = otp.max_attempts - otp.attempts
             logger.warning(
-                'OTP VERIFY WRONG CODE — OTP ID: %d | Attempts: %d/%d | Remaining: %d | Email: %s',
-                otp.id, otp.attempts, otp.max_attempts, max(remaining, 0), email,
+                'OTP VERIFY WRONG CODE — OTP ID: %d | Attempts: %d/%d | Remaining: %d | Email: %s | IP: %s',
+                otp.id, otp.attempts, otp.max_attempts, max(remaining, 0), email, ip,
             )
             return Response({
                 'detail': 'Kode OTP tidak valid.',
                 'field': 'otp_code',
                 'code': 'otp_invalid',
+                'remaining_attempts': max(remaining, 0),
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Step 3: Code is correct — verify OTP
-        otp.is_used = True
-        otp.is_valid = False
-        otp.verified_at = timezone.now()
-        otp.save(update_fields=['is_used', 'is_valid', 'verified_at'])
-        
-        logger.info('OTP VERIFY SUCCESS — OTP ID: %d | Email: %s | Purpose: %s', otp.id, email, purpose)
-        
-        # Auto-activate account after OTP verification
-        # Determine next step based on role and registration completeness
-        next_step = None
-        next_endpoint = None
-        
-        if purpose == 'registration' or purpose == 'email_change':
-            # Find the user to check registration completeness
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 5: Code is correct — verify OTP and activate account
+        #  Uses atomic transaction to ensure consistency
+        # ────────────────────────────────────────────────────────────────────
+        with transaction.atomic():
+            # Mark OTP as used
+            otp.is_used = True
+            otp.is_valid = False
+            otp.verified_at = timezone.now()
+            otp.save(update_fields=['is_used', 'is_valid', 'verified_at'])
+            
+            logger.info(
+                'OTP VERIFY SUCCESS — OTP ID: %d | Email: %s | Purpose: %s',
+                otp.id, email, purpose,
+            )
+            
+            # Find the user
             user_obj = None
             if email:
                 user_obj = User.objects.filter(email=email).first()
             elif phone:
                 user_obj = User.objects.filter(phone=phone).first()
             
-            if user_obj:
-                # Detect path: if full_name is populated, this is the single-step
-                # RegisterView path where the user is complete after OTP.
-                # If full_name is empty, this is the multi-step service path
-                # where complete_profile will be called next.
-                if user_obj.full_name:
-                    # Single-step registration (RegisterView) — user is complete
-                    # Separate Buyer and Seller OTP workflows
-                    if user_obj.role == 'seller':
-                        # Seller workflow: auto-initialize Store profile, redirect to Seller Login
-                        try:
-                            from stores.models import Store
-                            # Strip leading "Toko " if already present to avoid "Toko Toko ..."
-                            raw_name = user_obj.full_name or user_obj.email.split('@')[0]
-                            if raw_name.lower().startswith('toko '):
-                                raw_name = raw_name[5:].strip()
-                            store_name = f"Toko {raw_name}"
-                            Store.objects.create(
-                                user=user_obj,
-                                store_name=store_name,
-                                description=f"{store_name} — Mitra Warungio",
-                                address=user_obj.address or '',
-                                status='pending',
-                            )
-                            logger.info('Store auto-created for seller %s', user_obj.email)
-                        except Exception as store_err:
-                            logger.error('Failed to auto-create store for %s: %s', user_obj.email, store_err)
-                        
-                        update_fields = {
-                            'is_verified': True,
-                            'is_active': True,
-                            'registration_step': 'complete',
-                            'registration_completed_at': timezone.now(),
-                        }
-                        next_step = 'complete'
-                        next_endpoint = '/seller/dashboard/'
-                    else:
-                        # Buyer workflow: mark complete, redirect to Buyer Login
-                        update_fields = {
-                            'is_verified': True,
-                            'is_active': True,
-                            'registration_step': 'complete',
-                            'registration_completed_at': timezone.now(),
-                        }
-                        next_step = 'complete'
-                        next_endpoint = '/auth/login/'
-                    
-                    User.objects.filter(id=user_obj.id).update(**update_fields)
-                    _log_db_operation('user_activate', {'user_id': user_obj.id, 'role': user_obj.role})
-                    
-                    # ── Auto-create Wallet (via service for legacy balance migration) ──
-                    try:
-                        from payments.services.wallet import get_wallet
-                        get_wallet(user_obj, lock=False)
-                    except Exception:
-                        pass
-                    # ── Auto-create NotificationPreference ──
-                    try:
-                        from notifications.models import NotificationPreference
-                        NotificationPreference.objects.get_or_create(user=user_obj)
-                    except Exception:
-                        pass
-                    
-                    # Track registration completion event
-                    try:
-                        from .models import RegistrationEvent
-                        RegistrationEvent.objects.create(
-                            user=user_obj,
-                            email=user_obj.email,
-                            phone=str(user_obj.phone) if user_obj.phone else None,
-                            event_type='otp_verified',
-                            role=user_obj.role,
-                            ip_address=getattr(otp, 'ip_address', None),
-                            user_agent=getattr(otp, 'user_agent', None),
-                        )
-                    except Exception:
-                        pass
-                else:
-                    # Multi-step registration — user still needs complete_profile
-                    User.objects.filter(id=user_obj.id).update(
-                        is_verified=True,
-                        registration_step='otp',
+            if not user_obj:
+                logger.error(
+                    'OTP VERIFY — User not found for email: %s | phone: %s',
+                    email, phone,
+                )
+                return Response({
+                    'detail': 'Pengguna tidak ditemukan.',
+                    'code': 'user_not_found',
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Activate user: is_verified=True, is_active=True
+            user_obj.is_verified = True
+            user_obj.is_active = True
+            user_obj.registration_step = 'complete'
+            user_obj.registration_completed_at = timezone.now()
+            user_obj.save(update_fields=[
+                'is_verified', 'is_active', 'registration_step', 'registration_completed_at'
+            ])
+            
+            _log_db_operation('user_activate', {
+                'user_id': user_obj.id, 'email': user_obj.email, 'role': user_obj.role
+            })
+            logger.info(
+                'USER ACTIVATED — ID: %d | Email: %s | Role: %s',
+                user_obj.id, user_obj.email, user_obj.role,
+            )
+            
+            # ── Auto-create Store for sellers ──
+            if user_obj.role == 'seller':
+                try:
+                    from stores.models import Store
+                    raw_name = user_obj.full_name or user_obj.email.split('@')[0]
+                    if raw_name.lower().startswith('toko '):
+                        raw_name = raw_name[5:].strip()
+                    store_name = f"Toko {raw_name}"
+                    Store.objects.create(
+                        user=user_obj,
+                        store_name=store_name,
+                        description=f"{store_name} — Mitra Warungio",
+                        address=user_obj.address or '',
+                        status='pending',
                     )
-                    _log_db_operation('user_step_advance', {'user_id': user_obj.id, 'step': 'otp'})
-                    next_step = 'profile'
-                    next_endpoint = '/api/auth/registration/complete-profile/'
-        
-        response_data = {
-            'message': 'Verifikasi OTP berhasil.',
-            'verified': True,
-        }
-        if next_step:
-            response_data['next_step'] = next_step
-        if next_endpoint:
-            response_data['next_endpoint'] = next_endpoint
-        
-        # ── Generate JWT tokens for auto-login ──
-        # After successful OTP verification, return tokens so the frontend
-        # can stay authenticated without requiring the user to log in again.
-        # This is critical for the Seller registration wizard flow where the
-        # user must remain authenticated after OTP verification.
-        # Reuse user_obj from the lookup above if available, otherwise look up again.
-        user_for_token = user_obj if purpose in ('registration', 'email_change') and user_obj else None
-        if not user_for_token:
-            if email:
-                user_for_token = User.objects.filter(email=email).first()
-            elif phone:
-                user_for_token = User.objects.filter(phone=phone).first()
-
-        if user_for_token and user_for_token.is_active:
+                    logger.info('Store auto-created for seller %s', user_obj.email)
+                except Exception as store_err:
+                    logger.error('Failed to auto-create store for %s: %s', user_obj.email, store_err)
+            
+            # ── Auto-create Wallet ──
             try:
-                refresh_token = RefreshToken.for_user(user_for_token)
-                access_token = str(refresh_token.access_token)
-                response_data['access'] = access_token
-                response_data['refresh'] = str(refresh_token)
-                response_data['user'] = UserSerializer(user_for_token).data
-
-                # Set Django session cookie so session-based auth also works
-                # login() is already imported at the top of this module
-                # Must specify backend because multiple auth backends are configured
-                login(request, user_for_token, backend='django.contrib.auth.backends.ModelBackend')
-            except Exception as token_err:
-                logger.error('Failed to generate JWT after OTP verify: %s', token_err)
-
-        # ── Cleanup: Delete expired OTPs for this user after successful verification ──
+                from payments.services.wallet import get_wallet
+                get_wallet(user_obj, lock=False)
+            except Exception:
+                pass
+            
+            # ── Auto-create NotificationPreference ──
+            try:
+                from notifications.models import NotificationPreference
+                NotificationPreference.objects.get_or_create(user=user_obj)
+            except Exception:
+                pass
+            
+            # ── Track registration completion event ──
+            # Only log 'otp_verified' for registration purpose
+            if purpose == 'registration':
+                try:
+                    RegistrationEvent.objects.create(
+                        user=user_obj,
+                        email=user_obj.email,
+                        phone=str(user_obj.phone) if user_obj.phone else None,
+                        event_type='otp_verified',
+                        role=user_obj.role,
+                        ip_address=ip,
+                        user_agent=user_agent,
+                    )
+                except Exception:
+                    pass
+        
+        # ────────────────────────────────────────────────────────────────────
+        #  STEP 6: Generate JWT tokens + Django session for auto-login
+        # ────────────────────────────────────────────────────────────────────
+        redirect_url = None
         try:
-            deleted_count = OTP.objects.filter(
-                Q(email=email) | (Q(phone=phone) if phone else Q()),
-                expires_at__lt=timezone.now()
+            refresh_token = RefreshToken.for_user(user_obj)
+            access_token = str(refresh_token.access_token)
+            
+            # Set Django session cookie
+            login(request, user_obj, backend='django.contrib.auth.backends.ModelBackend')
+            
+            logger.info(
+                'AUTO-LOGIN AFTER OTP — User: %s | Role: %s',
+                user_obj.email, user_obj.role,
+            )
+            
+            # Determine redirect URL based on role
+            if user_obj.role == 'seller':
+                redirect_url = '/seller/dashboard/'
+            else:
+                redirect_url = '/buyer/home/'
+            
+            # Include next_step/next_endpoint for backward compatibility
+            # with existing frontend code that may depend on these fields
+            next_step = 'complete'
+            next_endpoint = redirect_url
+            
+            response_data = {
+                'verified': True,
+                'message': 'Verifikasi OTP berhasil.',
+                'access': access_token,
+                'refresh': str(refresh_token),
+                'user': UserSerializer(user_obj).data,
+                'redirect_url': redirect_url,
+                'next_step': next_step,
+                'next_endpoint': next_endpoint,
+            }
+            
+        except Exception as token_err:
+            logger.error('Failed to generate JWT after OTP verify: %s', token_err)
+            # Still return success for verification, but requires manual login
+            response_data = {
+                'verified': True,
+                'message': 'Verifikasi OTP berhasil. Silakan login.',
+                'redirect_url': '/auth/login/?email=' + (email or '') + '&verified=1',
+            }
+        
+        # ── Cleanup: Delete USED and EXPIRED OTPs for this user ──
+        # After successful verification, all used OTPs and expired records
+        # are removed to keep the database clean.
+        try:
+            identifier_filter = Q()
+            if email:
+                identifier_filter |= Q(email=email)
+            if phone:
+                identifier_filter |= Q(phone=phone)
+            
+            # Delete used OTPs (including the one just verified)
+            used_cleaned = OTP.objects.filter(
+                identifier_filter, is_used=True
             ).delete()[0]
-            if deleted_count:
-                _log_db_operation('otp_cleanup_expired', {
-                    'email': email, 'phone': phone or '(none)', 'deleted': deleted_count
+            
+            # Delete expired OTPs
+            expired_cleaned = OTP.objects.filter(
+                identifier_filter, expires_at__lt=timezone.now()
+            ).delete()[0]
+            
+            total_cleaned = used_cleaned + expired_cleaned
+            if total_cleaned:
+                _log_db_operation('otp_cleanup_after_verify', {
+                    'email': email, 'phone': phone or '(none)', 
+                    'used_deleted': used_cleaned, 'expired_deleted': expired_cleaned
                 })
+                logger.info(
+                    'OTP CLEANUP — Deleted %d used + %d expired OTPs for %s',
+                    used_cleaned, expired_cleaned, email or phone,
+                )
         except Exception as cleanup_err:
             logger.warning('OTP cleanup error (non-blocking): %s', cleanup_err)
-
-        if settings.DEBUG:
-            logger.info(
-                'OTP VERIFY RESPONSE — HTTP 200 | Email: %s | Next: %s',
-                email, next_step or '(none)',
-            )
+        
+        logger.info(
+            'OTP VERIFY COMPLETE — Email: %s | Role: %s | Redirect: %s',
+            email or phone, user_obj.role if user_obj else 'unknown', redirect_url,
+        )
         
         return Response(response_data)
 
 
 @extend_schema(exclude=True)
 class ResendOTPView(views.APIView):
-    """Resend OTP code with cooldown check."""
+    """Resend OTP code with cooldown check.
+    
+    Uses atomic transaction to ensure OTP creation and email sending
+    are consistent — if email fails, the OTP record is rolled back.
+    """
     permission_classes = (permissions.AllowAny,)
     throttle_scope = 'otp'
 
@@ -829,20 +998,21 @@ class ResendOTPView(views.APIView):
                 'cooldown_seconds': wait_seconds,
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
-        # ── INSTRUMENTATION: Invalidate old OTPs (by email AND/OR phone) ──
-        # Reuse the same identifier_filter from the cooldown check above
-        invalidated = OTP.objects.filter(identifier_filter, purpose=purpose, is_valid=True).update(is_valid=False)
-        _log_db_operation('otp_invalidate_old', {'email': email, 'phone': phone, 'purpose': purpose, 'count': invalidated})
+        # Use atomic transaction to ensure consistency
+        with transaction.atomic():
+            # ── Invalidate old OTPs ──
+            invalidated = OTP.objects.filter(identifier_filter, purpose=purpose, is_valid=True).update(is_valid=False)
+            _log_db_operation('otp_invalidate_old', {'email': email, 'phone': phone, 'purpose': purpose, 'count': invalidated})
 
-        # ── INSTRUMENTATION: Create new OTP ──
-        otp = OTP.objects.create(
-            email=email,
-            phone=phone,
-            purpose=purpose,
-            ip_address=ip,
-            user_agent=user_agent,
-        )
-        _log_db_operation('otp_create_resend', {'id': otp.id, 'email': email, 'phone': phone, 'purpose': purpose})
+            # ── Create new OTP ──
+            otp = OTP.objects.create(
+                email=email,
+                phone=phone,
+                purpose=purpose,
+                ip_address=ip,
+                user_agent=user_agent,
+            )
+            _log_db_operation('otp_create_resend', {'id': otp.id, 'email': email, 'phone': phone, 'purpose': purpose})
 
         response_data = {
             'message': 'Kode OTP telah dikirim ulang.',

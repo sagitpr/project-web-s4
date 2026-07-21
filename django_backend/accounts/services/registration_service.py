@@ -78,7 +78,7 @@ def start_registration(
             username=username,
             full_name='',
             role=role,
-            is_active=True,
+            is_active=False,  # CRITICAL: User starts as INACTIVE until OTP is verified
             is_verified=False,
             registration_step='email_phone',
             registration_started_at=timezone.now(),

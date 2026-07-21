@@ -1,6 +1,8 @@
 import logging
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
@@ -65,8 +67,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.username = validated_data['email'].split('@')[0]
-        user.is_active = True
+        # CRITICAL: User starts as INACTIVE until OTP is verified.
+        # This prevents login before email/phone verification.
+        # is_active will be set to True only after successful OTP verification.
+        user.is_active = False
         user.is_verified = False
+        user.registration_step = 'email_phone'
+        user.registration_started_at = timezone.now()
         user.save()
         return user
 
@@ -125,6 +132,27 @@ class LoginSerializer(serializers.Serializer):
             email=identifier, password=password
         )
         if not user:
+            # ── Detect unverified users ──
+            # The backend returns None for inactive users (is_active=False).
+            # If the user exists but is unverified, we pass them through
+            # so the LoginView can return 403 + requires_otp + redirect_url
+            # instead of a generic 400 error.
+            try:
+                existing_user = User.objects.get(
+                    Q(email__iexact=identifier) | Q(phone=identifier)
+                )
+                if not existing_user.is_verified and existing_user.check_password(password):
+                    logger.info(
+                        'LOGIN DETECTED UNVERIFIED — User: %s | IP: %s — '
+                        'Passing through for OTP redirect',
+                        existing_user.email, ip_address,
+                    )
+                    attrs['user'] = existing_user
+                    attrs['_is_unverified'] = True
+                    return attrs
+            except User.DoesNotExist:
+                pass
+
             logger.warning(
                 'LOGIN VALIDATION FAILED — Identifier: %s | IP: %s | '
                 'Reason: authentication backend returned None '

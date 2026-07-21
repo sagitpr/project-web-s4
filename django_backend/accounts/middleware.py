@@ -115,6 +115,8 @@ class RateLimitMiddleware:
 # Used by RoleBasedRedirectMiddleware to enforce routing.
 
 # Public routes accessible to everyone (including unauthenticated)
+# CRITICAL: /auth/ must be public so OTP verification and login pages are accessible
+# without authentication. This prevents redirect loops during registration flow.
 PUBLIC_PREFIXES = (
     '/api/', '/health/', '/static/', '/media/', '/assets/',
     '/auth/', '/info/', '/bantuan/',

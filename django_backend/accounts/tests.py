@@ -886,7 +886,7 @@ class OTPTests(BaseTestCase):
             'otp_code': '654321',
             'purpose': 'registration',
         }, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def test_forgot_password_success(self):
         """Test forgot password request."""
@@ -1150,7 +1150,7 @@ class SellerE2EFlowTests(TestCase):
         user = User.objects.get(email=self.seller_email)
         self.assertEqual(user.role, 'seller', 'User role should be seller')
         self.assertFalse(user.is_verified, 'User should NOT be verified before OTP')
-        self.assertTrue(user.is_active, 'User should be active after registration')
+        self.assertFalse(user.is_active, 'User should be INACTIVE until OTP verification')
         self.assertEqual(user.registration_step, 'email_phone')
         self.assertTrue(user.check_password(self.seller_password),
                         'Password should be correctly hashed')
@@ -1198,7 +1198,7 @@ class SellerE2EFlowTests(TestCase):
         # Verify User record after activation
         user.refresh_from_db()
         self.assertTrue(user.is_verified, 'User should be verified after OTP')
-        self.assertTrue(user.is_active, 'User should remain active after OTP')
+        self.assertTrue(user.is_active, 'User should be active after OTP verification')
         self.assertEqual(user.registration_step, 'complete')
         self.assertIsNotNone(user.registration_completed_at,
                              'registration_completed_at should be set after OTP')
@@ -1206,10 +1206,19 @@ class SellerE2EFlowTests(TestCase):
                           'completion time should be after start')
         
         # Verify OTP record after activation
-        otp_db.refresh_from_db()
-        self.assertFalse(otp_db.is_valid, 'OTP should be invalid after verification')
-        self.assertTrue(otp_db.is_used, 'OTP should be marked as used')
-        self.assertIsNotNone(otp_db.verified_at, 'OTP should have verified_at timestamp')
+        # OTP cleanup runs after successful verification to delete used + expired records.
+        # Check that the OTP was either cleaned up or properly marked.
+        otp_after = OTP.objects.filter(
+            email=self.seller_email, purpose='registration'
+        ).first()
+        if otp_after is None:
+            # OTP was cleaned up (deleted) — expected behavior
+            pass
+        else:
+            # OTP still exists but must be marked as used/invalid
+            self.assertFalse(otp_after.is_valid, 'OTP should be invalid after verification')
+            self.assertTrue(otp_after.is_used, 'OTP should be marked as used')
+            self.assertIsNotNone(otp_after.verified_at, 'OTP should have verified_at timestamp')
 
         # =====================================================================
         # STEP 3: Verify Store Auto-Creation
@@ -1402,8 +1411,10 @@ class SellerE2EFlowTests(TestCase):
         store_count = Store.objects.filter(user=user).count()
         self.assertEqual(store_count, 1, 'Should be exactly 1 store')
         
+        # OTP records are cleaned up (deleted) after successful verification.
+        # The cleanup removes both USED and EXPIRED OTPs for this email.
         otp_count = OTP.objects.filter(email=self.seller_email, purpose='registration').count()
-        self.assertEqual(otp_count, 1, 'Should be exactly 1 registration OTP')
+        self.assertEqual(otp_count, 0, 'OTPs should be cleaned up after successful verification')
 
     def test_seller_flow_rejects_unverified_login(self):
         """Test that unverified seller cannot login (verification gate)."""

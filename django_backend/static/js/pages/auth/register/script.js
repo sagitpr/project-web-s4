@@ -144,6 +144,28 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/';
   }
 
+  /**
+   * Handle registration response: redirect to OTP page using backend-provided URL.
+   * The backend returns { requires_otp: true, redirect_url: "/auth/otp/?email=..." }
+   * The frontend MUST use the backend-provided redirect_url, NEVER construct its own.
+   */
+  function handleRegisterResponse(data, email) {
+    // If backend provides a redirect_url, use it directly
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+      return;
+    }
+    
+    // Fallback: construct redirect URL manually (only if backend didn't provide one)
+    const params = new URLSearchParams(window.location.search);
+    const nextUrl = params.get('next');
+    var redirectUrl = '/auth/otp/?email=' + encodeURIComponent(email) + '&purpose=registration';
+    if (nextUrl) {
+      redirectUrl += '&next=' + encodeURIComponent(nextUrl);
+    }
+    window.location.href = redirectUrl;
+  }
+
   if (eyeBtn && passwordInput) {
     let visible = false;
     eyeBtn.addEventListener('click', () => {
@@ -182,6 +204,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ── Detect registration role from page URL or query param ──
+  // /auth/register/ → buyer (default)
+  // /auth/register-mitra/ or ?role=seller → seller
+  var detectedRole = 'buyer';
+  var pathname = window.location.pathname || '';
+  if (pathname.indexOf('mitra') !== -1 || pathname.indexOf('seller') !== -1) {
+    detectedRole = 'seller';
+  }
+  var roleParam = new URLSearchParams(window.location.search).get('role');
+  if (roleParam === 'seller' || roleParam === 'buyer') {
+    detectedRole = roleParam;
+  }
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -209,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         password,
         password2: password,
         address,
-        role: 'buyer',
+        role: detectedRole,
       });
 
       showToastNotification(
@@ -217,16 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
         'Kode OTP telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam untuk melakukan verifikasi akun.'
       );
 
-      const params = new URLSearchParams(window.location.search);
-      const nextUrl = params.get('next');
-      const redirectUrl =
-        '/auth/otp/?email=' +
-        encodeURIComponent(email) +
-        (data.otp_code ? '&otp=' + encodeURIComponent(data.otp_code) : '') +
-        (nextUrl ? '&next=' + encodeURIComponent(nextUrl) : '');
-
+      // CRITICAL: Use backend-provided redirect_url. Never construct manually.
+      // The backend ensures the redirect goes to the correct OTP page.
+      // Append otp_code for DEBUG mode (frontend development convenience).
+      if (data.redirect_url && data.otp_code) {
+        var separator = data.redirect_url.indexOf('?') === -1 ? '?' : '&';
+        data.redirect_url += separator + 'otp=' + encodeURIComponent(data.otp_code);
+      }
       setTimeout(() => {
-        window.location.href = redirectUrl;
+        handleRegisterResponse(data, email);
       }, 2000);
     } catch (err) {
       setMessage(err.message);

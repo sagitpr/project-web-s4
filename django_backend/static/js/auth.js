@@ -345,10 +345,16 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
           'Terjadi kesalahan. Silakan coba lagi.';
         
         // Pass through additional fields for the frontend to handle
-        // (e.g., needs_verification, email for OTP auto-redirect flow)
+        // (e.g., requires_otp, needs_verification, redirect_url, email for OTP auto-redirect flow)
         var enhancedErr = new Error(msg);
+        if (data.requires_otp !== undefined) {
+          enhancedErr.requires_otp = data.requires_otp;
+        }
         if (data.needs_verification !== undefined) {
           enhancedErr.needs_verification = data.needs_verification;
+        }
+        if (data.redirect_url !== undefined) {
+          enhancedErr.redirect_url = data.redirect_url;
         }
         if (data.email !== undefined) {
           enhancedErr.email = data.email;
@@ -358,6 +364,14 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         }
         if (data.expires_in_minutes !== undefined) {
           enhancedErr.expires_in_minutes = data.expires_in_minutes;
+        }
+        // Pass through success/verified fields even in error responses
+        // (e.g., 403 with requires_otp=true still has usable data)
+        if (data.verified !== undefined) {
+          enhancedErr.verified = data.verified;
+        }
+        if (data.redirect_url !== undefined) {
+          enhancedErr.redirect_url = data.redirect_url;
         }
         throw enhancedErr;
       }

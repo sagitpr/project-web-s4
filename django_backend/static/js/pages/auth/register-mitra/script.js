@@ -460,7 +460,8 @@
 
           // Step 1: Register user as seller
           // Backend RegisterView automatically creates and sends the OTP
-          await WarungioAPI.register({
+          // with requires_otp=true and redirect_url in the response
+          var registerResult = await WarungioAPI.register({
             full_name: data.ownerName,
             email: data.ownerEmail,
             phone: data.ownerPhone,
@@ -478,7 +479,21 @@
           
           setMsg('Pendaftaran mitra berhasil!', 'success');
           localStorage.removeItem(storageKey);
-          window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
+          
+          // CRITICAL: Use backend-provided redirect_url for OTP page.
+          // Never construct the URL manually — the backend ensures correct parameters.
+          if (registerResult && registerResult.redirect_url) {
+            var redirectUrl = registerResult.redirect_url;
+            // Append OTP code for DEBUG mode
+            if (registerResult.otp_code) {
+              var separator = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+              redirectUrl += separator + 'otp=' + encodeURIComponent(registerResult.otp_code);
+            }
+            window.location.href = redirectUrl;
+          } else {
+            // Fallback (only if backend didn't provide redirect_url)
+            window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration&role=seller';
+          }
         } catch (err) {
           setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
           _submitting = false;
