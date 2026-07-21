@@ -1,25 +1,22 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}{% load seo_tags %}<!DOCTYPE html>
 <html lang="id">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Blog - Warungio</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9}.page-content{max-width:900px;margin:0 auto;padding:40px 24px}.blog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}.blog-card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);overflow:hidden;transition:transform .15s}.blog-card:hover{transform:translateY(-2px)}.blog-card-img{height:160px;background:var(--color-gray-100);display:flex;align-items:center;justify-content:center;color:var(--color-gray-300);font-size:40px}.blog-card-body{padding:20px}.blog-card .tag{display:inline-block;padding:2px 8px;border-radius:12px;background:var(--color-gray-100);font-size:11px;font-weight:600;color:var(--color-text-tertiary);margin-bottom:8px}.blog-card h3{font-size:16px;font-weight:700;margin:0 0 8px;line-height:1.4}.blog-card p{font-size:13px;color:var(--color-text-tertiary);margin:0 0 12px;line-height:1.5}.blog-card .date{font-size:12px;color:var(--color-text-tertiary)}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'seo/seo_meta.html' %}
+    {% include 'seo/seo_schema.html' %}
+    <title>{{ seo.meta_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:80px 24px;text-align:center;color:white}.page-hero h1{font-size:2.5rem;font-weight:800;margin:0 0 12px}.page-hero p{font-size:1.125rem;opacity:.9}.page-hero .breadcrumb{font-size:.8rem;opacity:.7;margin-bottom:16px}.page-hero .breadcrumb a{color:#fff;text-decoration:none;opacity:.8}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}.nav-bar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;padding:12px 24px}.nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}.nav-inner a{text-decoration:none;font-weight:600;font-size:.875rem;color:#475569}.nav-inner a:hover{color:#059669}</style>
 </head>
 <body>
-<div class="page-hero"><h1>Blog Warungio</h1><p>Tips, berita, dan kisah sukses dari ekosistem Warungio.</p></div>
-<div class="page-content">
-<div class="blog-grid">
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-store"></i></div><div class="blog-card-body"><span class="tag">Tips Bisnis</span><h3>Cara Meningkatkan Penjualan di Warungio</h3><p>Pelajari strategi efektif untuk meningkatkan omzet toko Anda di platform Warungio.</p><span class="date">25 Jun 2026</span></div></article>
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-chart-line"></i></div><div class="blog-card-body"><span class="tag">Fitur Baru</span><h3>Fitur Smart Stock Prediction</h3><p>Prediksi stok dengan AI untuk membantu Anda merencanakan inventaris lebih akurat.</p><span class="date">20 Jun 2026</span></div></article>
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-trophy"></i></div><div class="blog-card-body"><span class="tag">Kisah Sukses</span><h3>Dari Warung Kaki Lima ke Omzet Puluhan Juta</h3><p>Kisah inspiratif Pak Budi yang mengembangkan usaha warungnya melalui Warungio.</p><span class="date">15 Jun 2026</span></div></article>
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-shield"></i></div><div class="blog-card-body"><span class="tag">Keamanan</span><h3>Tips Bertransaksi Aman di Marketplace</h3><p>Panduan lengkap menghindari penipuan saat belanja online di Warungio.</p><span class="date">10 Jun 2026</span></div></article>
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-tags"></i></div><div class="blog-card-body"><span class="tag">Promo</span><h3>Strategi Promo Efektif untuk Seller</h3><p>Manfaatkan fitur promo dan diskon untuk meningkatkan penjualan hingga 300%.</p><span class="date">5 Jun 2026</span></div></article>
-<article class="blog-card"><div class="blog-card-img"><i class="fa-solid fa-people-group"></i></div><div class="blog-card-body"><span class="tag">Komunitas</span><h3>Warungio Community Gathering 2026</h3><p>Rekap acara temu seller Warungio se-Jabodetabek yang penuh inspirasi.</p><span class="date">1 Jun 2026</span></div></article>
-</div>
-</div>
-<div class="footer-links"><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="{% url 'page-komunitas' %}">Komunitas</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+    <nav class="nav-bar"><div class="nav-inner"><a href="{% url 'home' %}">← Kembali ke Beranda</a><div><a href="{% url 'page-tentang-kami' %}" class="mr-4">Tentang Kami</a><a href="{% url 'page-tips-sukses' %}">Tips Sukses</a></div></div></nav>
+    <div class="page-hero"><div class="breadcrumb"><a href="{% url 'home' %}">Beranda</a> › Blog</div><h1>Blog Warungio</h1><p>Artikel tips belanja, resep masak, panduan bisnis UMKM, dan informasi terbaru seputar Warungio.</p></div>
+    <div class="page-content" style="max-width:800px;margin:0 auto;padding:48px 24px;">
+        <p style="font-size:0.938rem;color:#475569;line-height:1.8;text-align:center;padding:40px 0;">Konten blog akan segera hadir. Pantau terus halaman ini untuk mendapatkan artikel tips belanja hemat, resep masak sehat, panduan bisnis UMKM, dan informasi terbaru seputar pengembangan Warungio sebagai marketplace hyperlocal terkemuka di Indonesia.</p>
+    </div>
+    <div class="footer-links"><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="{% url 'page-cara-belanja' %}">Cara Belanja</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
 </body>
 </html>

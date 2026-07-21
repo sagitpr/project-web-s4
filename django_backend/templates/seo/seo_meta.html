@@ -1,0 +1,70 @@
+{% load seo_tags %}
+
+{# ── Standard Meta ── #}
+{# Note: <title> is handled by base.html via {% block title %} - DO NOT add it here to avoid duplicates #}
+<meta name="title" content="{{ seo.meta_title }}">
+<meta name="description" content="{{ seo.meta_description }}">
+<meta name="keywords" content="{{ seo.keywords }}">
+<meta name="robots" content="{{ seo.robots }}">
+<meta name="googlebot" content="{{ seo.robots }}">
+<meta name="google" content="notranslate">
+<meta http-equiv="content-language" content="id">
+<meta name="language" content="Indonesian">
+<meta name="geo.country" content="ID">
+
+{# ── Canonical ── #}
+<link rel="canonical" href="{{ seo.canonical_url }}">
+
+{# ── Theme / App ── #}
+<meta name="theme-color" content="#059669">
+<meta name="msapplication-TileColor" content="#059669">
+<meta name="msapplication-navbutton-color" content="#059669">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Warungio">
+<meta name="format-detection" content="telephone=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Warungio">
+
+{# ── Open Graph ── #}
+<meta property="og:type" content="{{ seo.og_type }}">
+<meta property="og:title" content="{{ seo.og_title }}">
+<meta property="og:description" content="{{ seo.og_description }}">
+<meta property="og:url" content="{{ seo.og_url }}">
+<meta property="og:image" content="{{ seo.og_image }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="{{ seo.meta_title }}">
+<meta property="og:locale" content="{{ seo.og_locale }}">
+<meta property="og:site_name" content="{{ seo.og_site_name }}">
+<meta property="og:country-name" content="Indonesia">
+
+{# ── Twitter Card ── #}
+<meta name="twitter:card" content="{{ seo.twitter_card }}">
+<meta name="twitter:site" content="{{ seo.twitter_site }}">
+<meta name="twitter:creator" content="{{ seo.twitter_creator }}">
+<meta name="twitter:title" content="{{ seo.twitter_title }}">
+<meta name="twitter:description" content="{{ seo.twitter_description }}">
+<meta name="twitter:image" content="{{ seo.twitter_image }}">
+<meta name="twitter:image:alt" content="{{ seo.meta_title }}">
+
+{# ── PWA / Manifest ── #}
+<link rel="manifest" href="{{ seo.site_url }}/assets/pwa/manifest.json">
+
+{# ── Preconnect / DNS-Prefetch ── #}
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+<link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="https://unpkg.com">
+
+{# ── Hreflang ── #}
+{% for hl in seo.hreflang_tags %}
+<link rel="alternate" hreflang="{{ hl.lang }}" href="{{ hl.url }}">
+{% endfor %}

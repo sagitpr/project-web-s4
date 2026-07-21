@@ -1,10 +1,24 @@
-{% load static %}<!DOCTYPE html>
-<html lang="id">
+{% load static %}{% load seo_tags %}<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
 <head>
     {% block head %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>{% block title %}Warungio{% endblock %}</title>
+    
+    {# ── SEO Meta Tags (from context processor) ── #}
+    {% block seo_meta %}
+    {% include 'seo/seo_meta.html' %}
+    {% endblock %}
+    
+    {# ── JSON-LD Structured Data (Schema.org) ── #}
+    {% block schema %}
+    {% include 'seo/seo_schema.html' %}
+    {% endblock %}
+    
+    {# ── Override title via block (for backward compatibility) ── #}
+    <title>{% block title %}{{ seo.meta_title }}{% endblock %}</title>
+    
+    {# ── Custom meta from child templates (e.g. page-specific overrides) ── #}
     {% block meta %}{% endblock %}
 
     {% block tailwind %}
@@ -28,7 +42,11 @@
     {% block favicon %}
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'favicon-180x180.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'favicon-180x180.png' %}">
+    <link rel="mask-icon" href="{% static 'favicon.ico' %}" color="#059669">
     {% endblock %}
 
     {% block extra_head %}{% endblock %}
@@ -55,7 +73,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <a href="/" class="flex items-center gap-2">
-            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height: 32px; width: auto;">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" width="120" height="32" style="height: 32px; width: auto;" loading="eager">
             <span style="font-size: 1.25rem; font-weight: 800; color: var(--color-text-primary);">
                 <span style="color: var(--color-brand);">Warung</span>io
             </span>
@@ -73,7 +91,7 @@
                     <p id="userName">Guest</p>
                     <span class="member-badge badge badge-green" id="userRoleBadge">Member</span>
                 </div>
-                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar" width="36" height="36" loading="lazy">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </div>
             <div class="dropdown-menu-custom" id="dropdownMenu">
@@ -110,7 +128,7 @@
 <footer class="footer">
     <div class="footer-inner">
         <div class="footer-brand">
-            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" height="24">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" width="96" height="24" loading="lazy">
             <span>Warung<span class="text-brand">io</span></span>
         </div>
         <div class="footer-download-badges">

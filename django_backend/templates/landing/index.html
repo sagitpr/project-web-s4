@@ -12,7 +12,7 @@
 <header class="header">
     <div class="header-container">
         <a href="/" class="logo">
-            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" width="120" height="32" loading="eager">
             <span class="brand-label">
                 <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
             </span>
@@ -81,32 +81,31 @@
         </div>
         <div class="hero-highlights">
           <div class="highlight-item">
-            <img src="{% static 'images/location.png' %}" alt="Warung terdekat" />
+            <img src="{% static 'images/location.png' %}" alt="Warung terdekat" width="40" height="40" loading="lazy">
             <span>Warung<br />Terdekat</span>
           </div>
           <div class="highlight-item">
             <img
               src="{% static 'images/shield.png' %}"
-              alt="Aman dan terpercaya"
+              alt="Aman dan terpercaya" width="40" height="40" loading="lazy"
             />
             <span>Aman &<br />Terpercaya</span>
           </div>
           <div class="highlight-item">
-            <img src="{% static 'images/kilat.png' %}" alt="Cepat dan praktis" />
+            <img src="{% static 'images/kilat.png' %}" alt="Cepat dan praktis" width="40" height="40" loading="lazy">
             <span>Cepat &<br />Praktis</span>
           </div>
         </div>
       </div>
       <div class="hero-visual">
-        <img
-          src="{% static 'images/store-bike.png' %}"
+        <img                src="{% static 'images/store-bike.png' %}"
           alt="Warung Warungio"
-          class="store-image"
+          class="store-image" width="400" height="300" loading="eager"
         />
         <img
           src="{% static 'images/phone-home.png' %}"
           alt="App Warungio"
-          class="phone-image"
+          class="phone-image" width="250" height="400" loading="lazy"
         />
       </div>
     </div>
@@ -119,7 +118,8 @@
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img src="{% static 'images/location.png' %}" alt="Lokasi" />
+              <img              src="{% static 'images/location.png' %}"
+              alt="Lokasi" width="40" height="40" loading="lazy" />
             </div>
             <div>
               <h3>Warung Terdekat</h3>
@@ -133,7 +133,8 @@
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img src="{% static 'images/shield.png' %}" alt="Aman" />
+              <img              src="{% static 'images/shield.png' %}"
+              alt="Aman" width="40" height="40" loading="lazy" />
             </div>
             <div>
               <h3>Aman & Terpercaya</h3>
@@ -147,7 +148,8 @@
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img src="{% static 'images/kilat.png' %}" alt="Cepat" />
+              <img              src="{% static 'images/kilat.png' %}"
+              alt="Cepat" width="40" height="40" loading="lazy" />
             </div>
             <div>
               <h3>Pesan Instan</h3>
@@ -161,7 +163,8 @@
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img src="{% static 'images/pengiriman.png' %}" alt="Tracking" />
+              <img              src="{% static 'images/pengiriman.png' %}"
+              alt="Tracking" width="40" height="40" loading="lazy" />
             </div>
             <div>
               <h3>Tracking Pesanan</h3>
@@ -216,7 +219,7 @@
               <img
                 src="{% static 'images/sembako.png' %}"
                 alt="Sembako"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Sembako</p>
             </div>
@@ -224,7 +227,7 @@
               <img
                 src="{% static 'images/vegetable.png' %}"
                 alt="Sayuran"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Sayuran</p>
             </div>
@@ -232,7 +235,7 @@
               <img
                 src="{% static 'images/fruit.png' %}"
                 alt="Buah"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Buah</p>
             </div>
@@ -240,15 +243,15 @@
               <img
                 src="{% static 'images/meat.png' %}"
                 alt="Daging"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Daging</p>
             </div>
             <div class="category-item">
               <img
-                src="{% static 'images/beverage.png' %}"
+                src="{% static 'images/beverage.png' %}
                 alt="Minuman"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Minuman</p>
             </div>
@@ -256,7 +259,7 @@
               <img
                 src="{% static 'images/food.png' %}"
                 alt="Makanan"
-                class="category-icon"
+                class="category-icon" width="60" height="60" loading="lazy"
               />
               <p>Makanan</p>
             </div>
@@ -294,26 +297,25 @@
       <h2 class="section-title">Cara Kerja <span>Warungio</span></h2>
       <div class="steps-grid">
         <div class="step-card">
-          <div class="step-number">1</div>
-          <img src="{% static 'images/store.png' %}" alt="Pilih Warung" />
+          <div class="step-number">1</div>            <img src="{% static 'images/store.png' %}" alt="Pilih Warung" width="60" height="60" loading="lazy">
           <h3>Pilih Warung</h3>
           <p>Pilih warung terdekat dari lokasi Anda.</p>
         </div>
         <div class="step-card">
           <div class="step-number">2</div>
-          <img src="{% static 'images/keranjang.png' %}" alt="Pilih Produk" />
+          <img src="{% static 'images/keranjang.png' %}" alt="Pilih Produk" width="60" height="60" loading="lazy">
           <h3>Pilih Produk</h3>
           <p>Pilih produk yang ingin kamu beli.</p>
         </div>
         <div class="step-card">
           <div class="step-number">3</div>
-          <img src="{% static 'images/credit-card-icon.png' %}" alt="Checkout" />
+          <img src="{% static 'images/credit-card-icon.png' %}" alt="Checkout" width="60" height="60" loading="lazy">
           <h3>Checkout</h3>
           <p>Konfirmasi pesanan dan metode pembayaran.</p>
         </div>
         <div class="step-card">
           <div class="step-number">4</div>
-          <img src="{% static 'images/pengiriman.png' %}" alt="Pesanan Diantar" />
+          <img src="{% static 'images/pengiriman.png' %}" alt="Pesanan Diantar" width="60" height="60" loading="lazy">
           <h3>Pesanan Diantar</h3>
           <p>Pesanan diantar cepat sampai ke alamat Anda.</p>
         </div>
@@ -339,7 +341,7 @@
             pengiriman cepat!
           </p>
           <div class="testimonial-author">
-            <img src="{% static 'images/av-siti.png' %}" alt="Siti Aisyah" />
+            <img src="{% static 'images/av-siti.png' %}" alt="Siti Aisyah" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Siti Aisyah</p>
               <p class="author-location">Jakarta Selatan</p>
@@ -358,7 +360,7 @@
             puas!
           </p>
           <div class="testimonial-author">
-            <img src="{% static 'images/av-stev.png' %}" alt="Budi Santoso" />
+            <img src="{% static 'images/av-stev.png' %}" alt="Budi Santoso" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Budi Santoso</p>
               <p class="author-location">Bandung</p>
@@ -377,7 +379,7 @@
             Rekomendasi untuk keluarga!
           </p>
           <div class="testimonial-author">
-            <img src="{% static 'images/av-melinda.png' %}" alt="Rina Kartika" />
+            <img src="{% static 'images/av-melinda.png' %}" alt="Rina Kartika" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Rina Kartika</p>
               <p class="author-location">Surabaya</p>

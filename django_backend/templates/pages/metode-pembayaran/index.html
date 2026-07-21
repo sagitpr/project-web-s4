@@ -1,25 +1,140 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}{% load seo_tags %}<!DOCTYPE html>
 <html lang="id">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Metode Pembayaran - Warungio</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-<style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:60px 24px;text-align:center;color:white}.page-hero h1{font-size:36px;font-weight:800;margin:0 0 8px}.page-hero p{font-size:16px;opacity:.9;max-width:600px;margin:0 auto}.pay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:900px;margin:0 auto;padding:40px 24px}.pay-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--color-border)}.pay-card i{font-size:28px;color:var(--color-brand);margin-bottom:12px}.pay-card h3{font-size:16px;font-weight:700;margin:0 0 8px}.pay-card p{font-size:13px;color:var(--color-text-tertiary);margin:0}.section-title{text-align:center;font-size:22px;font-weight:700;margin:40px 0 0;padding:0 24px}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {# ── SEO Meta & Structured Data ── #}
+    {% include 'seo/seo_meta.html' %}
+    {% include 'seo/seo_schema.html' %}
+    
+    {# ── Override title ── #}
+    <title>{{ seo.meta_title }}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8faf8; color: #0f172a; -webkit-font-smoothing: antialiased; }
+        .page-hero { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 80px 24px; text-align: center; color: white; position: relative; overflow: hidden; }
+        .page-hero h1 { font-size: 2.5rem; font-weight: 800; margin: 0 0 12px; }
+        .page-hero p { font-size: 1.125rem; opacity: .9; max-width: 640px; margin: 0 auto; line-height: 1.7; }
+        .page-hero .breadcrumb { font-size: 0.8rem; opacity: .7; margin-bottom: 16px; }
+        .page-hero .breadcrumb a { color: white; text-decoration: none; opacity: .8; }
+        .pay-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; padding: 48px 24px; }
+        .pay-card { background: white; border-radius: 20px; padding: 28px; border: 1px solid #e5e7eb; transition: all 0.3s ease; }
+        .pay-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.04); }
+        .pay-card i { font-size: 2rem; color: #059669; margin-bottom: 16px; display: block; }
+        .pay-card h2 { font-size: 1.125rem; font-weight: 700; margin: 0 0 10px; color: #0f172a; }
+        .pay-card p { font-size: 0.875rem; color: #475569; line-height: 1.7; margin: 0; }
+        .pay-card .badge { display: inline-block; padding: 4px 12px; background: #f0fdf4; color: #059669; border-radius: 100px; font-size: 0.75rem; font-weight: 700; margin-bottom: 12px; }
+        .section-title { text-align: center; font-size: 1.5rem; font-weight: 800; margin: 48px 0 0; padding: 0 24px; color: #0f172a; }
+        .section-subtitle { text-align: center; font-size: 0.875rem; color: #64748b; margin: 8px 0 0; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .seo-content { max-width: 800px; margin: 0 auto; padding: 0 24px 48px; }
+        .seo-content h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 32px 0 12px; }
+        .seo-content p { font-size: 0.938rem; color: #475569; line-height: 1.8; margin-bottom: 16px; text-align: justify; }
+        .seo-content ul { padding-left: 24px; margin-bottom: 16px; }
+        .seo-content li { font-size: 0.938rem; color: #475569; margin-bottom: 8px; line-height: 1.6; }
+        .nav-bar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e5e7eb; padding: 12px 24px; }
+        .nav-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .nav-inner a { text-decoration: none; font-weight: 600; font-size: 0.875rem; color: #475569; }
+        .nav-inner a:hover { color: #059669; }
+        .footer-links { border-top: 1px solid #e5e7eb; padding: 24px; text-align: center; }
+        .footer-links a { color: #059669; text-decoration: none; margin: 0 14px; font-size: 0.875rem; font-weight: 500; }
+        .footer-links a:hover { text-decoration: underline; }
+        .security-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 20px; padding: 24px; max-width: 960px; margin: 24px auto; display: flex; align-items: center; gap: 16px; }
+        .security-banner i { font-size: 2rem; color: #059669; }
+        .security-banner p { font-size: 0.875rem; color: #166534; line-height: 1.6; }
+        @media (max-width: 640px) {
+            .page-hero h1 { font-size: 1.75rem; }
+            .pay-grid { padding: 32px 20px; }
+        }
+    </style>
 </head>
 <body>
-<div class="page-hero"><h1>Metode Pembayaran</h1><p>Warungio mendukung berbagai metode pembayaran untuk kemudahan Anda.</p></div>
-<h2 class="section-title">Pembayaran Online (Midtrans)</h2>
-<div class="pay-grid">
-<div class="pay-card"><i class="fa-solid fa-building-columns"></i><h3>Transfer Bank</h3><p>BCA, BNI, BRI, Mandiri, CIMB, Permata. Bayar melalui ATM, mobile banking, atau internet banking.</p></div>
-<div class="pay-card"><i class="fa-solid fa-mobile-screen-button"></i><h3>E-Wallet</h3><p>GoPay, OVO, DANA, ShopeePay, LinkAja. Bayar instan dari dompet digital favorit Anda.</p></div>
-<div class="pay-card"><i class="fa-solid fa-qrcode"></i><h3>QRIS</h3><p>Bayar menggunakan QRIS dari aplikasi pembayaran manapun. Scan code QR dan konfirmasi pembayaran.</p></div>
-<div class="pay-card"><i class="fa-solid fa-credit-card"></i><h3>Kartu Kredit/Debit</h3><p>Visa, Mastercard, JCB. Pembayaran aman dengan enkripsi 3D Secure.</p></div>
-</div>
-<h2 class="section-title">Pembayaran Langsung</h2>
-<div class="pay-grid" style="padding-top:0">
-<div class="pay-card"><i class="fa-solid fa-money-bill-wave"></i><h3>COD (Cash on Delivery)</h3><p>Bayar tunai saat pesanan diterima. Tersedia di wilayah tertentu dengan biaya tambahan.</p></div>
-</div>
-<div class="footer-links"><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="{% url 'page-cara-belanja' %}">Cara Belanja</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+    <nav class="nav-bar" aria-label="Navigasi">
+        <div class="nav-inner">
+            <a href="{% url 'home' %}" aria-label="Warungio Beranda">← Kembali ke Beranda</a>
+            <div>
+                <a href="{% url 'page-tentang-kami' %}" class="mr-4">Tentang Kami</a>
+                <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-hero">
+        <div class="breadcrumb">
+            <a href="{% url 'home' %}">Beranda</a> › Metode Pembayaran
+        </div>
+        <h1>Metode Pembayaran Warungio</h1>
+        <p>Warungio mendukung berbagai metode pembayaran online dan offline yang aman, praktis, dan terpercaya untuk kemudahan belanja kebutuhan harian Anda.</p>
+    </div>
+
+    <h2 class="section-title">Pembayaran Online <span style="color:#059669;">(Midtrans)</span></h2>
+    <p class="section-subtitle">Semua pembayaran online diproses melalui Midtrans dengan enkripsi SSL 256-bit dan 3D Secure</p>
+
+    <div class="pay-grid">
+        <div class="pay-card">
+            <span class="badge">Populer</span>
+            <i class="fa-solid fa-building-columns"></i>
+            <h2>Transfer Bank</h2>
+            <p>Bayar melalui transfer bank dari rekening BCA, Mandiri, BRI, BNI, CIMB Niaga, atau Permata. Pembayaran dapat dilakukan melalui ATM, mobile banking, internet banking, atau teller bank. Konfirmasi pembayaran otomatis dan instan.</p>
+        </div>
+        <div class="pay-card">
+            <span class="badge">Instan</span>
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <h2>E-Wallet (Dompet Digital)</h2>
+            <p>Bayar instan menggunakan dompet digital favorit Anda: GoPay, OVO, DANA, ShopeePay, dan LinkAja. Cukup buka aplikasi dompet digital, scan QR atau konfirmasi pembayaran, dan transaksi selesai dalam hitungan detik.</p>
+        </div>
+        <div class="pay-card">
+            <span class="badge">Universal</span>
+            <i class="fa-solid fa-qrcode"></i>
+            <h2>QRIS</h2>
+            <p>Bayar menggunakan QRIS (Quick Response Code Indonesian Standard) dari aplikasi pembayaran manapun yang mendukung QRIS. Standar pembayaran nasional yang diterima di seluruh merchant Warungio.</p>
+        </div>
+        <div class="pay-card">
+            <span class="badge">Internasional</span>
+            <i class="fa-solid fa-credit-card"></i>
+            <h2>Kartu Kredit & Debit</h2>
+            <p>Bayar dengan kartu kredit atau debit Visa, Mastercard, dan JCB. Setiap transaksi dilindungi dengan sistem keamanan 3D Secure (Verified by Visa, Mastercard SecureCode) untuk mencegah penyalahgunaan kartu.</p>
+        </div>
+        <div class="pay-card">
+            <span class="badge">Tunai</span>
+            <i class="fa-solid fa-money-bill-wave"></i>
+            <h2>COD (Cash on Delivery)</h2>
+            <p>Bayar tunai saat pesanan diterima langsung di tangan kurir. Metode COD tersedia di wilayah tertentu dengan biaya tambahan yang transparan. Periksa ketersediaan COD di alamat Anda saat checkout.</p>
+        </div>
+        <div class="pay-card">
+            <span class="badge">Bayar Nanti</span>
+            <i class="fa-solid fa-clock"></i>
+            <h2>Bayar di Tempat (Indomaret/Alfamart)</h2>
+            <p>Pilih opsi bayar di gerai ritel terdekat seperti Indomaret, Alfamart, atau convenience store lainnya. Dapatkan kode pembayaran dan bayar dalam batas waktu yang ditentukan.</p>
+        </div>
+    </div>
+
+    <div class="security-banner">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div>
+            <p style="font-weight:700;margin-bottom:4px;">Keamanan Transaksi Terjamin</p>
+            <p>Semua transaksi pembayaran di Warungio diproses melalui Midtrans, penyedia payment gateway terkemuka di Indonesia yang telah terdaftar dan diawasi oleh Bank Indonesia. Data kartu kredit dan informasi pembayaran Anda dienkripsi dengan SSL 256-bit dan tidak pernah disimpan di server Warungio.</p>
+        </div>
+    </div>
+
+    <div class="seo-content">
+        <h2>Pilihan Pembayaran Lengkap untuk Kemudahan Belanja Anda</h2>
+        <p>Warungio menyediakan berbagai metode pembayaran yang lengkap dan fleksibel untuk memenuhi kebutuhan setiap pengguna. Baik Anda lebih suka pembayaran digital modern melalui e-wallet dan QRIS, transfer bank konvensional, atau metode tunai COD yang sederhana, semua tersedia di platform kami. Kami bekerja sama dengan Midtrans sebagai penyedia payment gateway terpercaya untuk memastikan setiap transaksi berlangsung aman, cepat, dan nyaman.</p>
+        <p>Untuk pembayaran melalui transfer bank, Warungio mendukung seluruh bank utama di Indonesia termasuk BCA, Mandiri, BRI, BNI, CIMB Niaga, dan Permata. Proses verifikasi pembayaran dilakukan secara otomatis sehingga pesanan Anda dapat segera diproses tanpa perlu menunggu konfirmasi manual. Sementara itu, untuk pengguna e-wallet, Anda dapat memilih GoPay, OVO, DANA, ShopeePay, atau LinkAja untuk pembayaran instan yang hanya membutuhkan beberapa detik.</p>
+        <p>Bagi Anda yang mengutamakan kemudahan dan kecepatan, QRIS adalah pilihan tepat karena dapat digunakan dari aplikasi pembayaran manapun yang mendukung standar QRIS nasional. Sedangkan untuk transaksi kartu kredit, sistem 3D Secure memberikan lapisan keamanan tambahan yang melindungi Anda dari risiko penipuan online. Metode COD (Cash on Delivery) tetap tersedia sebagai opsi pembayaran tunai yang praktis bagi pengguna yang lebih nyaman membayar saat barang diterima.</p>
+    </div>
+
+    <div class="footer-links">
+        <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
+        <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+        <a href="{% url 'home' %}">Kembali ke Beranda</a>
+    </div>
 </body>
 </html>

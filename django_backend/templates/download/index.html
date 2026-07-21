@@ -1,10 +1,12 @@
-{% load static %}<!DOCTYPE html>
+{% load static %}{% load seo_tags %}<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Aplikasi Warungio - Belanja Lebih Mudah</title>
-    <meta name="description" content="Download aplikasi Warungio untuk pengalaman belanja kebutuhan dapur harian yang lebih mudah, cepat, dan hemat.">
+    {% include 'seo/seo_meta.html' %}
+    {% include 'seo/seo_schema.html' %}
+    <title>{{ seo.meta_title }}</title>
+    <meta name="description" content="{{ seo.meta_description }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,13 +18,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
 </head>
 <body>
-    <!-- Background Grain -->
     <div class="download-grain"></div>
-
-    <!-- Nav -->
-    <nav class="download-nav" id="downloadNav">
-        <a href="/" class="download-nav-brand">
-            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" height="32">
+    <nav class="download-nav" id="downloadNav" aria-label="Navigasi">
+        <a href="/" class="download-nav-brand" aria-label="Warungio Beranda">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Logo Warungio" height="32" loading="eager">
             <span>Warung<span class="text-brand">io</span></span>
         </a>
         <div class="download-nav-links">
@@ -31,51 +30,26 @@
             <a href="/bantuan/" class="nav-link-ghost">Bantuan</a>
         </div>
     </nav>
-
-    <!-- Main Content -->
     <main class="download-main">
-        <!-- Hero Section -->
         <section class="download-hero" id="downloadHero">
             <div class="download-hero-bg-orb"></div>
             <div class="download-hero-bg-orb download-hero-bg-orb-2"></div>
-            
             <div class="download-hero-content">
-                <div class="download-hero-badge">v{{ android_version }}</div>
-                <h1 class="download-hero-title">
-                    Download <span class="text-brand">Warungio</span> App
-                </h1>
-                <p class="download-hero-subtitle">
-                    Belanja kebutuhan dapur harian lebih mudah, cepat, dan hemat langsung dari ponsel Anda.
-                </p>
-
+                <div class="download-hero-badge">v{{ android_version|default:"1.0.0" }}</div>
+                <h1 class="download-hero-title">Download <span class="text-brand">Warungio</span> App</h1>
+                <p class="download-hero-subtitle">Belanja kebutuhan dapur harian lebih mudah, cepat, dan hemat langsung dari ponsel Anda. Download aplikasi Warungio sekarang dan nikmati kemudahan belanja sembako, sayur segar, buah segar, dan kebutuhan rumah tangga dari warung terdekat.</p>
                 <div class="download-hero-benefits">
-                    <div class="benefit-chip">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Produk Segar Harian
-                    </div>
-                    <div class="benefit-chip">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Gratis Ongkir
-                    </div>
-                    <div class="benefit-chip">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Pembayaran Aman
-                    </div>
-                    <div class="benefit-chip">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        COD Tersedia
-                    </div>
+                    <div class="benefit-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Produk Segar Harian</div>
+                    <div class="benefit-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gratis Ongkir</div>
+                    <div class="benefit-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Pembayaran Aman</div>
+                    <div class="benefit-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> COD Tersedia</div>
                 </div>
             </div>
-
-            <!-- Phone Mockup -->
             <div class="download-hero-mockup">
                 <div class="phone-frame">
                     <div class="phone-notch"></div>
                     <div class="phone-screen">
-                        <div class="phone-app-icon">
-                            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio App">
-                        </div>
+                        <div class="phone-app-icon"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio App Icon" loading="lazy"></div>
                         <div class="phone-app-name">Warungio</div>
                         <div class="phone-app-desc">Marketplace Hyperlocal</div>
                         <div class="phone-stars">
@@ -85,223 +59,62 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         </div>
-                        <div class="phone-rating">4.8 &middot; 10rb+ Ulasan</div>
+                        <div class="phone-rating">4.8 · 10rb+ Ulasan</div>
                     </div>
                     <div class="phone-home-btn"></div>
                 </div>
             </div>
         </section>
-
-        <!-- Download Cards Section -->
         <section class="download-cards-section" id="downloadCards">
             <div class="download-section-label">Pilih Platform</div>
             <h2 class="download-section-title">Download untuk Perangkat Anda</h2>
-
-            <!-- Device Detection Banner -->
             <div class="device-detected-banner" id="deviceDetectedBanner" style="display:none;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 <span id="deviceDetectedText">Perangkat terdeteksi</span>
             </div>
-
             <div class="download-platform-grid">
-                <!-- Android Card -->
                 <div class="platform-card platform-card-android" id="androidCard">
                     <div class="platform-card-glow"></div>
                     <div class="platform-card-inner">
-                        <div class="platform-icon-wrap">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.523 14.382a.82.82 0 0 1-.82-.82.82.82 0 0 1 .82-.82.82.82 0 0 1 .82.82.82.82 0 0 1-.82.82zm-11.046 0a.82.82 0 0 1-.82-.82.82.82 0 0 1 .82-.82.82.82 0 0 1 .82.82.82.82 0 0 1-.82.82zm11.404-4.976l2.048-3.546a.38.38 0 0 0-.13-.52.38.38 0 0 0-.52.13l-2.074 3.592a12.58 12.58 0 0 0-8.41 0L6.721 5.47a.38.38 0 0 0-.52-.13.38.38 0 0 0-.13.52l2.048 3.546c-2.642 1.286-4.462 3.324-5.108 5.972h16.814a7.46 7.46 0 0 0-.334-2.234c-.485-1.648-1.477-3.15-2.89-4.258z"/>
-                            </svg>
-                        </div>
+                        <div class="platform-icon-wrap"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 14.382a.82.82 0 0 1-.82-.82.82.82 0 0 1 .82-.82.82.82 0 0 1 .82.82.82.82 0 0 1-.82.82zm-11.046 0a.82.82 0 0 1-.82-.82.82.82 0 0 1 .82-.82.82.82 0 0 1 .82.82.82.82 0 0 1-.82.82zm11.404-4.976l2.048-3.546a.38.38 0 0 0-.13-.52.38.38 0 0 0-.52.13l-2.074 3.592a12.58 12.58 0 0 0-8.41 0L6.721 5.47a.38.38 0 0 0-.52-.13.38.38 0 0 0-.13.52l2.048 3.546c-2.642 1.286-4.462 3.324-5.108 5.972h16.814a7.46 7.46 0 0 0-.334-2.234c-.485-1.648-1.477-3.15-2.89-4.258z"/></svg></div>
                         <h3 class="platform-name">Android</h3>
                         <p class="platform-desc">Untuk smartphone Android. Download APK langsung.</p>
-                        
-                        <div class="platform-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">Versi</span>
-                                <span class="meta-value" id="androidVersion">{{ android_version }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Ukuran</span>
-                                <span class="meta-value" id="androidFileSize">
-                                    {% if android_file_size %}
-                                        {{ android_file_size|filesizeformat }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-
-                        <a href="{% url 'download-android' %}" 
-                           class="download-btn download-btn-android" 
-                           id="androidDownloadBtn"
-                           {% if not android_available %}style="pointer-events:none;opacity:0.5;"{% endif %}>
-                            <span class="btn-text">
-                                {% if android_available %}
-                                    Download APK
-                                {% else %}
-                                    Segera Hadir
-                                {% endif %}
-                            </span>
-                            <span class="btn-icon-wrap">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            </span>
-                        </a>
-
-                        <div class="download-progress-wrap" id="androidProgress" style="display:none;">
-                            <div class="progress-bar-track">
-                                <div class="progress-bar-fill" id="androidProgressFill"></div>
-                            </div>
-                            <span class="progress-text" id="androidProgressText">Mengunduh...</span>
-                        </div>
+                        <div class="platform-meta"><div class="meta-item"><span class="meta-label">Versi</span><span class="meta-value" id="androidVersion">{{ android_version }}</span></div><div class="meta-item"><span class="meta-label">Ukuran</span><span class="meta-value" id="androidFileSize">{% if android_file_size %}{{ android_file_size|filesizeformat }}{% else %}-{% endif %}</span></div></div>
+                        <a href="{% url 'download-android' %}" class="download-btn download-btn-android" id="androidDownloadBtn" {% if not android_available %}style="pointer-events:none;opacity:0.5;"{% endif %}><span class="btn-text">{% if android_available %}Download APK{% else %}Segera Hadir{% endif %}</span><span class="btn-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span></a>
+                        <div class="download-progress-wrap" id="androidProgress" style="display:none;"><div class="progress-bar-track"><div class="progress-bar-fill" id="androidProgressFill"></div></div><span class="progress-text" id="androidProgressText">Mengunduh...</span></div>
                     </div>
                 </div>
-
-                <!-- iOS Card -->
                 <div class="platform-card platform-card-ios" id="iosCard">
                     <div class="platform-card-glow"></div>
                     <div class="platform-card-inner">
-                        <div class="platform-icon-wrap">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C4.79 17.1 5.12 11.08 8.77 10.1c1.23-.32 2.15.22 2.86.57.7-.36 1.75-.7 3.06-.38 1.76.48 3.05 1.83 3.36 3.5-2.02 1.14-1.69 3.91.28 4.73-.31.85-.63 1.7-1.28 2.76zM12.03 6.25c.8-1.14 2.03-1.98 3.38-2.12-.06 1.05-.48 2.14-1.2 2.95-.73.84-1.68 1.43-2.82 1.4-.03-.99.27-1.99.64-2.23z"/>
-                            </svg>
-                        </div>
+                        <div class="platform-icon-wrap"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C4.79 17.1 5.12 11.08 8.77 10.1c1.23-.32 2.15.22 2.86.57.7-.36 1.75-.7 3.06-.38 1.76.48 3.05 1.83 3.36 3.5-2.02 1.14-1.69 3.91.28 4.73-.31.85-.63 1.7-1.28 2.76zM12.03 6.25c.8-1.14 2.03-1.98 3.38-2.12-.06 1.05-.48 2.14-1.2 2.95-.73.84-1.68 1.43-2.82 1.4-.03-.99.27-1.99.64-2.23z"/></svg></div>
                         <h3 class="platform-name">iOS</h3>
                         <p class="platform-desc">Untuk iPhone & iPad. Tersedia di App Store.</p>
-                        
-                        <div class="platform-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">Versi</span>
-                                <span class="meta-value" id="iosVersion">{{ ios_version }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Status</span>
-                                <span class="meta-value" id="iosStatus">
-                                    {% if ios_distribution_url %}
-                                        Tersedia
-                                    {% else %}
-                                        Segera
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-
-                        <a href="{% url 'download-ios' %}" 
-                           class="download-btn download-btn-ios" 
-                           id="iosDownloadBtn"
-                           {% if not ios_available %}style="pointer-events:none;opacity:0.5;"{% endif %}>
-                            <span class="btn-text">
-                                {% if ios_distribution_url %}
-                                    Buka App Store
-                                {% elif ios_available %}
-                                    Download IPA
-                                {% else %}
-                                    Segera Hadir
-                                {% endif %}
-                            </span>
-                            <span class="btn-icon-wrap">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            </span>
-                        </a>
+                        <div class="platform-meta"><div class="meta-item"><span class="meta-label">Versi</span><span class="meta-value" id="iosVersion">{{ ios_version }}</span></div><div class="meta-item"><span class="meta-label">Status</span><span class="meta-value" id="iosStatus">{% if ios_distribution_url %}Tersedia{% else %}Segera{% endif %}</span></div></div>
+                        <a href="{% url 'download-ios' %}" class="download-btn download-btn-ios" id="iosDownloadBtn" {% if not ios_available %}style="pointer-events:none;opacity:0.5;"{% endif %}><span class="btn-text">{% if ios_distribution_url %}Buka App Store{% elif ios_available %}Download IPA{% else %}Segera Hadir{% endif %}</span><span class="btn-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span></a>
                     </div>
                 </div>
             </div>
         </section>
-
-        <!-- How It Works Section -->
-        <section class="download-how-section">
-            <div class="download-section-label">Cara Install</div>
-            <h2 class="download-section-title">Panduan Instalasi</h2>
-            
+        <section class="download-how-section"><div class="download-section-label">Cara Install</div><h2 class="download-section-title">Panduan Instalasi</h2>
             <div class="how-steps-grid">
-                <div class="how-step-card">
-                    <div class="step-number">01</div>
-                    <h4 class="step-title">Download File</h4>
-                    <p class="step-desc">Klik tombol download di atas untuk mengunduh APK Warungio ke perangkat Anda.</p>
-                </div>
-                <div class="how-step-card">
-                    <div class="step-number">02</div>
-                    <h4 class="step-title">Izinkan Instalasi</h4>
-                    <p class="step-desc">Buka Pengaturan &rarr; Keamanan &rarr; aktifkan "Izinkan instalasi dari sumber tidak dikenal".</p>
-                </div>
-                <div class="how-step-card">
-                    <div class="step-number">03</div>
-                    <h4 class="step-title">Buka & Install</h4>
-                    <p class="step-desc">Buka file APK yang sudah diunduh dari notifikasi atau folder Downloads.</p>
-                </div>
-                <div class="how-step-card">
-                    <div class="step-number">04</div>
-                    <h4 class="step-title">Mulai Belanja</h4>
-                    <p class="step-desc">Buka aplikasi Warungio, daftar atau login, dan nikmati belanja hemat!</p>
-                </div>
+                <div class="how-step-card"><div class="step-number">01</div><h4 class="step-title">Download File</h4><p class="step-desc">Klik tombol download di atas untuk mengunduh APK Warungio ke perangkat Anda.</p></div>
+                <div class="how-step-card"><div class="step-number">02</div><h4 class="step-title">Izinkan Instalasi</h4><p class="step-desc">Buka Pengaturan → Keamanan → aktifkan "Izinkan instalasi dari sumber tidak dikenal".</p></div>
+                <div class="how-step-card"><div class="step-number">03</div><h4 class="step-title">Buka & Install</h4><p class="step-desc">Buka file APK yang sudah diunduh dari notifikasi atau folder Downloads.</p></div>
+                <div class="how-step-card"><div class="step-number">04</div><h4 class="step-title">Mulai Belanja</h4><p class="step-desc">Buka aplikasi Warungio, daftar atau login, dan nikmati belanja hemat!</p></div>
             </div>
         </section>
-
-        <!-- FAQ Section -->
-        <section class="download-faq-section">
-            <div class="download-section-label">FAQ</div>
-            <h2 class="download-section-title">Pertanyaan Umum</h2>
-
+        <section class="download-faq-section"><div class="download-section-label">FAQ</div><h2 class="download-section-title">Pertanyaan Umum</h2>
             <div class="faq-list">
-                <details class="faq-item" open>
-                    <summary class="faq-question">
-                        <span>Apakah aplikasi Warungio gratis?</span>
-                        <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
-                    <p class="faq-answer">Ya, aplikasi Warungio gratis untuk diunduh dan digunakan. Tidak ada biaya berlangganan.</p>
-                </details>
-                <details class="faq-item">
-                    <summary class="faq-question">
-                        <span>Bagaimana cara update aplikasi?</span>
-                        <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
-                    <p class="faq-answer">Kunjungi kembali halaman ini untuk mengunduh versi terbaru. Kami akan memberi notifikasi jika ada pembaruan.</p>
-                </details>
-                <details class="faq-item">
-                    <summary class="faq-question">
-                        <span>Apakah aplikasi ini aman?</span>
-                        <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
-                    <p class="faq-answer">Ya, APK Warungio telah melalui verifikasi keamanan dan integrity check SHA256. Data Anda aman dan terenkripsi.</p>
-                </details>
-                <details class="faq-item">
-                    <summary class="faq-question">
-                        <span>Kapan aplikasi iOS tersedia?</span>
-                        <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
-                    <p class="faq-answer">Aplikasi iOS sedang dalam proses pengembangan. Pantau halaman ini untuk informasi terbaru.</p>
-                </details>
+                <details class="faq-item" open><summary class="faq-question"><span>Apakah aplikasi Warungio gratis?</span><svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p class="faq-answer">Ya, aplikasi Warungio gratis untuk diunduh dan digunakan. Tidak ada biaya berlangganan.</p></details>
+                <details class="faq-item"><summary class="faq-question"><span>Bagaimana cara update aplikasi?</span><svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p class="faq-answer">Kunjungi kembali halaman ini untuk mengunduh versi terbaru. Kami akan memberi notifikasi jika ada pembaruan.</p></details>
+                <details class="faq-item"><summary class="faq-question"><span>Apakah aplikasi ini aman?</span><svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p class="faq-answer">Ya, APK Warungio telah melalui verifikasi keamanan dan integrity check SHA256. Data Anda aman dan terenkripsi.</p></details>
+                <details class="faq-item"><summary class="faq-question"><span>Kapan aplikasi iOS tersedia?</span><svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p class="faq-answer">Aplikasi iOS sedang dalam proses pengembangan. Pantau halaman ini untuk informasi terbaru.</p></details>
             </div>
         </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="download-footer">
-        <div class="download-footer-inner">
-            <div class="footer-brand-area">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" height="28">
-                <span>Warung<span class="text-brand">io</span></span>
-            </div>
-            <div class="footer-links-area">
-                <a href="/info/tentang-kami/">Tentang Kami</a>
-                <a href="/info/kebijakan/">Kebijakan Privasi</a>
-                <a href="/info/kontak-kami/">Hubungi Kami</a>
-            </div>
-            <div class="footer-copyright">
-                &copy; 2026 Warungio. Hak Cipta Dilindungi.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Toast Notification -->
-    <div class="download-toast" id="downloadToast">
-        <div class="toast-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </div>
-        <span id="toastMessage">Download dimulai...</span>
-    </div>
-
+    <footer class="download-footer"><div class="download-footer-inner"><div class="footer-brand-area"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" height="28" loading="lazy"><span>Warung<span class="text-brand">io</span></span></div><div class="footer-links-area"><a href="/info/tentang-kami/">Tentang Kami</a><a href="/info/kebijakan/">Kebijakan Privasi</a><a href="/info/kontak-kami/">Hubungi Kami</a></div><div class="footer-copyright">© 2026 Warungio. Hak Cipta Dilindungi.</div></div></footer>
+    <div class="download-toast" id="downloadToast"><div class="toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><span id="toastMessage">Download dimulai...</span></div>
     <script src="{% static 'js/pages/download/script.js' %}"></script>
 </body>
 </html>

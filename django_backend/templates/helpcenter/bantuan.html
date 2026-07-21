@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ page_title }} | Warungio{% endblock %}
+{% block title %}{{ seo.meta_title }}{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Pusat bantuan Warungio. Temukan jawaban, artikel panduan, dan hubungi customer service kami untuk bantuan lebih lanjut.">
+{# Page-specific meta overrides if needed #}
 {% endblock %}
 
 {% block styles %}

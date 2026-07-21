@@ -1,28 +1,22 @@
-{% load static %}
-<!DOCTYPE html>
+{% load static %}{% load seo_tags %}<!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tentang Kami | Warungio Hyperlocal</title>
-    <meta name="description" content="Pelajari lebih lanjut tentang misi Warungio memberdayakan warung lokal dan UMKM Indonesia melalui platform marketplace hyperlocal." />
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://warungio.web.id/info/tentang-kami/" />
-    <meta property="og:title" content="Tentang Kami | Warungio Hyperlocal" />
-    <meta property="og:description" content="Pelajari lebih lanjut tentang misi Warungio memberdayakan warung lokal dan UMKM Indonesia melalui platform marketplace hyperlocal." />
+    {# ── SEO Meta & Structured Data ── #}
+    {% include 'seo/seo_meta.html' %}
+    {% include 'seo/seo_schema.html' %}
+    
+    {# ── Override title ── #}
+    <title>{{ seo.meta_title }}</title>
+    
+    {# ── Original OG (kept for backward compatibility, seo_meta already includes comprehensive OG) ── #}
     <meta property="og:image" content="{% static 'images/Tentang-kami.png' %}" />
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://warungio.web.id/info/tentang-kami/" />
-    <meta property="twitter:title" content="Tentang Kami | Warungio Hyperlocal" />
-    <meta property="twitter:description" content="Pelajari lebih lanjut tentang misi Warungio memberdayakan warung lokal dan UMKM Indonesia melalui platform marketplace hyperlocal." />
-    <meta property="twitter:image" content="{% static 'images/Tentang-kami.png' %}" />
+    <meta name="twitter:image" content="{% static 'images/Tentang-kami.png' %}" />
     
     <!-- Canonical -->
-    <link rel="canonical" href="https://warungio.web.id/info/tentang-kami/" />
+    <link rel="canonical" href="{{ seo.canonical_url }}" />
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -54,23 +48,6 @@
       }
     </script>
 
-    <!-- Structured Data Organization Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Warungio",
-      "url": "https://warungio.web.id",
-      "logo": "https://warungio.web.id{% static 'images/Warungio L.png' %}",
-      "description": "Hyperlocal marketplace menghubungkan warung lokal di Indonesia.",
-      "sameAs": [
-        "https://facebook.com/warungio",
-        "https://instagram.com/warungio",
-        "https://twitter.com/warungio"
-      ]
-    }
-    </script>
-
     <style>
         .glass-card-premium {
             background: rgba(255, 255, 255, 0.75);
@@ -96,7 +73,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-        /* Top Navigation override on full-width about page */
         .topbar-wrapper {
             position: fixed;
             top: 0;
@@ -126,42 +102,76 @@
             pointer-events: none;
             z-index: 2;
         }
+        .value-card {
+            transition: all 0.3s ease;
+        }
+        .value-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 32px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #16a34a;
+            border: 3px solid #dcfce7;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 13px;
+            top: 24px;
+            width: 2px;
+            height: calc(100% + 16px);
+            background: #e5e7eb;
+        }
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        .stats-counter {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #16a34a;
+            line-height: 1;
+        }
     </style>
 </head>
 <body class="bg-background text-[#0F172A] font-sans">
 
     <!-- Top Navigation Bar -->
-    <div class="topbar-wrapper">
+    <div class="topbar-wrapper" role="banner">
         <div class="topbar-container-about">
             <header class="topbar" style="border:none !important; background:transparent !important; box-shadow:none !important; height:auto; padding:0 !important;">
                 <div class="topbar-left">
-                    <a href="{% url 'home' %}" class="flex items-center gap-2">
-                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="brand-logo-img">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2" aria-label="Warungio Beranda">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Logo Warungio - Hyperlocal Marketplace Indonesia" class="brand-logo-img" width="32" height="32" loading="eager">
                         <span class="logo-text">Warung<span class="logo-green">io</span></span>
                     </a>
                 </div>
-
-                <!-- Navigation links matching header design -->
                 <div class="hidden lg:flex items-center gap-8 mx-auto">
-                    <!-- Public info page — all nav links point to public content on the Landing Page -->
-                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Beranda</a>
-                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Produk</a>
-                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Warung Terdekat</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}" aria-label="Beranda Warungio">Beranda</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}#fitur">Produk</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}#cara-kerja">Warung Terdekat</a>
                     <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Promo</a>
                 </div>
-
                 <div class="topbar-actions">
-                    <!-- Authenticated Actions (Toggled by JS) -->
                     <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
-                        <button class="icon-btn-premium"><i class="fa-regular fa-bell"></i><span class="icon-badge">1</span></button>
-                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
+                        <button class="icon-btn-premium" aria-label="Notifikasi"><i class="fa-regular fa-bell"></i><span class="icon-badge">0</span></button>
+                        <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'" aria-label="Keranjang Belanja">
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span class="icon-badge" id="cartBadgeHeader">0</span>
                         </button>
-                        
                         <div class="profile-dropdown-wrapper">
-                            <div class="profile-box-premium" id="profileBox">
-                                <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+                            <div class="profile-box-premium" id="profileBox" role="button" tabindex="0" aria-label="Profil Saya">
+                                <img src="{% static 'images/av-siti.png' %}" alt="Foto Profil" class="profile-avatar" id="userAvatar" loading="lazy">
                                 <div class="profile-info-premium">
                                     <p id="userName" class="profile-name">Hai, User</p>
                                     <span class="member-badge-premium" id="userRoleBadge">Member</span>
@@ -172,13 +182,11 @@
                                 <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
                                 <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
                                 <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                                <a href="#" class="btn-topup"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
+                                <a href="#"><i class="fa-solid fa-wallet"></i> Top Up Saldo <span id="userBalanceDropdown" style="margin-left: auto; font-weight: 700; color: var(--primary);">Rp 0</span></a>
                                 <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Guest Actions -->
                     <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
                         <a href="{% url 'page-login' %}" class="btn-login-premium">Masuk</a>
                         <a href="{% url 'page-register' %}" class="btn-register-premium">Daftar</a>
@@ -200,23 +208,43 @@
                     Warungio adalah marketplace hyperlocal yang menghubungkan warung lokal dengan kebutuhan harian masyarakat Indonesia melalui teknologi digital yang modern, cepat, aman, dan terpercaya.
                 </p>
                 <div class="flex flex-wrap gap-4 pt-2">
-                    <button onclick="window.location.href='{% url 'home' %}';" class="bg-primary text-white px-8 py-3.5 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/25">Mulai Belanja</button>
+                    <a href="{% url 'home' %}" class="bg-primary text-white px-8 py-3.5 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/25">Mulai Belanja</a>
                     <button onclick="document.getElementById('caraKerjaSection').scrollIntoView({behavior: 'smooth'});" class="bg-white text-primary border border-primary px-8 py-3.5 rounded-2xl font-bold hover:bg-primary/5 transition-all">Lihat Cara Kerja</button>
                 </div>
             </div>
             <div class="video-container-about reveal">
                 <div class="video-overlay-gradient"></div>
-                <video class="w-full h-[320px] md:h-[400px] object-cover rounded-2xl" autoplay muted loop playsinline preload="metadata" loading="lazy">
+                <video class="w-full h-[320px] md:h-[400px] object-cover rounded-2xl" autoplay muted loop playsinline preload="metadata" poster="{% static 'images/Tentang-kami.png' %}">
                     <source src="{% static 'video/Tentang-kami.mp4' %}" type="video/mp4">
                     Browser Anda tidak mendukung tag video.
                 </video>
             </div>
         </section>
 
+        <!-- Section Statistik -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-6 reveal">
+            <div class="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm value-card">
+                <div class="stats-counter">500+</div>
+                <p class="text-sm font-semibold text-slate-600 mt-2">Warung Mitra</p>
+            </div>
+            <div class="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm value-card">
+                <div class="stats-counter">10K+</div>
+                <p class="text-sm font-semibold text-slate-600 mt-2">Produk Tersedia</p>
+            </div>
+            <div class="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm value-card">
+                <div class="stats-counter">50K+</div>
+                <p class="text-sm font-semibold text-slate-600 mt-2">Pelanggan Puas</p>
+            </div>
+            <div class="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm value-card">
+                <div class="stats-counter">30+</div>
+                <p class="text-sm font-semibold text-slate-600 mt-2">Kota Tersedia</p>
+            </div>
+        </section>
+
         <!-- Section Misi -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center reveal">
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center reveal" id="misiSection">
             <div class="floating-illustration flex justify-center lg:justify-start order-2 lg:order-1">
-                <img src="{% static 'images/Tentang-kami.png' %}" alt="Warungio 3D Illustration" class="w-full max-w-md h-auto object-contain rounded-2xl" loading="lazy">
+                <img src="{% static 'images/Tentang-kami.png' %}" alt="Ilustrasi Warungio - Marketplace Hyperlocal Indonesia" class="w-full max-w-md h-auto object-contain rounded-2xl" loading="lazy" width="500" height="500">
             </div>
             <div class="space-y-6 order-1 lg:order-2">
                 <h2 class="text-3xl font-extrabold tracking-tight">Misi Kami</h2>
@@ -224,31 +252,31 @@
                     Warungio hadir untuk memberdayakan warung lokal dan UMKM Indonesia melalui teknologi digital sehingga masyarakat dapat memperoleh kebutuhan harian dengan lebih cepat, aman, dan mudah.
                 </p>
                 <div class="space-y-4">
-                    <div class="flex items-start gap-4 p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow group">
-                        <div class="bg-primary/10 text-primary p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
+                    <div class="flex items-start gap-4 p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow group" itemscope itemtype="https://schema.org/ItemList">
+                        <div class="bg-primary/10 text-primary p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors" aria-hidden="true">
                             <i class="fa-solid fa-store text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-slate-800 text-[16px]">Memberdayakan Warung Lokal</h4>
-                            <p class="text-xs text-slate-500 mt-1">Membantu jutaan pemilik warung tradisional mengakses pasar digital yang lebih luas.</p>
+                            <h3 class="font-bold text-slate-800 text-[16px]">Memberdayakan Warung Lokal</h3>
+                            <p class="text-xs text-slate-500 mt-1">Membantu jutaan pemilik warung tradisional mengakses pasar digital yang lebih luas dan meningkatkan pendapatan mereka secara signifikan.</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-4 p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow group">
-                        <div class="bg-primary/10 text-primary p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
-                            <i class="fa-solid fa-bolt-lightning text-lg"></i>
+                        <div class="bg-blue-50 text-blue-600 p-3 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors" aria-hidden="true">
+                            <i class="fa-solid fa-hand-holding-heart text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-slate-800 text-[16px]">Belanja Mudah & Cepat</h4>
-                            <p class="text-xs text-slate-500 mt-1">Navigasi intuitif dan sistem pengiriman instan untuk efisiensi maksimal harian.</p>
+                            <h3 class="font-bold text-slate-800 text-[16px]">Kemudahan Belanja Harian</h3>
+                            <p class="text-xs text-slate-500 mt-1">Memudahkan masyarakat Indonesia berbelanja sembako, sayur segar, buah segar, dan kebutuhan rumah tangga langsung dari warung terdekat.</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-4 p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow group">
-                        <div class="bg-primary/10 text-primary p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
+                        <div class="bg-amber-50 text-amber-600 p-3 rounded-xl group-hover:bg-amber-600 group-hover:text-white transition-colors" aria-hidden="true">
                             <i class="fa-solid fa-leaf text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-slate-800 text-[16px]">Produk Segar Setiap Hari</h4>
-                            <p class="text-xs text-slate-500 mt-1">Menjaga kualitas rantai pasok agar produk sampai ke tangan Anda dalam kondisi prima.</p>
+                            <h3 class="font-bold text-slate-800 text-[16px]">Ekonomi Berkelanjutan</h3>
+                            <p class="text-xs text-slate-500 mt-1">Mendorong pertumbuhan ekonomi lokal melalui pemberdayaan UMKM dan distribusi bahan pokok yang efisien dan berkelanjutan.</p>
                         </div>
                     </div>
                 </div>
@@ -256,366 +284,206 @@
         </section>
 
         <!-- Section Visi -->
-        <section class="space-y-8 reveal">
-            <div class="text-center max-w-2xl mx-auto space-y-2">
-                <h2 class="text-3xl font-extrabold tracking-tight">Visi Kami</h2>
-                <p class="text-sm text-slate-500">Membangun ekosistem ritel hyperlocal yang terintegrasi, andal, dan ramah bagi pelaku ekonomi mikro.</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-primary hover:shadow-xl transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <i class="fa-regular fa-lightbulb text-xl"></i>
+        <section class="reveal" id="visiSection">
+            <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl p-8 md:p-12 border border-emerald-100">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                    <div class="space-y-5">
+                        <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider">Visi Kami</span>
+                        <h2 class="text-3xl font-extrabold tracking-tight">Menjadi <span class="text-primary">Marketplace Hyperlocal</span> Terdepan di Indonesia</h2>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            Kami bercita-cita menjadi platform digital utama yang menghubungkan setiap warung, toko kelontong, dan UMKM di Indonesia dengan jutaan konsumen yang membutuhkan kemudahan belanja kebutuhan sehari-hari secara online. Dengan teknologi yang inklusif dan pemberdayaan ekonomi lokal, Warungio ingin mendigitalisasi lebih dari 5 juta warung tradisional Indonesia pada tahun 2030, menciptakan ekosistem belanja hyperlocal yang efisien, transparan, dan saling menguntungkan bagi semua pihak.
+                        </p>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            Kami percaya bahwa warung lokal adalah tulang punggung perekonomian Indonesia. Dengan menghubungkan mereka ke platform digital, kami tidak hanya membantu meningkatkan pendapatan pemilik warung, tetapi juga memberikan kemudahan bagi konsumen untuk mendapatkan kebutuhan harian berkualitas dengan harga terjangkau dan pengiriman cepat.
+                        </p>
                     </div>
-                    <h3 class="font-bold text-slate-800 text-lg mb-2">Inovasi</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Terus mengeksplorasi teknologi terbaru untuk solusi hyperlocal yang lebih cerdas.</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-primary hover:shadow-xl transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <i class="fa-regular fa-circle-check text-xl"></i>
+                    <div class="space-y-5">
+                        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-sm">
+                            <h3 class="font-bold text-slate-800 text-lg mb-3">Timeline Perjalanan Warungio</h3>
+                            <div class="space-y-4">
+                                <div class="timeline-item">
+                                    <p class="font-bold text-sm text-slate-800">2023</p>
+                                    <p class="text-xs text-slate-500">Warungio didirikan di Tasikmalaya, Jawa Barat dengan visi mendigitalisasi warung lokal.</p>
+                                </div>
+                                <div class="timeline-item">
+                                    <p class="font-bold text-sm text-slate-800">2024</p>
+                                    <p class="text-xs text-slate-500">Meluncurkan platform marketplace hyperlocal dengan 50 warung mitra dan 1.000+ produk.</p>
+                                </div>
+                                <div class="timeline-item">
+                                    <p class="font-bold text-sm text-slate-800">2025</p>
+                                    <p class="text-xs text-slate-500">Ekspansi ke 15 kota, 300+ warung mitra, dan integrasi pembayaran Midtrans serta AI analytics.</p>
+                                </div>
+                                <div class="timeline-item">
+                                    <p class="font-bold text-sm text-slate-800">2026</p>
+                                    <p class="text-xs text-slate-500">Melayani 50.000+ pelanggan di 30+ kota dengan 500+ warung mitra dan fitur AI canggih.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h3 class="font-bold text-slate-800 text-lg mb-2">Kepercayaan</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Membangun hubungan jangka panjang dengan integritas dan transparansi penuh.</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-primary hover:shadow-xl transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <i class="fa-regular fa-clock text-xl"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-800 text-lg mb-2">Kecepatan</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Memastikan setiap pengantaran terpenuhi dengan respons secepat kilat.</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-primary hover:shadow-xl transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <i class="fa-regular fa-handshake text-xl"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-800 text-lg mb-2">Keberlanjutan</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Menciptakan dampak ekonomi positif bagi komunitas lokal secara berkesinambungan.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section Nilai -->
-        <section class="space-y-8 reveal">
-            <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-extrabold tracking-tight">Nilai Kami</h2>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="glass-card-premium p-6 rounded-2xl text-center hover:scale-[1.03] transition-all duration-300 cursor-default">
-                    <div class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                        <i class="fa-solid fa-users text-lg"></i>
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-[16px] mb-2">Kolaborasi Lokal</h4>
-                    <p class="text-xs text-slate-500">Saling bahu-membahu memajukan ekonomi tetangga dan pemilik UMKM sekitar.</p>
-                </div>
-                <div class="glass-card-premium p-6 rounded-2xl text-center hover:scale-[1.03] transition-all duration-300 cursor-default">
-                    <div class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                        <i class="fa-solid fa-shield-halved text-lg"></i>
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-[16px] mb-2">Kepercayaan</h4>
-                    <p class="text-xs text-slate-500">Menjaga kredibilitas data pengguna & integritas transaksi Midtrans.</p>
-                </div>
-                <div class="glass-card-premium p-6 rounded-2xl text-center hover:scale-[1.03] transition-all duration-300 cursor-default">
-                    <div class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                        <i class="fa-solid fa-motorcycle text-lg"></i>
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-[16px] mb-2">Kecepatan</h4>
-                    <p class="text-xs text-slate-500">Menyelesaikan pesanan instan dalam jangkauan hyperlocal secara efisien.</p>
-                </div>
-                <div class="glass-card-premium p-6 rounded-2xl text-center hover:scale-[1.03] transition-all duration-300 cursor-default">
-                    <div class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
-                        <i class="fa-solid fa-face-smile text-lg"></i>
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-[16px] mb-2">Pelayanan Terbaik</h4>
-                    <p class="text-xs text-slate-500">Memprioritaskan kepuasan serta keramahan untuk seluruh pengguna.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section Statistik -->
-        <section id="statsSection" class="bg-primary/5 rounded-3xl py-12 px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center reveal">
-            <div>
-                <i class="fa-solid fa-store text-primary text-3xl mb-3"></i>
-                <div class="text-3xl md:text-4xl font-extrabold text-slate-800 stat-number" data-target="10000" data-suffix="+">0+</div>
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Warung Mitra</div>
-            </div>
-            <div>
-                <i class="fa-solid fa-users text-primary text-3xl mb-3"></i>
-                <div class="text-3xl md:text-4xl font-extrabold text-slate-800 stat-number" data-target="250000" data-suffix="+">0+</div>
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Pelanggan Aktif</div>
-            </div>
-            <div>
-                <i class="fa-solid fa-basket-shopping text-primary text-3xl mb-3"></i>
-                <div class="text-3xl md:text-4xl font-extrabold text-slate-800 stat-number" data-target="1000" data-suffix="+">0+</div>
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Produk Segar</div>
-            </div>
-            <div>
-                <i class="fa-solid fa-map-location-dot text-primary text-3xl mb-3"></i>
-                <div class="text-3xl md:text-4xl font-extrabold text-slate-800 stat-number" data-target="50" data-suffix="+">0+</div>
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Kota & Kabupaten</div>
             </div>
         </section>
 
         <!-- Section Cara Kerja -->
-        <section id="caraKerjaSection" class="space-y-12 reveal">
-            <h2 class="text-3xl font-extrabold tracking-tight text-center">Cara Kerja Warungio</h2>
-            <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-0">
-                <!-- Progress Line connector -->
-                <div class="hidden md:block absolute top-6 left-0 w-full h-[2px] bg-slate-200 z-0"></div>
-                
-                <!-- Step 1 -->
-                <div class="relative z-10 flex md:flex-col items-center gap-4 md:w-1/4 group text-left md:text-center">
-                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                    </div>
-                    <div>
-                        <h6 class="font-bold text-slate-800">Cari Warung</h6>
-                        <p class="text-xs text-slate-500">Temukan warung terdekat Anda</p>
-                    </div>
+        <section class="reveal" id="caraKerjaSection">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider">Cara Kerja</span>
+                <h2 class="text-3xl font-extrabold tracking-tight mt-4">Bagaimana <span class="text-primary">Warungio</span> Bekerja</h2>
+                <p class="text-sm text-slate-500 mt-2 max-w-xl mx-auto">Hanya 4 langkah mudah untuk belanja kebutuhan harian Anda</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold">1</div>
+                    <h3 class="font-bold text-slate-800 mb-2">Cari Warung & Produk</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Telusuri warung dan UMKM terdekat dari lokasi Anda. Gunakan fitur pencarian cerdas untuk menemukan sembako, sayur segar, buah, daging, dan kebutuhan rumah tangga.</p>
                 </div>
-                
-                <!-- Step 2 -->
-                <div class="relative z-10 flex md:flex-col items-center gap-4 md:w-1/4 group text-left md:text-center">
-                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-basket-shopping text-sm"></i>
-                    </div>
-                    <div>
-                        <h6 class="font-bold text-slate-800">Pilih Produk</h6>
-                        <p class="text-xs text-slate-500">Pilih kebutuhan harian segar</p>
-                    </div>
+                <div class="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold">2</div>
+                    <h3 class="font-bold text-slate-800 mb-2">Pesan & Bayar</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Tambahkan produk ke keranjang, checkout, dan pilih metode pembayaran favorit Anda: QRIS, GoPay, OVO, transfer bank, atau COD yang aman dan nyaman.</p>
                 </div>
-                
-                <!-- Step 3 -->
-                <div class="relative z-10 flex md:flex-col items-center gap-4 md:w-1/4 group text-left md:text-center">
-                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-credit-card text-sm"></i>
-                    </div>
-                    <div>
-                        <h6 class="font-bold text-slate-800">Bayar</h6>
-                        <p class="text-xs text-slate-500">Transaksi digital terintegrasi</p>
-                    </div>
+                <div class="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold">3</div>
+                    <h3 class="font-bold text-slate-800 mb-2">Pesanan Diproses</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Warung mitra memproses pesanan Anda dengan cepat. Pantau status pesanan secara real-time melalui aplikasi atau website Warungio.</p>
                 </div>
-                
-                <!-- Step 4 -->
-                <div class="relative z-10 flex md:flex-col items-center gap-4 md:w-1/4 group text-left md:text-center">
-                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-circle-check text-sm"></i>
-                    </div>
-                    <div>
-                        <h6 class="font-bold text-slate-800">Pesanan Sampai</h6>
-                        <p class="text-xs text-slate-500">Belanjaan tiba di depan pintu</p>
-                    </div>
+                <div class="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-extrabold">4</div>
+                    <h3 class="font-bold text-slate-800 mb-2">Pesanan Diantar</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Pesanan diantar oleh kurir terpercaya langsung ke alamat Anda. Nikmati kemudahan belanja kebutuhan harian tanpa harus keluar rumah!</p>
                 </div>
             </div>
         </section>
 
-        <!-- CTA Green Premium Card -->
-        <section class="reveal">
-            <div class="bg-primary rounded-3xl overflow-hidden relative shadow-xl shadow-primary/10">
-                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 items-center gap-8 p-10 md:p-16">
-                    <div class="text-white space-y-6">
-                        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">Mari Dukung Warung Lokal Bersama Warungio</h2>
-                        <p class="text-sm opacity-90 leading-relaxed">Jadilah bagian dari revolusi ekonomi digital hyperlocal Indonesia sekarang juga.</p>
-                        <div class="flex flex-wrap gap-4 pt-2">
-                            <button onclick="window.location.href='{% url 'home' %}';" class="bg-white text-primary px-8 py-3.5 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all shadow-md">Mulai Belanja Sekarang</button>
-                            <button onclick="window.location.href='{% url 'page-register-mitra' %}';" class="bg-primary-container text-white border border-white/20 px-8 py-3.5 rounded-2xl font-bold hover:bg-white/10 transition-all">Gabung Menjadi Mitra</button>
-                        </div>
+        <!-- Section Nilai-Nilai -->
+        <section class="reveal" id="nilaiSection">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider">Nilai-Nilai</span>
+                <h2 class="text-3xl font-extrabold tracking-tight mt-4">Apa yang Membuat <span class="text-primary">Warungio</span> Berbeda</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <article class="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-handshake text-xl"></i>
                     </div>
-                    <div class="hidden lg:flex justify-end floating-illustration">
-                        <img src="{% static 'images/store-bike.png' %}" alt="Warungio Delivery Illustration" class="w-full max-w-sm h-auto object-contain" loading="lazy">
+                    <h3 class="font-bold text-slate-800 text-lg mb-3">Pemberdayaan Lokal</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Kami berkomitmen untuk memberdayakan warung tradisional dan UMKM Indonesia dengan memberikan akses ke platform digital, pelatihan, dan dukungan bisnis agar dapat bersaing di era ekonomi digital dan meningkatkan kesejahteraan pemilik warung.</p>
+                </article>
+                <article class="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-3">Kepercayaan & Keamanan</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Setiap transaksi di Warungio dilindungi oleh sistem keamanan berlapis dan diproses melalui Midtrans, penyedia pembayaran terkemuka di Indonesia. Data pribadi Anda aman dan terenkripsi dengan standar keamanan tertinggi.</p>
+                </article>
+                <article class="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm value-card">
+                    <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-gem text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-3">Kualitas & Kesegaran</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Kami memastikan setiap produk yang dipesan melalui Warungio—baik sayur segar, buah segar, daging, sembako, maupun kebutuhan rumah tangga—berada dalam kondisi terbaik dengan jaminan kualitas dan kesegaran dari warung mitra terpercaya.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Section Deskripsi SEO -->
+        <section class="reveal" aria-label="Informasi lengkap tentang Warungio">
+            <div class="bg-white rounded-3xl p-8 md:p-12 border border-slate-100">
+                <h2 class="text-2xl font-extrabold tracking-tight mb-6">Platform Marketplace Hyperlocal Terpercaya untuk Kebutuhan Harian Anda</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-600 leading-relaxed">
+                    <div>
+                        <p>Warungio adalah platform marketplace hyperlocal yang menghubungkan pembeli dengan warung, toko kelontong, dan UMKM lokal di seluruh Indonesia. Kami menyediakan berbagai macam produk kebutuhan sehari-hari seperti sembako (beras, minyak goreng, gula, tepung, telur), sayur segar (bayam, kangkung, sawi, wortel, brokoli), buah segar (apel, jeruk, pisang, anggur, semangka), daging dan ayam segar, ikan, produk frozen food, minuman ringan, bumbu dapur, serta perlengkapan rumah tangga lainnya.</p>
+                        <p class="mt-4">Dengan sistem hyperlocal marketplace, setiap pembeli dapat menemukan warung terdekat dari lokasi mereka dan mendapatkan pengiriman yang cepat dan efisien. Kami bekerja sama dengan berbagai mitra kurir lokal dan layanan pengiriman instan seperti GoSend, GrabExpress, Maxim, dan opsi antar sendiri untuk memastikan pesanan Anda sampai dalam waktu singkat.</p>
+                    </div>
+                    <div>
+                        <p>Warungio menawarkan berbagai metode pembayaran yang aman dan praktis melalui integrasi Midtrans, termasuk transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, ShopeePay), QRIS, kartu kredit/debit (Visa, Mastercard, JCB), serta COD (Cash on Delivery) untuk kenyamanan Anda. Setiap transaksi diproses dengan enkripsi SSL 256-bit dan sistem keamanan 3D Secure untuk melindungi data Anda.</p>
+                        <p class="mt-4">Bagi para pemilik warung dan UMKM, Warungio menyediakan dashboard seller yang lengkap dengan fitur manajemen produk, pemrosesan pesanan, laporan keuangan, analitik bisnis, prediksi stok berbasis AI, serta fitur promo dan diskon untuk menarik lebih banyak pelanggan. Bergabung menjadi mitra Warungio berarti Anda mendapatkan akses ke pasar digital yang lebih luas tanpa biaya pendaftaran.</p>
                     </div>
                 </div>
             </div>
         </section>
-
-        <!-- Premium Footer -->
-        <footer class="store-footer-premium border-t border-slate-200 mt-12 pt-12">
-            <div class="footer-columns-grid">
-                <div class="footer-brand-col">
-                    <div class="brand-name">
-                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo">
-                        <span class="logo-text">Warung<span class="logo-green">io</span></span>
-                    </div>
-                    <p class="footer-tagline">Marketplace hyperlocal terbaik untuk kebutuhan harian Anda. Menghubungkan tetangga, memajukan bangsa.</p>
-                    <div class="footer-socials mt-4">
-                        <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fa-brands fa-twitter"></i></a>
-                        <a href="#" class="social-icon"><i class="fa-brands fa-whatsapp"></i></a>
-                    </div>
-                </div>
-                <div class="footer-links-col">
-                    <h4>Tentang Warungio</h4>
-                    <ul>
-                        <li><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a></li>
-                        <li><a href="#">Karir</a></li>
-                        <li><a href="#">Berita</a></li>
-                        <li><a href="#">Kontak Kami</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links-col">
-                    <h4>Layanan</h4>
-                    <ul>
-                        <li><a href="#">Cara Belanja</a></li>
-                        <li><a href="{% url 'page-register-mitra' %}">Daftar Mitra</a></li>
-                        <li><a href="#">Pusat Bantuan</a></li>
-                        <li><a href="#">Syarat & Ketentuan</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links-col">
-                    <h4>Download App</h4>
-                    <div class="flex flex-col gap-3 mt-4">
-                        <a href="#" class="flex items-center gap-3 bg-slate-900 text-white p-2.5 rounded-xl hover:bg-slate-800 transition-colors">
-                            <i class="fa-brands fa-google-play text-xl text-primary"></i>
-                            <div class="text-left">
-                                <span class="block text-[8px] uppercase leading-none">Get it on</span>
-                                <strong class="text-xs">Google Play</strong>
-                            </div>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 bg-slate-900 text-white p-2.5 rounded-xl hover:bg-slate-800 transition-colors">
-                            <i class="fa-brands fa-apple text-xl text-primary"></i>
-                            <div class="text-left">
-                                <span class="block text-[8px] uppercase leading-none">Download on</span>
-                                <strong class="text-xs">App Store</strong>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom-row mt-12 pt-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <span class="copyright text-slate-400">© 2026 Warungio Hyperlocal. Hak Cipta Dilindungi.</span>
-                <div class="legal-links">
-                    <a href="#">Kebijakan Privasi</a>
-                    <span class="dot-separator">•</span>
-                    <a href="#">Cookie Policy</a>
-                </div>
-            </div>
-        </footer>
-
     </main>
 
-    <!-- Floating Audio Background Control -->
-    <button id="audioToggleBtn" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center text-primary hover:scale-105 active:scale-95 transition-all" title="Musik Latar">
-        <i class="fa-solid fa-volume-xmark" id="audioIcon"></i>
-    </button>
-    <audio id="bgAudio" loop>
-        <source src="{% static 'audio/Tentang-kami.mp3' %}" type="audio/mpeg">
-    </audio>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-100">
+        <div class="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="h-8 w-auto" loading="lazy" width="32" height="32">
+                        <span class="text-xl font-extrabold"><span class="text-primary">Warung</span>io</span>
+                    </div>
+                    <p class="text-sm text-slate-500 leading-relaxed">Marketplace hyperlocal Indonesia yang menghubungkan warung lokal dengan kebutuhan harian masyarakat.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Informasi</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'page-tentang-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tentang Kami</a></li>
+                        <li><a href="{% url 'page-cara-belanja' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Cara Belanja</a></li>
+                        <li><a href="{% url 'page-metode-pembayaran' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Metode Pembayaran</a></li>
+                        <li><a href="{% url 'page-blog' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Bantuan</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'bantuan-page' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Pusat Bantuan</a></li>
+                        <li><a href="{% url 'page-kontak-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Hubungi Kami</a></li>
+                        <li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Kebijakan Privasi</a></li>
+                        <li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Syarat & Ketentuan</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Mitra</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'page-register-mitra' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Daftar Mitra</a></li>
+                        <li><a href="{% url 'page-panduan-seller' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Panduan Seller</a></li>
+                        <li><a href="{% url 'page-tips-sukses' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tips Sukses</a></li>
+                        <li><a href="{% url 'page-komunitas' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Komunitas</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-100 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-slate-400">&copy; 2026 Warungio. Hak Cipta Dilindungi.</p>
+                <div class="flex gap-4">
+                    <a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Facebook Warungio"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Instagram Warungio"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://twitter.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Twitter Warungio"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="YouTube Warungio"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    <!-- Global Javascript Integrations -->
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/utils/websocket.js' %}"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-
-    <!-- Page Specific Animations and Controls -->
     <script>
-        // Intersection Observer for scroll animations
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                }
-            });
-        }, { threshold: 0.1 });
-        
-        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-        // Animated scroll counters
-        const statNumbers = document.querySelectorAll('.stat-number');
-        const animateCounters = () => {
-            statNumbers.forEach(element => {
-                const target = parseInt(element.getAttribute('data-target'));
-                const suffix = element.getAttribute('data-suffix') || '';
-                const duration = 1500;
-                const startTime = performance.now();
-                
-                const updateNumber = (now) => {
-                    const elapsed = now - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const easeProgress = progress * (2 - progress);
-                    const currentValue = Math.floor(easeProgress * target);
-                    
-                    element.textContent = currentValue.toLocaleString('id-ID') + suffix;
-                    
-                    if (progress < 1) {
-                        requestAnimationFrame(updateNumber);
-                    } else {
-                        element.textContent = target.toLocaleString('id-ID') + suffix;
-                    }
-                };
-                requestAnimationFrame(updateNumber);
-            });
-        };
-
-        const statsSection = document.getElementById('statsSection');
-        if (statsSection) {
-            const statsObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        animateCounters();
-                        statsObserver.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.2 });
-            statsObserver.observe(statsSection);
-        }
-
-        // Background Audio Player
-        const audio = document.getElementById('bgAudio');
-        const audioBtn = document.getElementById('audioToggleBtn');
-        const audioIcon = document.getElementById('audioIcon');
-        
-        if (audio) {
-            audio.volume = 0.15;
-            
-            const savedState = localStorage.getItem('bgAudioPlayState');
-            
-            const setPlaying = () => {
-                audio.play().then(() => {
-                    audioIcon.className = 'fa-solid fa-volume-high';
-                    localStorage.setItem('bgAudioPlayState', 'playing');
-                }).catch(err => {
-                    console.warn("Autoplay blocked. Interaction required.");
-                });
-            };
-
-            const setPaused = () => {
-                audio.pause();
-                audioIcon.className = 'fa-solid fa-volume-xmark';
-                localStorage.setItem('bgAudioPlayState', 'paused');
-            };
-
-            if (savedState === 'playing') {
-                const handleInteract = () => {
-                    setPlaying();
-                    document.removeEventListener('click', handleInteract);
-                    document.removeEventListener('scroll', handleInteract);
-                };
-                document.addEventListener('click', handleInteract);
-                document.addEventListener('scroll', handleInteract);
-            }
-            
-            if (audioBtn) {
-                audioBtn.addEventListener('click', (e) => {
+        // Profile dropdown toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            var profileBox = document.getElementById('profileBox');
+            var dropdown = document.getElementById('dropdownMenu');
+            if (profileBox && dropdown) {
+                profileBox.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    if (audio.paused) {
-                        setPlaying();
-                    } else {
-                        setPaused();
-                    }
+                    dropdown.classList.toggle('show');
+                });
+                document.addEventListener('click', function() {
+                    dropdown.classList.remove('show');
                 });
             }
-
-            const playOnInteract = () => {
-                if (localStorage.getItem('bgAudioPlayState') === 'paused') return;
-                setPlaying();
-                document.removeEventListener('click', playOnInteract);
-                document.removeEventListener('scroll', playOnInteract);
-            };
-            document.addEventListener('click', playOnInteract);
-            document.addEventListener('scroll', playOnInteract);
-        }
+            // Scroll reveal
+            if (window.IntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('.reveal').forEach(function(el) {
+                    observer.observe(el);
+                });
+            }
+        });
     </script>
 </body>
 </html>

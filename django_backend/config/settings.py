@@ -96,6 +96,7 @@ LOCAL_APPS = [
     'ai_services.apps.AIServicesConfig',
     'engagement.apps.EngagementConfig',
     'ai_intelligence.apps.AIIntelligenceConfig',
+    'seo.apps.SeoConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -142,6 +143,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.site_settings',
                 'accounts.context_processors.user_context',
+                'seo.context_processors.seo_metadata',
             ],
         },
     },
