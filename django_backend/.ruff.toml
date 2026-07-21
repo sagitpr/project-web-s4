@@ -1,0 +1,19 @@
+# =============================================================================
+# Warungio Marketplace — Ruff Linter Configuration
+# =============================================================================
+# Mirrors the CI settings in .github/workflows/django.yml so local `ruff check .`
+# produces the same results as the CI pipeline.
+# =============================================================================
+
+# Ignored rules:
+#   E501  — Line too long (relaxed — handled by code review, not CI gate)
+#   F403  — Star import (from module import *) — common in Django views
+#   F405  — Name defined from star import — side effect of F403
+#   W292  — No newline at end of file (Django migrations often lack this)
+ignore = ["E501", "F403", "F405", "W292"]
+
+# Directories to skip (auto-generated code, vendored deps)
+exclude = ["migrations", "venv", ".venv", "__pycache__"]
+
+# Target Python version (minimum supported)
+target-version = "py311"

@@ -37,11 +37,15 @@ services:
         max-file: "2"
 
   # ---- Redis (Channels, Cache, Celery Broker) — 256MB Max Memory ----
+  # CRITICAL: mem_limit MUST be higher than --maxmemory to avoid OOM kills.
+  # Redis uses --maxmemory for internal data, but also needs overhead for
+  # client buffers, replication backlog, and connection memory.
+  # Set mem_limit ~25% above maxmemory to provide safe headroom.
   redis:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
-    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 60s

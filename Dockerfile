@@ -48,11 +48,15 @@ FROM base AS deps
 
 # Cache pip downloads — BuildKit akan menyimpan cache di host,
 # sehingga rebuild tidak perlu download ulang packages yang sama.
+#
+# NOTE: daphne, channels-redis, django-redis, hiredis SUDAH ada di requirements.txt.
+# Tidak perlu install ulang di sini. Hanya uvicorn yang perlu ditambahkan
+# karena entrypoint menggunakan gunicorn+uvicorn (bukan daphne).
 COPY django_backend/requirements.txt /app/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip setuptools wheel && \
     pip install --no-compile -r /app/requirements.txt && \
-    pip install --no-compile daphne channels-redis django-redis hiredis
+    pip install --no-compile uvicorn[standard]
 
 # =============================================================================
 # ---- Build Stage: collectstatic dijalankan SAAT BUILD (bukan saat startup) ----
@@ -72,15 +76,14 @@ COPY assets/ /app/assets/
 COPY shared/ /app/shared/
 
 ENV PYTHONPATH=/app/django_backend \
-    DJANGO_SETTINGS_MODULE=config.settings \
-    DJANGO_DEBUG=False \
-    DJANGO_ALLOWED_HOSTS=* \
-    USE_MYSQL=False \
-    DJANGO_SECRET_KEY=build-only-key-not-used-in-production
+    DJANGO_SETTINGS_MODULE=config.settings
 
 # Buat direktori logs (settings.py membuatnya saat import)
+# Gunakan dummy key hanya untuk build (tidak bocor ke runtime)
+ARG BUILD_SECRET_KEY=django-insecure-build-only-key
 RUN mkdir -p /app/logs && \
     cd /app/django_backend && \
+    DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} \
     python manage.py collectstatic --noinput 2>&1
 
 # =============================================================================

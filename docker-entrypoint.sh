@@ -4,7 +4,7 @@
 #
 # BEHAVIOR:
 #   No args ($# -eq 0)  → DJANGO mode: wait DB → sync_migrations → migrate
-#                          → superuser → daphne (foreground)
+#                          → superuser → gunicorn+uvicorn (foreground)
 #   With args ($# -gt 0) → CELERY/BEAT mode: wait DB → exec "$@" (skip startup)
 #
 # NOTE: collectstatic sudah dijalankan saat Docker build (stage build-static),
@@ -12,7 +12,7 @@
 # dan memastikan staticfiles selalu fresh dari source.
 #
 # Docker Compose passes `command:` as args to the entrypoint, so:
-#   django: no command            → full startup + daphne
+#   django: no command            → full startup + gunicorn+uvicorn
 #   celery: command: [celery ...] → wait DB + celery worker
 #   beat:   command: [celery ...] → wait DB + celery beat
 # =============================================================================
@@ -91,6 +91,11 @@ fi
 # NOTE: collectstatic TIDAK dijalankan di sini karena sudah dilakukan
 #       saat Docker build di stage build-static. Ini mempercepat startup
 #       container dan mengurangi I/O disk pada VPS 1GB RAM.
+#
+# NOTE: ASGI server menggunakan Gunicorn + UvicornWorker.
+#       BUKAN Daphne. Daphne di-replace karena Gunicorn memberikan
+#       worker lifecycle management (max_requests) yang mencegah
+#       memory leak tanpa perlu container restart.
 # ══════════════════════════════════════════════════════════════════════════════
 echo "[MODE] Django web container — running full startup."
 
@@ -109,7 +114,7 @@ echo "[2/2] Applying any remaining migrations..."
 python manage.py migrate --noinput \
     && echo "  -> Migration apply complete." \
     || echo "  -> WARNING: migrate gagal (non-fatal). Lanjut startup..."
-echo "  -> Migrations step selesai (Daphne akan tetap jalan)."
+echo "  -> Migrations step selesai (server akan tetap jalan)."
 
 # ------------------------------------------------------------------
 # Superuser (optional, non-fatal)
