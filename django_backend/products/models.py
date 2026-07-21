@@ -250,6 +250,7 @@ class Favorite(models.Model):
         db_table = 'favorites'
         verbose_name = 'Favorit'
         verbose_name_plural = 'Favorit'
+        ordering = ['-created_at']
         unique_together = ['user', 'product']
 
     def __str__(self):

@@ -1,5 +1,6 @@
 import logging
 from django.contrib.auth import authenticate
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
@@ -167,11 +168,19 @@ class UserSerializer(serializers.ModelSerializer):
     def get_wallet_balance(self, obj):
         """
         Read wallet balance from Wallet table (database-driven).
-        Fallback ke 0 jika belum punya Wallet (user lama).
+        Returns 0.0 if user doesn't have a Wallet yet (old users).
+        Uses specific exception handling to avoid masking unrelated errors.
         """
         try:
             return float(obj.wallet.balance)
-        except Exception:
+        except AttributeError:
+            # No wallet relation (user profile select_related didn't find one)
+            return 0.0
+        except ObjectDoesNotExist:
+            # Wallet OneToOneField doesn't exist yet (race condition on creation)
+            return 0.0
+        except (TypeError, ValueError):
+            # Balance is None or non-numeric
             return 0.0
 
     @extend_schema_field(OpenApiTypes.STR)

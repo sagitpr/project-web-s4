@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Launch background drawable displayed while Flutter engine loads.
+    Shows Warungio brand color with centered logo area.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color: Warungio primary orange -->
+    <item android:drawable="@color/launch_background" />
+</layer-list>

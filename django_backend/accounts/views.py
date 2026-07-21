@@ -131,44 +131,39 @@ class RegisterView(generics.CreateAPIView):
         ip = request.META.get('REMOTE_ADDR', 'unknown')
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
-        # ────────────────────────────────────────────────────────────────────
-        #  INSTRUMENTATION: Log the COMPLETE incoming request payload
-        #  (sensitive fields masked, non-sensitive shown in full)
-        # ────────────────────────────────────────────────────────────────────
-        logger.info(
-            'REGISTER REQUEST — IP: %s | User-Agent: %s | Complete payload: %s',
-            ip,
-            user_agent,
-            _mask_payload(dict(request.data.items())),
-        )
+        # ── Guard: verbose request payload logging only in DEBUG mode ──
+        # In production (DEBUG=False), we skip _mask_payload to avoid CPU overhead
+        # of stringifying the entire request body on every registration.
+        if settings.DEBUG:
+            logger.info(
+                'REGISTER REQUEST — IP: %s | User-Agent: %s | Complete payload: %s',
+                ip,
+                user_agent,
+                _mask_payload(dict(request.data.items())),
+            )
         
-        # ────────────────────────────────────────────────────────────────────
-        #  VALIDATION
-        # ────────────────────────────────────────────────────────────────────
         if not serializer.is_valid():
             error_detail = dict(serializer.errors)
-            payload_masked = _mask_payload(dict(request.data.items()))
             
             logger.warning(
-                'REGISTER VALIDATION FAILED — IP: %s | Errors: %s | Payload: %s',
+                'REGISTER VALIDATION FAILED — IP: %s | Errors: %s',
                 ip,
                 error_detail,
-                payload_masked,
             )
             
-            # Log every single field error with received value (or MASKED for sensitive)
-            for field, field_errors in serializer.errors.items():
-                for err in field_errors:
-                    raw_val = request.data.get(field, 'MISSING')
-                    val_preview = '***MASKED***' if field in REGISTER_SENSITIVE_FIELDS else str(raw_val)[:200]
-                    logger.warning(
-                        '  REGISTER FIELD ERROR — Field: "%s" | Error: %s | Value: %s',
-                        field,
-                        str(err),
-                        val_preview,
-                    )
+            # Log every single field error with received value (production-safe)
+            if logger.isEnabledFor(logging.WARNING):
+                for field, field_errors in serializer.errors.items():
+                    for err in field_errors:
+                        raw_val = request.data.get(field, 'MISSING')
+                        val_preview = '***MASKED***' if field in REGISTER_SENSITIVE_FIELDS else str(raw_val)[:200]
+                        logger.warning(
+                            '  REGISTER FIELD ERROR — Field: "%s" | Error: %s | Value: %s',
+                            field,
+                            str(err),
+                            val_preview,
+                        )
             
-            # Log the error response that will be sent back
             logger.warning(
                 'REGISTER ERROR RESPONSE — HTTP 400 | Response: {\"success\": false, \"errors\": %s}',
                 error_detail,
@@ -209,19 +204,16 @@ class RegisterView(generics.CreateAPIView):
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
         
-        # ────────────────────────────────────────────────────────────────────
-        #  INSTRUMENTATION: Log the response body (without full user data)
-        # ────────────────────────────────────────────────────────────────────
-        response_log = {
-            'status': 'success',
-            'user_id': user.id,
-            'email': user.email,
-            'role': user.role,
-            'otp_channels': list(set(channels)),
-        }
         if settings.DEBUG:
-            response_log['otp_code'] = otp.otp_code
-        logger.info('REGISTER RESPONSE — HTTP 201 | Response: %s', response_log)
+            response_log = {
+                'status': 'success',
+                'user_id': user.id,
+                'email': user.email,
+                'role': user.role,
+                'otp_channels': list(set(channels)),
+                'otp_code': otp.otp_code,
+            }
+            logger.info('REGISTER RESPONSE — HTTP 201 | Response: %s', response_log)
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -238,38 +230,27 @@ class LoginView(views.APIView):
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         login_entry = request.data.get('login_entry')
         
-        # ── INSTRUMENTATION: Log incoming payload ──
-        raw_payload = dict(request.data.items())
-        logger.info(
-            'LOGIN REQUEST — IP: %s | User-Agent: %s | Complete payload: %s | login_entry: %s',
-            ip, user_agent,
-            _mask_payload(raw_payload),
-            login_entry or '(none)',
-        )
-        
         serializer = LoginSerializer(data=request.data, context={'request': request})
         
-        # ── INSTRUMENTATION: Validate and log errors ──
         if not serializer.is_valid():
             error_detail = dict(serializer.errors)
-            payload_masked = _mask_payload(raw_payload)
             
             logger.warning(
-                'LOGIN VALIDATION FAILED — IP: %s | Request payload: %s | Errors: %s',
-                ip, payload_masked, error_detail,
+                'LOGIN VALIDATION FAILED — IP: %s | Errors: %s',
+                ip, error_detail,
             )
             
-            # Log every single field error with received value
-            for field, field_errors in serializer.errors.items():
-                for err in field_errors:
-                    raw_val = request.data.get(field, 'MISSING')
-                    val_preview = '***MASKED***' if field in LOGIN_SENSITIVE_FIELDS else str(raw_val)[:200]
-                    logger.warning(
-                        '  LOGIN FIELD ERROR — Field: "%s" | Error: %s | Received: %s',
-                        field, str(err), val_preview,
-                    )
+            # Log every single field error with received value (production-safe)
+            if logger.isEnabledFor(logging.WARNING):
+                for field, field_errors in serializer.errors.items():
+                    for err in field_errors:
+                        raw_val = request.data.get(field, 'MISSING')
+                        val_preview = '***MASKED***' if field in LOGIN_SENSITIVE_FIELDS else str(raw_val)[:200]
+                        logger.warning(
+                            '  LOGIN FIELD ERROR — Field: "%s" | Error: %s | Received: %s',
+                            field, str(err), val_preview,
+                        )
             
-            # Log the full error response that will be returned
             logger.warning(
                 'LOGIN ERROR RESPONSE — HTTP 400 | Response: {\"success\": false, \"errors\": %s}',
                 error_detail,
@@ -278,12 +259,6 @@ class LoginView(views.APIView):
             raise drf_serializers.ValidationError(serializer.errors)
         
         user = serializer.validated_data['user']
-        
-        # ── INSTRUMENTATION: Log authentication result ──
-        logger.info(
-            'LOGIN AUTH SUCCESS — Email: %s | User ID: %d | Role: %s | IsVerified: %s | IP: %s',
-            user.email, user.id, user.role, user.is_verified, ip,
-        )
         
         # ── Auto-OTP Flow for unverified accounts ──
         if not user.is_verified:
@@ -394,16 +369,11 @@ class LoginView(views.APIView):
             'user': UserSerializer(user).data,
         }
         
-        # ── INSTRUMENTATION: Log response ──
-        response_log = {
-            'status': 'success',
-            'user_id': user.id,
-            'email': user.email,
-            'role': user.role,
-            'is_verified': user.is_verified,
-            'registration_step': user.registration_step,
-        }
-        logger.info('LOGIN RESPONSE — HTTP 200 | Response: %s', response_log)
+        if settings.DEBUG:
+            logger.info(
+                'LOGIN SUCCESS — Email: %s | Role: %s | IP: %s',
+                user.email, user.role, ip,
+            )
         
         return Response(response_data)
 
@@ -432,7 +402,8 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
-        return self.request.user
+        # Use select_related to avoid N+1 wallet query in UserSerializer.get_wallet_balance
+        return User.objects.select_related('wallet').get(pk=self.request.user.pk)
 
     def patch(self, request, *args, **kwargs):
         serializer = UserUpdateSerializer(
@@ -471,13 +442,6 @@ class OTPRequestView(views.APIView):
         ip = request.META.get('REMOTE_ADDR', 'unknown')
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
-        # ── INSTRUMENTATION: Log incoming payload ──
-        logger.info(
-            'OTP REQUEST — IP: %s | User-Agent: %s | Payload: %s',
-            ip, user_agent,
-            _mask_payload(dict(request.data.items())),
-        )
-        
         serializer = OTPRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -486,14 +450,13 @@ class OTPRequestView(views.APIView):
         purpose = serializer.validated_data.get('purpose')
         user_full_name = None
         
-        # ── INSTRUMENTATION: Check rate limit ──
+        # Check rate limit — track count without full payload log in production
         recent_otps = OTP.objects.filter(
             email=email,
             purpose=purpose,
             created_at__gte=timezone.now() - timezone.timedelta(minutes=1)
         )
         recent_count = recent_otps.count()
-        logger.info('OTP RATE CHECK — Email: %s | Recent count: %d', email or '(phone)', recent_count)
         
         if recent_count >= 3:
             logger.warning('OTP RATE LIMIT EXCEEDED — Email: %s | IP: %s', email or phone, ip)
@@ -549,17 +512,16 @@ class OTPRequestView(views.APIView):
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
 
-        # ── INSTRUMENTATION: Log response ──
-        response_log = {
-            'status': 'success',
-            'user_email': email,
-            'purpose': purpose,
-            'channels': list(set(channels)) if email else [],
-            'otp_id': otp.id,
-        }
         if settings.DEBUG:
-            response_log['otp_code'] = otp.otp_code
-        logger.info('OTP REQUEST RESPONSE — HTTP 200 | Response: %s', response_log)
+            response_log = {
+                'status': 'success',
+                'user_email': email,
+                'purpose': purpose,
+                'channels': list(set(channels)) if email else [],
+                'otp_id': otp.id,
+                'otp_code': otp.otp_code,
+            }
+            logger.info('OTP REQUEST RESPONSE — HTTP 200 | Response: %s', response_log)
 
         return Response(response_data)
 
@@ -568,17 +530,11 @@ class OTPRequestView(views.APIView):
 class OTPVerifyView(views.APIView):
     """Verify OTP code."""
     permission_classes = (permissions.AllowAny,)
+    throttle_scope = 'otp'
 
     def post(self, request):
         ip = request.META.get('REMOTE_ADDR', 'unknown')
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
-        
-        # ── INSTRUMENTATION: Log incoming payload (masked) ──
-        logger.info(
-            'OTP VERIFY REQUEST — IP: %s | User-Agent: %s | Payload: %s',
-            ip, user_agent,
-            _mask_payload(dict(request.data.items())),
-        )
         
         serializer = OTPVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -638,6 +594,12 @@ class OTPVerifyView(views.APIView):
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         # Step 2: Verify the code against stored hash (with plaintext fallback)
+        # Security note: The plaintext fallback (otp.otp_code == otp_code) exists for
+        # legacy OTP records created before the hash migration. New OTP records always
+        # store the SHA256 hash via the model's save() method. This dual comparison
+        # ensures backward compatibility without breaking existing user flows.
+        # Once all old OTP records have expired (max 15 min lifetime), this fallback
+        # will naturally become unreachable and can be removed in a future cleanup.
         otp_code_hash = OTP.hash_otp(otp_code)
         is_code_valid = (otp.otp_code_hash == otp_code_hash) or (otp.otp_code == otp_code)
         
@@ -725,6 +687,19 @@ class OTPVerifyView(views.APIView):
                     User.objects.filter(id=user_obj.id).update(**update_fields)
                     _log_db_operation('user_activate', {'user_id': user_obj.id, 'role': user_obj.role})
                     
+                    # ── Auto-create Wallet (via service for legacy balance migration) ──
+                    try:
+                        from payments.services.wallet import get_wallet
+                        get_wallet(user_obj, lock=False)
+                    except Exception:
+                        pass
+                    # ── Auto-create NotificationPreference ──
+                    try:
+                        from notifications.models import NotificationPreference
+                        NotificationPreference.objects.get_or_create(user=user_obj)
+                    except Exception:
+                        pass
+                    
                     # Track registration completion event
                     try:
                         from .models import RegistrationEvent
@@ -799,14 +774,11 @@ class OTPVerifyView(views.APIView):
         except Exception as cleanup_err:
             logger.warning('OTP cleanup error (non-blocking): %s', cleanup_err)
 
-        # ── INSTRUMENTATION: Log response ──
-        log_data = {
-            'status': 'success',
-            'email': email,
-            'next': next_step or '(none)',
-            'has_tokens': 'access' in response_data,
-        }
-        logger.info('OTP VERIFY RESPONSE — HTTP 200 | %s', log_data)
+        if settings.DEBUG:
+            logger.info(
+                'OTP VERIFY RESPONSE — HTTP 200 | Email: %s | Next: %s',
+                email, next_step or '(none)',
+            )
         
         return Response(response_data)
 

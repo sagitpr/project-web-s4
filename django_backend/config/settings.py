@@ -21,10 +21,22 @@ try:
 except ImportError:
     pass
 
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-w4rungio-m4rk3tpl4c3-pr0duct10n-k3y-r3pl4c3-m3-1n-3nv'  # 48 chars, meets 32-byte minimum
-)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true':
+        SECRET_KEY = 'django-insecure-dev-only-key-do-not-use-in-production'
+        import warnings
+        warnings.warn(
+            'DJANGO_SECRET_KEY not set. Using insecure fallback for development only. '
+            'Set DJANGO_SECRET_KEY in your .env file for production.',
+            RuntimeWarning
+        )
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY environment variable is required in production. '
+            'Set a secure random key (at least 50 characters) in your .env or secrets manager.'
+        )
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 # In production (DEBUG=False), secure cookie/SSL/HSTS defaults activate automatically.
 # Set explicit env vars to override — useful when behind a TLS-terminating proxy
@@ -246,8 +258,8 @@ if REDIS_CHANNEL_LAYER_REQUIRED:
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
                 'hosts': [REDIS_URL],
-                'capacity': 1500,
-                'expiry': 60,
+                'capacity': 500,
+                'expiry': 120,
             },
         },
     }
@@ -277,11 +289,11 @@ if _redis_available:
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
                 'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
                 'CONNECTION_POOL_CLASS_KWARGS': {
-                    'max_connections': 8,
-                    'timeout': 3,
+                    'max_connections': 4,
+                    'timeout': 2,
                 },
-                'SOCKET_CONNECT_TIMEOUT': 3,
-                'SOCKET_TIMEOUT': 3,
+                'SOCKET_CONNECT_TIMEOUT': 2,
+                'SOCKET_TIMEOUT': 2,
                 'IGNORE_EXCEPTIONS': True,
             },
             'KEY_PREFIX': 'warungio',
@@ -331,7 +343,7 @@ CELERY_TASK_TIME_LIMIT = 300       # 5 minutes
 # ── Result Backend ──
 # Auto-expire task results after 1 hour to prevent Redis memory growth.
 # 24h (86400s) terlalu lama untuk 1GB RAM — result task tidak perlu disimpan >1 jam.
-CELERY_RESULT_EXPIRES = 3600
+CELERY_RESULT_EXPIRES = 1800  # 30 minutes (was 3600) — faster cleanup for 1GB RAM
 
 # ── Task Acknowledgment ──
 # If True, task is only removed from broker after it completes (not when received).
@@ -349,7 +361,7 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 # Combined with concurrency=1, this effectively manages memory.
 # Worker Concurrency: single worker for 1GB RAM VPS
 CELERY_WORKER_CONCURRENCY = 1
-CELERY_WORKER_MAX_TASKS_PER_CHILD = 500
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 200  # Restart every 200 tasks to prevent memory bloat on 1GB VPS
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 
 # ── Task Serialization ──
@@ -366,7 +378,8 @@ CELERY_TASK_DEFAULT_ROUTING_KEY = 'warungio_default'
 # Store schedule in DB so it persists across container restarts.
 # Requires django-celery-beat to be installed.
 # Fallback to file-based PersistentScheduler if not available.
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = 'celery.beat.PersistentScheduler'
+CELERY_BEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'  # Avoids DB locks on 1GB VPS
 
 # =============================================================================
 # AUTHENTICATION
@@ -409,11 +422,12 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',
-        'otp': '5/minute',
+        'otp': '30/minute',  # 30/min allows legitimate multi-step OTP flows without false throttling (was 5/min)
         'login': '10/minute',
         'admin_login': '5/minute',  # Tighter throttle for admin login security
     },
@@ -490,11 +504,62 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'django_backend' / 'media'
 
 # =============================================================================
+# =============================================================================
+# DOWNLOAD APP SYSTEM — APK & iOS Configuration
+# =============================================================================
+# Centralized configuration for direct app download system.
+# To update: upload new build, then change the version/path below.
+APP_DOWNLOAD_ENABLED = os.environ.get('APP_DOWNLOAD_ENABLED', 'True').lower() == 'true'
+
+# Android APK Configuration
+# Path to the APK file on the server (relative to BASE_DIR or absolute)
+ANDROID_APK_PATH = os.environ.get(
+    'ANDROID_APK_PATH',
+    str(BASE_DIR / 'django_backend' / 'downloads' / 'warungio.apk')
+)
+ANDROID_APK_VERSION = os.environ.get('ANDROID_APK_VERSION', '1.0.0')
+ANDROID_APK_BUILD_NUMBER = os.environ.get('ANDROID_APK_BUILD_NUMBER', '1')
+ANDROID_APK_PACKAGE_NAME = os.environ.get(
+    'ANDROID_APK_PACKAGE_NAME',
+    'com.warungio.marketplace'
+)
+# SHA256 hash of the APK for integrity verification (empty = skip check)
+ANDROID_APK_SHA256 = os.environ.get('ANDROID_APK_SHA256', '')
+
+# iOS Configuration (future distribution — TestFlight, App Store, or OTA manifest)
+IOS_IPA_PATH = os.environ.get('IOS_IPA_PATH', '')
+IOS_IPA_VERSION = os.environ.get('IOS_IPA_VERSION', '1.0.0')
+IOS_IPA_BUILD_NUMBER = os.environ.get('IOS_IPA_BUILD_NUMBER', '1')
+IOS_BUNDLE_ID = os.environ.get('IOS_BUNDLE_ID', 'com.warungio.marketplace')
+# For Apple App Store distribution, set the URL here. When configured,
+# iOS users will be redirected here instead of downloading the IPA.
+IOS_DISTRIBUTION_URL = os.environ.get('IOS_DISTRIBUTION_URL', '')
+# For OTA (Over-The-Air) enterprise distribution via manifest plist
+IOS_MANIFEST_URL = os.environ.get('IOS_MANIFEST_URL', '')
+IOS_MANIFEST_PATH = os.environ.get(
+    'IOS_MANIFEST_PATH',
+    str(BASE_DIR / 'django_backend' / 'downloads' / 'manifest.plist')
+)
+
+# General download settings
+DOWNLOAD_ANALYTICS_ENABLED = os.environ.get(
+    'DOWNLOAD_ANALYTICS_ENABLED', 'True'
+).lower() == 'true'
+DOWNLOAD_CHUNK_SIZE = 8192  # 8KB chunks for streaming
+DOWNLOAD_CACHE_SECONDS = 3600  # 1 hour cache for download metadata
+
+# In production, enable X-Accel-Redirect so nginx serves the file directly
+# without passing through Django's Python process (more efficient for large APKs).
+USE_X_ACCEL_REDIRECT = os.environ.get(
+    'USE_X_ACCEL_REDIRECT', 'False'
+).lower() == 'true'
+
+# =============================================================================
 # FILE UPLOAD SECURITY
 # =============================================================================
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2097152  # 2MB (reduced from 5MB for 1GB RAM)
 FILE_UPLOAD_PERMISSIONS = 0o644
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2097152  # 2MB (reduced from 5MB for 1GB RAM)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100
 
 ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
@@ -892,10 +957,10 @@ VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'admin@warungio.com')
 # Cooldown interval for processing notification queue (seconds)
 ENGAGEMENT_QUEUE_PROCESS_INTERVAL = int(os.environ.get('ENGAGEMENT_QUEUE_PROCESS_INTERVAL', 30))
 # Maximum notifications to process per queue run
-ENGAGEMENT_QUEUE_BATCH_SIZE = int(os.environ.get('ENGAGEMENT_QUEUE_BATCH_SIZE', 50))
+ENGAGEMENT_QUEUE_BATCH_SIZE = int(os.environ.get('ENGAGEMENT_QUEUE_BATCH_SIZE', 20))  # Reduced for 1GB VPS
 # Batch profile update interval (hours)
 ENGAGEMENT_PROFILE_UPDATE_INTERVAL = int(os.environ.get('ENGAGEMENT_PROFILE_UPDATE_INTERVAL', 6))
 # Max at-risk users to scan per run
-ENGAGEMENT_AT_RISK_SCAN_LIMIT = int(os.environ.get('ENGAGEMENT_AT_RISK_SCAN_LIMIT', 50))
+ENGAGEMENT_AT_RISK_SCAN_LIMIT = int(os.environ.get('ENGAGEMENT_AT_RISK_SCAN_LIMIT', 25))  # Reduced for 1GB VPS
 # Min inactive days before marking user as at-risk
 ENGAGEMENT_MIN_INACTIVE_DAYS = int(os.environ.get('ENGAGEMENT_MIN_INACTIVE_DAYS', 7))

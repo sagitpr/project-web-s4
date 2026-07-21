@@ -21,145 +21,85 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 # ── Periodic task schedule (beat) ──
-@app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    """Register periodic tasks for Celery Beat.
-    Import tasks inside the function to avoid circular imports.
-    """
-    from orders.tasks import (
-        poll_tracking_batch,
-        poll_near_complete_tracking,
-    )
-    from accounts.tasks import clean_expired_otps_task, clean_expired_blacklisted_tokens_task
-    from inventory.tasks import clean_expired_notifications_task
+# Using string task names instead of imported callables ensures Celery resolves
+# them lazily from the task registry (populated by autodiscover_tasks above).
+# This avoids 'Task never registered' errors in eager mode (CELERY_TASK_ALWAYS_EAGER=True)
+# where on_after_configure fires before the registry is fully populated.
+app.conf.beat_schedule = {
+    # ── Courier Tracking Polling ──
+    'poll-tracking-shipped': {
+        'task': 'orders.tasks.poll_tracking_batch',
+        'schedule': crontab(minute='*/30'),
+        'options': {'queue': 'default'},
+    },
+    'poll-tracking-near-complete': {
+        'task': 'orders.tasks.poll_near_complete_tracking',
+        'schedule': crontab(minute='*/5'),
+        'options': {'queue': 'default'},
+    },
 
-    # Poll tracking for shipped orders every 30 minutes
-    sender.add_periodic_task(
-        crontab(minute='*/30'),
-        poll_tracking_batch.s(),
-        name='Poll tracking status for all shipped orders',
-    )
+    # ── Cleanup Tasks ──
+    'clean-expired-otps': {
+        'task': 'accounts.tasks.clean_expired_otps_task',
+        'schedule': crontab(hour=2, minute=0),
+    },
+    'clean-old-notifications': {
+        'task': 'inventory.tasks.clean_expired_notifications_task',
+        'schedule': crontab(hour=3, minute=0),
+    },
+    'clean-expired-jwt-blacklist': {
+        'task': 'accounts.tasks.clean_expired_blacklisted_tokens_task',
+        'schedule': crontab(hour=4, minute=0),
+    },
 
-    # Quick-poll for orders nearing completion (every 5 minutes)
-    sender.add_periodic_task(
-        crontab(minute='*/5'),
-        poll_near_complete_tracking.s(),
-        name='Poll tracking for near-complete orders (every 5min)',
-    )
+    # ── Engagement Engine ──
+    'process-notification-queue': {
+        'task': 'engagement.tasks.process_notification_queue_task',
+        'schedule': 30.0,  # seconds
+    },
+    'batch-update-profiles': {
+        'task': 'engagement.tasks.batch_update_profiles_task',
+        'schedule': crontab(hour='*/6', minute=0),
+    },
+    'scan-at-risk-users': {
+        'task': 'engagement.tasks.scan_at_risk_users_task',
+        'schedule': crontab(hour='8,20', minute=0),
+    },
+    'detect-inactive-users': {
+        'task': 'engagement.tasks.detect_inactive_users_task',
+        'schedule': crontab(hour=2, minute=30),
+    },
+    'aggregate-notification-analytics': {
+        'task': 'engagement.tasks.aggregate_notification_analytics_task',
+        'schedule': crontab(hour=1, minute=0),
+    },
+    'update-optimal-notification-hours': {
+        'task': 'engagement.tasks.update_optimal_notification_hours_task',
+        'schedule': crontab(hour=5, minute=0),
+    },
+    'schedule-campaigns': {
+        'task': 'engagement.tasks.schedule_campaigns_task',
+        'schedule': crontab(minute='*/5'),
+    },
+    'clean-expired-queue-items': {
+        'task': 'engagement.tasks.clean_expired_queue_items_task',
+        'schedule': crontab(hour=3, minute=30),
+    },
+    'clean-old-behavior-events': {
+        'task': 'engagement.tasks.clean_old_behavior_events_task',
+        'schedule': crontab(hour=4, minute=0, day_of_week=0),
+    },
 
-    # Clean expired OTPs daily at 2 AM
-    sender.add_periodic_task(
-        crontab(hour=2, minute=0),
-        clean_expired_otps_task.s(),
-        name='Clean expired OTP records (daily)',
-    )
-
-    # Clean old notifications daily at 3 AM
-    sender.add_periodic_task(
-        crontab(hour=3, minute=0),
-        clean_expired_notifications_task.s(),
-        name='Clean old notifications and batches (daily)',
-    )
-
-    # Clean expired JWT blacklist tokens daily at 4 AM
-    sender.add_periodic_task(
-        crontab(hour=4, minute=0),
-        clean_expired_blacklisted_tokens_task.s(),
-        name='Clean expired blacklisted JWT tokens (daily)',
-    )
-
-    # ── Engagement Engine Periodic Tasks ──
-    from engagement.tasks import (
-        process_notification_queue_task,
-        batch_update_profiles_task,
-        scan_at_risk_users_task,
-        detect_inactive_users_task,
-        aggregate_notification_analytics_task,
-        update_optimal_notification_hours_task,
-        schedule_campaigns_task,
-        clean_expired_queue_items_task,
-        clean_old_behavior_events_task,
-    )
-
-    # Process notification queue every 30 seconds
-    sender.add_periodic_task(
-        30.0,  # seconds
-        process_notification_queue_task.s(),
-        name='Process engagement notification queue (30s)',
-    )
-
-    # Batch update user profiles every 6 hours
-    sender.add_periodic_task(
-        crontab(hour='*/6', minute=0),
-        batch_update_profiles_task.s(),
-        name='Batch update user engagement profiles (6h)',
-    )
-
-    # Scan at-risk users daily at 8 AM and 8 PM
-    sender.add_periodic_task(
-        crontab(hour='8,20', minute=0),
-        scan_at_risk_users_task.s(),
-        name='Scan at-risk users for re-engagement (daily)',
-    )
-
-    # Detect inactive users daily at 2 AM
-    sender.add_periodic_task(
-        crontab(hour=2, minute=30),
-        detect_inactive_users_task.s(),
-        name='Detect inactive users and mark risk (daily)',
-    )
-
-    # Aggregate notification analytics daily at 1 AM
-    sender.add_periodic_task(
-        crontab(hour=1, minute=0),
-        aggregate_notification_analytics_task.s(),
-        name='Aggregate notification analytics (daily)',
-    )
-
-    # Update optimal notification hours daily at 5 AM
-    sender.add_periodic_task(
-        crontab(hour=5, minute=0),
-        update_optimal_notification_hours_task.s(),
-        name='Update optimal notification hours (daily)',
-    )
-
-    # Check for campaigns to execute every 5 minutes
-    sender.add_periodic_task(
-        crontab(minute='*/5'),
-        schedule_campaigns_task.s(),
-        name='Schedule pending campaigns (every 5min)',
-    )
-
-    # Clean expired queue items daily at 3:30 AM
-    sender.add_periodic_task(
-        crontab(hour=3, minute=30),
-        clean_expired_queue_items_task.s(),
-        name='Clean expired notification queue items (daily)',
-    )
-
-    # Clean old behavior events weekly on Sunday at 4 AM
-    sender.add_periodic_task(
-        crontab(hour=4, minute=0, day_of_week=0),
-        clean_old_behavior_events_task.s(),
-        name='Clean old behavior events (weekly)',
-    )
-
-    # ── Payment Reconciliation Tasks ──
-    from payments.tasks import reconcile_orphan_webhooks_task, verify_pending_payments_task
-
-    # Reconcile orphan webhooks every 15 minutes
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        reconcile_orphan_webhooks_task.s(),
-        name='Reconcile orphan Midtrans webhooks (15min)',
-    )
-
-    # Verify pending payments every 30 minutes
-    sender.add_periodic_task(
-        crontab(minute='*/30'),
-        verify_pending_payments_task.s(),
-        name='Verify pending payment status (30min)',
-    )
+    # ── Payment Reconciliation ──
+    'reconcile-orphan-webhooks': {
+        'task': 'payments.tasks.reconcile_orphan_webhooks_task',
+        'schedule': crontab(minute='*/15'),
+    },
+    'verify-pending-payments': {
+        'task': 'payments.tasks.verify_pending_payments_task',
+        'schedule': crontab(minute='*/30'),
+    },
+}
 
 
 @app.task(bind=True, ignore_result=True)

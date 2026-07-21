@@ -137,11 +137,40 @@ if email and password:
 fi
 
 # ------------------------------------------------------------------
-# START Daphne ASGI server (foreground — container stays alive)
+# START ASGI server (foreground — container stays alive)
 # ------------------------------------------------------------------
-echo "Starting Daphne on 0.0.0.0:${PORT}..."
+# Uses Gunicorn with Uvicorn worker for better connection handling:
+# - 1 worker (matches 1 vCPU — no benefit from more)
+# - 2 threads per worker for concurrent I/O handling
+# - 1000 max requests per worker before restart (prevents memory leaks)
+# - 120s timeout (reduced from default to prevent connection pileup on 1GB VPS)
+# - --worker-connections=256 ensures we don't exceed DB connection pool
+# - --keep-alive=2 aggressively closes idle connections (free up memory)
+#
+# Note: Daphne-only mode was replaced by Gunicorn+Uvicorn because:
+#   - Gunicorn provides worker lifecycle management (max_requests)
+#   - Uvicorn provides async ASGI capability identical to Daphne
+#   - Both support WebSocket via ASGI
+#   - Gunicorn's --max-requests prevents memory leaks without container restart
+#
+echo "Starting Gunicorn+Uvicorn on 0.0.0.0:${PORT}..."
 echo "================================================"
 echo "  Warungio running on 0.0.0.0:${PORT}"
 echo "================================================"
 
-exec daphne -b 0.0.0.0 -p ${PORT} config.asgi:application
+exec gunicorn config.asgi:application \
+    -k uvicorn.workers.UvicornWorker \
+    -w 1 \
+    --threads 2 \
+    --worker-connections 256 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --timeout 120 \
+    --keep-alive 2 \
+    --bind 0.0.0.0:${PORT} \
+    --access-logfile '-' \
+    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"' \
+    --error-logfile '-' \
+    --log-level warning \
+    --capture-output \
+    --enable-stdio-inheritance

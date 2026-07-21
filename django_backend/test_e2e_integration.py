@@ -114,7 +114,7 @@ class TestCompleteBuyerSellerJourney(TestCase):
         }, format='json')
         self.assertEqual(resp.status_code, 200, f'OTP verify failed: {resp.data}')
         self.assertTrue(resp.data['verified'])
-        self.assertEqual(resp.data['next_endpoint'], '/auth/login-seller/')
+        self.assertEqual(resp.data['next_endpoint'], '/seller/dashboard/')
 
         # Verify user activated
         seller_user.refresh_from_db()
@@ -333,7 +333,7 @@ class TestCompleteBuyerSellerJourney(TestCase):
         mock_token = 'mock-snap-token-' + str(order_id)
         mock_transaction_id = 'E2E-TRX-' + str(order_id)
 
-        with patch('payments.services.midtrans.create_snap_token') as mock_snap:
+        with patch('payments.views.create_snap_token') as mock_snap:
             mock_snap.return_value = {
                 'success': True,
                 'token': mock_token,

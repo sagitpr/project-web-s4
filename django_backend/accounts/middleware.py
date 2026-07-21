@@ -36,10 +36,15 @@ Routing rules:
   - /health/ is always public
 """
 
+import logging
+import time
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
 from django.urls import resolve, Resolver404
+from django.conf import settings
 import re
+
+logger = logging.getLogger('django_backend.middleware')
 
 
 class CSRFExemptAPIMiddleware(MiddlewareMixin):
@@ -56,17 +61,53 @@ class CSRFExemptAPIMiddleware(MiddlewareMixin):
 
 class RateLimitMiddleware:
     """
-    Rate limiting middleware for brute force protection.
-    Delegates to accounts.services.rate_limit_service.
-    Currently handles the X-Forwarded-For parsing.
+    Request monitoring middleware for observability.
+
+    Logs high-level request metrics: path, method, IP, and response status.
+    In DEBUG mode, logs all requests. In production, only logs slow requests
+    (>2s) to help identify performance bottlenecks on the VPS without filling
+    logs with every request.
+
+    Actual rate limiting is handled by DRF's ScopedRateThrottle classes
+    (AnonRateThrottle, UserRateThrottle, ScopedRateThrottle) configured in
+    settings.REST_FRAMEWORK.DEFAULT_THROTTLE_RATES, which provide per-IP
+    and per-user throttling at the API view level.
+
+    Note: This middleware does NOT implement IP-based rate limiting because:
+    - DRF's throttle classes already handle this at the view level
+    - Nginx (front proxy) provides additional rate limiting before requests
+      reach Django
+    - Implementing IP-based limiting here would duplicate DRF's functionality
+      and add unnecessary overhead on every request
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Rate limiting logic goes here (future enhancement)
-        return self.get_response(request)
+        # Only monitor API and page requests (skip static files)
+        path = request.path
+        if path.startswith(('/static/', '/media/', '/assets/')):
+            return self.get_response(request)
+
+        start_time = time.time()
+        response = self.get_response(request)
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Log slow requests (>2s) in production, all requests in debug
+        if duration_ms > 2000:
+            logger.warning(
+                'SLOW REQUEST — %s %s | Status: %s | Duration: %.0fms | IP: %s',
+                request.method, path, response.status_code, duration_ms,
+                request.META.get('REMOTE_ADDR', 'unknown'),
+            )
+        elif settings.DEBUG and duration_ms > 500:
+            logger.info(
+                'REQUEST — %s %s | Status: %s | Duration: %.0fms',
+                request.method, path, response.status_code, duration_ms,
+            )
+
+        return response
 
 
 # ── Role-based route patterns ──

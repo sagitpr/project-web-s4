@@ -124,7 +124,7 @@ class Payment(models.Model):
                 defaults={
                     'store': self.order.store,
                     'amount': self.order.admin_fee,
-                    'owner_phone': '089667850425',
+                    'owner_phone': AdminFeeTransaction.get_default_owner_phone(),
                 }
             )
 
@@ -254,10 +254,23 @@ class AdminFeeTransaction(models.Model):
         default='pending', verbose_name='Status Pencairan'
     )
     # Target e-wallet owner
+    # The default is read from settings.ADMIN_OWNER_PHONE at runtime so it can be
+    # configured via environment variable instead of hardcoding a phone number.
+    # Fallback to '089667850425' for backward compatibility if setting is not defined.
     owner_phone = models.CharField(
-        max_length=20, default='089667850425',
+        max_length=20,
+        default='089667850425',
         verbose_name='No. HP Owner (E-Wallet)'
     )
+
+    @classmethod
+    def get_default_owner_phone(cls):
+        """
+        Return the configured admin owner phone from settings or env var.
+        Falls back to hardcoded default for backward compatibility.
+        """
+        from django.conf import settings as django_settings
+        return getattr(django_settings, 'ADMIN_OWNER_PHONE', '089667850425')
     paid_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

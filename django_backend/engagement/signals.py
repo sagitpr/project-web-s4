@@ -281,7 +281,7 @@ def _connect_payment_signals():
                     {
                         'order_id': instance.order_id,
                         'amount': float(instance.amount or 0),
-                        'method': instance.payment_method or '',
+                        'method': instance.payment_type or '',
                     },
                     value=float(instance.amount or 0),
                     source='system'

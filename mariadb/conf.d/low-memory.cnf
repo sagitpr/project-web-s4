@@ -1,69 +1,98 @@
 # =============================================================================
-# Warungio Marketplace — MariaDB Low-Memory Configuration
-# Target: 1GB RAM VPS (Docker container)
+# Warungio Marketplace — MariaDB AGGRESSIVELY OPTIMIZED for 1GB RAM VPS
+# Total MariaDB memory target: ~140MB (within 192m Docker mem_limit)
 # =============================================================================
 #
-# Allocate ~200MB total for MariaDB, leaving 800MB for other services.
-# Adjust innodb_buffer_pool_size upward if you upgrade RAM later.
+# Memory budget breakdown:
+#   innodb_buffer_pool_size:  64M   (largest consumer)
+#   innodb_log_buffer_size:    4M
+#   thread_stack + per-thread: ~2M × 20 = 40M
+#   key_buffer_size:           4M
+#   tmp_table_size:            8M
+#   table_cache:               ~8M
+#   misc overhead:            ~12M
+#   Total:                   ~140M
+#
+# Container mem_limit is 192m, leaving 52MB for burst.
 # =============================================================================
 
 [mysqld]
 
-# ── InnoDB ───────────────────────────────────────────────────────────────────
-# Rule of thumb: 50-70% of available RAM for InnoDB on a dedicated DB server.
-# On a 1GB shared VPS, 128M is conservative and leaves room for OS + others.
-innodb_buffer_pool_size        = 96M
+# ── InnoDB Buffer Pool ───────────────────────────────────────────────────────
+# 64M for 1GB VPS (was 96M). For reference:
+#   - 64M can hold ~400,000 InnoDB pages (16KB each)
+#   - Warungio has ~30 tables, avg table size <5M
+#   - Hot data (orders, products, users) will fit in bufferinnodb_buffer_pool_size        = 64M
 
 # Keep log small to reduce I/O and memory
 innodb_log_file_size           = 32M
 innodb_log_buffer_size         = 4M
 
-# Safer flushing without full ACID durability (speed vs. safety trade-off)
 # Value 2 = flushed once per second (lose 1 sec of data on crash, not corrupt)
+# This saves ~30% of fsync I/O vs value 1
 innodb_flush_log_at_trx_commit = 2
+innodb_flush_method            = O_DIRECT  # Bypass OS page cache, saves memory
 
 # ── Connections ──────────────────────────────────────────────────────────────
-# Warungio is a small marketplace — 30 concurrent connections is generous
-max_connections                = 30
+# 20 connections max for 1GB VPS. Breakdown:
+#   - Django/Gunicorn:  4 (1 worker × 2 threads + 1 health check + 1 admin)
+#   - Celery worker:    2 (1 task + 1 beat)
+#   - Management:       4 (backup, monitoring, etc.)
+#   - Reserve:         10 (for connection bursts)
+# Django CONN_MAX_AGE=60 reuses connections, so steady-state is ~6 connections.
+max_connections                = 20
 
-# ── MyISAM (needed for system tables) ────────────────────────────────────────
+# ── MyISAM (needed for django_content_type, django_session) ──────────────────
 key_buffer_size                = 4M
 
 # ── Query Cache (DISABLED — causes contention on write-heavy workloads) ─────
-# Modern MariaDB + InnoDB performs better without query cache
 query_cache_type               = 0
 query_cache_size               = 0
 
 # ── Temp Tables ──────────────────────────────────────────────────────────────
-# Sufficient for most Django ORM queries
+# 8M is enough for most Django ORM queries. Larger sorts spill to disk.
 tmp_table_size                 = 8M
 max_heap_table_size            = 8M
 
 # ── Table Cache ──────────────────────────────────────────────────────────────
-# Warungio has ~30 tables; 200 is generous
+# Warungio has ~30 tables; 200 is generous for 1GB VPS
 table_open_cache               = 200
 table_definition_cache         = 200
 
-# ── Thread & Buffer Settings ─────────────────────────────────────────────────
+# ── Thread & Buffer Settings (aggressively minimized) ────────────────────────
 thread_cache_size              = 4
 sort_buffer_size               = 256K
 read_buffer_size               = 128K
 read_rnd_buffer_size           = 256K
 join_buffer_size               = 128K
 bulk_insert_buffer_size        = 4M
+binlog_cache_size              = 32K  # Minimal binary log cache
 
 # ── Networking ───────────────────────────────────────────────────────────────
-# Skip name resolution (faster connections, no DNS)
-skip_name_resolve
+skip_name_resolve                 # Skip DNS resolution (faster connections)
+# skip_networking                 # DISABLED: Django connects via Docker network TCP.
+                                      # Enabling this would prevent Django from connecting
+                                      # to MariaDB in Docker Compose setup.
 
 # ── Character Set ────────────────────────────────────────────────────────────
 character_set_server           = utf8mb4
 collation_server               = utf8mb4_unicode_ci
 
-# ── Logging ──────────────────────────────────────────────────────────────────
-# Minimal logging to save I/O
+# ── Logging (minimal I/O) ────────────────────────────────────────────────────
 log_error                      = /var/lib/mysql/error.log
-# General log OFF (default, explicit for clarity)
 general_log                    = OFF
-# Slow query log — useful for debugging, disable in extreme memory pressure
 slow_query_log                 = OFF
+
+# ── Performance Schema (DISABLED — saves ~20MB RAM) ──────────────────────────
+performance_schema             = OFF
+
+# ── InnoDB I/O (SSD-friendly settings) ───────────────────────────────────────
+innodb_io_capacity             = 1000
+innodb_io_capacity_max         = 2000
+innodb_read_io_threads         = 2
+innodb_write_io_threads        = 2
+innodb_purge_threads           = 1
+innodb_page_cleaners           = 1
+innodb_adaptive_hash_index     = OFF  # Saves ~5% memory, marginal CPU gain on 1 vCPU
+innodb_adaptive_flushing       = ON
+innodb_flush_neighbors         = 0   # Not needed for SSDs

@@ -270,10 +270,73 @@ input, textarea, select {
 .footer {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  padding: var(--space-6) var(--space-6);
-  text-align: center;
+  padding: var(--space-4) var(--space-6);
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+}
+
+.footer-inner {
+  max-width: var(--content-max-width, 1280px);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.footer-download-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.footer-badge:hover {
+  background: var(--color-brand);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.footer-badge svg {
+  flex-shrink: 0;
+}
+
+.footer-copy {
+  color: var(--color-text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-3);
+  }
+  .footer-download-badges {
+    justify-content: center;
+  }
 }
 
 /* ── Value Props Strip ── */

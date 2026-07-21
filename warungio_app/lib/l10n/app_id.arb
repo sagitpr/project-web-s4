@@ -1,0 +1,160 @@
+{
+  "@@locale": "id",
+  "@@last_modified": "2026-07-21",
+
+  "app_name": "Warungio",
+  "@app_name": {
+    "description": "The name of the application"
+  },
+
+  "splash_title": "Warungio",
+  "@splash_title": {
+    "description": "Title text on the splash screen"
+  },
+  "splash_subtitle": "Marketplace untuk Semua",
+  "@splash_subtitle": {
+    "description": "Subtitle text on the splash screen"
+  },
+
+  "onboarding_title_1": "Selamat Datang di Warungio",
+  "@onboarding_title_1": {
+    "description": "Onboarding screen 1 title"
+  },
+  "onboarding_desc_1": "Temukan berbagai produk kebutuhan sehari-hari dari ribuan penjual terpercaya.",
+  "@onboarding_desc_1": {
+    "description": "Onboarding screen 1 description"
+  },
+  "onboarding_title_2": "Belanja Mudah & Aman",
+  "@onboarding_title_2": {
+    "description": "Onboarding screen 2 title"
+  },
+  "onboarding_desc_2": "Nikmati pengalaman belanja online yang mudah, aman, dan terpercaya dengan sistem pembayaran terintegrasi.",
+  "@onboarding_desc_2": {
+    "description": "Onboarding screen 2 description"
+  },
+  "onboarding_title_3": "Jualan Online Jadi Mudah",
+  "@onboarding_title_3": {
+    "description": "Onboarding screen 3 title"
+  },
+  "onboarding_desc_3": "Jadi penjual dan kelola toko online Anda dengan fitur lengkap termasuk OCR, AI, dan analitik real-time.",
+  "@onboarding_desc_3": {
+    "description": "Onboarding screen 3 description"
+  },
+
+  "login_title": "Masuk",
+  "@login_title": {
+    "description": "Login screen title"
+  },
+  "login_email_label": "Email",
+  "login_password_label": "Kata Sandi",
+  "login_button": "Masuk",
+  "login_forgot_password": "Lupa kata sandi?",
+  "login_no_account": "Belum punya akun? ",
+  "login_register_link": "Daftar Sekarang",
+  "login_error_invalid": "Email atau kata sandi salah.",
+  "login_error_network": "Gagal terhubung ke server. Periksa koneksi internet Anda.",
+
+  "register_title": "Daftar Akun",
+  "@register_title": {
+    "description": "Register screen title"
+  },
+  "register_full_name_label": "Nama Lengkap",
+  "register_phone_label": "Nomor Telepon",
+  "register_role_buyer": "Pembeli",
+  "register_role_seller": "Penjual",
+  "register_button": "Daftar",
+  "register_have_account": "Sudah punya akun? ",
+  "register_login_link": "Masuk",
+
+  "otp_title": "Verifikasi OTP",
+  "otp_subtitle": "Masukkan kode OTP yang dikirim ke email Anda",
+  "otp_code_label": "Kode OTP",
+  "otp_verify_button": "Verifikasi",
+  "otp_resend": "Kirim ulang kode",
+  "otp_resend_success": "Kode OTP berhasil dikirim ulang",
+
+  "home_title": "Beranda",
+  "home_search_hint": "Cari produk, toko, atau kategori...",
+  "home_categories": "Kategori",
+  "home_promo": "Promo Spesial",
+  "home_recommended": "Rekomendasi Untukmu",
+
+  "marketplace_title": "Marketplace",
+  "marketplace_all_stores": "Semua Toko",
+
+  "product_detail_title": "Detail Produk",
+  "product_add_to_cart": "Tambah ke Keranjang",
+  "product_buy_now": "Beli Sekarang",
+  "product_seller": "Penjual",
+  "product_category": "Kategori",
+  "product_stock": "Stok",
+  "product_description": "Deskripsi",
+
+  "search_title": "Cari",
+  "search_hint": "Cari produk...",
+
+  "cart_title": "Keranjang",
+  "cart_empty": "Keranjang belanja Anda kosong",
+  "cart_total": "Total",
+  "cart_checkout": "Checkout",
+  "cart_remove": "Hapus",
+
+  "checkout_title": "Checkout",
+  "checkout_shipping_address": "Alamat Pengiriman",
+  "checkout_payment_method": "Metode Pembayaran",
+  "checkout_order_summary": "Ringkasan Pesanan",
+  "checkout_place_order": "Buat Pesanan",
+
+  "orders_title": "Pesanan Saya",
+  "orders_empty": "Belum ada pesanan",
+  "orders_pending": "Menunggu",
+  "orders_processing": "Diproses",
+  "orders_shipped": "Dikirim",
+  "orders_completed": "Selesai",
+  "orders_cancelled": "Dibatalkan",
+
+  "wallet_title": "Dompet",
+  "wallet_balance": "Saldo",
+  "wallet_top_up": "Top Up",
+  "wallet_withdraw": "Tarik Dana",
+  "wallet_transactions": "Riwayat Transaksi",
+
+  "notifications_title": "Notifikasi",
+  "notifications_empty": "Tidak ada notifikasi",
+
+  "profile_title": "Profil",
+  "profile_my_orders": "Pesanan Saya",
+  "profile_notifications": "Notifikasi",
+  "profile_settings": "Pengaturan",
+  "profile_logout": "Keluar",
+  "profile_logout_confirm": "Apakah Anda yakin ingin keluar?",
+
+  "seller_dashboard_title": "Dashboard Penjual",
+  "seller_dashboard_total_sales": "Total Penjualan",
+  "seller_dashboard_total_orders": "Total Pesanan",
+  "seller_dashboard_total_products": "Total Produk",
+  "seller_dashboard_pending_orders": "Pesanan Menunggu",
+
+  "settings_title": "Pengaturan",
+  "settings_theme": "Tema",
+  "settings_theme_light": "Terang",
+  "settings_theme_dark": "Gelap",
+  "settings_theme_system": "Sistem",
+  "settings_language": "Bahasa",
+  "settings_about": "Tentang Aplikasi",
+  "settings_version": "Versi",
+
+  "general_save": "Simpan",
+  "general_cancel": "Batal",
+  "general_confirm": "Konfirmasi",
+  "general_loading": "Memuat...",
+  "general_error": "Terjadi kesalahan",
+  "general_retry": "Coba Lagi",
+  "general_no_data": "Tidak ada data",
+  "general_search": "Cari",
+  "general_filter": "Filter",
+  "general_sort": "Urutkan",
+  "general_next": "Selanjutnya",
+  "general_skip": "Lewati",
+  "general_done": "Selesai"
+}

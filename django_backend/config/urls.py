@@ -86,6 +86,9 @@ urlpatterns = [
     # AI Intelligence Platform
     path(f'{api_prefix}intelligence/', include('ai_intelligence.urls')),
 
+    # Download App (direct APK/IPA serving)
+    path('download/', include('core.download_urls')),
+
     # JWT Endpoints
     path(f'{api_prefix}token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
     path(f'{api_prefix}token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),

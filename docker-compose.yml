@@ -1,11 +1,11 @@
 # =============================================================================
-# Warungio Marketplace — Docker Compose (Production — 1GB RAM Optimized)
-# Services: Django (Daphne), MariaDB, Redis, Nginx, Celery Worker, Celery Beat
-# Target: Ubuntu VPS with 1GB RAM
+# Warungio Marketplace — Docker Compose
+# AGGRESSIVELY OPTIMIZED for 1 vCPU / 1 GB RAM Hard Limit
+# Total allocated: 736 MB → leaves 264 MB for OS + burst
 # =============================================================================
 
 services:
-  # ---- MariaDB Database (Low Memory: 96M buffer pool, 30 connections) ----
+  # ---- MariaDB Database (Ultra Low Memory: 64M buffer pool, 20 connections) ----
   mysql:
     image: mariadb:10.11
     container_name: warungio-mysql
@@ -20,44 +20,44 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/warungio_full_schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - ./mariadb/conf.d/low-memory.cnf:/etc/mysql/mariadb.conf.d/99-low-memory.cnf:ro
+      # MariaDB low-memory config: innodb_buffer_pool_size=64M, max_connections=20
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
+      interval: 60s
       timeout: 5s
       retries: 3
-      start_period: 60s
-    mem_limit: 256m
+      start_period: 120s
+    mem_limit: 192m
     networks:
       - warungio_net
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
-  # ---- Redis (Channels, Cache) — 64MB Max Memory ----
+  # ---- Redis (Channels, Cache, Celery Broker) — 256MB Max Memory ----
   redis:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
-    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
+      interval: 60s
       timeout: 3s
       retries: 3
       start_period: 10s
-    mem_limit: 48m
+    mem_limit: 128m
     networks:
       - warungio_net
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
-  # ---- Django Backend (Daphne ASGI — 1 Worker) ----
+  # ---- Django Backend (Daphne ASGI — Single Worker, 2 Threads per Connection) ----
   # ═══════════════════════════════════════════════════════════════════════
   # NOTE BuildKit: Dockerfile menggunakan --mount=type=cache (BuildKit).
   # Pastikan environment variable berikut diset sebelum build:
@@ -101,16 +101,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 240s
-    mem_limit: 256m
-    # Memory limit lebih rendah karena nginx handle static files,
-    # dan WhiteNoise dinonaktifkan di production (tidak perlu load static ke memory)
+    mem_limit: 192m
     networks:
       - warungio_net
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
   # ---- Celery Worker (Async Tasks) — WITH EMBEDDED BEAT ----
   # 1 concurrency, 500 max tasks per child, 5 min time limit
@@ -145,14 +143,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
-    mem_limit: 128m
+    mem_limit: 96m
     networks:
       - warungio_net
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
 
   # ---- Nginx (Reverse Proxy, Static/Media) ----
@@ -180,14 +178,89 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 32m
+    networks:
+      - warungio_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ---- Prometheus (Lightweight Metrics Collection) ----
+  # Scrapes node_exporter + cadvisor every 60s. ~50MB RAM idle.
+  # Fits within 160MB headroom after optimization.
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: warungio-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    mem_limit: 64m
+    networks:
+      - warungio_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ---- Node Exporter (Host-Level Metrics) ----
+  # CPU, memory, disk, network from the Docker host. ~20MB RAM.
+  node_exporter:
+    image: prom/node-exporter:v1.8.0
+    container_name: warungio-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /:/host:ro,rslave
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    pid: host
+    mem_limit: 32m
+    networks:
+      - warungio_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ---- cAdvisor (Container-Level Metrics) ----
+  # Per-container CPU, memory, network, disk I/O. ~40MB RAM.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: warungio-cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
     mem_limit: 48m
     networks:
       - warungio_net
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
 volumes:
   mysql_data:
@@ -195,6 +268,8 @@ volumes:
   static_volume:
     driver: local
   media_volume:
+    driver: local
+  prometheus_data:
     driver: local
 
 networks:

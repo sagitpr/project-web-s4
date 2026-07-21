@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warungio Brand Colors -->
+    <color name="warungio_primary">#FF6C3B</color>
+    <color name="warungio_primary_dark">#E55A2B</color>
+    <color name="warungio_secondary">#2D3436</color>
+    <color name="warungio_accent">#00B894</color>
+
+    <!-- Launch Background -->
+    <color name="launch_background">#FF6C3B</color>
+
+    <!-- Splash Colors -->
+    <color name="splash_background">#FF6C3B</color>
+    <color name="splash_text">#FFFFFFFF</color>
+
+    <!-- Notification Channel Colors -->
+    <color name="notification_color">#FF6C3B</color>
+</resources>

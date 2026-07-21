@@ -167,6 +167,18 @@ def verify_registration_otp(
     user.registration_step = 'otp'
     user.save(update_fields=['is_verified', 'registration_step'])
 
+    # ── Auto-create Wallet (via service for legacy balance migration) ──
+    try:
+        from payments.services.wallet import get_wallet
+        get_wallet(user, lock=False)
+    except Exception:
+        pass
+    try:
+        from notifications.models import NotificationPreference
+        NotificationPreference.objects.get_or_create(user=user)
+    except Exception:
+        pass
+
     # Track event
     _track_event(user, 'otp_verified', ip_address, user_agent)
 

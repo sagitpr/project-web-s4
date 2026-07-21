@@ -1,0 +1,51 @@
+# =============================================================================
+# Warungio Marketplace — Prometheus Scrape Configuration
+# OPTIMIZED for 1 vCPU / 1 GB RAM VPS
+# Scrape interval: 60s (reduced from default 15s to save CPU/memory)
+# Retention: 7 days (reduced from default 15d to save disk)
+# =============================================================================
+
+global:
+  scrape_interval:     60s
+  evaluation_interval: 60s
+  scrape_timeout:      10s
+
+# Alerting rules (placeholder — add alertmanager later if needed)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files (optional — can add .yml files here)
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Host-level metrics (CPU, RAM, disk, network)
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+    # Relabel to add hostname as a label
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'warungio-vps'
+
+  # Container-level metrics (per-container CPU, RAM, network, I/O)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'warungio-vps'
+
+  # Django application metrics (if django-prometheus is enabled later)
+  # - job_name: 'django'
+  #   static_configs:
+  #     - targets: ['django:8000']
+  #   metrics_path: '/metrics'
