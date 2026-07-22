@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block content %}
+<section class="py-16 md:py-20 bg-gradient-to-br from-emerald-600 via-emerald-500 to-green-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">
+            Belanja Berdasarkan Kategori
+        </h1>
+        <p class="text-lg text-white/80 max-w-2xl mx-auto">
+            Temukan produk segar, sembako, dan kebutuhan harian dari warung dan UMKM terdekat.
+        </p>
+    </div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for cat in categories %}
+            <a href="/kategori/{{ cat.category_name|slugify }}/" 
+               class="p-6 bg-white rounded-2xl border border-gray-100 hover:border-primary-200 hover:shadow-md transition-all group">
+                <h3 class="font-bold text-gray-900 group-hover:text-primary-700 transition-colors">{{ cat.category_name }}</h3>
+                <p class="text-sm text-gray-400 mt-1">{{ cat.product_count }} produk tersedia</p>
+            </a>
+            {% empty %}
+            <div class="col-span-full text-center py-16 text-gray-400">
+                <p class="text-lg font-medium">Belum ada kategori tersedia</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

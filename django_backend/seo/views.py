@@ -9,6 +9,7 @@ from django.conf import settings
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
 from django.template.loader import render_to_string
+from django.utils.text import slugify
 
 
 SITE_URL = "https://warungio.web.id"
@@ -25,7 +26,7 @@ def robots_txt(request):
     """
     lines = [
         "# Warungio - robots.txt",
-        "# Last updated: 2026-07-21",
+        "# Last updated: 2026-07-22",
         "",
         "User-agent: *",
         "Disallow: /admin/",
@@ -49,9 +50,15 @@ def robots_txt(request):
         "Allow: /bantuan/",
         "Allow: /download/",
         "Allow: /health/",
+        "Allow: /kategori/",
+        "Allow: /kota/",
+        "Allow: /toko/",
+        "Allow: /produk/",
+        "Allow: /promo/",
         "",
         "User-agent: Googlebot",
         "Allow: /",
+        "Allow: /*?page=",
         "Disallow: /admin/",
         "Disallow: /admin-panel/",
         "Disallow: /api/",
@@ -61,14 +68,17 @@ def robots_txt(request):
         "Allow: /media/",
         "",
         "User-agent: Bingbot",
+        "Allow: /*?page=",
         "Disallow: /admin/",
         "Disallow: /admin-panel/",
         "Disallow: /api/",
         "",
         f"Sitemap: {SITE_URL}/sitemap.xml",
         "",
-        "# Warungio - Hyperlocal Marketplace Indonesia",
-        "# Last updated: 2026-07-21",
+        "# Warungio - Ekosistem Marketplace & Manajemen Bisnis UMKM Indonesia",
+        "# Marketplace hyperlocal terpercaya + aplikasi stok barang gratis, POS kasir digital,",
+        "# manajemen inventaris, laporan keuangan, dan analisis bisnis berbasis AI",
+        "# Total pages indexed: 800+",
     ]
 
     return HttpResponse(
@@ -106,13 +116,101 @@ def sitemap_xml(request):
         {"loc": "/info/bantuan/", "priority": "0.7", "changefreq": "monthly", "lastmod": now},
         {"loc": "/bantuan/", "priority": "0.8", "changefreq": "weekly", "lastmod": now},
         {"loc": "/download/", "priority": "0.9", "changefreq": "monthly", "lastmod": now},
-        # ── Auth Pages (low priority, noindex) ──
-        {"loc": "/auth/login/", "priority": "0.3", "changefreq": "yearly", "lastmod": now},
-        {"loc": "/auth/register/", "priority": "0.5", "changefreq": "yearly", "lastmod": now},
-        {"loc": "/auth/register-mitra/", "priority": "0.5", "changefreq": "yearly", "lastmod": now},
-        # ── Health ──
-        {"loc": "/health/", "priority": "0.1", "changefreq": "yearly", "lastmod": now},
     ]
+
+    # ── Category & City index pages ──
+    pages.append({"loc": "/kategori/", "priority": "0.8", "changefreq": "daily", "lastmod": now})
+    pages.append({"loc": "/kota/", "priority": "0.8", "changefreq": "daily", "lastmod": now})
+
+    # ── Dynamically add categories from database ──
+    try:
+        from products.models import Category
+        categories = Category.objects.filter(is_active=True)
+        for cat in categories:
+            slug = slugify(cat.category_name)
+            pages.append({
+                "loc": f"/kategori/{slug}/",
+                "priority": "0.8",
+                "changefreq": "daily",
+                "lastmod": now,
+            })
+    except Exception:
+        pass  # Graceful fallback if categories table doesn't exist yet
+
+    # ── Dynamically add help articles from database ──
+    try:
+        from support.models import HelpArticle
+        articles = HelpArticle.objects.filter(is_published=True)
+        for article in articles:
+            pages.append({
+                "loc": f"/bantuan/artikel/{article.slug}/",
+                "priority": "0.6",
+                "changefreq": "weekly",
+                "lastmod": article.updated_at.strftime("%Y-%m-%d") if article.updated_at else now,
+            })
+    except Exception:
+        pass
+
+    # ── Dynamically add active stores ──
+    try:
+        from stores.models import Store
+        stores = Store.objects.filter(status='active').order_by('-total_sales')[:200]
+        for store in stores:
+            pages.append({
+                "loc": f"/toko/{store.slug}/",
+                "priority": "0.7",
+                "changefreq": "daily",
+                "lastmod": now,
+            })
+    except Exception:
+        pass
+
+    # ── Dynamically add cities with active stores ──
+    try:
+        from stores.models import Store
+        cities = Store.objects.filter(status='active').values_list('city', flat=True).distinct()[:50]
+        for city in cities:
+            if city:
+                city_slug = slugify(city)
+                pages.append({
+                    "loc": f"/kota/{city_slug}/",
+                    "priority": "0.7",
+                    "changefreq": "weekly",
+                    "lastmod": now,
+                })
+    except Exception:
+        pass
+
+    # ── Dynamically add active products (top 500) ──
+    try:
+        from products.models import Product
+        products = Product.objects.filter(is_active=True).order_by('-sold_count')[:500]
+        for product in products:
+            if product.slug:
+                pages.append({
+                    "loc": f"/produk/{product.slug}/",
+                    "priority": "0.6",
+                    "changefreq": "weekly",
+                    "lastmod": product.updated_at.strftime("%Y-%m-%d") if hasattr(product, 'updated_at') and product.updated_at else now,
+                })
+    except Exception:
+        pass
+
+    # ── Dynamically add active promos ──
+    try:
+        from products.models import Promo
+        promos = Promo.objects.filter(is_active=True).order_by('-created_at')[:20]
+        from django.utils import timezone
+        for promo in promos:
+            promo_slug = slugify(promo.promo_name)
+            pages.append({
+                "loc": f"/promo/{promo_slug}/",
+                "priority": "0.5",
+                "changefreq": "daily" if promo.start_date <= timezone.now().date() <= promo.end_date else "weekly",
+                "lastmod": now,
+            })
+    except Exception:
+        pass
 
     # Build XML
     xml_parts = [

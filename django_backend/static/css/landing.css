@@ -187,6 +187,182 @@ button {
     flex-shrink: 0;
 }
 
+/* ── Hero Badge (ecosystem label above H1) ── */
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(22, 163, 74, 0.10);
+    border: 1px solid rgba(22, 163, 74, 0.18);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+/* ── Section Label (above section titles) ── */
+.section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(22, 163, 74, 0.08);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 600px;
+    margin: -20px auto 32px;
+}
+
+/* ── Business Feature Card Variant ── */
+.feature-card-business {
+    border-color: rgba(22, 163, 74, 0.20);
+    background: linear-gradient(135deg, #F4FCE5 0%, #E9F7EE 100%);
+}
+.feature-card-business:hover {
+    border-color: var(--primary);
+    box-shadow: 0 18px 36px rgba(22, 163, 74, 0.18);
+}
+.feature-icon-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 8px;
+    font-weight: 800;
+    background: var(--primary);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+.feature-card-business .feature-icon {
+    position: relative;
+    background: rgba(22, 163, 74, 0.15);
+}
+
+/* ── Business Section ── */
+.business-section {
+    padding: 52px 0 40px;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f8f7 100%);
+}
+.business-section .section-subtitle {
+    margin-top: 0;
+}
+.business-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 32px 0;
+}
+.business-card {
+    padding: 28px 24px;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid rgba(22, 163, 74, 0.10);
+    transition: all 0.35s ease;
+    text-align: center;
+}
+.business-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px rgba(22, 163, 74, 0.12);
+    border-color: rgba(22, 163, 74, 0.25);
+}
+.business-card-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    background: var(--light-bg);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+.business-card-icon img {
+    width: 32px;
+    height: 32px;
+}
+.business-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+.business-card p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+}
+.business-cta {
+    text-align: center;
+    padding: 24px 0 8px;
+    border-top: 1px solid rgba(22, 163, 74, 0.10);
+    margin-top: 8px;
+}
+.business-cta p {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 16px;
+}
+.business-cta .btn-hero {
+    min-width: 240px;
+}
+
+/* ── Steps Tabs ── */
+.steps-tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+}
+.steps-tab {
+    padding: 10px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(22, 163, 74, 0.06);
+    color: var(--muted);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.steps-tab:hover {
+    background: rgba(22, 163, 74, 0.10);
+    color: var(--text);
+}
+.steps-tab.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+.steps-grid.steps-active {
+    display: grid;
+}
+
+/* ── Download section h2 span ── */
+.download-text h2 span {
+    color: #ffc940;
+}
+.download-text strong {
+    color: #ffc940;
+}
+
 /* ── Section Jump Dropdown ── */
 .section-jump {
     position: relative;

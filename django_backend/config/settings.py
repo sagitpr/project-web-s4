@@ -74,6 +74,8 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
 ]
 
+DJANGO_APPS.append('django.contrib.humanize')
+
 LOCAL_APPS = [
     'accounts.apps.AccountsConfig',
     'stores.apps.StoresConfig',
@@ -598,6 +600,14 @@ APPLE_PRIVATE_KEY = os.environ.get('APPLE_PRIVATE_KEY', '')
 # =============================================================================
 GOOGLE_MAPS_API_KEY = os.environ.get(
     'GOOGLE_MAPS_API_KEY',
+    ''
+)
+
+# =============================================================================
+# GOOGLE SEARCH CONSOLE
+# =============================================================================
+GOOGLE_SITE_VERIFICATION = os.environ.get(
+    'GOOGLE_SITE_VERIFICATION',
     ''
 )
 

@@ -29,17 +29,28 @@ except Exception:
 SITE_NAME = "Warungio"
 SITE_URL = "https://warungio.web.id"
 SITE_DESCRIPTION = (
-    "Warungio adalah marketplace hyperlocal Indonesia yang menghubungkan "
-    "pembeli dengan warung dan UMKM lokal terdekat. Belanja kebutuhan harian, "
-    "sembako, sayur segar, buah segar, daging, dan produk kebutuhan rumah "
-    "tangga lainnya dengan pengiriman cepat dan pembayaran aman."
+    "Warungio adalah ekosistem manajemen bisnis dan marketplace hyperlocal "
+    "Indonesia terlengkap untuk UMKM dan warung tradisional. Sebagai platform "
+    "all-in-one, Warungio menghubungkan pembeli dengan warung terdekat untuk "
+    "belanja kebutuhan harian, sembako, sayur segar, buah segar, daging, dan "
+    "produk rumah tangga. Untuk pemilik usaha, Warungio menyediakan sistem POS "
+    "kasir digital, manajemen inventaris dan stok real-time, aplikasi stok barang "
+    "gratis, laporan keuangan, analisis penjualan dengan AI, manajemen pemasok "
+    "dan supplier, manajemen pelanggan, serta fitur promosi dan diskon. "
+    "Digitalisasi warung Indonesia untuk bisnis yang lebih maju."
 )
 SITE_KEYWORDS = (
-    "warungio, marketplace hyperlocal, belanja online sembako, warung online, "
-    "UMKM Indonesia, toko kelontong digital, belanja kebutuhan harian, "
-    "sayur segar online, buah segar online, sembako murah, "
-    "grocery delivery Indonesia, distributor sembako, supplier bahan pokok, "
-    "belanja dari warung terdekat, aplikasi belanja harian"
+    "warungio, aplikasi stok barang gratis, aplikasi kasir gratis, "
+    "manajemen inventaris UMKM, aplikasi bisnis UMKM, "
+    "marketplace hyperlocal Indonesia, POS kasir digital, "
+    "aplikasi toko kelontong, aplikasi warung sembako, "
+    "manajemen stok barang, laporan keuangan bisnis, "
+    "analisis penjualan UMKM, aplikasi supplier barang, "
+    "manajemen pelanggan UMKM, belanja kebutuhan harian, "
+    "sayur segar online, sembako online murah, "
+    "belanja dari warung terdekat, aplikasi belanja harian, "
+    "sistem informasi manajemen UMKM, digitalisasi warung, "
+    "aplikasi pembukuan toko, aplikasi catat stok barang"
 )
 DEFAULT_OG_IMAGE = f"{SITE_URL}/static/images/Warungio L.png"
 DEFAULT_LOCALE = "id_ID"
@@ -76,61 +87,68 @@ SOCIAL_LINKS = {
 _PAGE_SEO = {
     # ── Landing / Home ──
     "/": {
-        "meta_title": f"{SITE_NAME} - Marketplace Hyperlocal Indonesia untuk Kebutuhan Harian",
+        "meta_title": f"{SITE_NAME} - Ekosistem Marketplace Hyperlocal & Manajemen Bisnis UMKM",
         "meta_description": (
-            "Warungio adalah marketplace hyperlocal terbaik di Indonesia untuk "
-            "belanja kebutuhan harian, sembako, sayur segar, buah segar, daging, "
-            "dan produk rumah tangga langsung dari warung dan UMKM terdekat. "
-            "Nikmati pengiriman cepat, pembayaran aman via Midtrans (QRIS, GoPay, "
-            "OVO, transfer bank, COD), dan harga terjangkau. Download aplikasi "
-            "Warungio sekarang dan rasakan kemudahan belanja dari rumah!"
+            "Warungio adalah platform all-in-one yang menggabungkan marketplace "
+            "hyperlocal dengan sistem manajemen bisnis UMKM terlengkap. Untuk "
+            "pembeli: belanja kebutuhan harian, sembako, sayur segar, buah segar, "
+            "daging, dan produk rumah tangga dari warung terdekat dengan pengiriman "
+            "cepat. Untuk pemilik usaha: POS kasir digital gratis, aplikasi stok "
+            "barang, manajemen inventaris real-time, laporan keuangan dan penjualan "
+            "berbasis AI, manajemen supplier, manajemen pelanggan, serta fitur "
+            "promosi. Digitalisasi warung Indonesia, tingkatkan omzet hingga 3x lipat!"
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/")],
     },
     # ── Auth Pages ──
     "/auth/login/": {
-        "meta_title": f"Masuk - {SITE_NAME}",
+        "meta_title": f"Masuk - {SITE_NAME} Marketplace & Bisnis UMKM",
         "meta_description": (
-            "Masuk ke akun Warungio Anda untuk mulai belanja kebutuhan harian, "
-            "sembako, sayur segar, dan produk rumah tangga dari warung terdekat. "
-            "Nikmati kemudahan belanja online dengan pengiriman cepat dan "
-            "pembayaran aman via QRIS, GoPay, OVO, atau COD."
+            "Masuk ke akun Warungio Anda. Pelanggan: belanja kebutuhan harian, "
+            "sembako, dan sayur segar dari warung terdekat. Pemilik UMKM: kelola "
+            "toko, pantau stok barang, akses laporan penjualan, dan proses pesanan "
+            "dari dashboard bisnis lengkap Warungio."
         ),
         "schema_type": "WebPage",
         "noindex": True,
         "breadcrumbs": [("Beranda", "/"), ("Masuk", "/auth/login/")],
     },
     "/auth/login-seller/": {
-        "meta_title": f"Login Mitra Seller - {SITE_NAME}",
+        "meta_title": f"Login Mitra Seller - {SITE_NAME} Bisnis UMKM",
         "meta_description": (
             "Login ke dashboard seller Warungio untuk mengelola toko, produk, "
-            "pesanan, dan keuangan Anda. Pantau performa bisnis UMKM Anda secara "
-            "real-time dan jangkau lebih banyak pelanggan."
+            "pesanan, stok barang, laporan keuangan, dan analisis penjualan. "
+            "Akses sistem POS kasir digital, manajemen inventaris real-time, "
+            "manajemen supplier, dan fitur manajemen pelanggan. Pantau performa "
+            "bisnis UMKM Anda dan jangkau lebih banyak pelanggan."
         ),
         "schema_type": "WebPage",
         "noindex": True,
         "breadcrumbs": [("Beranda", "/"), ("Login Seller", "/auth/login-seller/")],
     },
     "/auth/register/": {
-        "meta_title": f"Daftar Akun Baru - {SITE_NAME}",
+        "meta_title": f"Daftar Akun Baru - {SITE_NAME} Marketplace & Bisnis",
         "meta_description": (
-            "Daftar akun Warungio sekarang dan nikmati kemudahan belanja kebutuhan "
-            "harian online. Temukan sembako murah, sayur segar, buah segar, daging "
-            "berkualitas, dan kebutuhan rumah tangga lengkap dari warung terdekat. "
-            "Gratis pendaftaran!"
+            "Daftar akun Warungio gratis sekarang! Pembeli: nikmati kemudahan "
+            "belanja kebutuhan harian, sembako, sayur segar, dan buah segar dari "
+            "warung terdekat dengan pengiriman cepat. Pemilik UMKM: dapatkan akses "
+            "aplikasi stok barang gratis, POS kasir digital, dan dashboard "
+            "manajemen bisnis lengkap untuk mengembangkan usaha Anda."
         ),
         "schema_type": "WebPage",
         "noindex": True,
         "breadcrumbs": [("Beranda", "/"), ("Daftar", "/auth/register/")],
     },
     "/auth/register-mitra/": {
-        "meta_title": f"Daftar Menjadi Mitra Seller - {SITE_NAME}",
+        "meta_title": f"Daftar Mitra Seller - {SITE_NAME} Digitalisasi UMKM",
         "meta_description": (
-            "Gabung menjadi mitra seller Warungio dan kembangkan usaha warung atau "
-            "UMKM Anda. Jangkau lebih banyak pelanggan, kelola pesanan dengan mudah, "
-            "dan tingkatkan penjualan melalui platform marketplace hyperlocal terpercaya. "
-            "Daftar gratis sekarang!"
+            "Gabung menjadi mitra seller Warungio dan digitalisasikan bisnis UMKM "
+            "Anda. Dapatkan aplikasi stok barang gratis, sistem POS kasir digital, "
+            "manajemen inventaris real-time, laporan keuangan dan penjualan berbasis "
+            "AI, manajemen supplier, dan fitur manajemen pelanggan. Jangkau lebih "
+            "banyak pelanggan, kelola pesanan dengan mudah, dan tingkatkan omzet "
+            "hingga 3x lipat. Daftar gratis sekarang!"
         ),
         "schema_type": "WebPage",
         "noindex": True,
@@ -150,167 +168,181 @@ _PAGE_SEO = {
     },
     # ── Info / Public Pages ──
     "/info/tentang-kami/": {
-        "meta_title": f"Tentang Kami | {SITE_NAME} Hyperlocal Marketplace",
+        "meta_title": f"Tentang {SITE_NAME} - Ekosistem Marketplace & Manajemen Bisnis UMKM",
         "meta_description": (
-            "Pelajari lebih lanjut tentang Warungio, marketplace hyperlocal Indonesia "
-            "yang memberdayakan warung lokal dan UMKM. Kami menghubungkan pembeli "
-            "dengan warung terdekat untuk belanja kebutuhan harian, sembako, sayur "
-            "segar, dan buah segar dengan pengiriman cepat dan pembayaran aman. "
-            "Visi kami adalah mendigitalisasi jutaan warung tradisional Indonesia."
+            "Warungio adalah ekosistem all-in-one yang menggabungkan marketplace "
+            "hyperlocal dengan sistem manajemen bisnis UMKM terlengkap. Kami "
+            "memberdayakan jutaan warung tradisional Indonesia melalui aplikasi stok "
+            "barang gratis, POS kasir digital, manajemen inventaris real-time, "
+            "laporan keuangan dan analisis penjualan berbasis AI, manajemen supplier, "
+            "serta manajemen pelanggan. Untuk pembeli, nikmati belanja kebutuhan "
+            "harian, sembako, sayur segar, dan buah segar dari warung terdekat "
+            "dengan pengiriman cepat. Visi kami: digitalisasi UMKM Indonesia."
         ),
         "schema_type": "AboutPage",
         "breadcrumbs": [("Beranda", "/"), ("Tentang Kami", "/info/tentang-kami/")],
     },
     "/info/cara-belanja/": {
-        "meta_title": f"Cara Belanja di {SITE_NAME} - Panduan Lengkap",
+        "meta_title": f"Cara Belanja di {SITE_NAME} & Cara Jadi Mitra Seller",
         "meta_description": (
-            "Panduan lengkap cara belanja di Warungio. Mulai dari mendaftar akun, "
-            "mencari produk sembako dan sayur segar, menambahkan ke keranjang, "
-            "checkout dengan berbagai metode pembayaran (QRIS, GoPay, OVO, transfer "
-            "bank, COD), hingga melacak pengiriman. Belanja kebutuhan harian jadi "
-            "lebih mudah dan cepat bersama Warungio."
+            "Panduan lengkap menggunakan Warungio. Untuk pembeli: cara belanja "
+            "kebutuhan harian, sembako, sayur segar, buah segar, dari warung "
+            "terdekat dengan berbagai metode pembayaran (QRIS, GoPay, OVO, transfer "
+            "bank, COD). Untuk pemilik UMKM: cara mendaftar sebagai mitra seller, "
+            "menggunakan aplikasi stok barang gratis, POS kasir digital, manajemen "
+            "inventaris, dan fitur manajemen bisnis lengkap Warungio."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Cara Belanja", "/info/cara-belanja/")],
     },
     "/info/metode-pembayaran/": {
-        "meta_title": f"Metode Pembayaran - {SITE_NAME}",
+        "meta_title": f"Metode Pembayaran Marketplace & Bisnis - {SITE_NAME}",
         "meta_description": (
             "Warungio mendukung berbagai metode pembayaran aman dan praktis: "
             "transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, "
             "ShopeePay), QRIS, kartu kredit/debit (Visa, Mastercard, JCB), dan "
-            "COD (Cash on Delivery). Semua pembayaran online diproses melalui "
-            "Midtrans dengan enkripsi keamanan tinggi."
+            "COD. Untuk mitra seller: nikmati pencairan dana otomatis, laporan "
+            "transaksi real-time, dan rekonsiliasi pembayaran terintegrasi dengan "
+            "sistem POS dan manajemen keuangan Warungio. Semua pembayaran diproses "
+            "melalui Midtrans dengan enkripsi keamanan tinggi."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Metode Pembayaran", "/info/metode-pembayaran/")],
     },
     "/info/kontak-kami/": {
-        "meta_title": f"Hubungi Kami - {SITE_NAME}",
+        "meta_title": f"Hubungi Kami - {SITE_NAME} Marketplace & Bisnis UMKM",
         "meta_description": (
             "Hubungi tim customer service Warungio melalui email, telepon, WhatsApp, "
-            "atau kunjungi kantor pusat kami. Kami siap membantu Anda 24/7 untuk "
-            "pertanyaan tentang pesanan, pembayaran, pengiriman, atau pendaftaran "
-            "mitra seller. Warungio - belanja kebutuhan harian lebih mudah."
+            "atau kunjungi kantor pusat. Kami siap membantu Anda 24/7 untuk "
+            "pertanyaan tentang pesanan, pembayaran, pengiriman, pendaftaran mitra "
+            "seller, penggunaan aplikasi stok barang, POS kasir digital, manajemen "
+            "inventaris, laporan keuangan, dan fitur manajemen bisnis Warungio."
         ),
         "schema_type": "ContactPage",
         "breadcrumbs": [("Beranda", "/"), ("Hubungi Kami", "/info/kontak-kami/")],
     },
     "/info/kebijakan/": {
-        "meta_title": f"Kebijakan & Ketentuan - {SITE_NAME}",
+        "meta_title": f"Kebijakan & Ketentuan - {SITE_NAME} Marketplace & Bisnis",
         "meta_description": (
-            "Syarat dan ketentuan penggunaan platform marketplace hyperlocal Warungio. "
-            "Pelajari hak dan kewajiban pengguna, kebijakan privasi, ketentuan "
-            "pembayaran dan refund, serta perubahan kebijakan. Dengan menggunakan "
-            "Warungio, Anda menyetujui seluruh ketentuan yang berlaku."
+            "Syarat dan ketentuan penggunaan platform Warungio baik sebagai "
+            "marketplace hyperlocal untuk belanja kebutuhan harian maupun sebagai "
+            "sistem manajemen bisnis UMKM. Pelajari ketentuan penggunaan aplikasi "
+            "stok barang, POS kasir digital, layanan marketplace, kebijakan privasi, "
+            "pembayaran dan refund untuk pembeli dan mitra seller."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Kebijakan", "/info/kebijakan/")],
     },
     "/info/blog/": {
-        "meta_title": f"Blog - {SITE_NAME}",
+        "meta_title": f"Blog {SITE_NAME} - Tips Belanja & Panduan Bisnis UMKM",
         "meta_description": (
-            "Baca artikel tips belanja, resep masak, panduan bisnis UMKM, dan "
-            "informasi terbaru seputar Warungio. Dapatkan inspirasi belanja "
-            "kebutuhan harian, sembako, sayur segar, dan buah segar dengan "
-            "tips hemat dari Warungio."
+            "Baca artikel tips belanja hemat, resep masak, panduan bisnis UMKM, "
+            "cara menggunakan aplikasi stok barang gratis, tips manajemen inventaris, "
+            "strategi pemasaran untuk warung, dan informasi terbaru seputar Warungio. "
+            "Dapatkan inspirasi mengelola bisnis dan belanja kebutuhan harian dengan "
+            "lebih cerdas bersama Warungio."
         ),
         "schema_type": "Blog",
         "breadcrumbs": [("Beranda", "/"), ("Blog", "/info/blog/")],
     },
     "/info/panduan-seller/": {
-        "meta_title": f"Panduan Seller - {SITE_NAME}",
+        "meta_title": f"Panduan Seller - {SITE_NAME} Manajemen Bisnis UMKM",
         "meta_description": (
-            "Panduan lengkap untuk mitra seller Warungio. Pelajari cara mendaftar "
-            "sebagai mitra, mengelola produk, memproses pesanan, melakukan pencairan "
-            "dana, dan tips sukses berjualan di platform marketplace hyperlocal. "
-            "Kembangkan bisnis UMKM Anda bersama Warungio."
+            "Panduan lengkap untuk mitra seller Warungio. Pelajari cara menggunakan "
+            "aplikasi stok barang gratis, sistem POS kasir digital, manajemen "
+            "inventaris real-time, laporan keuangan dan penjualan berbasis AI, "
+            "manajemen supplier, pencairan dana, serta tips sukses berjualan dan "
+            "mengembangkan bisnis UMKM Anda di platform Warungio."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Panduan Seller", "/info/panduan-seller/")],
     },
     "/info/komunitas/": {
-        "meta_title": f"Komunitas Seller - Warungio",
+        "meta_title": f"Komunitas Seller & UMKM - {SITE_NAME}",
         "meta_description": (
             "Bergabung dengan komunitas seller Warungio di seluruh Indonesia. "
-            "Diskusikan strategi bisnis, dapatkan tips sukses, dan ikuti webinar "
-            "eksklusif untuk mengembangkan usaha UMKM Anda. Warungio - memberdayakan "
-            "warung lokal Indonesia."
+            "Diskusikan strategi bisnis, tips menggunakan aplikasi stok barang, "
+            "POS kasir digital, manajemen inventaris, dan pengelolaan keuangan "
+            "UMKM. Dapatkan tips sukses, ikuti webinar eksklusif, dan kembangkan "
+            "usaha Anda bersama ribuan mitra Warungio."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Komunitas Seller", "/info/komunitas/")],
     },
     "/info/tips-sukses/": {
-        "meta_title": f"Tips Sukses untuk Seller - {SITE_NAME}",
+        "meta_title": f"Tips Sukses UMKM & Manajemen Toko - {SITE_NAME}",
         "meta_description": (
             "Kumpulan tips sukses untuk mitra seller Warungio. Pelajari strategi "
-            "foto produk berkualitas, respons cepat, manajemen stok, pemanfaatan "
-            "promo, dan analisis data bisnis untuk mengembangkan toko Anda di "
-            "marketplace hyperlocal terbesar di Indonesia."
+            "manajemen inventaris dan stok barang, penggunaan POS kasir digital, "
+            "analisis laporan keuangan dan penjualan berbasis AI, manajemen "
+            "supplier, foto produk berkualitas, pemanfaatan promo, dan cara "
+            "mengembangkan toko UMKM Anda di platform Warungio."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Tips Sukses", "/info/tips-sukses/")],
     },
     # ── Bantuan / Help Center ──
     "/bantuan/": {
-        "meta_title": f"Pusat Bantuan - {SITE_NAME}",
+        "meta_title": f"Pusat Bantuan - {SITE_NAME} Marketplace & Manajemen Bisnis",
         "meta_description": (
-            "Pusat bantuan Warungio. Temukan jawaban atas pertanyaan seputar "
-            "pesanan, pembayaran, pengiriman, refund, dan cara menggunakan platform. "
-            "Cari artikel panduan, FAQ, atau hubungi tim customer service kami "
-            "yang siap membantu 24 jam sehari, 7 hari seminggu."
+            "Pusat bantuan Warungio. Temukan jawaban seputar belanja kebutuhan "
+            "harian, cara menggunakan aplikasi stok barang gratis, POS kasir "
+            "digital, manajemen inventaris, laporan keuangan, pesanan, pembayaran, "
+            "pengiriman, refund, dan fitur manajemen bisnis UMKM. Hubungi tim "
+            "customer service kami yang siap membantu 24/7."
         ),
         "schema_type": "FAQPage",
         "breadcrumbs": [("Beranda", "/"), ("Bantuan", "/bantuan/")],
     },
     # ── Download Page ──
     "/download/": {
-        "meta_title": f"Download Aplikasi {SITE_NAME} - Belanja Lebih Mudah",
+        "meta_title": f"Download Aplikasi {SITE_NAME} - Marketplace & Manajemen Bisnis",
         "meta_description": (
-            "Download aplikasi Warungio untuk pengalaman belanja kebutuhan harian "
-            "yang lebih mudah, cepat, dan hemat. Tersedia untuk Android (APK) dan "
-            "iOS (segera hadir). Belanja sembako, sayur segar, buah, daging, dan "
-            "kebutuhan rumah tangga langsung dari warung terdekat."
+            "Download aplikasi Warungio gratis! Untuk pembeli: belanja kebutuhan "
+            "harian, sembako, sayur segar, buah, daging dari warung terdekat. "
+            "Untuk pemilik UMKM: aplikasi stok barang gratis, POS kasir digital, "
+            "manajemen inventaris real-time, laporan keuangan berbasis AI, dan "
+            "manajemen pelanggan. Tersedia untuk Android APK."
         ),
         "schema_type": "WebPage",
         "breadcrumbs": [("Beranda", "/"), ("Download", "/download/")],
     },
     # ── Buyer Dashboard ──
     "/buyer/dashboard/": {
-        "meta_title": f"Dashboard Pembeli - {SITE_NAME}",
-        "meta_description": "Dashboard pembeli Warungio. Kelola profil, pantau pesanan, dan temukan rekomendasi warung terdekat.",
+        "meta_title": f"Dashboard Pembeli - {SITE_NAME} Marketplace",
+        "meta_description": "Dashboard pembeli Warungio. Kelola profil, pantau pesanan, dan temukan rekomendasi warung dan UMKM terdekat.",
         "schema_type": "WebPage",
         "noindex": True,
     },
     "/buyer/home/": {
-        "meta_title": f"Marketplace - {SITE_NAME}",
-        "meta_description": "Temukan warung terdekat, produk segar pilihan, dan promo terbaik hari ini di marketplace Warungio.",
+        "meta_title": f"Marketplace {SITE_NAME} - Belanja dari Warung & UMKM Terdekat",
+        "meta_description": "Temukan warung terdekat, produk segar pilihan, sembako murah, dan promo terbaik hari ini di marketplace hyperlocal Warungio.",
         "schema_type": "WebPage",
         "noindex": True,
     },
     # ── Products ──
     "/buyer/products/": {
-        "meta_title": f"Semua Produk | {SITE_NAME} Marketplace",
-        "meta_description": "Jelajahi semua produk segar, sembako, dan kebutuhan harian dari warung dan UMKM terdekat di Warungio.",
+        "meta_title": f"Semua Produk Segar & Sembako | {SITE_NAME} Marketplace",
+        "meta_description": "Jelajahi semua produk segar, sembako, sayuran, buah, daging, dan kebutuhan harian dari warung dan UMKM terdekat di marketplace hyperlocal Warungio.",
         "schema_type": "CollectionPage",
         "noindex": True,
     },
     # ── Seller Pages ──
     "/seller/dashboard/": {
-        "meta_title": f"Dashboard Seller - {SITE_NAME}",
-        "meta_description": "Dashboard seller Warungio. Pantau penjualan, pesanan, dan performa toko Anda secara real-time.",
+        "meta_title": f"Dashboard Seller - {SITE_NAME} Manajemen Bisnis UMKM",
+        "meta_description": "Dashboard seller Warungio. Kelola toko, pantau stok barang real-time, proses pesanan, akses laporan keuangan dan penjualan berbasis AI, manajemen supplier, dan fitur manajemen bisnis UMKM lengkap.",
         "schema_type": "WebPage",
         "noindex": True,
     },
     "/seller/products/": {
-        "meta_title": f"Produk Saya - {SITE_NAME} Seller",
-        "meta_description": "Kelola, tambah, dan edit produk toko Anda di dashboard seller Warungio.",
+        "meta_title": f"Produk Saya - {SITE_NAME} Manajemen Inventaris",
+        "meta_description": "Kelola stok barang, tambah produk baru, edit harga, dan atur kategori produk toko UMKM Anda dengan aplikasi manajemen inventaris Warungio.",
         "schema_type": "WebPage",
         "noindex": True,
     },
     "/seller/orders/": {
-        "meta_title": f"Pesanan Masuk - {SITE_NAME} Seller",
-        "meta_description": "Kelola dan proses pesanan pelanggan di dashboard seller Warungio.",
+        "meta_title": f"Pesanan Masuk - {SITE_NAME} POS & Manajemen Pesanan",
+        "meta_description": "Proses dan kelola pesanan pelanggan dengan sistem POS kasir digital Warungio. Pantau status pesanan real-time, cetak struk, dan atur pengiriman.",
         "schema_type": "WebPage",
         "noindex": True,
     },
@@ -408,45 +440,99 @@ def _get_seo_for_path(path):
 
     # 3. Dynamic prefix matching
     if seo is None:
-        if path.startswith("/bantuan/artikel/"):
+        if path == "/kategori/":
             seo = {
-                "meta_title": f"Artikel Bantuan - {SITE_NAME}",
-                "meta_description": "Baca artikel panduan dan informasi bantuan Warungio.",
+                "meta_title": f"Semua Kategori Produk | {SITE_NAME} Marketplace & Manajemen Bisnis",
+                "meta_description": f"Jelajahi semua kategori produk di {SITE_NAME}: sayuran segar, buah segar, \nsembako, daging, dan kebutuhan rumah tangga. Untuk pemilik UMKM: gunakan \naplikasi stok barang gratis dan POS kasir digital Warungio untuk mengelola \nusaha Anda. Belanja dan kelola bisnis dalam satu platform.",
+                "schema_type": "CollectionPage",
+                "noindex": False,
+            }
+        elif path == "/kota/":
+            seo = {
+                "meta_title": f"Belanja & Bisnis di Kota Anda | {SITE_NAME} Ekosistem UMKM",
+                "meta_description": f"Temukan warung dan UMKM lokal di kota Anda melalui {SITE_NAME}. \nPembeli: belanja kebutuhan harian, sembako, sayur segar dari warung terdekat. \nPemilik usaha: kelola toko dengan aplikasi stok barang gratis, POS kasir digital, \ndan laporan keuangan berbasis AI.",
+                "schema_type": "CollectionPage",
+                "noindex": False,
+            }
+        elif path.startswith("/bantuan/artikel/"):
+            seo = {
+                "meta_title": f"Artikel Bantuan - {SITE_NAME} Marketplace & Manajemen Bisnis",
+                "meta_description": "Baca artikel panduan Warungio: cara belanja kebutuhan harian, menggunakan aplikasi stok barang gratis, POS kasir digital, manajemen inventaris, laporan keuangan, dan fitur manajemen bisnis UMKM.",
                 "schema_type": "Article",
                 "noindex": False,
             }
         elif path.startswith("/products/"):
             seo = {
-                "meta_title": f"Detail Produk - {SITE_NAME}",
-                "meta_description": "Lihat detail produk, harga, dan ulasan di Warungio.",
+                "meta_title": f"Detail Produk - {SITE_NAME} Marketplace",
+                "meta_description": "Lihat detail produk segar, sembako, dan kebutuhan harian dari warung terdekat. Untuk pemilik UMKM: gunakan aplikasi stok barang Warungio untuk mengelola inventaris dan penjualan Anda.",
                 "schema_type": "Product",
                 "noindex": True,
             }
         elif path.startswith("/buyer/"):
             seo = {
-                "meta_title": f"Akun Saya - {SITE_NAME}",
-                "meta_description": "Halaman akun pembeli Warungio.",
+                "meta_title": f"Akun Pembeli - {SITE_NAME} Marketplace",
+                "meta_description": "Kelola akun pembeli Warungio Anda: pantau pesanan, kelola alamat, lihat riwayat transaksi, dan temukan promo belanja kebutuhan harian dari warung terdekat.",
                 "schema_type": "WebPage",
                 "noindex": True,
             }
         elif path.startswith("/seller/"):
             seo = {
-                "meta_title": f"Seller - {SITE_NAME}",
-                "meta_description": "Dashboard dan manajemen toko seller Warungio.",
+                "meta_title": f"Dashboard Seller - {SITE_NAME} Manajemen Bisnis UMKM",
+                "meta_description": "Kelola bisnis UMKM Anda di dashboard seller Warungio: POS kasir digital, aplikasi stok barang gratis, manajemen inventaris real-time, laporan keuangan dan penjualan berbasis AI, manajemen supplier, dan manajemen pelanggan.",
                 "schema_type": "WebPage",
                 "noindex": True,
             }
         elif path.startswith("/admin-panel/"):
             seo = {
-                "meta_title": f"Admin - {SITE_NAME}",
-                "meta_description": "Panel admin Warungio.",
+                "meta_title": f"Admin Panel - {SITE_NAME}",
+                "meta_description": "Panel administrasi Warungio. Kelola pengguna, transaksi, dan pengaturan platform marketplace hyperlocal dan sistem manajemen bisnis UMKM.",
                 "schema_type": "WebPage",
                 "noindex": True,
             }
+        elif path.startswith("/kategori/"):
+            category_name = path.split('/')[-2].replace('-', ' ').title()
+            seo = {
+                "meta_title": f"Jual & Beli {category_name} Segar Online | {SITE_NAME}",
+                "meta_description": f"Pembeli: beli {path.split('/')[-2].replace('-', ' ')} segar online dari warung dan UMKM \nterdekat dengan harga terjangkau. Pemilik UMKM: kelola stok dan penjualan \n{path.split('/')[-2].replace('-', ' ')} Anda dengan aplikasi stok barang gratis dan \nPOS kasir digital Warungio.",
+                "schema_type": "CollectionPage",
+                "noindex": False,
+            }
+        elif path.startswith("/kota/"):
+            city_name = path.split('/')[-2].replace('-', ' ').title()
+            seo = {
+                "meta_title": f"Belanja & Bisnis UMKM di {city_name} | {SITE_NAME}",
+                "meta_description": f"Nikmati {SITE_NAME} di {city_name}! Pembeli: belanja kebutuhan harian, \nsembako, sayur segar, buah segar dari warung terdekat. Pemilik usaha: digitalisasikan \ntoko Anda dengan aplikasi stok barang gratis, POS kasir digital, \ndan laporan keuangan berbasis AI dari {SITE_NAME}.",
+                "schema_type": "CollectionPage",
+                "noindex": False,
+            }
+        elif path.startswith("/toko/"):
+            store_name = path.split('/')[-2].replace('-', ' ').title()
+            seo = {
+                "meta_title": f"{store_name} - Toko UMKM di {SITE_NAME}",
+                "meta_description": f"Kunjungi {store_name} di {SITE_NAME} dan temukan produk segar, \nsembako, dan kebutuhan harian berkualitas. Pemilik toko: kelola stok barang, \npesanan, dan laporan penjualan dengan aplikasi stok barang gratis dan POS \nkasir digital dari {SITE_NAME}.",
+                "schema_type": "Store",
+                "noindex": False,
+            }
+        elif path.startswith("/produk/"):
+            product_name = path.split('/')[-2].replace('-', ' ').title()
+            seo = {
+                "meta_title": f"{product_name} - Harga & Review | {SITE_NAME}",
+                "meta_description": f"Beli {path.split('/')[-2].replace('-', ' ')} dengan harga terbaik di {SITE_NAME}. \nPembeli: dapatkan produk segar dari warung terdekat dengan pengiriman cepat. \nPemilik UMKM: gunakan aplikasi stok barang dan POS kasir digital Warungio \nuntuk mengelola penjualan produk Anda.",
+                "schema_type": "Product",
+                "noindex": False,
+            }
+        elif path.startswith("/promo/"):
+            promo_name = path.split('/')[-2].replace('-', ' ').title()
+            seo = {
+                "meta_title": f"{promo_name} - Promo {SITE_NAME} Marketplace & Bisnis",
+                "meta_description": f"Dapatkan promo dan diskon terbaik di {SITE_NAME}! Pembeli: \nnikmati diskon belanja kebutuhan harian, sembako, sayur segar, gratis ongkir, \ndan cashback. Pemilik UMKM: buat promo toko Anda sendiri dan pantau \nperforma dengan laporan penjualan dan analisis bisnis Warungio.",
+                "schema_type": "WebPage",
+                "noindex": False,
+            }
         elif path.startswith("/auth/"):
             seo = {
-                "meta_title": f"Autentikasi - {SITE_NAME}",
-                "meta_description": "Halaman autentikasi Warungio.",
+                "meta_title": f"Autentikasi - {SITE_NAME} Marketplace & Bisnis UMKM",
+                "meta_description": "Masuk atau daftar akun Warungio untuk mulai belanja kebutuhan harian dari warung terdekat atau mengelola bisnis UMKM Anda dengan aplikasi stok barang gratis dan POS kasir digital.",
                 "schema_type": "WebPage",
                 "noindex": True,
             }
@@ -534,6 +620,7 @@ def seo_metadata(request):
         "json_ld": json_ld,
         "noindex": noindex,
         "robots": "noindex, nofollow" if noindex else "index, follow, max-image-preview:large, max-snippet:-1",
+        "google_site_verification": getattr(settings, 'GOOGLE_SITE_VERIFICATION', ''),
         "hreflang_tags": hreflang_tags,
         "breadcrumbs": breadcrumbs,
         "page_name": meta_title.split(" | ")[0] if " | " in meta_title else meta_title.split(" - ")[0],
@@ -645,8 +732,8 @@ def _build_json_ld(schema_type, name, description, url, breadcrumbs):
             "itemListElement": item_list,
         })
 
-    # 5. LocalBusiness (for contact page or landing page)
-    if schema_type in ("ContactPage", "AboutPage", "WebPage"):
+    # 5. LocalBusiness (only for Landing, About, Contact pages)
+    if schema_type in ("ContactPage", "AboutPage", "WebPage") and url == _build_absolute_url("/"):
         schemas.append({
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
@@ -669,20 +756,21 @@ def _build_json_ld(schema_type, name, description, url, breadcrumbs):
             "paymentAccepted": ["Cash", "Credit Card", "QRIS", "GoPay", "OVO", "Bank Transfer"],
         })
 
-    # 6. MobileApplication (always included since Warungio has a mobile app)
-    schemas.append({
-        "@context": "https://schema.org",
-        "@type": "MobileApplication",
-        "name": f"{SITE_NAME} Marketplace",
-        "operatingSystem": "Android, iOS",
-        "applicationCategory": "ShoppingApplication",
-        "description": SITE_DESCRIPTION[:200],
-        "url": f"{SITE_URL}/download/",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "IDR",
-        },
-    })
+    # 6. MobileApplication (only on landing page and download page)
+    if url in (_build_absolute_url("/"), _build_absolute_url("/download/")):
+        schemas.append({
+            "@context": "https://schema.org",
+            "@type": "MobileApplication",
+            "name": f"{SITE_NAME} Marketplace",
+            "operatingSystem": "Android, iOS",
+            "applicationCategory": "ShoppingApplication",
+            "description": SITE_DESCRIPTION[:200],
+            "url": f"{SITE_URL}/download/",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "IDR",
+            },
+        })
 
     return schemas

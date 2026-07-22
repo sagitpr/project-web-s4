@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.hero-gradient-cat { background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); }
+.product-card-home { transition: all 0.3s ease; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: white; }
+.product-card-home:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); border-color: #bbf7d0; }
+.store-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; background: #f0fdf4; color: #166534; font-size: 0.8125rem; font-weight: 600; transition: all 0.2s; }
+.store-chip:hover { background: #dcfce7; transform: translateY(-1px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient-cat py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
+            Belanja {{ category.category_name }} Segar Online
+        </h1>
+        <p class="text-lg text-white/80 max-w-2xl mx-auto mb-6">
+            Temukan {{ category.category_name|lower }} segar berkualitas dari warung dan UMKM terdekat. 
+            Harga terjangkau, pengiriman cepat, dan pembayaran aman.
+        </p>
+        <div class="flex justify-center gap-3 flex-wrap">
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                {{ product_count }} Produk
+            </span>
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2"/></svg>
+                {{ store_count }} Warung Mitra
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- Products Grid -->
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Produk {{ category.category_name }}</h2>
+                <p class="text-sm text-gray-500 mt-1">Produk segar pilihan dari warung terdekat</p>
+            </div>
+            <a href="/buyer/products/?category={{ category.id }}" class="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+                Lihat Semua →
+            </a>
+        </div>
+
+        {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {% for product in products %}
+            <a href="/produk/{{ product.slug }}/" class="product-card-home group">
+                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    {% if product.product_photo %}
+                    <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                    {% else %}
+                    <div class="text-gray-300 text-center">
+                        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <span class="text-xs mt-1 block">No Image</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-3 md:p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-2 mb-1">{{ product.product_name }}</h3>
+                    <p class="text-primary-600 font-bold text-sm md:text-base">Rp {{ product.price|floatformat:0 }}</p>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                        <span>{{ product.sold_count }} terjual</span>
+                        {% if product.rating_avg > 0 %}
+                        <span>★ {{ product.rating_avg|floatformat:1 }}</span>
+                        {% endif %}
+                    </div>
+                    {% if product.store %}
+                    <div class="mt-2 text-xs text-gray-400 truncate">{{ product.store.store_name }}</div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-gray-400">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <p class="text-lg font-medium">Belum ada produk dalam kategori ini</p>
+            <p class="text-sm mt-1">Segera akan tersedia produk {{ category.category_name|lower }} segar dari warung terdekat.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Stores Section -->
+{% if stores %}
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Warung {{ category.category_name }} Terdekat</h2>
+        <p class="text-sm text-gray-500 mb-8">Warung dan UMKM mitra yang menyediakan {{ category.category_name|lower }}</p>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for store in stores %}
+            <a href="/toko/{{ store.slug }}/" class="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md hover:border-primary-100 transition-all">
+                <div class="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-lg flex-shrink-0">
+                    {{ store.store_name|first|upper }}
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-semibold text-gray-900 text-sm truncate">{{ store.store_name }}</h3>
+                    <p class="text-xs text-gray-400">{{ store.city|default:"" }}</p>
+                    {% if store.prod_count %}
+                    <p class="text-xs text-primary-600 font-medium">{{ store.prod_count }} produk {{ category.category_name|lower }}</p>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- SEO Text Section -->
+<section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-sm sm:prose max-w-none text-gray-600">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Belanja {{ category.category_name }} Online di Warungio</h2>
+            <p>
+                Warungio menghadirkan kemudahan belanja {{ category.category_name|lower }} online dengan kualitas 
+                terbaik dari warung dan UMKM lokal terdekat. Nikmati pengiriman cepat, 
+                pembayaran aman via QRIS, GoPay, OVO, transfer bank, dan COD. 
+                Dapatkan {{ category.category_name|lower }} segar berkualitas dengan harga terjangkau langsung dari 
+                produsen dan penjual terpercaya di kota Anda.
+            </p>
+            <p class="mt-4">
+                Dengan sistem hyperlocal marketplace, setiap pesanan {{ category.category_name|lower }} Anda akan 
+                diproses dan diantar oleh warung mitra terdekat dari lokasi Anda, 
+                menjamin kesegaran produk dan kecepatan pengiriman. 
+                Download aplikasi Warungio untuk pengalaman belanja yang lebih praktis!
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

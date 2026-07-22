@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Warungio - Belanja dari Warung Terdekat{% endblock %}
-
 {% block styles %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}" />
@@ -20,19 +18,20 @@
         <nav class="nav">
             <a href="#beranda" class="active">Beranda</a>
             <a href="#fitur">Fitur</a>
-            <a href="#tentang">Tentang</a>
+            <a href="#bisnis">Untuk Bisnis</a>
+            <a href="#tentang">Kategori</a>
             <a href="#cara-kerja">Cara Kerja</a>
-            <a href="#testimoni">Testimoni</a>
-            <a href="#faq">FAQ</a>
+            <a href="#mitra">Mitra</a>
         </nav>
-        <div class="header-right">                <div class="auth-buttons">
+        <div class="header-right">
+            <div class="auth-buttons">
                 <div class="auth-group">
                     <a href="{% url 'page-login' %}" class="btn-masuk">Masuk</a>
                     <a href="{% url 'page-register' %}" class="btn-daftar">Daftar</a>
                 </div>
                 <span class="auth-group-separator" aria-hidden="true"></span>
                 <div class="auth-group">
-                    <a href="{% url 'page-login-seller' %}" class="btn-masuk">Login</a>
+                    <a href="{% url 'page-login-seller' %}" class="btn-masuk">Login Mitra</a>
                     <a href="{% url 'page-register-mitra' %}" class="btn-daftar">Daftar Mitra</a>
                 </div>
             </div>
@@ -44,134 +43,160 @@
 {% block content %}
 
 <main>
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  HERO SECTION — Dual Audience (Pembeli + Pemilik Bisnis)  #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="hero" id="beranda">
     <div class="hero-content">
       <div class="hero-text">
+        <div class="hero-badge">Ekosistem Marketplace & Manajemen Bisnis UMKM</div>
         <h1>
-          Belanja dari<br>warung terdekat,<br>hidup <span>lebih dekat.</span>
+          Belanja Kebutuhan Harian &<br>
+          Kelola Bisnis UMKM dalam<br>
+          <span>Satu Platform</span>
         </h1>
         <p>
-          Warungio menghubungkan kamu dengan warung dan produk terbaik di
-          sekitarmu. Belanja jadi lebih mudah, cepat, dan terpercaya.
+          <strong>Warungio</strong> adalah ekosistem all-in-one yang menghubungkan pembeli 
+          dengan warung dan UMKM terdekat sekaligus memberdayakan pemilik usaha dengan 
+          <strong>aplikasi stok barang gratis, POS kasir digital, manajemen inventaris 
+          real-time, laporan keuangan dan penjualan berbasis AI, serta manajemen supplier 
+          dan pelanggan</strong>. Digitalisasi warung Indonesia untuk bisnis yang lebih maju.
         </p>
         <div class="hero-buttons">
-          <a href="{% url 'page-register' %}" class="btn-primary btn-hero"
-            >Mulai Belanja</a
-          >
-          <button
-            onclick="window.location.href = '{% url 'page-register' %}'"
-            class="btn-secondary btn-hero"
-          >
-            <span>Daftar Sekarang</span>
-            <svg
-              class="icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5 12H19M12 5L19 12L12 19"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+          <a href="{% url 'page-register' %}" class="btn-primary btn-hero">Mulai Belanja</a>
+          <a href="{% url 'page-register-mitra' %}" class="btn-secondary btn-hero">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
-          </button>
+            <span>Daftar Jadi Mitra</span>
+          </a>
         </div>
         <div class="hero-highlights">
           <div class="highlight-item">
-            <img src="{% static 'images/location.png' %}" alt="Warung terdekat" width="40" height="40" loading="lazy">
-            <span>Warung<br />Terdekat</span>
+            <img src="{% static 'images/location.png' %}" alt="Marketplace" width="40" height="40" loading="lazy">
+            <span>Marketplace<br />Hyperlocal</span>
           </div>
           <div class="highlight-item">
-            <img
-              src="{% static 'images/shield.png' %}"
-              alt="Aman dan terpercaya" width="40" height="40" loading="lazy"
-            />
-            <span>Aman &<br />Terpercaya</span>
+            <img src="{% static 'images/store.png' %}" alt="Bisnis" width="40" height="40" loading="lazy">
+            <span>Aplikasi Stok<br />Barang Gratis</span>
           </div>
           <div class="highlight-item">
-            <img src="{% static 'images/kilat.png' %}" alt="Cepat dan praktis" width="40" height="40" loading="lazy">
-            <span>Cepat &<br />Praktis</span>
+            <img src="{% static 'images/credit-card-icon.png' %}" alt="POS" width="40" height="40" loading="lazy">
+            <span>POS Kasir<br />Digital</span>
+          </div>
+          <div class="highlight-item">
+            <img src="{% static 'images/shield.png' %}" alt="AI" width="40" height="40" loading="lazy">
+            <span>AI Analytics &<br />Laporan Keuangan</span>
           </div>
         </div>
       </div>
       <div class="hero-visual">
-        <img                src="{% static 'images/store-bike.png' %}"
-          alt="Warung Warungio"
-          class="store-image" width="400" height="300" loading="eager"
-        />
-        <img
-          src="{% static 'images/phone-home.png' %}"
-          alt="App Warungio"
-          class="phone-image" width="250" height="400" loading="lazy"
-        />
+        <img src="{% static 'images/store-bike.png' %}" alt="Warungio" class="store-image" width="400" height="300" loading="eager" />
+        <img src="{% static 'images/phone-home.png' %}" alt="App Warungio" class="phone-image" width="250" height="400" loading="lazy" />
       </div>
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  FEATURES SECTION — Marketplace + Business Management      #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="features" id="fitur">
     <div class="container">
-      <h2 class="section-title">Fitur Unggulan <span>Warungio</span></h2>
+      <div class="section-label">Fitur Lengkap</div>
+      <h2 class="section-title">Satu Platform untuk <span>Belanja & Bisnis</span></h2>
+      <p class="section-subtitle">Warungio menggabungkan marketplace hyperlocal dengan sistem manajemen bisnis UMKM terlengkap di Indonesia.</p>
       <div class="features-grid">
+        {# ── Consumer Features ── #}
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img              src="{% static 'images/location.png' %}"
-              alt="Lokasi" width="40" height="40" loading="lazy" />
+              <img src="{% static 'images/location.png' %}" alt="Marketplace" width="40" height="40" loading="lazy" />
             </div>
             <div>
-              <h3>Warung Terdekat</h3>
-              <p>
-                Temukan warung terdekat dari lokasi Anda secara real-time
-                dengan mudah.
-              </p>
+              <h3>Marketplace Hyperlocal</h3>
+              <p>Temukan warung dan UMKM terdekat, belanja kebutuhan harian, sembako, sayur segar, buah, daging, dan produk rumah tangga dengan pengiriman cepat.</p>
             </div>
           </div>
         </div>
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img              src="{% static 'images/shield.png' %}"
-              alt="Aman" width="40" height="40" loading="lazy" />
+              <img src="{% static 'images/shield.png' %}" alt="Pembayaran" width="40" height="40" loading="lazy" />
             </div>
             <div>
-              <h3>Aman & Terpercaya</h3>
-              <p>
-                Mendukung transaksi lancar dan cepat setiap saat dengan
-                aman.
-              </p>
+              <h3>Pembayaran Digital Aman</h3>
+              <p>Bayar dengan QRIS, GoPay, OVO, DANA, ShopeePay, transfer bank, kartu kredit, atau COD. Semua transaksi diproses via Midtrans dengan enkripsi tinggi.</p>
             </div>
           </div>
         </div>
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img              src="{% static 'images/kilat.png' %}"
-              alt="Cepat" width="40" height="40" loading="lazy" />
+              <img src="{% static 'images/kilat.png' %}" alt="Cepat" width="40" height="40" loading="lazy" />
             </div>
             <div>
-              <h3>Pesan Instan</h3>
-              <p>
-                Pesan sekarang, diantar dalam hitungan jam langsung ke
-                tangan Anda.
-              </p>
+              <h3>Pesan & Antar Instan</h3>
+              <p>Pesan sekarang, diantar dalam hitungan jam langsung ke rumah Anda. Lacak status pesanan real-time sampai barang tiba.</p>
             </div>
           </div>
         </div>
         <div class="feature-card">
           <div class="feature-card-inner">
             <div class="feature-icon">
-              <img              src="{% static 'images/pengiriman.png' %}"
-              alt="Tracking" width="40" height="40" loading="lazy" />
+              <img src="{% static 'images/pengiriman.png' %}" alt="Tracking" width="40" height="40" loading="lazy" />
             </div>
             <div>
-              <h3>Tracking Pesanan</h3>
-              <p>
-                Pantau status pesananmu setiap saat sampai barang tiba di
-                rumah.
-              </p>
+              <h3>Tracking & Notifikasi</h3>
+              <p>Pantau status pesanan setiap saat, dapatkan notifikasi real-time, dan nikmati pengalaman belanja yang transparan dari awal hingga akhir.</p>
+            </div>
+          </div>
+        </div>
+        {# ── Business Features ── #}
+        <div class="feature-card feature-card-business">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <span class="feature-icon-badge">Bisnis</span>
+              <img src="{% static 'images/store.png' %}" alt="POS" width="40" height="40" loading="lazy" />
+            </div>
+            <div>
+              <h3>POS Kasir Digital Gratis</h3>
+              <p>Sistem Point of Sale yang mudah digunakan. Cetak struk, kelola transaksi, dan pantau penjualan harian dengan aplikasi kasir digital Warungio.</p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card feature-card-business">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <span class="feature-icon-badge">Bisnis</span>
+              <img src="{% static 'images/sembako.png' %}" alt="Stok" width="40" height="40" loading="lazy" />
+            </div>
+            <div>
+              <h3>Aplikasi Stok Barang & Inventaris</h3>
+              <p>Kelola stok barang secara real-time. Dapatkan peringatan stok menipis, atur batch produk, dan pantau pergerakan barang dengan mudah. Gratis!</p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card feature-card-business">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <span class="feature-icon-badge">Bisnis</span>
+              <img src="{% static 'images/list.png' %}" alt="AI" width="40" height="40" loading="lazy" />
+            </div>
+            <div>
+              <h3>AI Analytics & Laporan Keuangan</h3>
+              <p>Analisis penjualan berbasis AI, laporan keuangan otomatis, grafik performa bisnis, dan rekomendasi cerdas untuk mengembangkan UMKM Anda.</p>
+            </div>
+          </div>
+        </div>
+        <div class="feature-card feature-card-business">
+          <div class="feature-card-inner">
+            <div class="feature-icon">
+              <span class="feature-icon-badge">Bisnis</span>
+              <img src="{% static 'images/verified.png' %}" alt="Supplier" width="40" height="40" loading="lazy" />
+            </div>
+            <div>
+              <h3>Manajemen Supplier & Pelanggan</h3>
+              <p>Kelola pemasok dan distributor, atur hubungan pelanggan, kirim notifikasi promosi, dan bangun loyalitas dengan fitur manajemen terintegrasi.</p>
             </div>
           </div>
         </div>
@@ -179,15 +204,15 @@
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  VIDEO / FRESHNESS SECTION                                #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="video-section">
     <div class="container">
       <div class="video-content">
         <div class="video-player">
           <video autoplay muted loop>
-            <source
-              src="{% static 'video/video-vegetable.mp4' %}"
-              type="video/mp4"
-            />
+            <source src="{% static 'video/video-vegetable.mp4' %}" type="video/mp4" />
           </video>
           <button class="play-button" aria-label="Putar video">
             <span></span>
@@ -195,85 +220,118 @@
         </div>
         <div class="video-text">
           <p class="video-label">warungio</p>
-          <h2>Kesegaran Terjaga, Kualitas <span>Terpercaya</span></h2>
+          <h2>Kesegaran Terjaga, Bisnis <span>Terkelola</span></h2>
           <p>
-            Warungio memastikan setiap sayur dan bahan makanan segar pilihan
-            untuk keluarga kamu. Tonton video di samping untuk lihat
-            langsung kesegaran produk kami!
+            Warungio memastikan setiap produk segar pilihan untuk keluarga Anda. 
+            Untuk pemilik usaha, kelola stok, pantau penjualan, dan kembangkan bisnis 
+            dengan tools manajemen terlengkap — semua dalam satu platform.
           </p>
         </div>
       </div>
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  FOR BUSINESS OWNERS — Dedicated Section                   #}
+  {# ═══════════════════════════════════════════════════════════ #}
+  <section class="business-section" id="bisnis">
+    <div class="container">
+      <div class="section-label">Untuk Pemilik Usaha</div>
+      <h2 class="section-title">Digitalisasikan <span>Bisnis UMKM</span> Anda</h2>
+      <p class="section-subtitle">Warungio menyediakan semua alat yang Anda butuhkan untuk mengelola dan mengembangkan usaha, dari stok barang hingga laporan keuangan.</p>
+      <div class="business-grid">
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/store.png' %}" alt="POS" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Sistem POS Kasir</h3>
+          <p>Aplikasi kasir digital gratis untuk mencatat transaksi, mencetak struk, dan mengelola penjualan harian dengan cepat dan akurat.</p>
+        </div>
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/sembako.png' %}" alt="Stok" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Manajemen Stok Real-time</h3>
+          <p>Pantau stok barang secara otomatis, dapatkan notifikasi saat stok menipis, dan kelola inventaris dengan aplikasi stok barang gratis.</p>
+        </div>
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/list.png' %}" alt="Laporan" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Laporan Keuangan & Penjualan</h3>
+          <p>Laporan keuangan otomatis, grafik penjualan, analisis laba-rugi, dan rekomendasi berbasis AI untuk pengambilan keputusan bisnis.</p>
+        </div>
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/verified.png' %}" alt="Supplier" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Manajemen Supplier</h3>
+          <p>Kelola pemasok, atur pesanan ke distributor, pantau harga bahan baku, dan optimalkan rantai pasok bisnis UMKM Anda.</p>
+        </div>
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/star.png' %}" alt="Pelanggan" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Manajemen Pelanggan</h3>
+          <p>Kelola data pelanggan, kirim notifikasi promo, program loyalitas, dan bangun hubungan jangka panjang dengan pembeli setia.</p>
+        </div>
+        <div class="business-card">
+          <div class="business-card-icon">
+            <img src="{% static 'images/discount.png' %}" alt="Promo" width="48" height="48" loading="lazy">
+          </div>
+          <h3>Promosi & Diskon Cerdas</h3>
+          <p>Buat promo, diskon, dan paket hemat. Pantau efektivitas promosi dengan analisis data dan tingkatkan penjualan toko Anda.</p>
+        </div>
+      </div>
+      <div class="business-cta">
+        <p>Mulai digitalisasikan bisnis Anda sekarang. <strong>Gratis!</strong></p>
+        <a href="{% url 'page-register-mitra' %}" class="btn-primary btn-hero">Daftar Jadi Mitra</a>
+      </div>
+    </div>
+  </section>
+
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  CATEGORIES SECTION                                       #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="categories" id="tentang">
     <div class="container">
       <div class="categories-header">
-        <h2 class="section-title">Kategori Populer</h2>
+        <h2 class="section-title">Kategori <span>Populer</span></h2>
         <a href="/info/tentang-kami/" class="link-all">Lihat semua kategori →</a>
       </div>
       <div class="category-promo-row">
         <div class="category-panel">
           <div class="categories-grid">
             <div class="category-item">
-              <img
-                src="{% static 'images/sembako.png' %}"
-                alt="Sembako"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/sembako.png' %}" alt="Sembako" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Sembako</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/vegetable.png' %}"
-                alt="Sayuran"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/vegetable.png' %}" alt="Sayuran" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Sayuran</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/fruit.png' %}"
-                alt="Buah"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/fruit.png' %}" alt="Buah" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Buah</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/meat.png' %}"
-                alt="Daging"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/meat.png' %}" alt="Daging" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Daging</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/beverage.png' %}
-                alt="Minuman"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/beverage.png' %}" alt="Minuman" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Minuman</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/food.png' %}"
-                alt="Makanan"
-                class="category-icon" width="60" height="60" loading="lazy"
-              />
+              <img src="{% static 'images/food.png' %}" alt="Makanan" class="category-icon" width="60" height="60" loading="lazy" />
               <p>Makanan</p>
             </div>
             <div class="category-item">
-              <img
-                src="{% static 'images/kebutuhan dapur.png' %}"
-                alt="Kebutuhan"
-                class="category-icon"
-              />
+              <img src="{% static 'images/kebutuhan dapur.png' %}" alt="Kebutuhan" class="category-icon" loading="lazy" />
               <p>Kebutuhan</p>
             </div>
           </div>
         </div>
-
         <div class="promo-card">
           <div class="promo-content">
             <h3>Promo Spesial Hari Ini!</h3>
@@ -282,107 +340,139 @@
             <p class="promo-subtitle">Untuk semua produk segar</p>
             <button class="btn-primary btn-small">Belanja Sekarang</button>
           </div>
-          <img
-            src="{% static 'images/tambah-produk.png' %}"
-            alt="Promo produk segar"
-            class="promo-image"
-          />
+          <img src="{% static 'images/tambah-produk.png' %}" alt="Promo produk segar" class="promo-image" />
         </div>
       </div>
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  HOW IT WORKS — Dual Track (Pembeli + Pemilik Bisnis)     #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="how-it-works" id="cara-kerja">
     <div class="container">
-      <h2 class="section-title">Cara Kerja <span>Warungio</span></h2>
-      <div class="steps-grid">
+      <div class="section-label">Cara Kerja</div>
+      <h2 class="section-title">Mulai dengan <span>Warungio</span></h2>
+      <p class="section-subtitle">Belanja kebutuhan harian atau kelola bisnis — semua dalam satu platform.</p>
+      
+      <div class="steps-tabs">
+        <button class="steps-tab active" data-track="buyer">Untuk Pembeli</button>
+        <button class="steps-tab" data-track="seller">Untuk Pemilik Usaha</button>
+      </div>
+
+      {# ── Buyer Steps ── #}
+      <div class="steps-grid steps-active" id="steps-buyer">
         <div class="step-card">
-          <div class="step-number">1</div>            <img src="{% static 'images/store.png' %}" alt="Pilih Warung" width="60" height="60" loading="lazy">
-          <h3>Pilih Warung</h3>
-          <p>Pilih warung terdekat dari lokasi Anda.</p>
+          <div class="step-number">1</div>
+          <img src="{% static 'images/store.png' %}" alt="Daftar" width="60" height="60" loading="lazy">
+          <h3>Daftar Akun</h3>
+          <p>Buat akun Warungio gratis dalam 1 menit. Verifikasi dengan OTP, dan siap belanja!</p>
         </div>
         <div class="step-card">
           <div class="step-number">2</div>
-          <img src="{% static 'images/keranjang.png' %}" alt="Pilih Produk" width="60" height="60" loading="lazy">
-          <h3>Pilih Produk</h3>
-          <p>Pilih produk yang ingin kamu beli.</p>
+          <img src="{% static 'images/location.png' %}" alt="Cari" width="60" height="60" loading="lazy">
+          <h3>Cari Warung & Produk</h3>
+          <p>Temukan warung dan UMKM terdekat. Jelajahi ribuan produk segar, sembako, dan kebutuhan harian.</p>
         </div>
         <div class="step-card">
           <div class="step-number">3</div>
-          <img src="{% static 'images/credit-card-icon.png' %}" alt="Checkout" width="60" height="60" loading="lazy">
-          <h3>Checkout</h3>
-          <p>Konfirmasi pesanan dan metode pembayaran.</p>
+          <img src="{% static 'images/keranjang.png' %}" alt="Pesan" width="60" height="60" loading="lazy">
+          <h3>Pesan & Bayar</h3>
+          <p>Tambahkan ke keranjang, checkout dengan berbagai metode pembayaran aman. Bayar via QRIS, GoPay, atau COD.</p>
         </div>
         <div class="step-card">
           <div class="step-number">4</div>
-          <img src="{% static 'images/pengiriman.png' %}" alt="Pesanan Diantar" width="60" height="60" loading="lazy">
-          <h3>Pesanan Diantar</h3>
-          <p>Pesanan diantar cepat sampai ke alamat Anda.</p>
+          <img src="{% static 'images/pengiriman.png' %}" alt="Terima" width="60" height="60" loading="lazy">
+          <h3>Terima & Nikmati</h3>
+          <p>Pesanan diantar cepat ke alamat Anda. Lacak status real-time dan nikmati produk segar!</p>
+        </div>
+      </div>
+
+      {# ── Seller Steps ── #}
+      <div class="steps-grid" id="steps-seller" style="display:none;">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <img src="{% static 'images/store.png' %}" alt="Daftar" width="60" height="60" loading="lazy">
+          <h3>Daftar Jadi Mitra</h3>
+          <p>Daftar gratis sebagai mitra seller. Dapatkan akses langsung ke dashboard bisnis dan aplikasi stok barang gratis.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <img src="{% static 'images/sembako.png' %}" alt="Stok" width="60" height="60" loading="lazy">
+          <h3>Kelola Stok & POS</h3>
+          <p>Gunakan aplikasi stok barang dan POS kasir digital Warungio. Atur inventaris, harga, dan kategori produk.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <img src="{% static 'images/list.png' %}" alt="Analytics" width="60" height="60" loading="lazy">
+          <h3>Pantau Bisnis</h3>
+          <p>Akses laporan keuangan, analisis penjualan berbasis AI, dan wawasan bisnis untuk mengembangkan toko Anda.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <img src="{% static 'images/discount.png' %}" alt="Jual" width="60" height="60" loading="lazy">
+          <h3>Jual & Kembangkan</h3>
+          <p>Jangkau lebih banyak pelanggan, buat promo, kelola supplier, dan tingkatkan omzet hingga 3x lipat!</p>
         </div>
       </div>
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  TESTIMONIALS                                             #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="testimonials" id="testimoni">
     <div class="container">
       <div class="testimonials-header">
-        <h2 class="section-title">Testimoni Pelanggan</h2>
-        <a href="/info/tentang-kami/" class="link-all">Lihat semua testimoni →</a>
+        <div class="section-label">Testimoni</div>
+        <h2 class="section-title">Apa Kata <span>Pengguna</span></h2>
       </div>
       <div class="testimonials-grid">
         <div class="testimonial-card">
           <span class="quote-mark">&ldquo;</span>
           <div class="testimonial-stars">
-            <span>★</span><span>★</span><span>★</span><span>★</span
-            ><span>★</span>
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
           </div>
           <p class="testimonial-text">
-            Belanja di Warungio sangat membantu, sayurnya segar dan
-            pengiriman cepat!
+            Belanja di Warungio sangat membantu, sayurnya segar dan pengiriman cepat! Saya juga jadi bisa mengelola stok toko sembako saya dengan aplikasi gratisnya.
           </p>
           <div class="testimonial-author">
             <img src="{% static 'images/av-siti.png' %}" alt="Siti Aisyah" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Siti Aisyah</p>
-              <p class="author-location">Jakarta Selatan</p>
+              <p class="author-location">Pembeli & Pemilik Toko | Jakarta Selatan</p>
             </div>
           </div>
         </div>
-
         <div class="testimonial-card">
           <span class="quote-mark">&ldquo;</span>
           <div class="testimonial-stars">
-            <span>★</span><span>★</span><span>★</span><span>★</span
-            ><span>★</span>
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
           </div>
           <p class="testimonial-text">
-            Harga terjangkau, produk lengkap, dan warung dekat rumah. Sangat
-            puas!
+            Sejak pindah ke Warungio, manajemen stok dan laporan keuangan jadi jauh lebih mudah. Aplikasi kasirnya gratis dan sangat membantu operasional toko saya.
           </p>
           <div class="testimonial-author">
             <img src="{% static 'images/av-stev.png' %}" alt="Budi Santoso" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Budi Santoso</p>
-              <p class="author-location">Bandung</p>
+              <p class="author-location">Pemilik Toko Sembako | Bandung</p>
             </div>
           </div>
         </div>
-
         <div class="testimonial-card">
           <span class="quote-mark">&ldquo;</span>
           <div class="testimonial-stars">
-            <span>★</span><span>★</span><span>★</span><span>★</span
-            ><span>★</span>
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
           </div>
           <p class="testimonial-text">
-            Aplikasi mudah digunakan, pelayanan juga sangat ramah.
-            Rekomendasi untuk keluarga!
+            Aplikasi stok barangnya gratis dan sangat membantu! Sekarang saya bisa pantau stok, supplier, dan laporan keuangan dari HP saja. Omzet naik 2x lipat!
           </p>
           <div class="testimonial-author">
             <img src="{% static 'images/av-melinda.png' %}" alt="Rina Kartika" width="48" height="48" loading="lazy">
             <div>
               <p class="author-name">Rina Kartika</p>
-              <p class="author-location">Surabaya</p>
+              <p class="author-location">Pemilik UMKM | Surabaya</p>
             </div>
           </div>
         </div>
@@ -395,24 +485,22 @@
     </div>
   </section>
 
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  DOWNLOAD SECTION                                        #}
+  {# ═══════════════════════════════════════════════════════════ #}
   <section class="download">
     <div class="container">
       <div class="download-content">
         <div class="download-visual">
-          <img
-            src="{% static 'images/download-app.png' %}"
-            alt="Download Warungio"
-          />
+          <img src="{% static 'images/download-app.png' %}" alt="Download Warungio" />
         </div>
         <div class="download-text">
-          <h2>Download Warungio Sekarang!</h2>
-          <p>Belanja dari warung terdekat jadi lebih mudah.</p>
+          <div class="section-label">Download Aplikasi</div>
+          <h2>Download Warungio <span>Sekarang!</span></h2>
+          <p>Belanja kebutuhan harian dari warung terdekat <strong>dan</strong> kelola bisnis UMKM Anda dengan aplikasi stok barang gratis, POS kasir digital, dan laporan keuangan berbasis AI — semua dalam satu aplikasi.</p>
           <div class="download-buttons">
             <a href="https://play.google.com/store" target="_blank" rel="noopener" class="store-button">
-              <img
-                src="{% static 'images/google-playstore.png' %}"
-                alt="Google Play Store"
-              />
+              <img src="{% static 'images/google-playstore.png' %}" alt="Google Play Store" />
             </a>
             <a href="https://apps.apple.com" target="_blank" rel="noopener" class="store-button">
               <img src="{% static 'images/appstore.png' %}" alt="App Store" />
@@ -423,52 +511,60 @@
     </div>
   </section>
 
-  <section class="partner" id="faq">
+  {# ═══════════════════════════════════════════════════════════ #}
+  {#  PARTNER / MITRA SECTION — Full Ecosystem                  #}
+  {# ═══════════════════════════════════════════════════════════ #}
+  <section class="partner" id="mitra">
     <div class="container">
       <div class="partner-content">
         <div class="partner-text">
-          <h2>Gabung Jadi Mitra <span>Warungio</span></h2>
+          <div class="section-label">Mitra Bisnis</div>
+          <h2>Gabung Jadi Mitra & <span>Digitalisasikan Usaha</span> Anda</h2>
           <p>
-            Jangkau lebih banyak pelanggan dan kembangkan usaha warungmu
-            bersama Warungio.
+            Warungio memberikan Anda ekosistem bisnis digital lengkap untuk mengelola 
+            dan mengembangkan UMKM. Dapatkan semua tools gratis dan jangkau lebih banyak 
+            pelanggan.
           </p>
           <ul class="partner-benefits">
             <li>
-              <img src="{% static 'images/verified.png' %}" alt="Benefit" />
+              <img src="{% static 'images/verified.png' %}" alt="POS" />
               <div>
-                <h4>Meningkatkan Penjualan</h4>
-                <p>
-                  Jangkau lebih banyak pelanggan di seluruh wilayah Anda.
-                </p>
+                <h4>Aplikasi Stok Barang & POS Kasir Gratis</h4>
+                <p>Kelola stok real-time, catat transaksi dengan POS digital, dan pantau inventaris dari mana saja. Gratis selamanya!</p>
               </div>
             </li>
             <li>
-              <img src="{% static 'images/shield.png' %}" alt="Benefit" />
+              <img src="{% static 'images/list.png' %}" alt="Analytics" />
               <div>
-                <h4>Mudah Digunakan</h4>
-                <p>
-                  Kelola produk dan pesanan dengan aplikasi yang simpel.
-                </p>
+                <h4>AI Analytics & Laporan Keuangan</h4>
+                <p>Dapatkan wawasan bisnis berbasis AI, laporan keuangan otomatis, analisis penjualan, dan rekomendasi cerdas untuk mengembangkan usaha.</p>
+              </div>
+            </li>
+            <li>
+              <img src="{% static 'images/store.png' %}" alt="Marketplace" />
+              <div>
+                <h4>Marketplace Hyperlocal Terintegrasi</h4>
+                <p>Jangkau ribuan pembeli potensial di sekitar lokasi Anda. Kelola pesanan, pembayaran digital, dan pengiriman dalam satu dashboard.</p>
+              </div>
+            </li>
+            <li>
+              <img src="{% static 'images/shield.png' %}" alt="Supplier" />
+              <div>
+                <h4>Manajemen Supplier & Pelanggan</h4>
+                <p>Atur hubungan dengan pemasok, kelola data pelanggan, kirim notifikasi promo, dan bangun loyalitas dengan program rewards.</p>
               </div>
             </li>
           </ul>
-          <a
-            href="{% url 'page-register-mitra' %}"
-            class="btn-primary btn-partner"
-            >Daftar Jadi Mitra</a
-          >
+          <a href="{% url 'page-register-mitra' %}" class="btn-primary btn-partner">Daftar Jadi Mitra Sekarang</a>
         </div>
         <div class="partner-visual">
-          <img
-            src="{% static 'images/store-icon-T.png' %}"
-            alt="Mitra Warungio"
-          />
+          <img src="{% static 'images/store-icon-T.png' %}" alt="Mitra Warungio" />
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Recent Orders (only shown when logged in) -->
+  {# ── Recent Orders (only shown when logged in) ── #}
   <section class="orders-section" id="ordersSection" style="display:none">
     <div class="container">
       <div class="section-header-row">
@@ -491,60 +587,50 @@
   <div class="container">
     <div class="footer-content">
       <div class="footer-column footer-brand">
-        <img
-          src="{% static 'images/Warungio L.png' %}"
-          alt="Warungio Logo"
-          class="footer-logo"
-        />
-        <p>Belanja dari warung terdekat, jadi lebih dekat.</p>
+        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo" />
+        <p>Marketplace hyperlocal & ekosistem manajemen bisnis UMKM dalam satu platform. Belanja kebutuhan harian, kelola stok, POS, keuangan, dan supplier.</p>
       </div>
-
       <div class="footer-column">
-        <h4>Menu</h4>
+        <h4>Belanja</h4>
         <ul>
-          <li><a href="/">Beranda</a></li>
-          <li><a href="/info/tentang-kami/">Tentang</a></li>
-          <li><a href="/#fitur">Fitur</a></li>
-          <li><a href="/#cara-kerja">Cara Kerja</a></li>
-          <li><a href="/bantuan/">FAQ</a></li>
+          <li><a href="/kategori/sayuran/">Sayuran Segar</a></li>
+          <li><a href="/kategori/buah/">Buah Segar</a></li>
+          <li><a href="/kategori/sembako/">Sembako</a></li>
+          <li><a href="/kategori/daging/">Daging & Ikan</a></li>
+          <li><a href="/buyer/products/">Semua Produk</a></li>
         </ul>
       </div>
-
+      <div class="footer-column">
+        <h4>Untuk Bisnis</h4>
+        <ul>
+          <li><a href="/info/panduan-seller/">Panduan Seller</a></li>
+          <li><a href="/info/tips-sukses/">Tips Sukses UMKM</a></li>
+          <li><a href="/info/komunitas/">Komunitas Seller</a></li>
+          <li><a href="/auth/register-mitra/">Daftar Mitra</a></li>
+        </ul>
+      </div>
       <div class="footer-column">
         <h4>Bantuan</h4>
         <ul>
           <li><a href="/bantuan/">Pusat Bantuan</a></li>
+          <li><a href="/info/kontak-kami/">Hubungi Kami</a></li>
           <li><a href="/info/kebijakan/">Syarat & Ketentuan</a></li>
           <li><a href="/info/kebijakan/">Kebijakan Privasi</a></li>
         </ul>
       </div>
-
       <div class="footer-column">
         <h4>Hubungi Kami</h4>
         <ul>
-          <li>
-            <img src="{% static 'images/location.png' %}" alt="Location" />
-            Jl. Mawar No. 30, Tasikmalaya
-          </li>
-          <li>
-            <img src="{% static 'images/call.png' %}" alt="Email" />
-            info@warungio.id
-          </li>
-          <li>
-            <img src="{% static 'images/call.png' %}" alt="Phone" />
-            +62 812-3456-7890
-          </li>
+          <li><img src="{% static 'images/location.png' %}" alt="Location" /> Jl. Mawar No. 30, Tasikmalaya</li>
+          <li><img src="{% static 'images/call.png' %}" alt="Email" /> info@warungio.id</li>
+          <li><img src="{% static 'images/call.png' %}" alt="Phone" /> +62 812-3456-7890</li>
         </ul>
         <div class="payment-methods">
           <img src="{% static 'images/cod-icon.png' %}" alt="COD" />
-          <img
-            src="{% static 'images/credit-card-icon.png' %}"
-            alt="Credit Card"
-          />
+          <img src="{% static 'images/credit-card-icon.png' %}" alt="Credit Card" />
         </div>
       </div>
     </div>
-
     <div class="footer-social">
       <div class="social-icons">
         <a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="social-icon">
@@ -557,7 +643,7 @@
           <img src="{% static 'images/youtube.png' %}" alt="YouTube" />
         </a>
       </div>
-      <p>&copy; 2026 Warungio. All rights reserved.</p>
+      <p>&copy; 2026 Warungio. Ekosistem Marketplace & Manajemen Bisnis UMKM Indonesia. All rights reserved.</p>
     </div>
   </div>
 </footer>
@@ -574,18 +660,29 @@
 document.addEventListener('DOMContentLoaded', function() {
   'use strict';
 
-  // ── Preserve ?next= on all login/register buttons without breaking existing params ──
+  // ── Dual Track Tabs (Pembeli / Pemilik Usaha) ──
+  var tabs = document.querySelectorAll('.steps-tab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var track = this.getAttribute('data-track');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+      document.querySelectorAll('.steps-grid').forEach(function(g) { g.style.display = 'none'; });
+      var target = document.getElementById('steps-' + track);
+      if (target) target.style.display = 'grid';
+    });
+  });
+
+  // ── Preserve ?next= on all login/register buttons ──
   var urlParams = new URLSearchParams(window.location.search);
   var nextUrl = urlParams.get('next');
   if (nextUrl) {
     document.querySelectorAll('[href*="/auth/login"], [href*="/auth/register"]').forEach(function(btn) {
       var href = btn.getAttribute('href');
       if (!href) return;
-      // Parse existing query params to preserve them (e.g. ?role=seller on Login Seller)
       var parts = href.split('?');
       var base = parts[0];
       var existingParams = new URLSearchParams(parts[1] || '');
-      // Only add ?next= if not already present
       if (!existingParams.has('next')) {
         existingParams.set('next', nextUrl);
         btn.setAttribute('href', base + '?' + existingParams.toString());
@@ -593,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ── Smooth scroll for anchor links in content ──
+  // ── Smooth scroll for anchor links ──
   document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
     anchor.addEventListener('click', function(e) {
       var targetId = this.getAttribute('href');

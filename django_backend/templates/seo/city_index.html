@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.city-card { transition: all 0.3s ease; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: white; padding: 20px; }
+.city-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.06); border-color: #bbf7d0; }
+.hero-gradient-index { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #10b981 100%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-gradient-index py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">
+            Belanja Online di {{ city_count }} Kota
+        </h1>
+        <p class="text-lg text-white/80 max-w-2xl mx-auto mb-6">
+            Temukan warung dan UMKM lokal di kota Anda. Belanja kebutuhan harian, 
+            sembako, sayur segar, buah segar, dan produk rumah tangga dengan pengiriman cepat.
+        </p>
+        <div class="flex justify-center gap-3 flex-wrap">
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2"/></svg>
+                {{ total_stores|intcomma }} Warung Mitra
+            </span>
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                {{ total_products|intcomma }} Produk Tersedia
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Pilih Kota Anda</h2>
+        <p class="text-sm text-gray-500 mb-8">Temukan warung mitra terdekat di kota Anda dan mulailah berbelanja</p>
+        
+        {% if cities %}
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for city in cities %}
+            <a href="/kota/{{ city.city|slugify }}/" class="city-card flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-gray-900">{{ city.city }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ city.store_count }} warung{% if city.product_count %} · {{ city.product_count }} produk{% endif %}
+                    </p>
+                </div>
+                <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-gray-400">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <p class="text-lg font-medium">Belum ada kota tersedia</p>
+            <p class="text-sm mt-1">Warungio akan segera hadir di kota Anda!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="py-12 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-sm max-w-none text-gray-600">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Warungio Hadir di {{ city_count }} Kota di Indonesia</h2>
+            <p>
+                Warungio adalah marketplace hyperlocal yang menghubungkan Anda dengan warung dan UMKM 
+                lokal di berbagai kota di Indonesia. Dengan jangkauan {{ city_count }} kota dan {{ total_stores|intcomma }} 
+                warung mitra, kami siap memenuhi kebutuhan harian Anda dengan produk segar berkualitas 
+                dan pengiriman cepat. Pilih kota Anda di atas untuk mulai berbelanja!
+            </p>
+            <p class="mt-4">
+                Nikmati kemudahan belanja sembako, sayur segar, buah segar, daging, dan kebutuhan rumah 
+                tangga langsung dari warung terdekat. Pembayaran aman via QRIS, GoPay, OVO, transfer bank, 
+                dan COD. Download aplikasi Warungio untuk pengalaman belanja yang lebih praktis!
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

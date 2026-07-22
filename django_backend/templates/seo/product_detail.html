@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.product-detail-img { aspect-ratio: 1/1; object-fit: contain; border-radius: 16px; background: #f8fafc; }
+.related-card { transition: all 0.3s ease; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: white; }
+.related-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); border-color: #bbf7d0; }
+.review-card { border-bottom: 1px solid #f1f5f9; padding: 16px 0; }
+.review-card:last-child { border-bottom: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Product Detail -->
+<section class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-xs text-gray-400 mb-6">
+            <a href="/" class="hover:text-primary-600 transition-colors">Beranda</a>
+            <span>/</span>
+            {% if product.category %}
+            <a href="/kategori/{{ product.category.category_name|slugify }}/" class="hover:text-primary-600 transition-colors">{{ product.category.category_name }}</a>
+            <span>/</span>
+            {% endif %}
+            <span class="text-gray-600">{{ product.product_name }}</span>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+            <!-- Image -->
+            <div class="product-detail-img flex items-center justify-center p-8">
+                {% if product.product_photo %}
+                <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain" loading="eager">
+                {% else %}
+                <div class="text-gray-300 text-center">
+                    <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <p class="text-sm mt-2">Belum ada foto</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Info -->
+            <div>
+                {% if product.store %}
+                <a href="/toko/{{ product.store.slug }}/" class="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 font-medium mb-3">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2"/></svg>
+                    {{ product.store.store_name }}
+                </a>
+                {% endif %}
+
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">{{ product.product_name }}</h1>
+
+                <div class="flex items-center gap-3 mb-4">
+                    {% if product.rating_avg > 0 %}
+                    <span class="flex items-center gap-1 text-amber-500 font-semibold">★ {{ product.rating_avg|floatformat:1 }}</span>
+                    <span class="text-sm text-gray-400">({{ product.review_count }} ulasan)</span>
+                    <span class="text-gray-300">|</span>
+                    {% endif %}
+                    <span class="text-sm text-gray-400">{{ product.sold_count }} terjual</span>
+                </div>
+
+                <p class="text-3xl font-extrabold text-primary-600 mb-6">Rp {{ product.price|floatformat:0 }}</p>
+
+                {% if product.description %}
+                <div class="mb-6">
+                    <h2 class="text-sm font-semibold text-gray-900 mb-2">Deskripsi</h2>
+                    <p class="text-sm text-gray-600 leading-relaxed">{{ product.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Product meta info -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400">Stok tersedia</p>
+                        <p class="font-semibold text-gray-900 text-sm">{{ product.available_stock }} {{ product.unit }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400">Kualitas</p>
+                        <p class="font-semibold text-gray-900 text-sm capitalize">{{ product.product_status }}</p>
+                    </div>
+                    {% if product.category %}
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400">Kategori</p>
+                        <a href="/kategori/{{ product.category.category_name|slugify }}/" class="font-semibold text-primary-600 text-sm hover:text-primary-700">{{ product.category.category_name }}</a>
+                    </div>
+                    {% endif %}
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400">Satuan</p>
+                        <p class="font-semibold text-gray-900 text-sm">{{ product.unit }}</p>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <a href="/auth/register/" class="inline-flex items-center justify-center w-full px-6 py-3.5 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-25 hover:shadow-xl active:scale-[0.98]">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                    Beli Sekarang — Daftar/Login untuk checkout
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews -->
+{% if reviews %}
+<section class="py-10 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Ulasan Pembeli ({{ review_count }})</h2>
+        {% for review in reviews %}
+        <div class="review-card">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-sm flex-shrink-0">
+                    {{ review.user.full_name|first|default:"U"|upper }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-900 text-sm">{{ review.user.full_name|default:"Pengguna" }}</span>
+                        <span class="text-xs text-amber-500">★ {{ review.rating }}</span>
+                    </div>
+                    {% if review.comment %}
+                    <p class="text-sm text-gray-600 mt-1">{{ review.comment }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-400 mt-1">{{ review.created_at|date:"d M Y" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Related Products -->
+{% if related_products or category_products %}
+<section class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {% if related_products %}
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Produk Lain dari Toko Ini</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            {% for rp in related_products %}
+            <a href="/produk/{{ rp.slug }}/" class="related-card group">
+                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    {% if rp.product_photo %}
+                    <img src="{{ rp.product_photo.url }}" alt="{{ rp.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                    {% else %}
+                    <div class="text-gray-300"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <h3 class="font-medium text-gray-900 text-sm line-clamp-2">{{ rp.product_name }}</h3>
+                    <p class="text-primary-600 font-bold text-sm mt-1">Rp {{ rp.price|floatformat:0 }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if category_products %}
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Produk {{ product.category.category_name }} Lainnya</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for cp in category_products %}
+            <a href="/produk/{{ cp.slug }}/" class="related-card group">
+                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    {% if cp.product_photo %}
+                    <img src="{{ cp.product_photo.url }}" alt="{{ cp.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                    {% else %}
+                    <div class="text-gray-300"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+                    {% endif %}
+                </div>
+                <div class="p-3">
+                    <h3 class="font-medium text-gray-900 text-sm line-clamp-2">{{ cp.product_name }}</h3>
+                    <p class="text-primary-600 font-bold text-sm mt-1">Rp {{ cp.price|floatformat:0 }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- SEO Info -->
+<section class="py-10 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-sm max-w-none text-gray-600">
+            <h2 class="text-lg font-bold text-gray-900 mb-3">Beli {{ product.product_name }} Online di Warungio</h2>
+            <p>
+                {{ product.product_name }} tersedia di Warungio dengan harga terjangkau dan kualitas 
+                terjamin. Dapatkan produk segar berkualitas dengan pengiriman cepat dari warung mitra 
+                terdekat. Tersedia berbagai metode pembayaran: QRIS, GoPay, OVO, transfer bank, 
+                dan COD. Download aplikasi Warungio untuk pengalaman belanja yang lebih praktis!
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

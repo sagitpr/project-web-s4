@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.product-grid-item { transition: all 0.3s ease; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: white; }
+.product-grid-item:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); border-color: #bbf7d0; }
+.store-header-gradient { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Store Header -->
+<section class="store-header-gradient py-12 md:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-6">
+            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+                {{ store.store_name|first|upper }}
+            </div>
+            <div class="text-white">
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">{{ store.store_name }}</h1>
+                <p class="text-white/80 mt-1 text-sm md:text-base">{{ store.city|default:"" }}{% if store.city and store.district %}, {% endif %}{{ store.district|default:"" }}</p>
+                <div class="flex items-center gap-4 mt-3 flex-wrap">
+                    {% if store.rating_avg > 0 %}
+                    <span class="flex items-center gap-1 text-sm font-medium text-white">★ {{ store.rating_avg|floatformat:1 }}</span>
+                    {% endif %}
+                    <span class="text-white/70 text-sm">{{ product_count }} produk</span>
+                    <span class="text-white/70 text-sm">{{ store.follower_count }} pengikut</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Store Description -->
+{% if store.description %}
+<section class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <p class="text-sm text-gray-600 leading-relaxed">{{ store.description }}</p>
+    </div>
+</section>
+{% endif %}
+
+<!-- Products -->
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Produk {{ store.store_name }}</h2>
+                <p class="text-sm text-gray-500 mt-1">Temukan produk segar dan kebutuhan harian</p>
+            </div>
+        </div>
+
+        {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {% for product in products %}
+            <a href="/produk/{{ product.slug }}/" class="product-grid-item group">
+                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    {% if product.product_photo %}
+                    <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                    {% else %}
+                    <div class="text-gray-300 text-center">
+                        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-3 md:p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-2 mb-1">{{ product.product_name }}</h3>
+                    <p class="text-primary-600 font-bold text-sm md:text-base">Rp {{ product.price|floatformat:0 }}</p>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                        <span>{{ product.sold_count }} terjual</span>
+                        {% if product.rating_avg > 0 %}
+                        <span>★ {{ product.rating_avg|floatformat:1 }}</span>
+                        {% endif %}
+                    </div>
+                    {% if product.category %}
+                    <div class="mt-2">
+                        <span class="text-xs px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{{ product.category.category_name }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-gray-400">
+            <p class="text-lg font-medium">Belum ada produk tersedia</p>
+            <p class="text-sm mt-1">Produk akan segera ditambahkan oleh penjual.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Categories -->
+{% if categories %}
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Kategori Produk</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for cat in categories %}
+            <a href="/kategori/{{ cat.category_name|slugify }}/" class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-200 hover:border-primary-300 transition-all text-sm font-medium text-gray-700 hover:text-primary-700">
+                {{ cat.category_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Store Info SEO Text -->
+<section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-sm max-w-none text-gray-600">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Tentang {{ store.store_name }}</h2>
+            <p>
+                {{ store.store_name }} adalah mitra Warungio yang menyediakan berbagai produk kebutuhan 
+                harian berkualitas di {{ store.city|default:"lokasi Anda" }}. 
+                Belanja online dari {{ store.store_name }} melalui Warungio untuk mendapatkan 
+                produk segar dengan pengiriman cepat dan pembayaran aman.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

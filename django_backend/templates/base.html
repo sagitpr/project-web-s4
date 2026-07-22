@@ -18,6 +18,11 @@
     {# ── Override title via block (for backward compatibility) ── #}
     <title>{% block title %}{{ seo.meta_title }}{% endblock %}</title>
     
+    {# ── Google Search Console Verification ── #}
+    {% if seo.google_site_verification %}
+    <meta name="google-site-verification" content="{{ seo.google_site_verification }}">
+    {% endif %}
+
     {# ── Custom meta from child templates (e.g. page-specific overrides) ── #}
     {% block meta %}{% endblock %}
 
@@ -140,6 +145,37 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C4.79 17.1 5.12 11.08 8.77 10.1c1.23-.32 2.15.22 2.86.57.7-.36 1.75-.7 3.06-.38 1.76.48 3.05 1.83 3.36 3.5-2.02 1.14-1.69 3.91.28 4.73-.31.85-.63 1.7-1.28 2.76zM12.03 6.25c.8-1.14 2.03-1.98 3.38-2.12-.06 1.05-.48 2.14-1.2 2.95-.73.84-1.68 1.43-2.82 1.4-.03-.99.27-1.99.64-2.23z"/></svg>
                 iOS
             </a>
+        </div>
+        <div class="footer-links" style="display:flex;flex-wrap:wrap;gap:32px;margin-top:24px;padding-top:24px;border-top:1px solid #e5e7eb;">
+            <div>
+                <h4 style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:12px;">Belanja</h4>
+                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+                    <li><a href="/kategori/sayuran/" style="font-size:13px;color:#64748b;text-decoration:none;">Sayuran Segar</a></li>
+                    <li><a href="/kategori/buah/" style="font-size:13px;color:#64748b;text-decoration:none;">Buah Segar</a></li>
+                    <li><a href="/kategori/sembako/" style="font-size:13px;color:#64748b;text-decoration:none;">Sembako</a></li>
+                    <li><a href="/kategori/daging/" style="font-size:13px;color:#64748b;text-decoration:none;">Daging & Ikan</a></li>
+                    <li><a href="/buyer/products/" style="font-size:13px;color:#64748b;text-decoration:none;">Semua Produk</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:12px;">Informasi</h4>
+                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+                    <li><a href="/info/tentang-kami/" style="font-size:13px;color:#64748b;text-decoration:none;">Tentang Kami</a></li>
+                    <li><a href="/info/cara-belanja/" style="font-size:13px;color:#64748b;text-decoration:none;">Cara Belanja</a></li>
+                    <li><a href="/info/metode-pembayaran/" style="font-size:13px;color:#64748b;text-decoration:none;">Metode Pembayaran</a></li>
+                    <li><a href="/info/blog/" style="font-size:13px;color:#64748b;text-decoration:none;">Blog</a></li>
+                    <li><a href="/download/" style="font-size:13px;color:#64748b;text-decoration:none;">Download Aplikasi</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:12px;">Bantuan</h4>
+                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+                    <li><a href="/bantuan/" style="font-size:13px;color:#64748b;text-decoration:none;">Pusat Bantuan</a></li>
+                    <li><a href="/info/kontak-kami/" style="font-size:13px;color:#64748b;text-decoration:none;">Hubungi Kami</a></li>
+                    <li><a href="/info/kebijakan/" style="font-size:13px;color:#64748b;text-decoration:none;">Kebijakan Privasi</a></li>
+                    <li><a href="/info/panduan-seller/" style="font-size:13px;color:#64748b;text-decoration:none;">Panduan Seller</a></li>
+                </ul>
+            </div>
         </div>
         <p class="footer-copy">&copy; 2026 Warungio. Hak Cipta Dilindungi.</p>
     </div>

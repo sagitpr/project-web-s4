@@ -20,6 +20,7 @@ from drf_spectacular.views import (
 )
 from accounts import views as accounts_views
 from accounts.decorators import buyer_required, seller_required, admin_required
+from seo import page_views as seo_views
 
 
 @require_GET
@@ -220,6 +221,17 @@ urlpatterns += [path('bantuan/', include('support.page_urls'))]
 # Alias: page-bantuan → redirect to the actual bantuan page
 urlpatterns += [
     path('info/bantuan/', RedirectView.as_view(url='/bantuan/', permanent=True), name='page-bantuan'),
+]
+
+# ── SEO Landing Pages (indexable, public) ──
+urlpatterns += [
+    path('kategori/', seo_views.category_index, name='seo-category-index'),
+    path('kategori/<slug:slug>/', seo_views.category_landing, name='seo-category'),
+    path('kota/', seo_views.city_index, name='seo-city-index'),
+    path('kota/<slug:slug>/', seo_views.city_landing, name='seo-city'),
+    path('toko/<slug:slug>/', seo_views.store_landing, name='seo-store'),
+    path('produk/<slug:slug>/', seo_views.product_detail, name='seo-product'),
+    path('promo/<slug:slug>/', seo_views.promo_landing, name='seo-promo'),
 ]
 
 # Extra routes for feature pages

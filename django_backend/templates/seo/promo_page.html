@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block content %}
+<section class="py-16 bg-gradient-to-br from-emerald-600 via-emerald-500 to-green-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">{{ promo.promo_name }}</h1>
+        {% if promo.description %}
+        <p class="text-lg text-white/80 max-w-2xl mx-auto">{{ promo.description }}</p>
+        {% endif %}
+        {% if promo.promo_code %}
+        <div class="mt-6 inline-flex items-center gap-3 px-6 py-3 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20">
+            <span class="text-white/70 text-sm">Kode Promo:</span>
+            <span class="text-white font-bold text-lg tracking-widest">{{ promo.promo_code }}</span>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8">Produk Promo</h2>
+        {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {% for product in products %}
+            <a href="/produk/{{ product.slug }}/" class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md hover:border-primary-100 transition-all group bg-white">
+                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    {% if product.product_photo %}
+                    <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                    {% endif %}
+                </div>
+                <div class="p-3 md:p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">{{ product.product_name }}</h3>
+                    <p class="text-primary-600 font-bold">Rp {{ product.price|floatformat:0 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">{{ product.sold_count }} terjual</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-400 py-12">Belum ada produk dalam promo ini.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

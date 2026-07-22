@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ seo.meta_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.store-card { transition: all 0.3s ease; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: white; }
+.store-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.06); border-color: #bbf7d0; }
+.hero-gradient-city { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #10b981 100%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient-city py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
+            Belanja Online di {{ city_name }}
+        </h1>
+        <p class="text-lg text-white/80 max-w-2xl mx-auto mb-6">
+            Temukan warung dan UMKM terdekat di {{ city_name }}. Belanja kebutuhan harian, 
+            sembako, sayur segar, buah segar, dan produk rumah tangga dengan pengiriman cepat.
+        </p>
+        <div class="flex justify-center gap-3 flex-wrap">
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2"/></svg>
+                {{ store_count }} Warung Mitra
+            </span>
+            <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                {{ product_count }} Produk Tersedia
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- Store Listings -->
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Warung & UMKM di {{ city_name }}</h2>
+        <p class="text-sm text-gray-500 mb-8">Temukan warung mitra terdekat dan mulailah berbelanja</p>
+        
+        {% if stores %}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for store in stores %}
+            <a href="/toko/{{ store.slug }}/" class="store-card p-5">
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-xl flex-shrink-0">
+                        {{ store.store_name|first|upper }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-semibold text-gray-900">{{ store.store_name }}</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ store.address|default:city_name|truncatechars:40 }}</p>
+                        <div class="flex items-center gap-3 mt-2">
+                            {% if store.rating_avg > 0 %}
+                            <span class="text-xs font-medium text-amber-600">★ {{ store.rating_avg|floatformat:1 }}</span>
+                            {% endif %}
+                            <span class="text-xs text-gray-400">{{ store.follower_count }} pengikut</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 flex gap-2 flex-wrap">
+                    {% for cat in categories_available|slice:":4" %}
+                    <span class="text-xs px-2.5 py-1 bg-gray-50 text-gray-600 rounded-full">{{ cat.category_name }}</span>
+                    {% endfor %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-gray-400">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <p class="text-lg font-medium">Belum ada warung mitra di {{ city_name }}</p>
+            <p class="text-sm mt-1">Warungio akan segera hadir di {{ city_name }}!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Categories Available -->
+{% if categories_available %}
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Kategori Produk Tersedia di {{ city_name }}</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for cat in categories_available %}
+            <a href="/kategori/{{ cat.category_name|slugify }}/" 
+               class="inline-flex items-center gap-2 px-5 py-3 bg-white rounded-xl border border-gray-200 hover:border-primary-300 hover:shadow-sm transition-all text-sm font-medium text-gray-700 hover:text-primary-700">
+                <span>{{ cat.category_name }}</span>
+                <span class="text-xs text-gray-400">({{ cat.prod_count }})</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- SEO Text Section -->
+<section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-sm sm:prose max-w-none text-gray-600">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Belanja Online di {{ city_name }} Bersama Warungio</h2>
+            <p>
+                Warungio adalah marketplace hyperlocal yang menghubungkan warga {{ city_name }} dengan warung 
+                dan UMKM lokal terdekat. Nikmati kemudahan belanja kebutuhan harian seperti sembako, 
+                sayur segar, buah segar, daging, dan produk rumah tangga tanpa harus keluar rumah. 
+                Cukup pesan melalui aplikasi atau website Warungio, dan pesanan Anda akan diantar 
+                langsung oleh warung mitra terdekat.
+            </p>
+            <p class="mt-4">
+                Tersedia berbagai metode pembayaran aman: QRIS, GoPay, OVO, DANA, transfer bank 
+                (BCA, Mandiri, BRI, BNI), kartu kredit, dan COD. Semua transaksi diproses melalui 
+                Midtrans dengan enkripsi keamanan tinggi. Download aplikasi Warungio sekarang dan 
+                nikmati kemudahan belanja dari rumah di {{ city_name }}!
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
