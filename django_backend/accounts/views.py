@@ -213,51 +213,64 @@ class RegisterView(generics.CreateAPIView):
         )
         
         # ────────────────────────────────────────────────────────────────────
-        #  STEP 3: Send OTP via email (synchronous — blocks until sent)
+        #  STEP 3: Send OTP — try Celery async FIRST, fallback to sync
+        #  
+        #  Priority:
+        #    1. Celery .delay() (non-blocking, fast response)
+        #    2. Synchronous send_mail (blocking, guarantees delivery)
+        #    3. WhatsApp via Celery as bonus channel
+        #
         #  CRITICAL: OTP must be sent BEFORE committing the transaction.
-        #  If email fails, the entire transaction rolls back — no orphan account.
+        #  If all delivery channels fail, the entire transaction rolls back
+        #  preventing orphan accounts.
         # ────────────────────────────────────────────────────────────────────
         otp_sent = False
-        email_result = send_otp_email(
+        
+        # Priority 1: Try Celery async delivery FIRST (non-blocking, ~5ms)
+        channels = _dispatch_otp_async(
             email=user.email,
+            phone=str(user.phone) if user.phone else None,
             otp_code=otp.otp_code,
             purpose='registration',
             user_full_name=user.full_name,
         )
         
-        if email_result.get('success'):
+        if channels:
             otp_sent = True
-            channels = ['email']
             logger.info(
-                'REGISTER OTP SENT — Email: %s | OTP ID: %d',
-                user.email, otp.id,
+                'REGISTER OTP DISPATCHED — Email: %s | Channels: %s | OTP ID: %d',
+                user.email, channels, otp.id,
             )
         else:
-            # Email failed — try Celery task as fallback
+            # Priority 2: Celery unavailable — fallback to synchronous send
             logger.warning(
-                'REGISTER OTP EMAIL FAILED — %s | Falling back to Celery for %s',
-                email_result.get('error', 'unknown'), user.email,
+                'REGISTER — Celery unavailable, falling back to sync email for %s',
+                user.email,
             )
-            channels = _dispatch_otp_async(
+            email_result = send_otp_email(
                 email=user.email,
-                phone=str(user.phone) if user.phone else None,
                 otp_code=otp.otp_code,
                 purpose='registration',
                 user_full_name=user.full_name,
             )
-            if channels:
+            if email_result.get('success'):
                 otp_sent = True
+                channels = ['email']
+                logger.info(
+                    'REGISTER OTP SENT (sync) — Email: %s | OTP ID: %d',
+                    user.email, otp.id,
+                )
         
         # Attempt WhatsApp delivery as bonus channel (non-blocking)
         if user.phone and _whatsapp_configured():
-            _dispatch_otp_async(
+            wa_sent = _dispatch_otp_async(
                 email=user.email,
                 phone=str(user.phone),
                 otp_code=otp.otp_code,
                 purpose='registration',
                 user_full_name=user.full_name,
             )
-            if 'whatsapp' not in channels:
+            if wa_sent and 'whatsapp' not in channels:
                 channels.append('whatsapp')
         
         if not otp_sent:
@@ -392,26 +405,28 @@ class LoginView(views.APIView):
                 'id': otp.id, 'email': email, 'purpose': 'registration'
             })
 
-            # 3. Send OTP via email (synchronous)
-            email_result = send_otp_email(
+            # 3. Send OTP — try Celery async FIRST, fallback to sync
+            channels = _dispatch_otp_async(
                 email=email,
+                phone=phone,
                 otp_code=otp.otp_code,
                 purpose='registration',
                 user_full_name=user_full_name,
             )
-            
-            # Also try async dispatch as bonus
-            channels = []
-            if email_result.get('success'):
-                channels.append('email')
-            else:
-                channels = _dispatch_otp_async(
+            if not channels:
+                # Celery unavailable — send synchronously
+                logger.warning(
+                    'LOGIN AUTO-OTP — Celery unavailable, falling back to sync email for %s',
+                    email,
+                )
+                email_result = send_otp_email(
                     email=email,
-                    phone=phone,
                     otp_code=otp.otp_code,
                     purpose='registration',
                     user_full_name=user_full_name,
                 )
+                if email_result.get('success'):
+                    channels = ['email']
 
             # Build redirect URL for OTP page
             if user.role == 'seller':
@@ -1381,24 +1396,6 @@ class RootView(views.APIView):
         return render(request, 'landing/index.html')
 
 
-@extend_schema(exclude=True)
-class AdminLoginView(views.APIView):
-    """
-    Dedicated admin login view.
-    
-    Only staff users (is_staff=True or role='admin') may log in here.
-    Uses AdminLoginSerializer which checks admin status BEFORE authenticating
-    to prevent leaking authentication success to non-admin users.
-    
-    Admin login has a tighter rate limit (5/minute) than public login (10/minute)
-    to prevent brute force attacks on admin accounts.
-    
-    Returns JWT tokens AND sets Django session for template-based navigation.
-    """
-    permission_classes = (permissions.AllowAny,)
-    throttle_classes = [throttling.ScopedRateThrottle]
-    throttle_scope = 'admin_login'
-
 # =============================================================================
 # Registration Service Views (bridge to registration_service.py)
 # These view wrappers provide HTTP endpoints for the multi-step registration flow
@@ -1406,7 +1403,7 @@ class AdminLoginView(views.APIView):
 # =============================================================================
 # NOTE: The main registration flow uses RegisterView (single-step with OTP).
 # These multi-step views are exposed for frontend code that references
-# the /api/auth/registration/* endpoints.
+# the /api/auth/registration/* endpoints as an alternative multi-step flow.
 
 
 @extend_schema(exclude=True)

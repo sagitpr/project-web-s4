@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const email = params.get('email') || '';
   const testOtp = params.get('otp') || '';
   const purpose = params.get('purpose') || 'registration';
+  const role = params.get('role') || ''; // 'seller' or 'buyer' — used for UI customization
 
   const otpInputs = document.querySelectorAll('.otp-input');
   const otpForm = document.getElementById('otpForm');
@@ -53,7 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
       emailGroup.style.display = 'block';
     }
     if (otpDesc) {
-      otpDesc.innerHTML = 'Kami telah mengirim kode OTP ke:<br><strong>' + email + '</strong>';
+      var roleLabel = role === 'seller' ? 'Akun Mitra Penjual' : (role === 'buyer' ? 'Akun Pembeli' : 'Akun');
+      otpDesc.innerHTML = 'Kami telah mengirim kode OTP verifikasi ' + roleLabel + ' ke:<br><strong>' + email + '</strong>';
     }
   }
 
