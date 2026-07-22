@@ -238,8 +238,6 @@ services:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
-      - CHOWN
-      - DAC_OVERRIDE
       - SETGID
       - SETUID
     healthcheck:
@@ -259,8 +257,10 @@ services:
 
   # ---- Prometheus (Lightweight Metrics Collection) ----
   # Scrapes node_exporter + cadvisor every 60s. ~50MB RAM idle.
-  # Fits within 160MB headroom after optimization.
+  # OPTIONAL: Enable only after VPS has swap & is stable.
+  # Start with: docker compose --profile monitoring up -d
   prometheus:
+    profiles: ["monitoring"]
     image: prom/prometheus:v2.53.0
     container_name: warungio-prometheus
     restart: unless-stopped
@@ -285,7 +285,9 @@ services:
 
   # ---- Node Exporter (Host-Level Metrics) ----
   # CPU, memory, disk, network from the Docker host. ~20MB RAM.
+  # OPTIONAL: Enable only after VPS has swap & is stable.
   node_exporter:
+    profiles: ["monitoring"]
     image: prom/node-exporter:v1.8.0
     container_name: warungio-node-exporter
     restart: unless-stopped
@@ -310,7 +312,9 @@ services:
 
   # ---- cAdvisor (Container-Level Metrics) ----
   # Per-container CPU, memory, network, disk I/O. ~40MB RAM.
+  # OPTIONAL: Enable only after VPS has swap & is stable.
   cadvisor:
+    profiles: ["monitoring"]
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: warungio-cadvisor
     restart: unless-stopped

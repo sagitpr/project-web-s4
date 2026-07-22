@@ -183,6 +183,19 @@ validate_endpoints() {
     fi
 }
 
+# ─── Check monitoring containers (profile-based, not started by default) ──
+check_monitoring() {
+    echo ""
+    echo -e "${BLUE}   Checking monitoring services...${NC}"
+    local MON_COUNT=$(docker compose "${COMPOSE_FILES[@]}" ps 2>/dev/null | grep -c -E 'prometheus|node_exporter|cadvisor' || echo 0)
+    if [ "$MON_COUNT" -gt 0 ]; then
+        echo -e "  ${GREEN}✅ Monitoring containers: ${MON_COUNT} running${NC}"
+    else
+        echo -e "  ${YELLOW}⚠️  Monitoring containers not running (profile-based, start manually with --profile monitoring)${NC}"
+        echo "     docker compose --profile monitoring up -d"
+    fi
+}
+
 # ─── Firewall check ──────────────────────────────────────────────────────────
 check_firewall() {
     echo ""
@@ -325,6 +338,7 @@ echo ""
 echo -e "${BLUE}[6/6]${NC} Validating deployment..."
 
 validate_nginx_config
+check_monitoring
 check_firewall
 validate_endpoints
 
