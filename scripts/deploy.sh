@@ -196,6 +196,42 @@ check_monitoring() {
     fi
 }
 
+# ─── Setup UFW firewall (run once per machine, idempotent) ────────────────
+setup_firewall() {
+    echo ""
+    echo -e "${BLUE}   Setting up UFW firewall...${NC}"
+
+    if ! command -v ufw &>/dev/null; then
+        echo -e "  ${YELLOW}   ⚠️  UFW not available. Install with: apt-get install -y ufw${NC}"
+        return 0
+    fi
+
+    # Check if UFW is already active with correct rules
+    local UFW_STATUS=$(sudo ufw status 2>&1)
+    if echo "$UFW_STATUS" | grep -q "Status: active"; then
+        echo -e "  ${GREEN}✅ UFW already active${NC}"
+        echo "   $(sudo ufw status verbose 2>&1 | head -10)"
+        return 0
+    fi
+
+    echo -e "  ${YELLOW}   Configuring UFW rules...${NC}"
+
+    # Default deny incoming, allow outgoing
+    sudo ufw default deny incoming 2>/dev/null || true
+    sudo ufw default allow outgoing 2>/dev/null || true
+
+    # Allow essential ports
+    sudo ufw allow 22/tcp comment 'SSH'
+    sudo ufw allow 80/tcp comment 'HTTP'
+    sudo ufw allow 443/tcp comment 'HTTPS'
+
+    # Enable UFW (non-interactive)
+    echo "y" | sudo ufw enable 2>&1 || true
+
+    echo -e "  ${GREEN}✅ UFW configured: SSH(22), HTTP(80), HTTPS(443) allowed${NC}"
+    echo "   $(sudo ufw status verbose 2>&1 | head -15)"
+}
+
 # ─── Firewall check ──────────────────────────────────────────────────────────
 check_firewall() {
     echo ""
@@ -339,6 +375,7 @@ echo -e "${BLUE}[6/6]${NC} Validating deployment..."
 
 validate_nginx_config
 check_monitoring
+setup_firewall
 check_firewall
 validate_endpoints
 

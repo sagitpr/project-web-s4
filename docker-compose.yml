@@ -137,8 +137,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      django:
-        condition: service_healthy
     env_file:
       - .env
     environment:
