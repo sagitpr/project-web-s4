@@ -235,9 +235,15 @@ services:
     cap_drop:
       - ALL
     cap_add:
+      - CHOWN
       - NET_BIND_SERVICE
       - SETGID
       - SETUID
+    # NOTES:
+    #   CHOWN  → Nginx master (root) perlu chown() temp directories (/var/cache/nginx/{client,proxy,fastcgi,uwsgi,scgi}_temp) ke user nginx (UID 101)
+    #             saat startup. Tanpa CAP_CHOWN, semua direktori temp gagal di-chown → nginx crash dengan EPERM.
+    #   NET_BIND_SERVICE → Bind ke port 80/443 (privileged ports < 1024)
+    #   SETGID/SETUID   → Nginx master perlu drop privileges dari root ke user nginx untuk worker processes
     healthcheck:
       test: ["CMD-SHELL", "nginx -t 2>/dev/null && (pgrep nginx || exit 1)"]
       interval: 15s
