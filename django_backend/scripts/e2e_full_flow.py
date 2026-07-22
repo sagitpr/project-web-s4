@@ -3,10 +3,16 @@
 Warungio Complete E2E Integration Test
 ========================================
 Tests the full Buyer-Seller lifecycle end-to-end through real Django APIs.
-Usage:  python scripts/test_e2e_full_flow.py
+Usage:  python scripts/e2e_full_flow.py
 """
 
 import os, sys, json, uuid, random, time
+
+# Add parent directory to Python path so 'config' module can be found
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_script_dir)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 os.environ['DJANGO_ALLOWED_HOSTS'] = '*'
