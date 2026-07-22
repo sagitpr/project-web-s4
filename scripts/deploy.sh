@@ -11,7 +11,10 @@
 #
 # Changelog:
 #   - Auto-generates self-signed SSL certs if Let's Encrypt certs missing
+#   - Auto-detects Let's Encrypt certs and copies to nginx/ssl/
 #   - Validates nginx config before starting
+#   - Checks /etc/hosts for incorrect domain→localhost mapping
+#   - Verifies production config is used (not dev override)
 #   - Runs full endpoint validation after deploy (/, /robots.txt, etc.)
 #   - Checks firewall and reports port status
 # =============================================================================
@@ -26,6 +29,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
+# CRITICAL: Always use explicit -f flags to prevent docker-compose.override.yml
+# from being auto-loaded in production. Base docker-compose.yml now uses
+# warungio.conf (production SSL config) by default.
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 SERVICE_NAME="django"
 HEALTH_CHECK_URL="http://localhost:8000/health/"
@@ -83,6 +89,72 @@ EOF
     echo -e "     Key:  $SSL_DIR/warungio.key"
     echo -e "  ${YELLOW}⚠️  Replace with Let's Encrypt certs for production:${NC}"
     echo -e "     sudo bash scripts/setup-ssl.sh"
+}
+
+# ─── Auto-detect Let's Encrypt certs (preferred over self-signed) ────────────
+setup_letsencrypt_certs() {
+    local LE_DIR="/etc/letsencrypt/live/$DOMAIN"
+    if [ -f "$LE_DIR/fullchain.pem" ] && [ -f "$LE_DIR/privkey.pem" ]; then
+        echo -e "  ${BLUE}   Let's Encrypt certificates found at $LE_DIR${NC}"
+        echo "   Copying to $SSL_DIR/ for nginx..."
+        cp "$LE_DIR/fullchain.pem" "$SSL_DIR/warungio.crt"
+        cp "$LE_DIR/privkey.pem" "$SSL_DIR/warungio.key"
+        chmod 644 "$SSL_DIR/warungio.crt"
+        chmod 600 "$SSL_DIR/warungio.key"
+        echo -e "  ${GREEN}✅ Let's Encrypt certs deployed to nginx/ssl/${NC}"
+        return 0
+    fi
+    return 1
+}
+
+# ─── Check /etc/hosts for incorrect warungio.web.id → 127.0.0.1 mapping ────
+check_hosts_file() {
+    echo ""
+    echo -e "${BLUE}   Checking /etc/hosts for domain misconfiguration...${NC}"
+
+    if grep -E '^127\.0\.0\.1.*warungio\.web\.id' /etc/hosts 2>/dev/null; then
+        echo -e "  ${RED}❌ CRITICAL: /etc/hosts maps $DOMAIN → 127.0.0.1!${NC}"
+        echo "     This causes the public domain to resolve to localhost."
+        echo ""
+        echo -e "  ${YELLOW}   Auto-fixing: removing $DOMAIN from 127.0.0.1 line...${NC}"
+        sed -i "s/127\\.0\\.0\\.1.*$DOMAIN/127.0.0.1 localhost/" /etc/hosts
+        echo -e "  ${GREEN}✅ /etc/hosts fixed.${NC}"
+        echo ""
+        echo "  To verify:"
+        echo "     getent hosts $DOMAIN"
+        return 1
+    fi
+
+    # Also check if domain resolves to expected IP
+    local DNS_IP=$(getent hosts "$DOMAIN" 2>/dev/null | awk '{print $1}')
+    if [ -n "$DNS_IP" ] && [ "$DNS_IP" != "127.0.0.1" ] && [ "$DNS_IP" != "::1" ]; then
+        echo -e "  ${GREEN}✅ Domain $DOMAIN resolves to $DNS_IP (not localhost)${NC}"
+    elif [ -z "$DNS_IP" ]; then
+        echo -e "  ${YELLOW}   ⚠️  Could not resolve $DOMAIN (DNS may not be configured)${NC}"
+    else
+        echo -e "  ${YELLOW}   ⚠️  $DOMAIN resolves to $DNS_IP (localhost) — check /etc/hosts${NC}"
+    fi
+}
+
+# ─── Verify production nginx config is used (not dev override) ──────────────
+check_production_config() {
+    echo ""
+    echo -e "${BLUE}   Verifying production nginx config...${NC}"
+
+    if docker compose "${COMPOSE_FILES[@]}" ps 2>/dev/null | grep -q "nginx.*Up"; then
+        local MOUNTED_CONF=$(docker compose "${COMPOSE_FILES[@]}" exec -T nginx cat /etc/nginx/conf.d/warungio.conf 2>/dev/null | grep -c "warungio.web.id" || echo 0)
+        if [ "$MOUNTED_CONF" -gt 0 ]; then
+            echo -e "  ${GREEN}✅ Production config confirmed (contains warungio.web.id server_name)${NC}"
+        else
+            echo -e "  ${RED}❌ PRODUCTION CONFIG NOT DETECTED!${NC}"
+            echo "     The mounted warungio.conf does not contain production server_name."
+            echo "     This means docker-compose.override.yml is overriding with dev config!"
+            echo ""
+            echo "  Run with explicit -f flags:"
+            echo "     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d"
+            return 1
+        fi
+    fi
 }
 
 # ─── Validate nginx config + show container/logs status ─────────────────────
@@ -297,24 +369,27 @@ case "${1:-}" in
         ;;
 esac
 
-# ─── Step 0: Auto-generate SSL certs if missing ───────────────────────────────
+# ─── Step 0: SSL certificates (Let's Encrypt first, then self-signed) ────────
 echo ""
 echo "╔═══════════════════════════════════════════════╗"
 echo "║   Warungio Deployment                         ║"
 echo "╚═══════════════════════════════════════════════╝"
 echo ""
 
-echo -e "${BLUE}[0/6]${NC} Checking SSL certificates..."
+echo -e "${BLUE}[0/7]${NC} Checking SSL certificates..."
+# Try Let's Encrypt first (preferred for production)
+setup_letsencrypt_certs
+# Fall back to self-signed if no LE certs
 generate_selfsigned_certs
 
 # ─── Step 1: Git Pull ────────────────────────────────────────────────────────
-echo -e "${BLUE}[1/6]${NC} Pulling latest code from Git..."
+echo -e "${BLUE}[1/7]${NC} Pulling latest code from Git..."
 git pull --ff-only
 echo -e "${GREEN}  ✅ Git pull complete.${NC}"
 
 # ─── Step 2: Log Environment Info ────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[2/6]${NC} Checking environment..."
+echo -e "${BLUE}[2/7]${NC} Checking environment..."
 echo "  Branch:   $(git rev-parse --abbrev-ref HEAD)"
 echo "  Commit:   $(git rev-parse --short HEAD)"
 echo "  Time:     $(date '+%Y-%m-%d %H:%M:%S')"
@@ -328,20 +403,20 @@ echo -e "${GREEN}  ✅ .env file found.${NC}"
 
 # ─── Step 3: Build Docker Images ─────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[3/6]${NC} Building Docker images..."
+echo -e "${BLUE}[3/7]${NC} Building Docker images..."
 if [ "${BUILD_FLAG}" = "--no-cache --pull" ]; then
     docker compose "${COMPOSE_FILES[@]}" build --no-cache --pull
 elif [ "${BUILD_FLAG}" = "--build" ]; then
     docker compose "${COMPOSE_FILES[@]}" build
 else
-    echo "  Checking if rebuild is needed..."
+    echo "  Building with cache..."
     docker compose "${COMPOSE_FILES[@]}" build
 fi
 echo -e "${GREEN}  ✅ Build complete.${NC}"
 
 # ─── Step 4: Start Services ─────────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[4/6]${NC} Starting services..."
+echo -e "${BLUE}[4/7]${NC} Starting services..."
 echo "  Running: docker compose ${COMPOSE_FILES[*]} up -d"
 
 docker compose "${COMPOSE_FILES[@]}" up -d
@@ -350,7 +425,7 @@ echo -e "${GREEN}  ✅ Services started.${NC}"
 
 # ─── Step 5: Wait for Health Check ───────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[5/6]${NC} Waiting for health check..."
+echo -e "${BLUE}[5/7]${NC} Waiting for health check..."
 for i in $(seq 1 $HEALTH_RETRIES); do
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL" 2>/dev/null || echo "000")
     if [ "$STATUS" = "200" ]; then
@@ -369,14 +444,20 @@ if [ "$STATUS" != "200" ]; then
     exit 1
 fi
 
-# ─── Step 6: Nginx config validation + endpoints ────────────────────────────
+# ─── Step 6: Full validation ────────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[6/6]${NC} Validating deployment..."
+echo -e "${BLUE}[6/7]${NC} Validating deployment..."
 
+check_hosts_file
+check_production_config
 validate_nginx_config
 check_monitoring
 setup_firewall
 check_firewall
+
+# ─── Step 7: Endpoint validation ─────────────────────────────────────────────
+echo ""
+echo -e "${BLUE}[7/7]${NC} Checking endpoints..."
 validate_endpoints
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
@@ -392,6 +473,7 @@ echo -e "  ${GREEN}✅${NC} Docker build:        done"
 echo -e "  ${GREEN}✅${NC} Services up:         done"
 echo -e "  ${GREEN}✅${NC} Health check:        passed"
 echo -e "  ${GREEN}✅${NC} Nginx config:        validated"
+echo -e "  ${GREEN}✅${NC} Config check:        production config confirmed"
 echo -e "  ${GREEN}✅${NC} Endpoints:           validated"
 echo ""
 

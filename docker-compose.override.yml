@@ -1,0 +1,50 @@
+# =============================================================================
+# Warungio Marketplace — Docker Compose DEVELOPMENT Override
+# ═══════════════════════════════════════════════════════════════════════════════
+# THIS FILE IS AUTO-LOADED when running `docker compose up -d` without -f flags.
+# It overrides the base docker-compose.yml for local development:
+#   - Uses nginx.dev.conf (plain HTTP, no SSL needed)
+#   - Exposes port 80 only (no 443)
+#   - Sets DEBUG=true for Django error pages
+#
+# PRODUCTION DEPLOYMENT: Use explicit -f flags:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#   → Override file is NOT loaded when -f flags are used.
+# =============================================================================
+# Reference: https://docs.docker.com/compose/multiple-compose-files/extends/
+# =============================================================================
+
+services:
+  # ---- Nginx — Dev overrides (plain HTTP, no SSL) ----
+  nginx:
+    # Replace production warungio.conf with dev config (no SSL)
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # DEV: Use nginx.dev.conf (server_name localhost, plain HTTP)
+      - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/warungio.conf:ro
+      # DEV: No SSL certs — warungio.conf not used
+      # DEV: No /etc/letsencrypt mount
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/django_backend/media:ro
+      - ./assets:/app/assets:ro
+      - ./auth:/app/auth:ro
+      - ./buyer:/app/buyer:ro
+      - ./seller:/app/seller:ro
+      - ./home:/app/home:ro
+
+    # DEV: Expose HTTP only (port 80). No SSL port 443.
+    ports:
+      - "80:80"
+
+  # ---- Django — Dev overrides (debug mode, hot reload) ----
+  django:
+    environment:
+      - DJANGO_DEBUG=true
+      - DJANGO_LOG_LEVEL=DEBUG
+    # DEV: Mount source code for hot-reload (no rebuild needed)
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/django_backend/media
+      - ./logs:/app/logs
+      - ./django_backend:/app/django_backend  # Hot-reload source changes
