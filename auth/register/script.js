@@ -200,10 +200,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'Kode OTP telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam untuk melakukan verifikasi akun.'
       );
 
-      const redirectUrl =
-        '/auth/otp/?email=' +
-        encodeURIComponent(email) +
-        (data.otp_code ? '&otp=' + encodeURIComponent(data.otp_code) : '');
+      // SECURITY: OTP code is NEVER included in URL query params.
+      // The OTP is read from the JSON response body by the OTP page.
+      // Including it in the URL would leak it to browser history,
+      // referrer headers, analytics services, and server logs.
+      const redirectUrl = '/auth/otp/?email=' + encodeURIComponent(email);
+
+      // If in DEBUG mode, display OTP in a toast notification instead of URL
+      if (data.otp_code) {
+        showToastNotification(
+          'Kode OTP (Development)',
+          'Kode OTP Anda: <strong>' + data.otp_code + '</strong>'
+        );
+      }
 
       setTimeout(() => {
         window.location.href = redirectUrl;

@@ -34,6 +34,15 @@ urlpatterns = [
     # Admin Login (separated from public auth)
     path('admin-login/', views.AdminLoginView.as_view(), name='admin-login'),
     
+    # Multi-step Registration (bridged from registration_service.py)
+    # These view wrappers match the endpoint paths expected by the frontend
+    # and delegate to the corresponding registration service functions.
+    path('registration/start/', views.RegistrationStartView.as_view(), name='registration-start'),
+    path('registration/verify-otp/', views.RegistrationVerifyOTPView.as_view(), name='registration-verify-otp'),
+    path('registration/complete-profile/', views.RegistrationCompleteProfileView.as_view(), name='registration-complete-profile'),
+    path('registration/setup-store/', views.RegistrationSetupStoreView.as_view(), name='registration-setup-store'),
+    path('registration/status/', views.RegistrationStatusView.as_view(), name='registration-status'),
+    
     # Social Authentication
     path('social/google/', social_views.GoogleLoginView.as_view(), name='social-google'),
     path('social/facebook/', social_views.FacebookLoginView.as_view(), name='social-facebook'),

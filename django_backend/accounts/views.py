@@ -41,7 +41,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .response_utils import success_response, error_response
-from .models import User, OTP, LoginAttempt
+from .models import User, OTP, LoginAttempt, RegistrationEvent
 from .services.email_service import send_otp_email
 from .services.whatsapp_service import _whatsapp_configured
 
@@ -294,6 +294,9 @@ class RegisterView(generics.CreateAPIView):
         }
 
         if settings.DEBUG:
+            # OTP returned in response body (NOT in URL query params)
+            # This avoids leaking OTP to browser history, analytics, or referrer headers.
+            # The frontend must read otp_code from the JSON response body, not the URL.
             response_data['otp_code'] = otp.otp_code
         
         logger.info(
@@ -927,9 +930,12 @@ class OTPVerifyView(views.APIView):
                 'redirect_url': '/auth/login/?email=' + (email or '') + '&verified=1',
             }
         
-        # ── Cleanup: Delete USED and EXPIRED OTPs for this user ──
-        # After successful verification, all used OTPs and expired records
-        # are removed to keep the database clean.
+        # ── Cleanup: Soft-invalidate remaining valid OTPs (do NOT delete) ──
+        # After successful verification, we invalidate any remaining valid OTPs
+        # so they can't be used. We do NOT delete used OTP records because:
+        #   - Multiple browser tabs may be verifying simultaneously
+        #   - Audit trail requires keeping historical OTP records
+        #   - OTP cleanup is handled by Celery beat task (clean_expired_otps_task)
         try:
             identifier_filter = Q()
             if email:
@@ -937,28 +943,24 @@ class OTPVerifyView(views.APIView):
             if phone:
                 identifier_filter |= Q(phone=phone)
             
-            # Delete used OTPs (including the one just verified)
-            used_cleaned = OTP.objects.filter(
-                identifier_filter, is_used=True
-            ).delete()[0]
+            # Soft-invalidate remaining valid OTPs (same purpose only)
+            # Filter by purpose to avoid invalidating password_reset OTPs
+            # when a registration OTP is verified or vice versa.
+            invalidated = OTP.objects.filter(
+                identifier_filter, purpose=purpose, is_valid=True
+            ).exclude(pk=otp.pk).update(is_valid=False)
             
-            # Delete expired OTPs
-            expired_cleaned = OTP.objects.filter(
-                identifier_filter, expires_at__lt=timezone.now()
-            ).delete()[0]
-            
-            total_cleaned = used_cleaned + expired_cleaned
-            if total_cleaned:
-                _log_db_operation('otp_cleanup_after_verify', {
+            if invalidated:
+                _log_db_operation('otp_invalidate_others', {
                     'email': email, 'phone': phone or '(none)', 
-                    'used_deleted': used_cleaned, 'expired_deleted': expired_cleaned
+                    'invalidated_count': invalidated
                 })
                 logger.info(
-                    'OTP CLEANUP — Deleted %d used + %d expired OTPs for %s',
-                    used_cleaned, expired_cleaned, email or phone,
+                    'OTP POST-VERIFY — Invalidated %d remaining valid OTPs for %s',
+                    invalidated, email or phone,
                 )
         except Exception as cleanup_err:
-            logger.warning('OTP cleanup error (non-blocking): %s', cleanup_err)
+            logger.warning('OTP invalidate error (non-blocking): %s', cleanup_err)
         
         logger.info(
             'OTP VERIFY COMPLETE — Email: %s | Role: %s | Redirect: %s',
@@ -1377,6 +1379,129 @@ class RootView(views.APIView):
 
         # Unauthenticated: always show landing page
         return render(request, 'landing/index.html')
+
+
+@extend_schema(exclude=True)
+class AdminLoginView(views.APIView):
+    """
+    Dedicated admin login view.
+    
+    Only staff users (is_staff=True or role='admin') may log in here.
+    Uses AdminLoginSerializer which checks admin status BEFORE authenticating
+    to prevent leaking authentication success to non-admin users.
+    
+    Admin login has a tighter rate limit (5/minute) than public login (10/minute)
+    to prevent brute force attacks on admin accounts.
+    
+    Returns JWT tokens AND sets Django session for template-based navigation.
+    """
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'admin_login'
+
+# =============================================================================
+# Registration Service Views (bridge to registration_service.py)
+# These view wrappers provide HTTP endpoints for the multi-step registration flow
+# and delegate to the corresponding service functions.
+# =============================================================================
+# NOTE: The main registration flow uses RegisterView (single-step with OTP).
+# These multi-step views are exposed for frontend code that references
+# the /api/auth/registration/* endpoints.
+
+
+@extend_schema(exclude=True)
+class RegistrationStartView(views.APIView):
+    """Start multi-step registration process."""
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        from .services.registration_service import start_registration
+        result = start_registration(
+            email=request.data.get('email'),
+            phone=request.data.get('phone'),
+            role=request.data.get('role', 'buyer'),
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:200],
+        )
+        if result.get('success'):
+            return Response(result, status=status.HTTP_201_CREATED)
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(exclude=True)
+class RegistrationVerifyOTPView(views.APIView):
+    """Verify OTP for multi-step registration."""
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        from .services.registration_service import verify_registration_otp
+        result = verify_registration_otp(
+            user_id=request.data.get('user_id'),
+            otp_code=request.data.get('otp_code'),
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:200],
+        )
+        if result.get('success'):
+            return Response(result, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(exclude=True)
+class RegistrationCompleteProfileView(views.APIView):
+    """Complete profile for multi-step registration."""
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        from .services.registration_service import complete_profile
+        result = complete_profile(
+            user_id=request.data.get('user_id'),
+            full_name=request.data.get('full_name'),
+            password=request.data.get('password'),
+            email=request.data.get('email'),
+            phone=request.data.get('phone'),
+            address=request.data.get('address'),
+        )
+        if result.get('success'):
+            return Response(result, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(exclude=True)
+class RegistrationSetupStoreView(views.APIView):
+    """Setup store for seller multi-step registration."""
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        from .services.registration_service import setup_seller_store
+        result = setup_seller_store(
+            user_id=request.data.get('user_id'),
+            store_name=request.data.get('store_name'),
+            store_description=request.data.get('store_description'),
+            store_address=request.data.get('store_address'),
+            store_phone=request.data.get('store_phone'),
+        )
+        if result.get('success'):
+            return Response(result, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(exclude=True)
+class RegistrationStatusView(views.APIView):
+    """Get registration status for a user."""
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        from .services.registration_service import get_registration_status
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response(
+                {'success': False, 'error': 'user_id diperlukan.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        result = get_registration_status(user_id=int(user_id))
+        if result.get('success'):
+            return Response(result, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_404_NOT_FOUND)
 
 
 @extend_schema(exclude=True)

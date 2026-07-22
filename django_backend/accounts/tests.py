@@ -1411,10 +1411,14 @@ class SellerE2EFlowTests(TestCase):
         store_count = Store.objects.filter(user=user).count()
         self.assertEqual(store_count, 1, 'Should be exactly 1 store')
         
-        # OTP records are cleaned up (deleted) after successful verification.
-        # The cleanup removes both USED and EXPIRED OTPs for this email.
-        otp_count = OTP.objects.filter(email=self.seller_email, purpose='registration').count()
-        self.assertEqual(otp_count, 0, 'OTPs should be cleaned up after successful verification')
+        # OTP records are soft-invalidated after successful verification.
+        # The OTP should be marked as used+invalid rather than deleted.
+        remaining_otps = OTP.objects.filter(email=self.seller_email, purpose='registration')
+        self.assertEqual(remaining_otps.count(), 1, 'OTP should remain in DB after soft-invalidate')
+        otp_after = remaining_otps.first()
+        self.assertFalse(otp_after.is_valid, 'OTP should be invalid after verification')
+        self.assertTrue(otp_after.is_used, 'OTP should be marked as used')
+        self.assertIsNotNone(otp_after.verified_at, 'OTP should have verified_at timestamp')
 
     def test_seller_flow_rejects_unverified_login(self):
         """Test that unverified seller cannot login (verification gate)."""

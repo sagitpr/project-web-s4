@@ -312,15 +312,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Store is auto-created by the backend after OTP verification.
       // Do NOT call createStore here — the backend handles it in OTPVerifyView.
-      // Save form data for store setup after OTP (password NOT stored — OTP auto-login handles session)
-      // SECURITY: plaintext password is never persisted to sessionStorage.
-      // Auto-login after OTP verification uses the registration token from the backend.
+      // Save NON-SENSITIVE form data for store setup after OTP.
+      // SECURITY: plaintext password is NEVER persisted to sessionStorage/localStorage.
+      // Auto-login after OTP verification uses the JWT tokens returned by the backend.
+      const partnerData = { ...data };
+      delete partnerData.ownerPassword;
+      delete partnerData.ownerPassword2;
       sessionStorage.removeItem('register_password');
-      sessionStorage.setItem('warungio_partner_registration_data', JSON.stringify(data));
+      sessionStorage.setItem('warungio_partner_registration_data', JSON.stringify(partnerData));
 
       setMsg('Pendaftaran mitra berhasil!', 'success');
       localStorage.removeItem(storageKey);
-      window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration';
+      // Redirect to OTP page with role=seller so the OTP page knows
+      // to redirect to the seller dashboard after verification
+      window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration&role=seller';
     } catch (err) {
       setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
       _submitting = false;
