@@ -830,6 +830,11 @@ class ChatQuickReplyAPITests(SupportAPITestBase):
 class HelpSearchAPITests(SupportAPITestBase):
     """Tests for combined help search endpoint."""
 
+    def _pre_setup(self):
+        super()._pre_setup()
+        from django.core.cache import cache
+        cache.clear()
+
     def test_search_articles_by_query(self):
         response = self.client.get(self.get_url('help-search'), {'q': 'Melacak'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
