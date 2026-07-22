@@ -48,7 +48,7 @@ SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000' if no
 ALLOWED_HOSTS = [
     h.strip() for h in os.environ.get(
         'DJANGO_ALLOWED_HOSTS',
-        'localhost,127.0.0.1,0.0.0.0,.run.app'
+        'localhost,127.0.0.1,0.0.0.0,.run.app,warungio.web.id,www.warungio.web.id'
     ).split(',')
     if h.strip()
 ]
@@ -466,7 +466,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = DEBUG and not os.environ.get('CORS_ALLOWED_ORIGINS')
 CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://localhost:8000,http://localhost:5000'
+    'http://localhost:3000,http://localhost:8000,http://localhost:5000,https://warungio.web.id,https://www.warungio.web.id'
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
@@ -480,7 +480,7 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get(
         'CSRF_TRUSTED_ORIGINS',
-        'http://localhost,http://127.0.0.1,http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,http://127.0.0.1:3000'
+        'http://localhost,http://127.0.0.1,http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,http://127.0.0.1:3000,https://warungio.web.id,https://www.warungio.web.id'
     ).split(',')
     if o.strip()
 ]

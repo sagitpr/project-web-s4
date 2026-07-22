@@ -99,6 +99,10 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/django_backend/media
       - ./logs:/app/logs
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/health/ > /dev/null 2>&1 || exit 1"]
       interval: 30s
@@ -140,6 +144,10 @@ services:
     command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "--max-tasks-per-child=500", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     # Healthcheck: lightweight process check instead of heavy app-loading `celery inspect ping`
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'celery.*worker' || exit 1"]
@@ -176,6 +184,12 @@ services:
       - media_volume:/app/django_backend/media:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./assets:/app/assets:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     healthcheck:
       test: ["CMD-SHELL", "pgrep nginx || exit 1"]
       interval: 30s

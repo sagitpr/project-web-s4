@@ -34,7 +34,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
-COMPOSE_FILE="docker-compose.yml"
+COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 SERVICE_NAME="django"
 HEALTH_CHECK_URL="http://localhost:8000/health/"
 HEALTH_RETRIES=30
@@ -104,22 +104,22 @@ echo -e "${GREEN}  ✅ .env file found.${NC}"
 echo ""
 echo -e "${BLUE}[3/5]${NC} Building Docker images..."
 if [ "${BUILD_FLAG}" = "--no-cache --pull" ]; then
-    docker compose -f "$COMPOSE_FILE" build --no-cache --pull
+    docker compose "${COMPOSE_FILES[@]}" build --no-cache --pull
 elif [ "${BUILD_FLAG}" = "--build" ]; then
-    docker compose -f "$COMPOSE_FILE" build
+    docker compose "${COMPOSE_FILES[@]}" build
 else
     # Default: check if images need rebuilding
     echo "  Checking if rebuild is needed..."
-    docker compose -f "$COMPOSE_FILE" build
+    docker compose "${COMPOSE_FILES[@]}" build
 fi
 echo -e "${GREEN}  ✅ Build complete.${NC}"
 
 # ─── Step 4: Deploy Services ─────────────────────────────────────────────────
 echo ""
 echo -e "${BLUE}[4/5]${NC} Starting services..."
-echo "  Running: docker compose -f $COMPOSE_FILE up -d"
+echo "  Running: docker compose ${COMPOSE_FILES[*]} up -d"
 
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose "${COMPOSE_FILES[@]}" up -d
 
 echo -e "${GREEN}  ✅ Services started.${NC}"
 
@@ -140,7 +140,7 @@ if [ "$STATUS" != "200" ]; then
     echo -e "${RED}  ❌ Health check failed after $HEALTH_RETRIES retries.${NC}"
     echo ""
     echo "Checking logs..."
-    docker compose -f "$COMPOSE_FILE" logs --tail=30 "$SERVICE_NAME"
+    docker compose "${COMPOSE_FILES[@]}" logs --tail=30 "$SERVICE_NAME"
     exit 1
 fi
 
