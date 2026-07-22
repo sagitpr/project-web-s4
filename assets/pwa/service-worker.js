@@ -26,7 +26,7 @@ const PRECACHE_URLS = [
   '/static/js/nav.js',
   '/static/js/device-detector.js',
   '/assets/pwa/manifest.json',
-  '/assets/favicon.ico',
+  '/static/favicon.ico',
 ];
 
 // Install event - pre-cache core assets

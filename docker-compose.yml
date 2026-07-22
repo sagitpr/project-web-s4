@@ -118,11 +118,14 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  # ---- Celery Worker (Async Tasks) — WITH EMBEDDED BEAT ----
+  # ---- Celery Worker (Async Tasks) — NO embedded beat (separate container) ----
   # 1 concurrency, 500 max tasks per child, 5 min time limit
-  # Beat dijalankan embedded (-B) untuk hemat memory (tidak perlu container terpisah)
   # --without-heartbeat --without-gossip --without-mingle: matikan discovery protocol
-  # celery worker akan restart setelah 500 tasks untuk cegah memory leak
+  # Worker restart setelah 500 tasks untuk cegah memory leak.
+  # Beat dijalankan di container terpisah (celery-beat) untuk:
+  #   - Mencegah OOM kill (exit code 137) pada 1GB RAM VPS
+  #   - Isolasi memory: worker bisa pakai 128m, beat cukup 32m
+  #   - Worker restart karena max-tasks-per-child tidak ganggu beat scheduler
   celery:
     build:
       context: .
@@ -141,7 +144,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
       CELERY_ENABLED: "true"
-    command: ["celery", "-A", "config", "worker", "-B", "-l", "info", "-c", "1", "--max-tasks-per-child=500", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
+    command: ["celery", "-A", "config", "worker", "-l", "info", "-c", "1", "--max-tasks-per-child=500", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
     security_opt:
@@ -155,7 +158,49 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
-    mem_limit: 96m
+    mem_limit: 128m
+    networks:
+      - warungio_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ---- Celery Beat Scheduler (separate dari worker untuk cegah OOM) ----
+  # Beat scheduler berdiri sendiri, memory footprint minimal (~20MB).
+  # Tidak perlu healthcheck complex — `pgrep -f 'celery.*beat'` sudah cukup.
+  # Depend on redis only (not django) karena beat hanya jadwalkan task, tidak eksekusi.
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warungio-celery-beat
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      CELERY_ENABLED: "true"
+    command: ["celery", "-A", "config", "beat", "-l", "info", "--scheduler", "celery.beat.PersistentScheduler"]
+    volumes:
+      - ./logs:/app/logs
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'celery.*beat' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 32m
     networks:
       - warungio_net
     logging:
@@ -182,8 +227,11 @@ services:
       - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/warungio.conf:ro
       - static_volume:/app/staticfiles:ro
       - media_volume:/app/django_backend/media:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./assets:/app/assets:ro
+      - ./auth:/app/auth:ro
+      - ./buyer:/app/buyer:ro
+      - ./seller:/app/seller:ro
+      - ./home:/app/home:ro
     security_opt:
       - no-new-privileges:true
     cap_drop:

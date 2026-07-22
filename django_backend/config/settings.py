@@ -552,8 +552,11 @@ DOWNLOAD_CACHE_SECONDS = 3600  # 1 hour cache for download metadata
 
 # In production, enable X-Accel-Redirect so nginx serves the file directly
 # without passing through Django's Python process (more efficient for large APKs).
+# Default: True in production (DEBUG=False), False in development.
+# nginx must have the /download-files/ internal location configured (it does).
+_use_x_accel_default = 'True' if not DEBUG else 'False'
 USE_X_ACCEL_REDIRECT = os.environ.get(
-    'USE_X_ACCEL_REDIRECT', 'False'
+    'USE_X_ACCEL_REDIRECT', _use_x_accel_default
 ).lower() == 'true'
 
 # =============================================================================

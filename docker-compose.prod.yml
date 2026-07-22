@@ -7,7 +7,18 @@
 services:
   nginx:
     # Override the dev nginx config with the production SSL config
+    # CRITICAL: Docker Compose v2 REPLACES list values (volumes, ports) when merging.
+    # We must include ALL base volumes from docker-compose.yml here, not just the overrides.
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/warungio.conf:/etc/nginx/conf.d/warungio.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./assets:/app/assets:ro
+      - ./auth:/app/auth:ro
+      - ./buyer:/app/buyer:ro
+      - ./seller:/app/seller:ro
+      - ./home:/app/home:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/django_backend/media:ro
