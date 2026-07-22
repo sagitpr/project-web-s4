@@ -238,13 +238,17 @@ services:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "pgrep nginx || exit 1"]
-      interval: 30s
+      test: ["CMD-SHELL", "nginx -t 2>/dev/null && (pgrep nginx || exit 1)"]
+      interval: 15s
       timeout: 5s
-      retries: 3
+      retries: 5
       start_period: 15s
-    mem_limit: 32m
+    mem_limit: 48m
     networks:
       - warungio_net
     logging:
