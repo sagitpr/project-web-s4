@@ -1107,10 +1107,6 @@ ul { list-style: none; }
     border-color: var(--primary);
 }
 
-.step-card:hover img {
-    filter: brightness(0) invert(1);
-}
-
 .step-card:hover .step-number {
     background: var(--primary-dark);
     transform: scale(1.1);
