@@ -78,13 +78,18 @@ COPY shared/ /app/shared/
 ENV PYTHONPATH=/app/django_backend \
     DJANGO_SETTINGS_MODULE=config.settings
 
-# Buat direktori logs (settings.py membuatnya saat import)
+# Buat direktori static jika belum ada (safeguard untuk .dockerignore issues)
+# dan direktori logs (settings.py membuatnya saat import)
 # Gunakan dummy key hanya untuk build (tidak bocor ke runtime)
 ARG BUILD_SECRET_KEY=django-insecure-build-only-key
-RUN mkdir -p /app/logs && \
+RUN mkdir -p /app/logs /app/django_backend/static && \
     cd /app/django_backend && \
     DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} \
-    python manage.py collectstatic --noinput 2>&1
+    python manage.py collectstatic --noinput 2>&1 && \
+    echo "=== Collected $(find /app/staticfiles -type f 2>/dev/null | wc -l) static files ===" && \
+    if [ "$(find /app/staticfiles -type f 2>/dev/null | wc -l)" -lt 5 ]; then \
+        echo "WARNING: Less than 5 static files collected. Check STATICFILES_DIRS." >&2; \
+    fi
 
 # =============================================================================
 # ---- Runtime Stage (CLEAN — build-essential, pkg-config, assets TIDAK ADA) ----

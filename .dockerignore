@@ -43,12 +43,16 @@ django_backend/.venv/
 # ── Django — Generated / Static / Media ──────────────────────────────────────
 django_backend/db.sqlite3
 *.sqlite3
+# ── Generated output (collectstatic result) — jangan ikut sebagai source ──
 django_backend/staticfiles/
-django_backend/media/
 staticfiles/
+# ── Media uploads (isi runtime, bukan source) ──
+django_backend/media/
 media/
-static/
-django_backend/static/
+# ── NOTE: django_backend/static/ TIDAK di-exclude karena merupakan
+#    STATICFILES_DIRS utama untuk collectstatic. Tanpa direktori ini,
+#    collectstatic tidak punya source files untuk disalin ke volume.
+#    Semua file CSS/JS/images project ada di sini.
 
 # ── Logs ─────────────────────────────────────────────────────────────────────
 logs/
