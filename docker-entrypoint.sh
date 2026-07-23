@@ -3,13 +3,14 @@
 # Warungio Marketplace — Docker Entrypoint (SPLIT BY CONTAINER ROLE)
 #
 # BEHAVIOR:
-#   No args ($# -eq 0)  → DJANGO mode: wait DB → sync_migrations → migrate
-#                          → superuser → gunicorn+uvicorn (foreground)
+#   No args ($# -eq 0)  → DJANGO mode: wait DB → collectstatic → sync_migrations
+#                          → migrate → superuser → gunicorn+uvicorn (foreground)
 #   With args ($# -gt 0) → CELERY/BEAT mode: wait DB → exec "$@" (skip startup)
 #
-# NOTE: collectstatic sudah dijalankan saat Docker build (stage build-static),
-# tidak perlu dijalankan ulang saat container start. Ini mempercepat startup
-# dan memastikan staticfiles selalu fresh dari source.
+# NOTE: collectstatic dijalankan SETIAP startup karena Docker named volume
+#       (static_volume) persist meskipun image di-rebuild. Tanpa ini,
+#       perubahan CSS/JS tidak akan muncul di volume yang sudah ada.
+#       Durasi: ~1-2 detik untuk ~6 file (negligible).
 #
 # Docker Compose passes `command:` as args to the entrypoint, so:
 #   django: no command            → full startup + gunicorn+uvicorn
@@ -86,11 +87,13 @@ fi
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DJANGO MODE — Full startup (migrations + superuser + daphne)
+# DJANGO MODE — Full startup (migrations + superuser + gunicorn)
 # ══════════════════════════════════════════════════════════════════════════════
-# NOTE: collectstatic TIDAK dijalankan di sini karena sudah dilakukan
-#       saat Docker build di stage build-static. Ini mempercepat startup
-#       container dan mengurangi I/O disk pada VPS 1GB RAM.
+# NOTE: collectstatic dijalankan SETIAP startup untuk memastikan Docker named
+#       volume (static_volume) selalu sync dengan source code terbaru.
+#       Named volume persist meskipun image di-rebuild, jadi tanpanya
+#       perubahan CSS/JS tidak akan muncul sampai volume dihapus manual.
+#       Biaya: ~1-2 detik untuk ~6 file (negligible).
 #
 # NOTE: ASGI server menggunakan Gunicorn + UvicornWorker.
 #       BUKAN Daphne. Daphne di-replace karena Gunicorn memberikan
@@ -100,9 +103,17 @@ fi
 echo "[MODE] Django web container — running full startup."
 
 # ------------------------------------------------------------------
-# STEP 1: Sync migrations (non-fatal — Daphne tetap jalan walau gagal)
+# STEP 0: Collect static files (sync volume with latest source)
 # ------------------------------------------------------------------
-echo "[1/2] Syncing migrations with existing database..."
+echo "[0/3] Collecting static files..."
+python manage.py collectstatic --noinput \
+    && echo "  -> Static files collected." \
+    || echo "  -> WARNING: collectstatic gagal (non-fatal)."
+
+# ------------------------------------------------------------------
+# STEP 1: Sync migrations (non-fatal — gunicorn tetap jalan walau gagal)
+# ------------------------------------------------------------------
+echo "[1/3] Syncing migrations with existing database..."
 python manage.py sync_migrations --no-backup \
     && echo "  -> Migration sync complete." \
     || echo "  -> WARNING: sync_migrations gagal (non-fatal). Lanjut startup..."
@@ -110,7 +121,7 @@ python manage.py sync_migrations --no-backup \
 # ------------------------------------------------------------------
 # STEP 2: Run database migrations (safety net for any remaining)
 # ------------------------------------------------------------------
-echo "[2/2] Applying any remaining migrations..."
+echo "[2/3] Applying any remaining migrations..."
 python manage.py migrate --noinput \
     && echo "  -> Migration apply complete." \
     || echo "  -> WARNING: migrate gagal (non-fatal). Lanjut startup..."

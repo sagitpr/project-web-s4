@@ -376,20 +376,20 @@ echo "║   Warungio Deployment                         ║"
 echo "╚═══════════════════════════════════════════════╝"
 echo ""
 
-echo -e "${BLUE}[0/7]${NC} Checking SSL certificates..."
+echo -e "${BLUE}[0/8]${NC} Checking SSL certificates..."
 # Try Let's Encrypt first (preferred for production)
 setup_letsencrypt_certs
 # Fall back to self-signed if no LE certs
 generate_selfsigned_certs
 
 # ─── Step 1: Git Pull ────────────────────────────────────────────────────────
-echo -e "${BLUE}[1/7]${NC} Pulling latest code from Git..."
+echo -e "${BLUE}[1/8]${NC} Pulling latest code from Git..."
 git pull --ff-only
 echo -e "${GREEN}  ✅ Git pull complete.${NC}"
 
 # ─── Step 2: Log Environment Info ────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[2/7]${NC} Checking environment..."
+echo -e "${BLUE}[2/8]${NC} Checking environment..."
 echo "  Branch:   $(git rev-parse --abbrev-ref HEAD)"
 echo "  Commit:   $(git rev-parse --short HEAD)"
 echo "  Time:     $(date '+%Y-%m-%d %H:%M:%S')"
@@ -403,7 +403,7 @@ echo -e "${GREEN}  ✅ .env file found.${NC}"
 
 # ─── Step 3: Build Docker Images ─────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[3/7]${NC} Building Docker images..."
+echo -e "${BLUE}[3/8]${NC} Building Docker images..."
 if [ "${BUILD_FLAG}" = "--no-cache --pull" ]; then
     docker compose "${COMPOSE_FILES[@]}" build --no-cache --pull
 elif [ "${BUILD_FLAG}" = "--build" ]; then
@@ -416,7 +416,7 @@ echo -e "${GREEN}  ✅ Build complete.${NC}"
 
 # ─── Step 4: Start Services ─────────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[4/7]${NC} Starting services..."
+echo -e "${BLUE}[4/8]${NC} Starting services..."
 echo "  Running: docker compose ${COMPOSE_FILES[*]} up -d"
 
 docker compose "${COMPOSE_FILES[@]}" up -d
@@ -425,7 +425,7 @@ echo -e "${GREEN}  ✅ Services started.${NC}"
 
 # ─── Step 5: Wait for Health Check ───────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[5/7]${NC} Waiting for health check..."
+echo -e "${BLUE}[5/8]${NC} Waiting for health check..."
 for i in $(seq 1 $HEALTH_RETRIES); do
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL" 2>/dev/null || echo "000")
     if [ "$STATUS" = "200" ]; then
@@ -444,9 +444,41 @@ if [ "$STATUS" != "200" ]; then
     exit 1
 fi
 
-# ─── Step 6: Full validation ────────────────────────────────────────────────
+# ─── Step 6: Collect static files (sync volume with latest source) ───────────
 echo ""
-echo -e "${BLUE}[6/7]${NC} Validating deployment..."
+echo -e "${BLUE}[6/8]${NC} Collecting static files..."
+
+# Run collectstatic to sync the named volume with latest source code changes.
+# The Docker container entrypoint also runs collectstatic on startup, but
+# running it here ensures the volume is updated even if the container was
+# already running before the deployment.
+docker compose "${COMPOSE_FILES[@]}" exec -T django python manage.py collectstatic --noinput 2>&1 && \
+    echo -e "  ${GREEN}✅ Static files collected.${NC}" || \
+    echo -e "  ${YELLOW}   ⚠️  collectstatic warning (non-fatal).${NC}"
+
+# Verify critical static files exist in the volume
+echo ""
+echo -e "${BLUE}   Verifying static files in nginx volume...${NC}"
+if docker compose "${COMPOSE_FILES[@]}" exec -T nginx sh -c \
+    'test -f /app/staticfiles/css/premium.css && test -f /app/staticfiles/js/utils/auth-ui.js && test -f /app/staticfiles/css/landing.css' 2>/dev/null; then
+    echo -e "  ${GREEN}✅ Critical static files confirmed (premium.css, auth-ui.js, landing.css)${NC}"
+else
+    echo -e "  ${RED}❌ Critical static files MISSING from nginx volume!${NC}"
+    echo "     Running emergency collectstatic (without --clear to preserve existing files)..."
+    docker compose "${COMPOSE_FILES[@]}" exec -T django python manage.py collectstatic --noinput 2>&1 || true
+    # Retry validation
+    if docker compose "${COMPOSE_FILES[@]}" exec -T nginx sh -c \
+        'test -f /app/staticfiles/css/premium.css && test -f /app/staticfiles/js/utils/auth-ui.js' 2>/dev/null; then
+        echo -e "  ${GREEN}✅ Static files recovered after emergency collectstatic.${NC}"
+    else
+        echo -e "  ${RED}❌ Static files STILL MISSING after emergency collectstatic!${NC}"
+        echo "     Check Django settings and STATICFILES_DIRS."
+    fi
+fi
+
+# ─── Step 7: Full validation ────────────────────────────────────────────────
+echo ""
+echo -e "${BLUE}[7/8]${NC} Validating deployment..."
 
 check_hosts_file
 check_production_config
@@ -455,9 +487,9 @@ check_monitoring
 setup_firewall
 check_firewall
 
-# ─── Step 7: Endpoint validation ─────────────────────────────────────────────
+# ─── Step 8: Endpoint validation ─────────────────────────────────────────────
 echo ""
-echo -e "${BLUE}[7/7]${NC} Checking endpoints..."
+echo -e "${BLUE}[8/8]${NC} Checking endpoints..."
 validate_endpoints
 
 # ─── Summary ──────────────────────────────────────────────────────────────────

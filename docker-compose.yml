@@ -68,15 +68,13 @@ services:
   #   export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
   # ═══════════════════════════════════════════════════════════════════════
   # ═══════════════════════════════════════════════════════════════════════
-  # NOTE Static files: collectstatic dijalankan SAAT BUILD (bukan startup).
-  # Static files tersimpan di image pada /app/staticfiles/.
+  # NOTE Static files: collectstatic dijalankan SETIAP container startup
+  # (lihat docker-entrypoint.sh) untuk memastikan Docker named volume
+  # (static_volume) selalu sync dengan source code terbaru.
   #
-  # Saat container pertama kali jalan, Docker akan menginisialisasi
-  # static_volume (named volume) dengan isi dari image.
-  #
-  # PADA REDEPLOY: jika static files berubah, volume TIDAK otomatis
-  # terupdate. Jalankan perintah ini setelah deploy:
-  #   docker-compose run --rm django python manage.py collectstatic --noinput
+  # Named volume persist meskipun image di-rebuild. Tanpa collectstatic
+  # di startup, perubahan CSS/JS tidak akan muncul di volume yang ada.
+  # Biaya: ~1-2 detik untuk ~6 file (negligible pada 1GB RAM VPS).
   # ═══════════════════════════════════════════════════════════════════════
   django:
     build:
