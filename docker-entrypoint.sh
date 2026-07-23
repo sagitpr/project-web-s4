@@ -108,7 +108,7 @@ echo "[MODE] Django web container — running full startup."
 echo "[0/3] Collecting static files..."
 python manage.py collectstatic --noinput \
     && echo "  -> Static files collected." \
-    || echo "  -> WARNING: collectstatic gagal (non-fatal)."
+    || echo "  -> WARNING: collectstatic startup sync failed. Check Docker build output for static file validation errors."
 
 # ------------------------------------------------------------------
 # STEP 1: Sync migrations (non-fatal — gunicorn tetap jalan walau gagal)
