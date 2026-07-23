@@ -82,13 +82,31 @@ ENV PYTHONPATH=/app/django_backend \
 # dan direktori logs (settings.py membuatnya saat import)
 # Gunakan dummy key hanya untuk build (tidak bocor ke runtime)
 ARG BUILD_SECRET_KEY=django-insecure-build-only-key
-RUN mkdir -p /app/logs /app/django_backend/static && \
+RUN mkdir -p /app/logs && \
     cd /app/django_backend && \
     DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} \
+    # CRITICAL: Verify ALL source static files exist BEFORE collectstatic.
+    # Without this check, a .dockerignore regression that excludes
+    # django_backend/static/ would silently produce 0 project files.
+    test -f /app/django_backend/static/css/premium.css && \
+    test -f /app/django_backend/static/css/landing.css && \
+    test -f /app/django_backend/static/css/tokens.css && \
+    test -f /app/django_backend/static/css/components.css && \
+    test -f /app/django_backend/static/js/utils/auth-ui.js && \
+    echo "=== Source: ALL 5 critical static files confirmed ===" && \
     python manage.py collectstatic --noinput 2>&1 && \
-    echo "=== Collected $(find /app/staticfiles -type f 2>/dev/null | wc -l) static files ===" && \
-    if [ "$(find /app/staticfiles -type f 2>/dev/null | wc -l)" -lt 5 ]; then \
-        echo "WARNING: Less than 5 static files collected. Check STATICFILES_DIRS." >&2; \
+    # Verify ALL critical files were actually collected into the output
+    test -f /app/staticfiles/css/premium.css && \
+    test -f /app/staticfiles/css/landing.css && \
+    test -f /app/staticfiles/css/tokens.css && \
+    test -f /app/staticfiles/css/components.css && \
+    test -f /app/staticfiles/js/utils/auth-ui.js && \
+    echo "=== Collectstatic: ALL 5 critical files in output ===" && \
+    COLLECTED_COUNT=$(find /app/staticfiles -type f 2>/dev/null | wc -l) && \
+    echo "=== Total: $COLLECTED_COUNT static files collected ===" && \
+    if [ "$COLLECTED_COUNT" -lt 50 ]; then \
+        echo "ERROR: Only $COLLECTED_COUNT files collected (expected 50+)." >&2; \
+        exit 1; \
     fi
 
 # =============================================================================
