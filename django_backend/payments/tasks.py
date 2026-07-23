@@ -125,10 +125,13 @@ def create_snap_transaction_task(self, order_id, payment_method, bank=None):
 
     except requests.RequestException as exc:
         logger.error('Midtrans HTTP error for order %s: %s', order.id, str(exc))
-        raise self.retry(exc=exc)
+        # Exponential backoff: 60s, 120s, 240s, 480s
+        countdown = 60 * (2 ** self.request.retries)
+        raise self.retry(exc=exc, countdown=countdown)
     except Exception as exc:
         logger.exception('Unexpected error in Snap task for order %s', order.id)
-        raise self.retry(exc=exc)
+        countdown = 60 * (2 ** self.request.retries)
+        raise self.retry(exc=exc, countdown=countdown)
 
 
 @shared_task(bind=True, max_retries=4, default_retry_delay=30)
@@ -153,7 +156,9 @@ def poll_midtrans_payment_status_task(self, order_id):
 
     result = get_transaction_status(payment.midtrans_order_id)
     if not result.get('success'):
-        raise self.retry(exc=Exception(f'Status lookup failed: {result.get("error")}'))
+        # Exponential backoff: 60s, 120s, 240s, 480s
+        countdown = 60 * (2 ** self.request.retries)
+        raise self.retry(exc=Exception(f'Status lookup failed: {result.get("error")}'), countdown=countdown)
 
     data = result['data']
     transaction_status = data.get('transaction_status', '')
