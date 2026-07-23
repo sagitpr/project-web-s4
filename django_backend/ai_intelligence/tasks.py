@@ -12,7 +12,7 @@ from datetime import timedelta
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def update_digital_twin_task(user_id: int):
     """Update a single user's digital twin."""
     from django.contrib.auth import get_user_model
@@ -27,7 +27,7 @@ def update_digital_twin_task(user_id: int):
         logger.warning('User %s not found for digital twin', user_id)
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def batch_update_digital_twins_task(batch_size: int = 50):
     """Batch update digital twins for all users."""
     from django.contrib.auth import get_user_model
@@ -42,7 +42,7 @@ def batch_update_digital_twins_task(batch_size: int = 50):
     return {'dispatched': count}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=10, autoretry_for=(Exception,))
 def update_gamification_task(user_id: int, event_type: str = ''):
     """Update gamification profile after a user action."""
     from django.contrib.auth import get_user_model
@@ -58,7 +58,7 @@ def update_gamification_task(user_id: int, event_type: str = ''):
         logger.warning('User %s not found for gamification', user_id)
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def capture_marketplace_health_task():
     """Capture a marketplace health snapshot."""
     from ai_intelligence.services.marketplace_health import get_marketplace_health_service
@@ -68,7 +68,7 @@ def capture_marketplace_health_task():
     return {'health_score': snapshot.marketplace_health_score}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def segment_all_users_task(batch_size: int = 100):
     """Run customer segmentation for all active users."""
     from django.contrib.auth import get_user_model
@@ -91,7 +91,7 @@ def segment_all_users_task(batch_size: int = 100):
     return {'segmented': min(batch_size, User.objects.count())}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def generate_coach_insights_task(batch_size: int = 20):
     """Generate business coach insights for active sellers."""
     from stores.models import Store
@@ -117,7 +117,7 @@ def generate_coach_insights_task(batch_size: int = 20):
     return {'insights': count}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def predict_demand_task(product_id: int):
     """Predict demand for a product."""
     from products.models import Product
@@ -141,7 +141,7 @@ def predict_demand_task(product_id: int):
         logger.warning('Product %s not found', product_id)
 
 
-@shared_task
+@shared_task(max_retries=1, default_retry_delay=60, autoretry_for=(Exception,))
 def clean_old_predictions_task():
     """Clean old predictions and snapshots."""
     from ai_intelligence.models import DemandPrediction, SalesForecast, MarketplaceHealthSnapshot

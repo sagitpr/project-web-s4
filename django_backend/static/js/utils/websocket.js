@@ -124,9 +124,11 @@
 
     ws.onopen = function () {
       isConnecting = false;
-      currentReconnectDelay = RECONNECT_DELAY; // Reset reconnect delay on success
+      currentReconnectDelay = RECONNECT_DELAY;
       console.info('WarungioWS: Connected');
       emit('connected', {});
+      try { window.dispatchEvent(new CustomEvent('warungio:ws-connected')); } catch(e) {}
+      try { window.dispatchEvent(new CustomEvent('warungio:ws-reconnected')); } catch(e) {}
 
       // Start periodic ping
       if (pingInterval) clearInterval(pingInterval);
@@ -160,6 +162,7 @@
       isConnecting = false;
       console.info('WarungioWS: Disconnected (code: ' + event.code + ')');
       emit('disconnected', { code: event.code });
+      try { window.dispatchEvent(new CustomEvent('warungio:ws-disconnected', { detail: { code: event.code } })); } catch(e) {}
       if (pingInterval) { clearInterval(pingInterval); pingInterval = null; }
       scheduleReconnect();
     };
@@ -212,13 +215,14 @@
   // ── Reconnect Logic ──
 
   function scheduleReconnect() {
-    if (reconnectTimer) return; // Already scheduled
+    if (reconnectTimer) return;
+
+    try { window.dispatchEvent(new CustomEvent('warungio:ws-connecting', { detail: { delay: currentReconnectDelay } })); } catch(e) {}
 
     reconnectTimer = setTimeout(function () {
       reconnectTimer = null;
       console.info('WarungioWS: Reconnecting in ' + currentReconnectDelay + 'ms...');
       WS.connect();
-      // Exponential backoff with cap
       currentReconnectDelay = Math.min(currentReconnectDelay * 1.5, MAX_RECONNECT_DELAY);
     }, currentReconnectDelay);
   }

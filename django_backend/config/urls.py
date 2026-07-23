@@ -163,7 +163,7 @@ urlpatterns += [
     path('favorites/', RedirectView.as_view(url='/buyer/favorites/', permanent=True), name='page-favorites'),
     path('wallet/', RedirectView.as_view(url='/buyer/wallet/', permanent=True), name='page-wallet'),
     path('settings/', RedirectView.as_view(url='/buyer/settings/', permanent=True), name='page-settings'),
-    path('buyer/chat/', login_required(TemplateView.as_view(template_name='buyer/chat/index.html')), name='page-buyer-chat'),
+    path('buyer/chat/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/chat/index.html'))), name='page-buyer-chat'),
     # Buyer Refund pages
     path('buyer/refunds/', login_required(TemplateView.as_view(template_name='buyer/refunds/index.html')), name='page-buyer-refunds'),
     path('buyer/refunds/create/', login_required(TemplateView.as_view(template_name='buyer/refunds/create.html')), name='page-buyer-refund-create'),

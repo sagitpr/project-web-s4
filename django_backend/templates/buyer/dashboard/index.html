@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
@@ -81,19 +82,19 @@
 
       <!-- Order Status Summary Cards -->
       <div class="stat-cards" id="statCards">
-        <div class="stat-card">
+        <div class="stat-card card-glow card-glow-ambient">
           <div class="stat-icon yellow"><img src="{% static 'images/order-delivery.png' %}" alt="Menunggu" /></div>
           <div class="stat-info"><strong id="statPending">0</strong><span>Menunggu Bayar</span></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-glow card-glow-ambient">
           <div class="stat-icon blue"><img src="{% static 'images/keranjang.png' %}" alt="Diproses" /></div>
           <div class="stat-info"><strong id="statProcessed">0</strong><span>Diproses</span></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-glow card-glow-ambient">
           <div class="stat-icon green"><img src="{% static 'images/pengiriman.png' %}" alt="Dikirim" /></div>
           <div class="stat-info"><strong id="statShipped">0</strong><span>Dikirim</span></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-glow card-glow-ambient">
           <div class="stat-icon red"><img src="{% static 'images/star.png' %}" alt="Selesai" /></div>
           <div class="stat-info"><strong id="statCompleted">0</strong><span>Selesai</span></div>
         </div>
@@ -106,8 +107,8 @@
           <strong id="dashWalletBalance">Rp 0</strong>
         </div>
         <div class="wallet-actions-row">
-          <button class="btn-topup-dash" id="btnTopUpDash">Top Up</button>
-          <button class="btn-riwayat" onclick="window.location.href='/buyer/orders/'">Riwayat Pesanan</button>
+          <button class="btn-topup-dash ripple" id="btnTopUpDash">Top Up</button>
+          <button class="btn-riwayat ripple" onclick="window.location.href='/buyer/orders/'">Riwayat Pesanan</button>
         </div>
       </div>
 
@@ -142,8 +143,8 @@
       <p>© 2026 Warungio. Hak Cipta Dilindungi.</p>
     </footer>
 
-    <script src="{% static 'js/utils/asset-loader.js' %}"></script>
-<script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/utils/asset-loader.js' %}"></script>    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/utils/loader.js' %}"></script>
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>

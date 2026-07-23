@@ -47,16 +47,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated;
+      final isSeller = authState.isSeller;
       final location = state.matchedLocation;
 
+      // Public routes — always accessible (no auth required)
       if (location == RouteNames.splash ||
           location == RouteNames.onboarding ||
           location.startsWith('/auth/')) {
         return null;
       }
 
+      // Not logged in → redirect to login
       if (!isLoggedIn) {
         return RouteNames.login;
+      }
+
+      // Logged in seller at buyer home (/) → redirect to seller dashboard
+      if (isLoggedIn && isSeller && location == RouteNames.home) {
+        return RouteNames.sellerDashboard;
       }
 
       return null;

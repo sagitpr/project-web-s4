@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/premium.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
     <link rel="stylesheet" href="{% static 'css/pages/buyer/favorites/style.css' %}">
@@ -335,7 +336,7 @@
                     const oldPrice = p.discount_pct ? `<p class="text-[10px] text-slate-400 line-through">Rp ${Number(p.price + (p.price * p.discount_pct / 100)).toLocaleString('id-ID')}</p>` : '';
                     
                     return `
-                        <div class="product-card-premium" data-product-id="${p.id}">
+                        <div class="product-card-premium card-glow" data-product-id="${p.id}">
                             <div class="img-zoom-parent">
                                 <img src="${img}" alt="${p.product_name}" loading="lazy" onerror="this.src='/static/images/paket-sayur.png'">
                                 <div class="absolute top-2 left-2 flex flex-col gap-1">
@@ -394,8 +395,7 @@
                     const rating = Number(s.rating_avg || 4.7).toFixed(1);
                     const category = s.category_name || (s.id === 1 ? 'Sembako' : 'Sayuran');
                     
-                    return `
-                        <div class="bg-white rounded-xxl overflow-hidden border border-slate-100 flex flex-col relative group cursor-pointer shadow-sm hover-lift" data-store-id="${s.id}">
+                    return `                            <div class="bg-white rounded-xxl overflow-hidden border border-slate-100 flex flex-col relative group cursor-pointer shadow-sm hover-lift card-glow" data-store-id="${s.id}">
                             <div class="relative h-28 overflow-hidden">
                                 <img src="${banner}" alt="${s.store_name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='/static/images/promosi-toko.png'">
                                 <button class="absolute top-2.5 right-2.5 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-red-500 border-none shadow-sm btn-delete-store-fav-action" data-id="${s.id}">

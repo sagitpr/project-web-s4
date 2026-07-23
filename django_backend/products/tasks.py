@@ -71,13 +71,17 @@ def process_smart_scan_task(self, product_id, scan_type='computer_vision', optio
     return result
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def run_stock_prediction_task(self, store_id, product_id=None, days_ahead=30, history_days=90):
     """
     Run stock prediction asynchronously (CPU-heavy).
     Caches result for 15 minutes.
     
     Predicts demand for one product or all products in a store.
+    
+    NOTE: autoretry_for=(Exception,) will retry on transient failures.
+    Known/recoverable errors (Store not found, Product not found) are
+    caught and returned gracefully — autoretry does NOT fire on those.
     """
     from products.services.stock_prediction import StockPredictor
     from products.models import Product
@@ -100,31 +104,30 @@ def run_stock_prediction_task(self, store_id, product_id=None, days_ahead=30, hi
         logger.info('Stock prediction cache hit for store %s', store_id)
         return cached
 
-    try:
-        predictor = StockPredictor(store=store)
+    predictor = StockPredictor(store=store)
 
-        if product_id:
-            product = Product.objects.filter(id=product_id, store=store).first()
-            if not product:
-                return {'error': 'Produk tidak ditemukan', 'product_id': product_id}
-            result = predictor.predict_demand(product, days_ahead, history_days)
-        else:
-            result = predictor.predict_store_stock(store, days_ahead)
+    if product_id:
+        product = Product.objects.filter(id=product_id, store=store).first()
+        if not product:
+            return {'error': 'Produk tidak ditemukan', 'product_id': product_id}
+        result = predictor.predict_demand(product, days_ahead, history_days)
+    else:
+        result = predictor.predict_store_stock(store, days_ahead)
 
-        # Cache result
-        cache.set(cache_key, result, PREDICTION_CACHE_TTL)
-        return result
-
-    except Exception as exc:
-        logger.exception('Stock prediction error for store %s', store_id)
-        return {'error': str(exc), 'store_id': store_id}
+    # Cache result
+    cache.set(cache_key, result, PREDICTION_CACHE_TTL)
+    return result
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def run_reorder_suggestions_task(self, store_id):
     """
     Generate reorder suggestions asynchronously.
     Uses EOQ (Economic Order Quantity) calculations (CPU-heavy).
+    
+    NOTE: autoretry_for=(Exception,) retries transient failures only.
+    Store.DoesNotExist is handled gracefully — autoretry does NOT fire.
+    All other exceptions propagate for automatic retry.
     """
     from products.services.stock_prediction import ReorderOptimizer
     from stores.models import Store
@@ -136,10 +139,10 @@ def run_reorder_suggestions_task(self, store_id):
 
     try:
         store = Store.objects.get(id=store_id)
-        optimizer = ReorderOptimizer(store)
-        suggestions = optimizer.get_reorder_suggestions()
-        cache.set(cache_key, suggestions, REORDER_CACHE_TTL)
-        return suggestions
-    except Exception as exc:
-        logger.exception('Reorder suggestion error for store %s', store_id)
-        return {'error': str(exc), 'store_id': store_id}
+    except Store.DoesNotExist:
+        return {'error': 'Store not found', 'store_id': store_id}
+
+    optimizer = ReorderOptimizer(store)
+    suggestions = optimizer.get_reorder_suggestions()
+    cache.set(cache_key, suggestions, REORDER_CACHE_TTL)
+    return suggestions

@@ -102,12 +102,26 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, content):
-        """Save support message to database."""
+        """Save support message to database.
+        
+        Each user gets their own conversation. Anonymous users get a shared
+        anonymous conversation to prevent data leakage between users.
+        """
         try:
-            conversation, _ = SupportConversation.objects.get_or_create(
-                is_active=True,
-                defaults={'subject': 'Chat Bantuan'}
-            )
+            if self.user.is_authenticated:
+                # Authenticated user: own conversation (prevents data leakage)
+                conversation, _ = SupportConversation.objects.get_or_create(
+                    user=self.user,
+                    is_active=True,
+                    defaults={'subject': 'Chat Bantuan'}
+                )
+            else:
+                # Anonymous user: shared active conversation (no user association)
+                conversation, _ = SupportConversation.objects.get_or_create(
+                    user__isnull=True,
+                    is_active=True,
+                    defaults={'subject': 'Chat Bantuan (Anonim)'}
+                )
             message = SupportMessage.objects.create(
                 conversation=conversation,
                 sender=self.user if self.user.is_authenticated else None,

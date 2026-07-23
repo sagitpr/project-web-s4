@@ -16,10 +16,11 @@ from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
+import logging
 from channels.auth import AuthMiddlewareStack
 from channels.middleware import BaseMiddleware
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.exceptions import DenyConnection
+logger = logging.getLogger(__name__)
 from chat import routing as chat_routing
 from notifications import routing as notification_routing
 from analytics import routing as analytics_routing
@@ -32,7 +33,7 @@ class JWTAuthMiddleware(BaseMiddleware):
     via JWT token passed as a query parameter (?token=...).
     Falls back to AuthMiddlewareStack (session-based) if no token.
     """
-    async def __call__(self, scope, receive, send):
+    async    def __call__(self, scope, receive, send):
         # Try JWT token from query string first
         query_string = scope.get('query_string', b'').decode()
         params = dict(p.split('=') for p in query_string.split('&') if '=' in p)
@@ -43,10 +44,12 @@ class JWTAuthMiddleware(BaseMiddleware):
                 access = AccessToken(token)
                 User = get_user_model()
                 scope['user'] = await database_sync_to_async(User.objects.get)(id=access['user_id'])
-                # Bypass AuthMiddlewareStack — JWT auth replaces session auth
+                # JWT auth succeeded — bypass AuthMiddlewareStack
                 return await self.inner(scope, receive, send)
-            except Exception:
-                raise DenyConnection('Token tidak valid.')
+            except Exception as exc:
+                # JWT invalid (expired/malformed) — log and fall through to session-based auth
+                # Don't DenyConnection here because the user may have a valid session cookie
+                logger.warning('WebSocket JWT auth failed, falling back to session: %s', exc)
 
         # Fallback to session-based auth (AuthMiddlewareStack)
         return await super().__call__(scope, receive, send)

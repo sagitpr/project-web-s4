@@ -1,0 +1,32 @@
+<!--
+  Warungio Global Premium Loader Component — Reusable
+  Include via: {% include 'components/global-loader.html' %}
+  This is the SVG template used by WarungioLoader JS utility.
+  Does NOT modify any existing DOM structure.
+-->
+<div id="warungioLoaderTemplate" style="display:none;">
+  <div class="warungio-loader">
+    <!-- Premium SVG Animated Logo Loader -->
+    <svg class="warungio-loader-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Static ring -->
+      <circle class="loader-ring" cx="40" cy="40" r="32" stroke="#e2e8f0" stroke-width="2.5"/>
+      <!-- Animated arc -->
+      <path class="loader-arc" d="M40 8 A32 32 0 0 1 72 40" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/>
+      <!-- Animated dots at arc endpoints -->
+      <circle class="loader-dot" cx="40" cy="8" r="4.5" fill="#16a34a"/>
+      <circle class="loader-dot" cx="72" cy="40" r="4" fill="#22c55e"/>
+      <circle class="loader-dot" cx="40" cy="72" r="3.5" fill="#16a34a"/>
+      <!-- Center dot -->
+      <circle cx="40" cy="40" r="5" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    </svg>
+
+    <!-- Warungio Brand Text (Warung=dark, io=green) -->
+    <div class="warungio-loader-text">
+      <span class="text-warung">Warung</span>
+      <span class="text-io">io</span>
+    </div>
+
+    <!-- Dynamic Status Text (updated by JS) -->
+    <div class="warungio-loader-status" id="warungioLoaderStatus">Memuat...</div>
+  </div>
+</div>

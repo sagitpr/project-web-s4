@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/profile/style.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
@@ -74,7 +75,7 @@
                                     <div class="form-grid">
                                         <div class="form-group">
                                             <label>Nama Lengkap</label>
-                                            <input type="text" id="inputFullName" placeholder="Nama lengkap" />
+                                            <input type="text" id="inputFullName" placeholder="Nama lengkap" class="input-glow" />
                                         </div>
                                         <div class="form-group">
                                             <label>Email</label>
@@ -82,15 +83,15 @@
                                         </div>
                                         <div class="form-group">
                                             <label>Nomor HP</label>
-                                            <input type="tel" id="inputPhone" placeholder="08XX-XXXX-XXXX" />
+                                            <input type="tel" id="inputPhone" placeholder="08XX-XXXX-XXXX" class="input-glow" />
                                         </div>
                                         <div class="form-group">
                                             <label>Tanggal Lahir</label>
-                                            <input type="date" id="inputBirthDate" />
+                                            <input type="date" id="inputBirthDate" class="input-glow" />
                                         </div>
                                         <div class="form-group full-width">
                                             <label>Alamat</label>
-                                            <textarea id="inputAddress" rows="2" placeholder="Alamat lengkap"></textarea>
+                                            <textarea id="inputAddress" rows="2" placeholder="Alamat lengkap" class="input-glow"></textarea>
                                         </div>
                                     </div>
                                 </div>

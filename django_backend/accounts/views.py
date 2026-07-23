@@ -17,11 +17,16 @@ logger = logging.getLogger(__name__)
 REGISTER_SENSITIVE_FIELDS = frozenset({'password', 'password2', 'captcha_token'})
 OTP_SENSITIVE_FIELDS = frozenset({'otp_code'})
 LOGIN_SENSITIVE_FIELDS = frozenset({'password'})
+TOKEN_SENSITIVE_FIELDS = frozenset({'access', 'refresh', 'token', 'id_token', 'identity_token', 'access_token'})
 
 def _mask_payload(data):
-    """Return a copy of request data with sensitive field values masked."""
+    """Return a copy of request data with sensitive field values masked.
+    
+    Masks passwords, OTP codes, tokens, and other sensitive fields
+    to prevent leakage through logs.
+    """
     masked = {}
-    sensitive = REGISTER_SENSITIVE_FIELDS | OTP_SENSITIVE_FIELDS | LOGIN_SENSITIVE_FIELDS
+    sensitive = REGISTER_SENSITIVE_FIELDS | OTP_SENSITIVE_FIELDS | LOGIN_SENSITIVE_FIELDS | TOKEN_SENSITIVE_FIELDS
     for k, v in data.items():
         if k in sensitive:
             masked[k] = '***MASKED***'

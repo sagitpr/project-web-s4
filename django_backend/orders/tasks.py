@@ -169,7 +169,7 @@ def poll_tracking_for_order(self, order_id):
 # Batch Task: Poll all shipped orders (called every 30 min by Celery Beat)
 # =============================================================================
 
-@shared_task
+@shared_task(max_retries=3, default_retry_delay=60, autoretry_for=(Exception,))
 def poll_tracking_batch():
     """
     Find all orders with status='shipped' and a tracking number,
@@ -218,7 +218,7 @@ def poll_tracking_batch():
 # Quick-Poll Task: Orders nearing completion (every 5 min)
 # =============================================================================
 
-@shared_task
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
 def poll_near_complete_tracking():
     """
     Poll orders that are likely already delivered but not yet marked complete.
@@ -279,7 +279,7 @@ def poll_near_complete_tracking():
 # Admin / Manual Task: Force-poll a specific order
 # =============================================================================
 
-@shared_task
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
 def force_poll_order(order_id):
     """
     Force-poll tracking for a specific order, ignoring status checks.

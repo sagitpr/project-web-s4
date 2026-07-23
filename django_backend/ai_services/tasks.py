@@ -11,7 +11,7 @@ logger = logging.getLogger('django_backend.ai_services.tasks')
 
 VISION_RESULT_CACHE_TTL = 300  # 5 minutes
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=5)
+@shared_task(bind=True, max_retries=2, default_retry_delay=5, autoretry_for=(Exception,))
 def analyze_vision_task(self, task_id: str, image_data: str, product_name: str = '',
                          analysis_type: str = 'full') -> dict:
     """
@@ -74,20 +74,20 @@ def analyze_vision_task(self, task_id: str, image_data: str, product_name: str =
         raise self.retry(exc=exc)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=10)
+@shared_task(bind=True, max_retries=2, default_retry_delay=10, autoretry_for=(Exception,))
 def generate_batch_ai_insights_task(self, store_id: int, days: int = 30) -> dict:
     """
     Generate AI insights for a seller dashboard asynchronously.
     Runs CPU-heavy analytics + Gemini calls without blocking.
+    
+    NOTE: autoretry_for=(Exception,) retries transient failures.
+    Store.DoesNotExist is handled gracefully — autoretry does NOT fire.
     """
     logger.info('Batch AI insights task started for store %s (days=%d)', store_id, days)
-    try:
-        from .seller_assistant import get_seller_assistant
-        from stores.models import Store
-        store = Store.objects.get(id=store_id)
-        assistant = get_seller_assistant(store)
-        result = assistant.get_comprehensive_analysis(days=days)
-        return result
-    except Exception as exc:
-        logger.exception('Batch AI insights failed for store %s: %s', store_id, exc)
-        return {'error': str(exc), 'store_id': store_id}
+    from .seller_assistant import get_seller_assistant
+    from stores.models import Store
+
+    store = Store.objects.get(id=store_id)
+    assistant = get_seller_assistant(store)
+    result = assistant.get_comprehensive_analysis(days=days)
+    return result

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # USER PROFILE & SCORING TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=10)
+@shared_task(bind=True, max_retries=3, default_retry_delay=10, autoretry_for=(Exception,))
 def update_user_profile_task(self, user_id: int):
     """
     Update a single user's behavior profile and scores.
@@ -91,7 +91,7 @@ def update_user_profile_task(self, user_id: int):
             return {'error': str(exc), 'user_id': user_id}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def batch_update_profiles_task(batch_size: int = 100):
     """
     Batch update user profiles.
@@ -120,7 +120,7 @@ def batch_update_profiles_task(batch_size: int = 100):
 # NOTIFICATION GENERATION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30)
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def generate_engagement_notification_task(self, user_id: int, trigger_type: str,
                                            context: dict = None):
     """
@@ -171,7 +171,7 @@ def generate_engagement_notification_task(self, user_id: int, trigger_type: str,
             return {'error': str(exc), 'user_id': user_id}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def generate_abandoned_cart_notification_task(user_id: int):
     """
     Generate abandoned cart reminder for users with items in cart.
@@ -237,7 +237,7 @@ def generate_abandoned_cart_notification_task(user_id: int):
     return {'user_id': user_id, 'status': 'skipped'}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def check_abandoned_cart_task(user_id: int):
     """
     Check if user has abandoned cart and trigger notification after delay.
@@ -255,7 +255,7 @@ def check_abandoned_cart_task(user_id: int):
 # NOTIFICATION DELIVERY TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task
+@shared_task(max_retries=3, default_retry_delay=15, autoretry_for=(Exception,))
 def process_notification_queue_task(batch_size: int = 50):
     """
     Process the notification queue for due notifications.
@@ -276,7 +276,7 @@ def process_notification_queue_task(batch_size: int = 50):
 # ANALYTICS & AGGREGATION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=120, autoretry_for=(Exception,))
 def aggregate_notification_analytics_task():
     """
     Aggregate notification analytics for all active users.
@@ -387,7 +387,7 @@ def _aggregate_single_user(user_id: int, period: str, period_start, period_end):
     )
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def update_optimal_notification_hours_task():
     """
     Compute optimal notification hours for each user based on
@@ -437,7 +437,7 @@ def update_optimal_notification_hours_task():
 # RE-ENGAGEMENT & CHURN PREVENTION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def scan_at_risk_users_task(max_users: int = 50):
     """
     Scan for users at risk of churning and trigger re-engagement.
@@ -486,7 +486,7 @@ def scan_at_risk_users_task(max_users: int = 50):
     return {'engaged': engaged_count}
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def detect_inactive_users_task(min_inactive_days: int = 7):
     """
     Detect users who have been inactive for too long and mark them.
@@ -524,7 +524,7 @@ def detect_inactive_users_task(min_inactive_days: int = 7):
 # NOTIFICATION CAMPAIGN TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
 def execute_campaign_task(campaign_id: int):
     """
     Execute a notification campaign.
@@ -639,7 +639,7 @@ def _get_campaign_target_users(campaign):
         return User.objects.filter(is_active=True)[:1000]
 
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
 def schedule_campaigns_task():
     """
     Check for campaigns that need to be started.
@@ -668,7 +668,7 @@ def schedule_campaigns_task():
 # CLEANUP & MAINTENANCE TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
 def clean_expired_queue_items_task():
     """
     Clean up expired and old notification queue items.
@@ -695,7 +695,7 @@ def clean_expired_queue_items_task():
     return {'expired': expired, 'deleted': deleted}
 
 
-@shared_task
+@shared_task(max_retries=1, default_retry_delay=120, autoretry_for=(Exception,))
 def clean_old_behavior_events_task():
     """
     Clean up old behavior events (older than 90 days).

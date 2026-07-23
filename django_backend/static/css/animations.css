@@ -1,0 +1,765 @@
+/**
+ * Warungio Premium Animation System — v1
+ * GPU-accelerated, accessibility-friendly animations.
+ * Load AFTER tokens.css, components.css, premium.css.
+ * Does NOT modify any existing styles — only adds animation layers.
+ *
+ * ── Contents ──
+ * 1. Global Premium Loader (SVG + overlay)
+ * 2. Card Glow/Blob Animation (product, dashboard, stat cards)
+ * 3. Grid Glow Input Animation (forms, search, inputs)
+ * 4. Premium Skeleton Loader (shimmer v2)
+ * 5. Micro-Interactions (ripple, hover, focus, press)
+ * 6. Page Transition Animations
+ * 7. Accessibility (prefers-reduced-motion)
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   1. GLOBAL PREMIUM LOADER — SVG Warungio Branded
+   ═══════════════════════════════════════════════════════════ */
+
+/* Overlay backdrop */
+.warungio-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-300) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.warungio-loader-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.warungio-loader-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .warungio-loader-overlay {
+    background: rgba(15, 23, 42, 0.92);
+  }
+}
+
+/* Loader container */
+.warungio-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Premium SVG Loader Animation */
+.warungio-loader-svg {
+  width: 80px;
+  height: 80px;
+  animation: loaderFloat 2s ease-in-out infinite;
+}
+
+.warungio-loader-svg .loader-ring {
+  fill: none;
+  stroke: var(--color-gray-200, #e2e8f0);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.warungio-loader-svg .loader-arc {
+  fill: none;
+  stroke: var(--color-brand, #16a34a);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+  animation: loaderSpin 1.4s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.warungio-loader-svg .loader-dot {
+  fill: var(--color-brand, #16a34a);
+  animation: loaderPulse 1.4s ease-in-out infinite;
+}
+
+.warungio-loader-svg .loader-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.warungio-loader-svg .loader-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Warungio text below loader */
+.warungio-loader-text {
+  font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.warungio-loader-text .text-warung {
+  color: var(--color-text-primary, #0f172a);
+}
+
+.warungio-loader-text .text-io {
+  color: var(--color-brand, #16a34a);
+}
+
+@media (prefers-color-scheme: dark) {
+  .warungio-loader-text .text-warung {
+    color: var(--color-text-inverse, #ffffff);
+  }
+}
+
+/* Loading status text */
+.warungio-loader-status {
+  font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-tertiary, #94a3b8);
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: loaderBlink 1.2s ease-in-out infinite;
+}
+
+/* Keyframes for loader */
+@keyframes loaderSpin {
+  0% { stroke-dashoffset: 200; transform: rotate(0deg); }
+  50% { stroke-dashoffset: 50; transform: rotate(270deg); }
+  100% { stroke-dashoffset: 200; transform: rotate(360deg); }
+}
+
+@keyframes loaderFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes loaderPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes loaderBlink {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Inline mini-loader (for buttons, small containers) */
+.warungio-loader-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.warungio-loader-mini svg {
+  width: 18px;
+  height: 18px;
+  animation: loaderSpin 1s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. CARD GLOW/BLOB ANIMATION — Cards only
+   ═══════════════════════════════════════════════════════════ */
+/* Applied via .card-glow class on card containers.
+   Only for: product cards, stat cards, dashboard cards, promo cards.
+   NOT for: forms, modals, navbar, sidebar, tables, lists. */
+
+/* Card Glow/Blob — GPU-optimized: only opacity transitions, no layout triggers.
+   Applied via .card-glow class. Use SPARINGLY — best on featured/prominent cards,
+   not on every card in a scrollable grid (avoids paint storms on large lists). */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+  /* Promote to own compositor layer */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  /* Use box-shadow for glow instead of radial-gradient — GPU-composited, no repaint */
+  box-shadow: inset 0 0 60px rgba(22, 163, 74, 0.04);
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.card-glow:hover::before {
+  opacity: 1;
+  box-shadow: inset 0 0 80px rgba(22, 163, 74, 0.08);
+}
+
+/* Ambient blob — subtle always-on organic movement.
+   Uses transform animations (GPU-only, no paint/layout triggers).
+   Best for hero cards, featured products, dashboard stat cards. */
+.card-glow-ambient {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glow-ambient::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.04) 0%, transparent 70%);
+  top: var(--glow-y, -60px);
+  left: var(--glow-x, -60px);
+  z-index: 0;
+  pointer-events: none;
+  animation: cardBlobFloat 8s ease-in-out infinite;
+}
+
+.card-glow-ambient::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.03) 0%, transparent 70%);
+  bottom: var(--glow-y2, -40px);
+  right: var(--glow-x2, -40px);
+  z-index: 0;
+  pointer-events: none;
+  animation: cardBlobFloat2 12s ease-in-out infinite reverse;
+}
+
+@keyframes cardBlobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.1); }
+  66% { transform: translate(-20px, 15px) scale(0.9); }
+}
+
+@keyframes cardBlobFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 20px) scale(1.15); }
+}
+
+/* Ensure card content stays above glow */
+.card-glow > *,
+.card-glow-ambient > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Stat card specific glow */
+.stat-card.card-glow::before {
+  background:
+    radial-gradient(
+      400px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      rgba(22, 163, 74, 0.08) 0%,
+      transparent 60%
+    );
+}
+
+/* Product card specific glow */
+.product-card.card-glow::before {
+  background:
+    radial-gradient(
+      500px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      rgba(22, 163, 74, 0.05) 0%,
+      transparent 60%
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. GRID GLOW INPUT ANIMATION — Inputs/forms only
+   ═══════════════════════════════════════════════════════════ */
+/* Applied via .input-glow class on form-input, form-select, form-textarea, search-input.
+   ONLY for input fields, NOT for cards, containers, or backgrounds. */
+
+.input-glow {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.input-glow:focus-within {
+  border-color: var(--color-brand, #16a34a) !important;
+  box-shadow:
+    0 0 0 3px rgba(22, 163, 74, 0.1),
+    inset 0 0 0 1px rgba(22, 163, 74, 0.15) !important;
+  animation: inputGlowPulse 2s ease-in-out infinite;
+}
+
+/* Animated grid background on focus (extremely subtle) */
+.input-glow:focus-within::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(rgba(22, 163, 74, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 163, 74, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: inputGridShift 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes inputGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1), inset 0 0 0 1px rgba(22, 163, 74, 0.15); }
+  50% { box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.06), inset 0 0 0 1px rgba(22, 163, 74, 0.1); }
+}
+
+@keyframes inputGridShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+/* OTP input specific grid glow */
+.otp-input.input-glow {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: var(--text-xl, 1.25rem);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+.otp-input.input-glow:focus {
+  border-color: var(--color-brand, #16a34a);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+  animation: otpGlowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes otpGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15); }
+  50% { box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.08), 0 0 15px rgba(22, 163, 74, 0.1); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. PREMIUM SKELETON LOADER — Enhanced shimmer
+   ═══════════════════════════════════════════════════════════ */
+
+.skeleton-premium-v2 {
+  position: relative;
+  background: var(--color-gray-100, #f1f5f9);
+  border-radius: var(--radius-squircle-md, 10px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.skeleton-premium-v2::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 40%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.4) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmerPremium 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes skeletonShimmerPremium {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Dark mode skeleton */
+@media (prefers-color-scheme: dark) {
+  .skeleton-premium-v2 {
+    background: var(--color-gray-800, #1e293b);
+  }
+  .skeleton-premium-v2::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 40%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%
+    );
+  }
+}
+
+/* Skeleton shape variants */
+.skeleton-text-line {
+  height: 14px;
+  border-radius: 4px;
+}
+
+.skeleton-text-line-sm {
+  height: 10px;
+  border-radius: 3px;
+  width: 60%;
+}
+
+.skeleton-text-line-lg {
+  height: 20px;
+  border-radius: 6px;
+  width: 85%;
+}
+
+.skeleton-avatar-premium {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full, 9999px);
+}
+
+.skeleton-image-premium {
+  width: 100%;
+  height: 160px;
+  border-radius: var(--radius-xl, 16px);
+}
+
+.skeleton-card-premium {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius-xl, 16px);
+}
+
+.skeleton-button-premium {
+  width: 120px;
+  height: 42px;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.skeleton-table-row {
+  height: 48px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+/* Skeleton grid layout helper */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4, 16px);
+}
+
+.skeleton-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--space-4, 16px);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-xl, 16px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-grid-item {
+    background: var(--color-gray-900, #0f172a);
+    border-color: var(--color-gray-800, #1e293b);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   5. MICRO-INTERACTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 5a. Ripple Effect (for buttons) ── */
+.ripple {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ripple::before {
+  content: '';
+  position: absolute;
+  top: var(--ripple-y, 50%);
+  left: var(--ripple-x, 50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(22, 163, 74, 0.15);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease-out, height 0.5s ease-out, opacity 0.5s ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ripple:active::before {
+  width: 300px;
+  height: 300px;
+  opacity: 0;
+}
+
+.ripple > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 5b. Button Press Animation ── */
+.btn-press {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* ── 5c. Hover Lift (moderate) ── */
+.hover-lift {
+  transition: transform var(--duration-200, 200ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--duration-200, 200ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.08));
+}
+
+/* ── 5d. Focus Ring Enhancement ── */
+.focus-ring-brand:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+  border-color: var(--color-brand, #16a34a);
+}
+
+/* ── 5e. Success/Error State Animations ── */
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.state-success {
+  animation: successPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.state-error {
+  animation: shakeError 0.4s ease-out;
+}
+
+/* ── 5f. Fade In Animation ── */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.5s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* ── 5g. Slide Up Animation ── */
+.slide-up {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: slideUp 0.5s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 5h. Scale In Animation ── */
+.scale-in {
+  opacity: 0;
+  transform: scale(0.95);
+  animation: scaleIn 0.4s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards;
+}
+
+@keyframes scaleIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── 5i. Infinite Scroll Loading Indicator ── */
+.scroll-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px;
+}
+
+.scroll-loader .scroll-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-brand, #16a34a);
+  animation: scrollDotBounce 1.2s ease-in-out infinite;
+}
+
+.scroll-loader .scroll-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.scroll-loader .scroll-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes scrollDotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── 5j. Skeleton Fade-Out (when content loads) ── */
+.skeleton-fade-out {
+  animation: skeletonFadeOut 0.4s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+}
+
+@keyframes skeletonFadeOut {
+  to { opacity: 0; transform: translateY(4px); }
+}
+
+/* ── 5k. Page Transition ── */
+.page-enter {
+  animation: pageEnter 0.4s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-exit {
+  animation: pageExit 0.3s var(--ease-in-out, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
+}
+
+@keyframes pageExit {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* ── 5l. Lazy Image Load Transition ── */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+img[loading="lazy"].loaded,
+img[loading="lazy"][src]:not([src=""]) {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   6. TOAST & NOTIFICATION ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Slide-in from right for toasts */
+.toast-slide-in {
+  animation: toastSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-slide-out {
+  animation: toastSlideOut 0.3s var(--ease-in-out, cubic-bezier(0.4, 0, 0.2, 1)) forwards;
+}
+
+@keyframes toastSlideOut {
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   7. ACCESSIBILITY — prefers-reduced-motion
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  .warungio-loader-overlay,
+  .warungio-loader-svg,
+  .warungio-loader-text,
+  .warungio-loader-status,
+  .card-glow::before,
+  .card-glow-ambient::before,
+  .card-glow-ambient::after,
+  .input-glow:focus-within,
+  .input-glow:focus-within::before,
+  .skeleton-premium-v2::after,
+  .ripple::before,
+  .scroll-loader .scroll-dot,
+  img[loading="lazy"] {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Show static loader immediately */
+  .warungio-loader-overlay.active {
+    opacity: 1;
+  }
+
+  /* Minimal skeleton (no shimmer) */
+  .skeleton-premium-v2::after {
+    display: none;
+  }
+
+  /* Instant fade for lazy images */
+  img[loading="lazy"] {
+    opacity: 1;
+    transition: none;
+  }
+
+  /* Static card glow */
+  .card-glow::before {
+    opacity: 0.3;
+  }
+
+  /* Static input focus */
+  .input-glow:focus-within {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12) !important;
+    animation: none !important;
+  }
+
+  /* No ripple */
+  .ripple:active::before {
+    display: none;
+  }
+
+  /* No scale on press */
+  .btn-press:active {
+    transform: none;
+  }
+}

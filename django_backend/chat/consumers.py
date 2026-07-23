@@ -79,11 +79,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
 
-            # Send notification to receiver
+            # Send notification to receiver via notification group
+            # NOTE: Group name must match NotificationConsumer group name:
+            # NotificationConsumer joins 'notifications_{user.id}'
             await self.channel_layer.group_send(
-                f'user_{receiver_id}',
+                f'notifications_{receiver_id}',
                 {
-                    'type': 'notification',
+                    'type': 'send_notification',
                     'notification_type': 'chat',
                     'title': f'Pesan dari {self.user.full_name}',
                     'description': content[:100],
