@@ -78,14 +78,28 @@ COPY shared/ /app/shared/
 ENV PYTHONPATH=/app/django_backend \
     DJANGO_SETTINGS_MODULE=config.settings
 
-# Buat direktori static jika belum ada (safeguard untuk .dockerignore issues)
-# dan direktori logs (settings.py membuatnya saat import)
+# =============================================================================
+# 🔴 ROOT CAUSE FIX #1: DJANGO_SECRET_KEY Tidak Terpropagasi ke collectstatic
+#
+# Masalah:
+#   RUN ... DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} test -f ... && \
+#              python manage.py collectstatic ...
+#   Di bash, `VAR=val cmd1 && cmd2` hanya set VAR untuk cmd1 (test -f),
+#   BUKAN untuk cmd2 (collectstatic). Settings.py kemudian raise
+#   ImproperlyConfigured karena DJANGO_SECRET_KEY=None dan DEBUG=False.
+#
+# Fix:
+#   Gunakan `export DJANGO_SECRET_KEY=${BUILD_SECRET_KEY}` sebagai
+#   perintah terpisah, sehingga key persist untuk seluruh chain.
+# Buat direktori logs (dibutuhkan settings.py saat import)
 # Gunakan dummy key hanya untuk build (tidak bocor ke runtime)
+# CELERY_ENABLED tidak perlu di-set karena config/__init__.py sekarang
+# default ke 'false' (secure-by-default).
 ARG BUILD_SECRET_KEY=django-insecure-build-only-key
-RUN mkdir -p /app/logs && \
+RUN export DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} && \
+    mkdir -p /app/logs && \
     cd /app/django_backend && \
-    DJANGO_SECRET_KEY=${BUILD_SECRET_KEY} \
-    # CRITICAL: Verify ALL source static files exist BEFORE collectstatic.
+    # ── CRITICAL: Verify ALL source static files exist BEFORE collectstatic ──
     # Without this check, a .dockerignore regression that excludes
     # django_backend/static/ would silently produce 0 project files.
     test -f /app/django_backend/static/css/premium.css && \
@@ -95,7 +109,7 @@ RUN mkdir -p /app/logs && \
     test -f /app/django_backend/static/js/utils/auth-ui.js && \
     echo "=== Source: ALL 5 critical static files confirmed ===" && \
     python manage.py collectstatic --noinput 2>&1 && \
-    # Verify ALL critical files were actually collected into the output
+    # ── Verify ALL critical files were actually collected into the output ──
     test -f /app/staticfiles/css/premium.css && \
     test -f /app/staticfiles/css/landing.css && \
     test -f /app/staticfiles/css/tokens.css && \
@@ -119,11 +133,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Install ONLY runtime libraries — minimal dan spesifik
+# redis-tools: ~1MB, dibutuhkan oleh Redis heartbeat healthcheck
+# untuk celery worker dan celery beat containers.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmariadb-dev-compat \
     ca-certificates \
     curl \
     mariadb-client \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages dari stage deps (tanpa .pyc — sudah --no-compile)

@@ -105,7 +105,21 @@ echo "[MODE] Django web container — running full startup."
 # ------------------------------------------------------------------
 # STEP 0: Collect static files (sync volume with latest source)
 # ------------------------------------------------------------------
+# Pre-flight check: Ensure DJANGO_SECRET_KEY is available.
+# Without this, settings.py raises ImproperlyConfigured at import time.
+# config/__init__.py now defaults CELERY_ENABLED to 'false' (secure-by-default),
+# so Celery circular import during collectstatic is no longer a concern.
 echo "[0/3] Collecting static files..."
+if [ -z "${DJANGO_SECRET_KEY}" ]; then
+    if [ "${DJANGO_DEBUG}" = "true" ] || [ "${DJANGO_DEBUG}" = "1" ]; then
+        echo "  -> WARNING: DJANGO_SECRET_KEY not set. Using dev fallback."
+        export DJANGO_SECRET_KEY="django-insecure-dev-only-key-do-not-use-in-production"
+    else
+        echo "  -> ERROR: DJANGO_SECRET_KEY is not set and DEBUG=false. Aborting."
+        echo "  -> Set DJANGO_SECRET_KEY in your .env file or environment."
+        exit 1
+    fi
+fi
 python manage.py collectstatic --noinput \
     && echo "  -> Static files collected." \
     || echo "  -> WARNING: collectstatic startup sync failed. Check Docker build output for static file validation errors."

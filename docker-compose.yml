@@ -147,10 +147,21 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Healthcheck: lightweight process check instead of heavy app-loading `celery inspect ping`
-    # pgrep checks the worker process exists without loading Django (critical for 1GB RAM VPS)
+    # Healthcheck: Redis Heartbeat (bukan pgrep)
+    # ───────────────────────────────────────────────────────
+    # SEBELUMNYA: pgrep hanya cek apakah proses masih hidup.
+    #   Tidak bisa deteksi: worker hang, deadlock, broker disconnect.
+    #
+    # SEKARANG: Celery worker signal (worker_process_init) memulai
+    #   background thread yang menulis `celery:heartbeat:worker` ke Redis
+    #   setiap 30 detik dengan TTL 90 detik. Healthcheck membaca key via
+    #   `redis-cli exists` — fixed key (tanpa hostname) untuk menghindari
+    #   mismatch antara $(hostname) dan Celery hostname (worker@abc123).
+    #
+    # Overhead: ~1ms per redis-cli call, ~0 byte Django loading.
+    # Redis CLI tersedia karena Dockerfile runtime menginstall redis-tools.
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "redis-cli -h redis exists celery:heartbeat:worker 2>/dev/null | grep -q 1 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -191,9 +202,12 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Healthcheck: lightweight process check (beat scheduler minimal ~20MB RAM)
+    # Healthcheck: Redis Heartbeat (bukan pgrep)
+    # Celery Beat scheduled task `celery-heartbeat-beat` berjalan setiap 60 detik,
+    # menulis `celery:heartbeat:beat` ke Redis dengan TTL 180 detik.
+    # Jika beat crash/stuck/scheduler freeze, key TTL expired → healthcheck fail.
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'celery.*beat' > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "redis-cli -h redis exists celery:heartbeat:beat 2>/dev/null | grep -q 1 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

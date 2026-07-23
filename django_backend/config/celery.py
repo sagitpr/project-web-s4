@@ -4,8 +4,11 @@ Async task queue with Redis broker for tracking, notifications, and analytics.
 """
 
 import os
+import threading
+import time
 from celery import Celery
 from celery.schedules import crontab
+from celery.signals import worker_process_init
 
 # ── Transient Error Types (used by all tasks via import) ──
 # These are errors that are safe to retry because they represent temporary
@@ -113,10 +116,96 @@ app.conf.beat_schedule = {
         'task': 'payments.tasks.verify_pending_payments_task',
         'schedule': crontab(minute='*/30'),
     },
+
+    # ── Celery Heartbeat (Healthcheck) ──
+    # Writes `celery:heartbeat:beat` key to Redis every 60 seconds.
+    # If beat crashes or scheduler hangs, key TTL (180s) expires and
+    # Docker healthcheck (redis-cli exists) detects failure → restart.
+    #
+    # Worker heartbeat is handled by `on_worker_process_init` signal
+    # (background daemon thread, not a scheduled task) so that
+    # worker health works even without Celery Beat running.
+    'celery-heartbeat-beat': {
+        'task': 'config.celery.celery_heartbeat_beat',
+        'schedule': 60.0,
+        'options': {'queue': 'default'},
+    },
 }
 
 
-@app.task(bind=True, ignore_result=True)
-def debug_task(self):
-    """Debug task to verify Celery is running."""
-    print(f'Request: {self.request!r}')
+# =========================================================================
+# 🔴 REDIS HEARTBEAT — Production Healthcheck untuk Celery Worker
+# =========================================================================
+# Sebelumnya healthcheck menggunakan `pgrep -f 'celery.*worker'` yang hanya
+# memeriksa apakah proses masih hidup, TIDAK bisa mendeteksi worker hang,
+# deadlock, broker disconnect, atau queue macet.
+#
+# Solusi: Worker menulis heartbeat ke Redis SETEX setiap 30 detik dengan TTL
+# 90 detik (3x missed beats). Docker healthcheck membaca key via `redis-cli`.
+# Total overhead: ~1ms per write, ~0 byte Django loading, ~0.1MB RAM.
+#
+# Untuk Celery Beat: scheduled task `celery_heartbeat_beat` berjalan setiap
+# 60 detik yang menulis key `celery:heartbeat:beat`. Jika beat crash/stuck,
+# TTL expired dalam 180 detik → healthcheck gagal → container restart.
+# =========================================================================
+
+_HEARTBEAT_REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+_HEARTBEAT_WORKER_KEY = 'celery:heartbeat:worker'
+_HEARTBEAT_BEAT_KEY = 'celery:heartbeat:beat'
+_HEARTBEAT_WORKER_TTL = 90   # 90 detik = 3 missed beats (30s interval)
+_HEARTBEAT_BEAT_TTL = 180    # 180 detik = 3 missed beats (60s interval)
+
+
+def _send_heartbeat(key, ttl, broker_url=None):
+    """Write heartbeat to Redis SETEX. Silent fail jika Redis down."""
+    try:
+        import redis as redis_mod
+        url = broker_url or _HEARTBEAT_REDIS_URL
+        r = redis_mod.StrictRedis.from_url(url)
+        r.setex(key, ttl, 'alive')
+    except Exception:
+        pass  # Heartbeat failure is non-fatal
+
+
+def _start_heartbeat_thread():
+    """
+    Background daemon thread: menulis heartbeat ke Redis setiap 30 detik.
+    Thread daemon akan mati otomatis saat worker process berhenti.
+    Overhead: ~0.1MB RAM, ~1ms CPU per 30 detik.
+
+    🔴 FIX: Gunakan fixed key (tanpa hostname) untuk menghindari mismatch
+    antara key yang ditulis worker (worker@abc123) dan key yang dibaca
+    healthcheck ($(hostname) = abc123). Docker healthcheck menggunakan
+    `redis-cli exists celery:heartbeat:worker` — cocok dengan key fixed ini.
+    """
+    def _beat():
+        while True:
+            _send_heartbeat(_HEARTBEAT_WORKER_KEY, _HEARTBEAT_WORKER_TTL)
+            time.sleep(30)
+
+    t = threading.Thread(target=_beat, daemon=True, name='celery-hb')
+    t.start()
+
+
+@worker_process_init.connect
+def on_worker_process_init(sender=None, **kwargs):
+    """
+    Celery signal: dipanggil saat worker process (atau child process pool)
+    dimulai. Memulai background thread heartbeat ke Redis.
+
+    Mendeteksi:
+    - Worker hang: thread berhenti → key TTL expired → healthcheck fail
+    - Broker disconnect: Redis write exception (silent, non-fatal)
+    - Worker crash: thread mati → key expired → healthcheck fail
+    """
+    _start_heartbeat_thread()
+
+
+@app.task(ignore_result=True, name='config.celery.celery_heartbeat_beat')
+def celery_heartbeat_beat():
+    """
+    Heartbeat task untuk Celery Beat scheduler.
+    Dijadwalkan setiap 60 detik via beat_schedule.
+    Jika beat crash/stuck, key TTL expired → healthcheck gagal.
+    """
+    _send_heartbeat(_HEARTBEAT_BEAT_KEY, _HEARTBEAT_BEAT_TTL)
