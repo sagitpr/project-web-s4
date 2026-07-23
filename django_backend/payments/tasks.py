@@ -7,6 +7,7 @@ pending transaction verification.
 
 import logging
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.db import transaction as db_transaction
 from django.utils import timezone
 from django.conf import settings
@@ -15,7 +16,7 @@ from datetime import timedelta
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=4, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=4, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS, retry_backoff=True, retry_backoff_max=600)
 def create_snap_transaction_task(self, order_id, payment_method, bank=None):
     """Create Midtrans Snap transaction asynchronously."""
     import requests
@@ -134,7 +135,7 @@ def create_snap_transaction_task(self, order_id, payment_method, bank=None):
         raise self.retry(exc=exc, countdown=countdown)
 
 
-@shared_task(bind=True, max_retries=4, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=4, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS, retry_backoff=True, retry_backoff_max=600)
 def poll_midtrans_payment_status_task(self, order_id):
     """Poll Midtrans transaction status for a specific order."""
     from payments.services.midtrans import get_transaction_status
@@ -174,7 +175,7 @@ def poll_midtrans_payment_status_task(self, order_id):
     }
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def reconcile_orphan_webhooks_task(self):
     """
     Scheduled reconciliation task (every 15 minutes).
@@ -222,7 +223,7 @@ def reconcile_orphan_webhooks_task(self):
     return {'reconciled': reconciled}
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def verify_pending_payments_task(self):
     """
     Scheduled task (every 30 minutes) to verify payments stuck in 'pending' status

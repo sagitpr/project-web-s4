@@ -283,6 +283,39 @@ services:
         max-size: "5m"
         max-file: "2"
 
+  # ---- Flower (Celery Task Monitoring Dashboard) ----
+  # Real-time Celery worker monitoring: task progress, queue depth, retries, failures.
+  # Only listens on internal Docker network (not exposed to public).
+  # Access via SSH tunnel: ssh -L 5555:localhost:5555 root@36.50.77.237
+  # Then open http://localhost:5555 in browser.
+  # OPTIONAL: Enable with monitoring profile.
+  flower:
+    profiles: ["monitoring"]
+    image: mher/flower:2.0
+    container_name: warungio-flower
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      FLOWER_PORT: "5555"
+      FLOWER_BASIC_AUTH: "${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-warungio123}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5555 > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    mem_limit: 48m
+    networks:
+      - warungio_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   # ---- Prometheus (Lightweight Metrics Collection) ----
   # Scrapes node_exporter + cadvisor every 60s. ~50MB RAM idle.
   # OPTIONAL: Enable only after VPS has swap & is stable.

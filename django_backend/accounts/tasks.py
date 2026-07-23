@@ -5,11 +5,12 @@ Moves SMTP/WhatsApp HTTP calls (blocking) out of the request thread.
 
 import logging
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=5, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=3, default_retry_delay=5, autoretry_for=TRANSIENT_ERRORS)
 def send_otp_task(self, identifier, otp_code, purpose='registration', user_full_name=None):
     """
     Send OTP code via email and/or WhatsApp asynchronously.
@@ -43,7 +44,7 @@ def send_otp_task(self, identifier, otp_code, purpose='registration', user_full_
         raise self.retry(exc=exc)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=10, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=10, autoretry_for=TRANSIENT_ERRORS)
 def send_whatsapp_only_otp_task(self, phone, otp_code, purpose='registration', user_full_name=None):
     """
     Send OTP via WhatsApp only (for phone-only identifiers).
@@ -72,7 +73,7 @@ def send_whatsapp_only_otp_task(self, phone, otp_code, purpose='registration', u
         raise self.retry(exc=exc)
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def clean_expired_otps_task():
     """
     Periodically clean expired OTP records from the database.
@@ -87,7 +88,7 @@ def clean_expired_otps_task():
     return {'deleted': deleted}
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def clean_expired_blacklisted_tokens_task():
     """
     Periodically clean expired blacklisted JWT tokens from the database.

@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 # Core Task: Poll tracking for a single order
 # =============================================================================
 
-@shared_task(bind=True, max_retries=5, default_retry_delay=120)
+@shared_task(bind=True, max_retries=5, default_retry_delay=120, retry_backoff=True, retry_backoff_max=600)
 def poll_tracking_for_order(self, order_id):
     """
     Poll external courier tracking API for a single order.
@@ -169,7 +170,7 @@ def poll_tracking_for_order(self, order_id):
 # Batch Task: Poll all shipped orders (called every 30 min by Celery Beat)
 # =============================================================================
 
-@shared_task(max_retries=3, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=3, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS, retry_backoff=True, retry_backoff_max=600)
 def poll_tracking_batch():
     """
     Find all orders with status='shipped' and a tracking number,
@@ -218,7 +219,7 @@ def poll_tracking_batch():
 # Quick-Poll Task: Orders nearing completion (every 5 min)
 # =============================================================================
 
-@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def poll_near_complete_tracking():
     """
     Poll orders that are likely already delivered but not yet marked complete.
@@ -279,7 +280,7 @@ def poll_near_complete_tracking():
 # Admin / Manual Task: Force-poll a specific order
 # =============================================================================
 
-@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def force_poll_order(order_id):
     """
     Force-poll tracking for a specific order, ignoring status checks.

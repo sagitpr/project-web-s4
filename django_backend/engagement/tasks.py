@@ -9,6 +9,7 @@ from datetime import timedelta
 from typing import Optional, Dict, List
 
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.db.models import Count, Sum, Q
 from django.db import connection
 from django.utils import timezone
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 # USER PROFILE & SCORING TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=10, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=3, default_retry_delay=10, autoretry_for=TRANSIENT_ERRORS)
 def update_user_profile_task(self, user_id: int):
     """
     Update a single user's behavior profile and scores.
@@ -91,7 +92,7 @@ def update_user_profile_task(self, user_id: int):
             return {'error': str(exc), 'user_id': user_id}
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def batch_update_profiles_task(batch_size: int = 100):
     """
     Batch update user profiles.
@@ -120,7 +121,7 @@ def batch_update_profiles_task(batch_size: int = 100):
 # NOTIFICATION GENERATION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def generate_engagement_notification_task(self, user_id: int, trigger_type: str,
                                            context: dict = None):
     """
@@ -171,7 +172,7 @@ def generate_engagement_notification_task(self, user_id: int, trigger_type: str,
             return {'error': str(exc), 'user_id': user_id}
 
 
-@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def generate_abandoned_cart_notification_task(user_id: int):
     """
     Generate abandoned cart reminder for users with items in cart.
@@ -237,7 +238,7 @@ def generate_abandoned_cart_notification_task(user_id: int):
     return {'user_id': user_id, 'status': 'skipped'}
 
 
-@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def check_abandoned_cart_task(user_id: int):
     """
     Check if user has abandoned cart and trigger notification after delay.
@@ -255,28 +256,41 @@ def check_abandoned_cart_task(user_id: int):
 # NOTIFICATION DELIVERY TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(max_retries=3, default_retry_delay=15, autoretry_for=(Exception,))
+@shared_task(max_retries=3, default_retry_delay=15, autoretry_for=TRANSIENT_ERRORS)
 def process_notification_queue_task(batch_size: int = 50):
     """
     Process the notification queue for due notifications.
     Runs frequently to deliver scheduled notifications on time.
+    
+    Uses Redis cache to prevent duplicate execution when previous
+    invocation is still running (hertbeat task overlap protection).
     """
+    from django.core.cache import cache
     from engagement.services.notification_intelligence import get_notification_intelligence
 
-    intelligence = get_notification_intelligence()
-    processed = intelligence.process_queue(batch_size=batch_size)
-
-    if processed > 0:
-        logger.info('Processed %d notifications from queue', processed)
-
-    return {'processed': processed}
+    # Single-instance lock: atomic SETNX to prevent TOCTOU race (code review finding)
+    LOCK_KEY = 'celery:lock:process_notification_queue'
+    LOCK_TTL = 300  # 5 minutes — safely exceeds max execution time
+    # cache.add() is atomic — if another instance already set it, returns False
+    if not cache.add(LOCK_KEY, True, LOCK_TTL):
+        logger.debug('process_notification_queue already running, skipping')
+        return {'skipped': 'already_running'}
+    
+    try:
+        intelligence = get_notification_intelligence()
+        processed = intelligence.process_queue(batch_size=batch_size)
+        if processed > 0:
+            logger.info('Processed %d notifications from queue', processed)
+        return {'processed': processed}
+    finally:
+        cache.delete(LOCK_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════
 # ANALYTICS & AGGREGATION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(max_retries=2, default_retry_delay=120, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=120, autoretry_for=TRANSIENT_ERRORS)
 def aggregate_notification_analytics_task():
     """
     Aggregate notification analytics for all active users.
@@ -387,7 +401,7 @@ def _aggregate_single_user(user_id: int, period: str, period_start, period_end):
     )
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def update_optimal_notification_hours_task():
     """
     Compute optimal notification hours for each user based on
@@ -437,7 +451,7 @@ def update_optimal_notification_hours_task():
 # RE-ENGAGEMENT & CHURN PREVENTION TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def scan_at_risk_users_task(max_users: int = 50):
     """
     Scan for users at risk of churning and trigger re-engagement.
@@ -486,7 +500,7 @@ def scan_at_risk_users_task(max_users: int = 50):
     return {'engaged': engaged_count}
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def detect_inactive_users_task(min_inactive_days: int = 7):
     """
     Detect users who have been inactive for too long and mark them.
@@ -524,7 +538,7 @@ def detect_inactive_users_task(min_inactive_days: int = 7):
 # NOTIFICATION CAMPAIGN TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=3, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def execute_campaign_task(campaign_id: int):
     """
     Execute a notification campaign.
@@ -639,36 +653,50 @@ def _get_campaign_target_users(campaign):
         return User.objects.filter(is_active=True)[:1000]
 
 
-@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def schedule_campaigns_task():
     """
     Check for campaigns that need to be started.
     Runs every minute.
+    
+    Uses Redis cache to prevent duplicate execution (single-instance lock).
     """
+    from django.core.cache import cache
     from engagement.models import NotificationCampaign
 
-    now = timezone.now()
-    due_campaigns = NotificationCampaign.objects.filter(
-        status='scheduled',
-        scheduled_at__lte=now,
-    )
+    # Single-instance lock: atomic SETNX to prevent TOCTOU race (code review finding)
+    LOCK_KEY = 'celery:lock:schedule_campaigns'
+    LOCK_TTL = 600  # 10 minutes
+    # cache.add() is atomic — if another instance already set it, returns False
+    if not cache.add(LOCK_KEY, True, LOCK_TTL):
+        logger.debug('schedule_campaigns already running, skipping')
+        return {'skipped': 'already_running'}
 
-    count = 0
-    for campaign in due_campaigns:
-        execute_campaign_task.delay(campaign.id)
-        count += 1
+    try:
+        now = timezone.now()
+        due_campaigns = NotificationCampaign.objects.filter(
+            status='scheduled',
+            scheduled_at__lte=now,
+        )
 
-    if count > 0:
-        logger.info('Scheduled %d campaigns for execution', count)
+        count = 0
+        for campaign in due_campaigns:
+            execute_campaign_task.delay(campaign.id)
+            count += 1
 
-    return {'scheduled': count}
+        if count > 0:
+            logger.info('Scheduled %d campaigns for execution', count)
+
+        return {'scheduled': count}
+    finally:
+        cache.delete(LOCK_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════
 # CLEANUP & MAINTENANCE TASKS
 # ═══════════════════════════════════════════════════════════════
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def clean_expired_queue_items_task():
     """
     Clean up expired and old notification queue items.
@@ -695,7 +723,7 @@ def clean_expired_queue_items_task():
     return {'expired': expired, 'deleted': deleted}
 
 
-@shared_task(max_retries=1, default_retry_delay=120, autoretry_for=(Exception,))
+@shared_task(max_retries=1, default_retry_delay=120, autoretry_for=TRANSIENT_ERRORS)
 def clean_old_behavior_events_task():
     """
     Clean up old behavior events (older than 90 days).

@@ -4,6 +4,7 @@ Celery tasks for inventory — async expiry check and batch sync.
 
 import logging
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ EXPIRY_CACHE_TTL = 60 * 5  # 5 minutes
 LOW_STOCK_CACHE_TTL = 60 * 3  # 3 minutes
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=3, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def run_expiry_check_task(self, store_id):
     """
     Check all batches for a store and send expiry notifications.
@@ -42,7 +43,7 @@ def run_expiry_check_task(self, store_id):
         return {'error': str(exc), 'store_id': store_id}
 
 
-@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=(Exception,))
+@shared_task(max_retries=2, default_retry_delay=60, autoretry_for=TRANSIENT_ERRORS)
 def clean_expired_notifications_task():
     """
     Clean up old notifications and expired batch records.

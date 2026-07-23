@@ -7,6 +7,20 @@ import os
 from celery import Celery
 from celery.schedules import crontab
 
+# ── Transient Error Types (used by all tasks via import) ──
+# These are errors that are safe to retry because they represent temporary
+# infrastructure/network failures. Business logic errors (ValidationError,
+# DoesNotExist) are NOT included — those should fail fast, not retry.
+TRANSIENT_ERRORS = (
+    ConnectionError,
+    ConnectionRefusedError,
+    ConnectionResetError,
+    BrokenPipeError,
+    TimeoutError,
+    IOError,
+    OSError,
+)
+
 # Set the default Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 

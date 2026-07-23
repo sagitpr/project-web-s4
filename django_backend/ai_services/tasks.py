@@ -5,13 +5,14 @@ Moves Gemini Vision API calls (3-10s) out of the request thread.
 
 import logging
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.core.cache import cache
 
 logger = logging.getLogger('django_backend.ai_services.tasks')
 
 VISION_RESULT_CACHE_TTL = 300  # 5 minutes
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=5, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=5, autoretry_for=TRANSIENT_ERRORS)
 def analyze_vision_task(self, task_id: str, image_data: str, product_name: str = '',
                          analysis_type: str = 'full') -> dict:
     """
@@ -74,13 +75,13 @@ def analyze_vision_task(self, task_id: str, image_data: str, product_name: str =
         raise self.retry(exc=exc)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=10, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=10, autoretry_for=TRANSIENT_ERRORS)
 def generate_batch_ai_insights_task(self, store_id: int, days: int = 30) -> dict:
     """
     Generate AI insights for a seller dashboard asynchronously.
     Runs CPU-heavy analytics + Gemini calls without blocking.
     
-    NOTE: autoretry_for=(Exception,) retries transient failures.
+    NOTE: autoretry_for=TRANSIENT_ERRORS retries only transient failures (IO, Connection, Timeout).
     Store.DoesNotExist is handled gracefully — autoretry does NOT fire.
     """
     logger.info('Batch AI insights task started for store %s (days=%d)', store_id, days)

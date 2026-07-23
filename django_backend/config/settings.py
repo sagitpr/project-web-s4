@@ -378,6 +378,60 @@ CELERY_TASK_DEFAULT_QUEUE = 'warungio_default'
 CELERY_TASK_DEFAULT_EXCHANGE = 'warungio_default'
 CELERY_TASK_DEFAULT_ROUTING_KEY = 'warungio_default'
 
+# ── Task Rejection on Worker Lost ──
+# When a worker crashes/restarts while processing a task (acks_late=True),
+# reject the unacknowledged message so it can be redelivered to another worker.
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+# ── Task ACK on Failure ──
+# Acknowledge tasks even when they fail. Prevents permanently failing tasks
+# from remaining on the broker and being re-delivered after visibility_timeout.
+# Combined with autoretry_for, this ensures transient failures retry while
+# business logic errors are acknowledged and logged (not re-queued forever).
+CELERY_TASK_ACKS_ON_FAILURE_OR_TIMEOUT = True
+
+# ── Task Events (for monitoring tools like Flower, Prometheus) ──
+# Sends task state changes (sent, received, started, succeeded, failed, retried)
+# as Celery events. Required for Flower dashboards and Prometheus metrics.
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_TASK_SEND_SENT_EVENT = True
+CELERY_TASK_TRACK_STARTED = True
+
+# ── Broker Transport Options ──
+# visibility_timeout: If a worker fetches a task then crashes before ACKing,
+# the task becomes visible to other workers after this timeout.
+# Set to match CELERY_TASK_TIME_LIMIT (300s) + 60s buffer.
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 360,
+    'global_keyprefix': 'warungio_celery_',
+    'socket_timeout': 5,
+    'socket_connect_timeout': 5,
+    'retry_on_timeout': True,
+    'health_check_interval': 30,
+}
+
+# ── Task Annotations (auto-set time limits per task name pattern) ──
+# Only tasks that might exceed the global 240s limit need explicit annotations.
+# All other tasks inherit CELERY_TASK_SOFT_TIME_LIMIT / CELERY_TASK_TIME_LIMIT.
+CELERY_TASK_ANNOTATIONS = {
+    'payments.tasks.*': {
+        'soft_time_limit': 240,
+        'time_limit': 300,
+    },
+    'ai_intelligence.tasks.*': {
+        'soft_time_limit': 120,
+        'time_limit': 180,
+    },
+    'engagement.tasks.*': {
+        'soft_time_limit': 120,
+        'time_limit': 180,
+    },
+    'ai_services.tasks.*': {
+        'soft_time_limit': 180,
+        'time_limit': 240,
+    },
+}
+
 # ── Beat Schedule Storage ──
 # Store schedule in DB so it persists across container restarts.
 # Requires django-celery-beat to be installed.

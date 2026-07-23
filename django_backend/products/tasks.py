@@ -5,6 +5,7 @@ Moves Gemini Vision API calls (3-10s) and CPU-heavy predictions out of request t
 
 import logging
 from celery import shared_task
+from config.celery import TRANSIENT_ERRORS
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ def process_smart_scan_task(self, product_id, scan_type='computer_vision', optio
     return result
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def run_stock_prediction_task(self, store_id, product_id=None, days_ahead=30, history_days=90):
     """
     Run stock prediction asynchronously (CPU-heavy).
@@ -79,7 +80,7 @@ def run_stock_prediction_task(self, store_id, product_id=None, days_ahead=30, hi
     
     Predicts demand for one product or all products in a store.
     
-    NOTE: autoretry_for=(Exception,) will retry on transient failures.
+    NOTE: autoretry_for=TRANSIENT_ERRORS retries only transient failures (IO, Connection, Timeout).
     Known/recoverable errors (Store not found, Product not found) are
     caught and returned gracefully — autoretry does NOT fire on those.
     """
@@ -119,13 +120,13 @@ def run_stock_prediction_task(self, store_id, product_id=None, days_ahead=30, hi
     return result
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=(Exception,))
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, autoretry_for=TRANSIENT_ERRORS)
 def run_reorder_suggestions_task(self, store_id):
     """
     Generate reorder suggestions asynchronously.
     Uses EOQ (Economic Order Quantity) calculations (CPU-heavy).
     
-    NOTE: autoretry_for=(Exception,) retries transient failures only.
+    NOTE: autoretry_for=TRANSIENT_ERRORS retries only transient failures (IO, Connection, Timeout).
     Store.DoesNotExist is handled gracefully — autoretry does NOT fire.
     All other exceptions propagate for automatic retry.
     """
