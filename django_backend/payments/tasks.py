@@ -15,7 +15,7 @@ from datetime import timedelta
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=10)
+@shared_task(bind=True, max_retries=4, default_retry_delay=30)
 def create_snap_transaction_task(self, order_id, payment_method, bank=None):
     """Create Midtrans Snap transaction asynchronously."""
     import requests
@@ -131,7 +131,7 @@ def create_snap_transaction_task(self, order_id, payment_method, bank=None):
         raise self.retry(exc=exc)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=30)
+@shared_task(bind=True, max_retries=4, default_retry_delay=30)
 def poll_midtrans_payment_status_task(self, order_id):
     """Poll Midtrans transaction status for a specific order."""
     from payments.services.midtrans import get_transaction_status
