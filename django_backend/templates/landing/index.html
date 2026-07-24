@@ -85,7 +85,7 @@
             <span>Daftar Jadi Mitra</span>
           </a>
         </div>
-        <div class="hero-highlights">
+        <div class="hero-highlights icon-replace" data-icon-size="40" data-icon-color="#108d35">
           <div class="highlight-item">
             <img
               src="{% static 'images/location.png' %}"
@@ -149,12 +149,27 @@
     </div>
   </section>
 
+  {# ── Ad: After Hero Section ── #}
+  <div class="container">
+    <div class="adsense-wrapper">
+      <div class="adsense-display-container" id="ad-landing-after-hero">
+        <ins class="adsbygoogle"
+             style="display:block; min-height:90px;"
+             data-ad-client="ca-pub-8639756788997808"
+             data-ad-slot="8639756788997808_1"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins>
+      </div>
+    </div>
+  </div>
+
   <section class="features" id="fitur">
     <div class="container">
       <h2 class="section-title">
         Satu Platform untuk <span>Belanja & Bisnis</span>
       </h2>
-      <div class="features-grid">
+      <div class="features-grid icon-replace" data-icon-size="40" data-icon-color="#108d35">
         {# ── Consumer Features ── #}
         <div class="feature-card">
           <div class="feature-card-inner">
@@ -356,6 +371,21 @@
     </div>
   </section>
 
+  {# ── Ad: After Video/Features Section ── #}
+  <div class="container">
+    <div class="adsense-wrapper">
+      <div class="adsense-display-container" id="ad-landing-after-features">
+        <ins class="adsbygoogle"
+             style="display:block; min-height:90px;"
+             data-ad-client="ca-pub-8639756788997808"
+             data-ad-slot="8639756788997808_2"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins>
+      </div>
+    </div>
+  </div>
+
   <section class="business-section" id="bisnis">
     <div class="container">
       <h2 class="section-title">
@@ -365,7 +395,7 @@
         Warungio menyediakan semua alat yang Anda butuhkan untuk mengelola dan
         mengembangkan usaha, dari stok barang hingga laporan keuangan.
       </p>
-      <div class="business-grid">
+      <div class="business-grid icon-replace" data-icon-size="48" data-icon-color="#108d35">
         <div class="business-card">
           <div class="business-card-icon">
             <img
@@ -484,7 +514,7 @@
       </div>
       <div class="category-promo-row">
         <div class="category-panel">
-          <div class="categories-grid">
+          <div class="categories-grid icon-replace" data-icon-size="60" data-icon-color="#108d35">
             <div class="category-item">
               <img
                 src="{% static 'images/sembako.png' %}"
@@ -579,6 +609,21 @@
       </div>
     </div>
   </section>
+
+  {# ── Ad: After Categories Section ── #}
+  <div class="container">
+    <div class="adsense-wrapper">
+      <div class="adsense-display-container" id="ad-landing-after-category">
+        <ins class="adsbygoogle"
+             style="display:block; min-height:90px;"
+             data-ad-client="ca-pub-8639756788997808"
+             data-ad-slot="8639756788997808_3"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins>
+      </div>
+    </div>
+  </div>
 
   <section class="how-it-works" id="cara-kerja">
     <div class="container">
@@ -813,6 +858,21 @@
       </div>
     </div>
   </section>
+
+  {# ── Ad: Before Download Section ── #}
+  <div class="container">
+    <div class="adsense-wrapper">
+      <div class="adsense-display-container" id="ad-landing-before-footer">
+        <ins class="adsbygoogle"
+             style="display:block; min-height:90px;"
+             data-ad-client="ca-pub-8639756788997808"
+             data-ad-slot="8639756788997808_4"
+             data-ad-format="auto"
+             data-full-width-responsive="true">
+        </ins>
+      </div>
+    </div>
+  </div>
 
   <section class="download">
     <div class="container">
@@ -1050,6 +1110,7 @@
 {% endblock %} {% block scripts %}
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/api.js' %}"></script>
+<script src="{% static 'js/utils/icons.js' %}"></script>
 {{ block.super }}
 <script src="{% static 'js/device-detector.js' %}"></script>
 <script src="{% static 'js/landing.js' %}"></script>
@@ -1112,5 +1173,27 @@
       });
     });
   });
+
+  // ── AdSense Push — Initialize all ad slots on page ──
+  // Uses retry polling instead of fixed setTimeout to handle slow connections
+  (function() {
+    var maxRetries = 10;
+    var retryCount = 0;
+    function pushAds() {
+      if (typeof adsbygoogle !== 'undefined') {
+        var containers = document.querySelectorAll('.adsense-display-container ins.adsbygoogle:not([data-adsbygoogle-status])');
+        if (containers.length > 0) {
+          for (var i = 0; i < containers.length; i++) {
+            try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+          }
+        }
+      } else if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(pushAds, 500);
+      }
+    }
+    // First attempt after 500ms, retry every 500ms if adsbygoogle not loaded yet
+    setTimeout(pushAds, 500);
+  })();
 </script>
 {% endblock %}

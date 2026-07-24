@@ -592,6 +592,139 @@ table.w-table tbody tr:last-child td {
   transform: translateX(-50%) scale(1);
 }
 
+/* ── AdSense Containers (zero CLS, responsive) ── */
+.adsense-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 32px 0;
+  overflow: hidden;
+}
+.adsense-wrapper:empty { display: none; }
+.adsense-display-container {
+  width: 100%;
+  max-width: 728px;
+  min-height: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+}
+.adsense-display-container ins.adsbygoogle {
+  display: block !important;
+}
+
+/* In-feed ad card styling — matches native product card aesthetic */
+.adsense-infeed-container {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fafafa;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.adsense-infeed-container .adsense-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.adsense-infeed-container ins.adsbygoogle {
+  width: 100%;
+}
+
+/* Anchor ad (sticky bottom) */
+.adsense-anchor {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  padding: 4px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+.adsense-anchor-inner {
+  position: relative;
+  max-width: 728px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.adsense-anchor-close {
+  position: absolute;
+  right: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+  z-index: 1;
+}
+.adsense-anchor-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Mobile responsive for ads */
+@media (max-width: 768px) {
+  .adsense-wrapper { margin: 24px 0; }
+  .adsense-display-container { min-height: 100px; }
+  .adsense-anchor { padding: 2px; }
+}
+@media (max-width: 480px) {
+  .adsense-wrapper { margin: 16px 0; }
+  .adsense-display-container { min-height: 100px; }
+  .adsense-anchor { display: none; }
+}
+
+/* ── Icon Replace System (inline SVG replaces PNG icons) ── */
+.icon-svg-replace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+.icon-svg-replace svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Prevent FOUC: hide images that will be replaced until JS runs */
+.icon-replace img[data-icon],
+.icon-replace img[src*="/static/images/"] {
+  /* These get replaced by SVG via icons.js */
+}
+
+/* Smooth transition for icon swap */
+.icon-svg-replace {
+  animation: iconFadeIn 0.2s ease;
+}
+@keyframes iconFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* ── Glass Card ── */
 .glass-card {
   background: var(--glass-bg);

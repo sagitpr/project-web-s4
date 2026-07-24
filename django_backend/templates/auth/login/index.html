@@ -5,17 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {% include 'seo/seo_meta.html' %}
     {% include 'seo/seo_schema.html' %}
-    <title>{{ seo.meta_title }}</title>
+    <title>{{ seo.meta_title }} | Warungio</title>
+    
+    {# ── Fonts ── #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {# ── Favicon ── #}
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    {# ... rest of existing login template ... #}
-    <!-- Note: Preserving existing login template content -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
+    
+    {# ── Auth Page CSS ── #}
+    <link rel="stylesheet" href="{% static 'css/pages/auth/login/style.css' %}">
+    
+    {# ── Google Identity Services (GSI) ── #}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div id="app"></div>
+    <div class="page-shell">
+        <div class="login-card">
+            {# ── Left Panel: Hero ── #}
+            <div class="hero-panel">
+                <div class="brand-bar">
+                    <div class="logo-box">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" width="46" height="auto">
+                    </div>
+                    <div class="brand-label">
+                        <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
+                    </div>
+                </div>
+                <div class="hero-copy">
+                    <h1>Belanja & Bisnis<br><span>Satu Platform</span></h1>
+                    <p class="hero-text">
+                        Marketplace hyperlocal & ekosistem manajemen bisnis UMKM terpadu untuk Indonesia.
+                    </p>
+                </div>
+                <div class="download-apps">
+                    <img src="{% static 'images/store-bike.png' %}" alt="Warungio App" class="store-visual" width="400" height="300" loading="lazy">
+                </div>
+                <div class="hero-features icon-replace" data-icon-size="54" data-icon-color="#108d35">
+                    <article>
+                        <img src="{% static 'images/location.png' %}" alt="Marketplace" width="54" height="54" loading="lazy">
+                        <strong>Marketplace Hyperlocal</strong>
+                    </article>
+                    <article>
+                        <img src="{% static 'images/store.png' %}" alt="Bisnis" width="54" height="54" loading="lazy">
+                        <strong>Aplikasi Stok Gratis</strong>
+                    </article>
+                    <article>
+                        <img src="{% static 'images/shield.png' %}" alt="Aman" width="54" height="54" loading="lazy">
+                        <strong>Pembayaran Aman</strong>
+                    </article>
+                </div>
+            </div>
+
+            {# ── Right Panel: Login Form ── #}
+            <div class="form-panel">
+                <div class="form-header">
+                    <a href="/" class="top-link">
+                        Kembali ke <strong>Beranda</strong>
+                    </a>
+                    {% if entry == 'seller' %}
+                    <h1 class="form-title">Masuk sebagai Mitra</h1>
+                    <p class="form-subtitle">
+                        Akses dashboard bisnis, kelola toko, dan pantau penjualan Anda.
+                    </p>
+                    {% else %}
+                    <h1 class="form-title">Masuk ke Akun Anda</h1>
+                    <p class="form-subtitle">
+                        Belanja kebutuhan harian dari warung dan UMKM terdekat.
+                    </p>
+                    {% endif %}
+                </div>
+
+                {# ── Form Message ── #}
+                <div id="formMessage" class="form-message" style="display:none;"></div>
+
+                {# ── Login Form ── #}
+                <form class="login-form" id="loginForm" novalidate>
+                    <div class="input-group">
+                        <label for="email">Alamat Email</label>
+                        <div class="input-shell">
+                            <i class="fa-regular fa-envelope field-icon"></i>
+                            <input type="email" id="email" name="email" placeholder="contoh@email.com" required autocomplete="email" autofocus>
+                        </div>
+                    </div>
+
+                    <div class="input-group password-group">
+                        <div class="label-row">
+                            <label for="password">Kata Sandi</label>
+                            <a href="/auth/reset-password/" class="link-underline">Lupa password?</a>
+                        </div>
+                        <div class="input-shell">
+                            <i class="fa-solid fa-lock field-icon"></i>
+                            <input type="password" id="password" name="password" placeholder="Masukkan kata sandi" required autocomplete="current-password" minlength="8">
+                            <button type="button" class="eye-btn" id="eyeBtn" aria-label="Toggle password visibility">
+                                <svg id="eyeOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg id="eyeClosed" class="eye-closed" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row-options">
+                        <label class="remember">
+                            <input type="checkbox" name="remember" id="remember">
+                            <span class="check-box">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </span>
+                            Ingat saya
+                        </label>
+                    </div>
+
+                    <button type="submit" class="login-button" id="loginBtn">
+                        {% if entry == 'seller' %}Masuk sebagai Mitra{% else %}Masuk Sekarang{% endif %}
+                    </button>
+                </form>
+
+                {# ── Social Login Divider ── #}
+                <div class="social-divider">
+                    <span></span>
+                    <span>atau masuk dengan</span>
+                    <span></span>
+                </div>
+
+                {# ── Social Login Buttons ── #}
+                <div class="social-login">
+                    <button class="btn-social google" type="button">
+                        <img src="{% static 'images/google-logo.png' %}" alt="Google" width="26" height="26" loading="lazy">
+                        <span>Google</span>
+                    </button>
+                    <button class="btn-social facebook" type="button">
+                        <img src="{% static 'images/facebook-1.png' %}" alt="Facebook" width="26" height="26" loading="lazy">
+                        <span>Facebook</span>
+                    </button>
+                    <button class="btn-social apple" type="button">
+                        <img src="{% static 'images/apple-logo.png' %}" alt="Apple" width="26" height="26" loading="lazy">
+                        <span>Apple</span>
+                    </button>
+                </div>
+
+                {# ── Register Link ── #}
+                <div class="secure-note">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#108d35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>
+                        {% if entry == 'seller' %}
+                        Belum punya akun mitra? <a href="/auth/register-mitra/" class="link-underline" style="font-weight:700;">Daftar Mitra</a>
+                        {% else %}
+                        Belum punya akun? <a href="/auth/register/" class="link-underline" style="font-weight:700;">Daftar Sekarang</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {# ── Footer ── #}
+        <footer class="site-footer">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" width="44" height="auto">
+                        <p>Warung<span>io</span></p>
+                    </div>
+                    <p>Marketplace hyperlocal & ekosistem manajemen bisnis UMKM dalam satu platform.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Belanja</h3>
+                    <a href="/buyer/products/">Produk Segar</a>
+                    <a href="/kategori/sayuran/">Sayuran</a>
+                    <a href="/kategori/buah/">Buah</a>
+                    <a href="/kategori/sembako/">Sembako</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Untuk Bisnis</h3>
+                    <a href="/seller/dashboard/">Dashboard Seller</a>
+                    <a href="/info/panduan-seller/">Panduan Seller</a>
+                    <a href="/info/tips-sukses/">Tips Sukses UMKM</a>
+                    <a href="/auth/register-mitra/">Daftar Mitra</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Bantuan</h3>
+                    <a href="/bantuan/">Pusat Bantuan</a>
+                    <a href="/info/kontak-kami/">Hubungi Kami</a>
+                    <a href="/info/kebijakan/">Kebijakan Privasi</a>
+                    <a href="/info/kebijakan/">Syarat & Ketentuan</a>
+                </div>
+                <div class="footer-column download-column">
+                    <h3>Download App</h3>
+                    <p>Download aplikasi Warungio untuk pengalaman terbaik.</p>
+                    <div class="footer-badges">
+                        <a href="/download/">
+                            <img src="{% static 'images/google-playstore.png' %}" alt="Google Play" height="44" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="social-row">
+                        <span>Ikuti kami:</span>
+                        <a href="https://facebook.com/warungio" target="_blank" rel="noopener">
+                            <img src="{% static 'images/facebook.png' %}" alt="Facebook" width="17" height="17">
+                        </a>
+                        <a href="https://instagram.com/warungio" target="_blank" rel="noopener">
+                            <img src="{% static 'images/instagram.png' %}" alt="Instagram" width="17" height="17">
+                        </a>
+                        <a href="https://youtube.com/@warungio" target="_blank" rel="noopener">
+                            <img src="{% static 'images/youtube.png' %}" alt="YouTube" width="17" height="17">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    {# ── Scripts ── #}
     <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/pages/auth/login/script.js' %}"></script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
 </body>
-</html>
+</html>

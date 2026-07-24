@@ -5,15 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {% include 'seo/seo_meta.html' %}
     {% include 'seo/seo_schema.html' %}
-    <title>{{ seo.meta_title }}</title>
+    <title>{{ seo.meta_title }} | Warungio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">
+    <link rel="stylesheet" href="{% static 'css/pages/auth/reset-password/style.css' %}">
 </head>
 <body>
-    <div id="app"></div>
+    <div class="page-shell">
+        <div class="login-card">
+            <div class="hero-panel">
+                <div class="brand-bar">
+                    <div class="logo-box">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" width="46">
+                    </div>
+                    <div class="brand-label">
+                        <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
+                    </div>
+                </div>
+                <div class="hero-copy">
+                    <h1>Atur Ulang<br><span>Kata Sandi</span></h1>
+                    <p class="hero-text">
+                        Masukkan email atau nomor HP Anda. Kami akan mengirimkan kode OTP untuk verifikasi.
+                    </p>
+                </div>
+                <div class="hero-features" style="margin-top:auto;">
+                    <article>
+                        <img src="{% static 'images/shield.png' %}" alt="Aman" width="54" height="54" loading="lazy">
+                        <strong>Aman & Terenkripsi</strong>
+                    </article>
+                    <article>
+                        <img src="{% static 'images/kilat.png' %}" alt="Cepat" width="54" height="54" loading="lazy">
+                        <strong>Proses Cepat</strong>
+                    </article>
+                    <article>
+                        <img src="{% static 'images/store.png' %}" alt="OTP" width="54" height="54" loading="lazy">
+                        <strong>Verifikasi OTP</strong>
+                    </article>
+                </div>
+            </div>
+
+            <div class="form-panel">
+                <div class="form-header">
+                    <a href="/auth/login/" class="top-link">
+                        Kembali ke <strong>Login</strong>
+                    </a>
+                    <h1 class="form-title">Reset Password</h1>
+                    <p class="form-subtitle" id="pageDescription">
+                        Masukkan email Anda untuk menerima kode OTP.
+                    </p>
+                </div>
+
+                <div id="formMessage" class="form-message" style="display:none;"></div>
+
+                {# ── Step 1: Request OTP ── #}
+                <form class="login-form" id="requestForm">
+                    <div class="input-group">
+                        <label for="inputIdentifier">Email atau Nomor HP</label>
+                        <div class="input-shell">
+                            <i class="fa-regular fa-envelope field-icon"></i>
+                            <input type="email" id="inputIdentifier" name="identifier" placeholder="Masukkan email Anda" required autocomplete="email">
+                        </div>
+                    </div>
+                    <button type="submit" class="login-button">Kirim Kode OTP</button>
+                </form>
+
+                {# ── Step 2: Verify OTP + Set New Password ── #}
+                <form class="login-form hidden" id="verifyForm" novalidate>
+                    <input type="hidden" id="verifyIdentifier" name="verifyIdentifier">
+
+                    <div class="input-group password-group">
+                        <label>Kode OTP</label>
+                        <div class="otp-input-row" style="display:flex; gap:8px; justify-content:center;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                        </div>
+                    </div>
+
+                    <div class="input-group password-group">
+                        <label for="newPassword">Kata Sandi Baru</label>
+                        <div class="input-shell">
+                            <i class="fa-solid fa-lock field-icon"></i>
+                            <input type="password" id="newPassword" name="new_password" placeholder="Minimal 8 karakter" required minlength="8">
+                        </div>
+                    </div>
+
+                    <div class="input-group password-group">
+                        <label for="confirmPassword">Konfirmasi Kata Sandi</label>
+                        <div class="input-shell">
+                            <i class="fa-solid fa-lock field-icon"></i>
+                            <input type="password" id="confirmPassword" name="confirm_password" placeholder="Ulangi kata sandi" required minlength="8">
+                        </div>
+                    </div>
+
+                    <button type="button" class="login-button" id="backButton" style="background:#64748b; box-shadow:none; margin-bottom:12px;">Kembali</button>
+                    <button type="submit" class="login-button">Ubah Kata Sandi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/pages/auth/reset-password/script.js' %}"></script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
 </body>
-</html>
+</html>
