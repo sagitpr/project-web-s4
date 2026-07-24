@@ -155,7 +155,7 @@
   --space-24: 96px;
 
   /* ── Glassmorphism ── */
-  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(255, 255, 255, 0.82);
   --glass-border: rgba(255, 255, 255, 0.20);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   --glass-blur: blur(16px);
@@ -184,9 +184,6 @@
   --bottom-nav-height: 64px;
   --content-max-width: 1280px;
   --content-max-width-wide: 1600px;
-
-  /* ── Premium Noise/Grain Texture ── */
-  --grain-opacity: 0.015;
 
   /* ── Section Spacing — Massive Whitespace ── */
   --section-py-sm: 40px;

@@ -201,8 +201,8 @@ body {
     top: 0px;
     z-index: 100;
     background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(229, 231, 235, 0.6) !important;
     border-radius: 20px !important;
     padding: 12px 24px !important;

@@ -68,10 +68,6 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
-{% block grain %}
-<div class="premium-grain"></div>
-{% endblock %}
-
 {% comment %}🔴 FIX: Inline global-loader.html content to avoid Django 6.0.6 bug
 where {% include %} on static HTML causes RecursionError in template parser.{% endcomment %}
 {% block global_loader %}

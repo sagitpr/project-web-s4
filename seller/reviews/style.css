@@ -55,7 +55,7 @@ img { display: block; max-width: 100%; }
 .content-area { padding: 0 34px 34px; min-width: 0; }
 .header-main {
   min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 22px;
-  border-bottom: 1px solid var(--line); background: rgba(255,255,255,.78); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line); background: rgba(255,255,255,.88); backdrop-filter: blur(6px);
   position: sticky; top: 0; z-index: 10; margin: 0 -34px; padding: 16px 34px;
 }
 .menu-btn { width: 42px; height: 42px; border-radius: 12px; background: #f0f5f2; color: #183653; font-size: 1.1rem; }

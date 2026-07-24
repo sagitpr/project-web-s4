@@ -6,32 +6,17 @@
  * Depends on tokens.css — load AFTER tokens.css.
  *
  * Architecture:
- *   1. Base Grain / Ambient Texture
- *   2. Fluid Island Navigation
- *   3. Double-Bezel Card System
- *   4. Nested CTA Buttons (Button-in-Button)
- *   5. Scroll Reveal Animation System
- *   6. Premium Typography Helpers
- *   7. Premium Glass Effects
- *   8. Utility Classes
+ *   1. Fluid Island Navigation
+ *   2. Double-Bezel Card System
+ *   3. Nested CTA Buttons (Button-in-Button)
+ *   4. Scroll Reveal Animation System
+ *   5. Premium Typography Helpers
+ *   6. Premium Glass Effects
+ *   7. Utility Classes
  */
 
 /* ═══════════════════════════════════════════════════════════
-   1. AMBIENT GRAIN TEXTURE (fixed, pointer-events-none)
-   ═══════════════════════════════════════════════════════════ */
-.premium-grain {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   2. FLUID ISLAND NAVIGATION
+   1. FLUID ISLAND NAVIGATION
    ═══════════════════════════════════════════════════════════ */
 .fluid-island {
   position: sticky;
@@ -39,9 +24,9 @@
   z-index: 100;
   margin: 8px 16px 0;
   padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
   border: 1px solid var(--hairline-medium);
   border-radius: var(--radius-squircle-2xl);
   box-shadow: var(--shadow-bezel-lg);
@@ -55,11 +40,11 @@
 
 .fluid-island.scrolled {
   box-shadow: var(--shadow-bezel-xl);
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 /* ═══════════════════════════════════════════════════════════
-   3. DOUBLE-BEZEL CARD SYSTEM
+   2. DOUBLE-BEZEL CARD SYSTEM
    ═══════════════════════════════════════════════════════════ */
 
 /* Outer shell — the "tray" */
@@ -134,7 +119,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   4. NESTED CTA BUTTONS (Button-in-Button)
+   3. NESTED CTA BUTTONS (Button-in-Button)
    ═══════════════════════════════════════════════════════════ */
 
 /* Premium primary CTA with nested icon */
@@ -252,7 +237,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   5. SCROLL REVEAL ANIMATION SYSTEM
+   4. SCROLL REVEAL ANIMATION SYSTEM
    ═══════════════════════════════════════════════════════════ */
 
 .reveal {
@@ -311,28 +296,28 @@
 .reveal-delay-5 { transition-delay: 320ms; }
 
 /* ═══════════════════════════════════════════════════════════
-   6. PREMIUM GLASS EFFECTS
+   5. PREMIUM GLASS EFFECTS
    ═══════════════════════════════════════════════════════════ */
 
 .glass-premium {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(1.15);
-  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  backdrop-filter: blur(8px) saturate(1.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-squircle-xl);
 }
 
 .glass-premium-strong {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(32px) saturate(1.2);
-  -webkit-backdrop-filter: blur(32px) saturate(1.2);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(1.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
   border: 1px solid var(--hairline-white);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
 }
 
 /* ═══════════════════════════════════════════════════════════
-   7. PREMIUM TYPOGRAPHY HELPERS
+   6. PREMIUM TYPOGRAPHY HELPERS
    ═══════════════════════════════════════════════════════════ */
 
 .eyebrow {
@@ -384,7 +369,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   8. UTILITY CLASSES
+   7. UTILITY CLASSES
    ═══════════════════════════════════════════════════════════ */
 
 /* Hairline borders */
@@ -458,7 +443,6 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.3);
-  backdrop-filter: blur(4px);
   z-index: 998;
   opacity: 0;
   pointer-events: none;

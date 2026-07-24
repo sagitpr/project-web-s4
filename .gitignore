@@ -94,6 +94,10 @@ Thumbs.db
 # =============================================================================
 # Local Development Only
 # =============================================================================
+# docker-compose.override.yml was renamed to docker-compose.dev.yml to prevent
+# auto-load during production deployment. This entry ensures if anyone recreates
+# docker-compose.override.yml, it won't be committed to git.
+docker-compose.override.yml
 mariadb-10.11.10/
 CLEANUP-PLAN.md
 analisis-spec.md

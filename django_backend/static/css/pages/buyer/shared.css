@@ -101,8 +101,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ── Topbar (Glassmorphism) ── */
 .topbar {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(229,231,235,0.6);
   border-radius: var(--radius-2xl, 20px);
   padding: 12px 24px;

@@ -69,8 +69,8 @@
 /* ── Filter Bar ── */
 .filter-sticky-bar {
   background: rgba(248, 250, 248, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 20;
   padding: 8px 0;
 }

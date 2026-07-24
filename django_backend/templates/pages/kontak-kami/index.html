@@ -1,151 +1,422 @@
-{% load static %}{% load seo_tags %}<!DOCTYPE html>
+{% load static %}{% load seo_tags %}<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    {# ── SEO Meta & Structured Data ── #}
-    {% include 'seo/seo_meta.html' %}
-    {% include 'seo/seo_schema.html' %}
-    
-    {# ── Override title ── #}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {# ── SEO Meta & Structured Data ── #} {% include 'seo/seo_meta.html' %} {%
+    include 'seo/seo_schema.html' %} {# ── Override title ── #}
     <title>{{ seo.meta_title }}</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8faf8; color: #0f172a; -webkit-font-smoothing: antialiased; }
-        .page-hero { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 80px 24px; text-align: center; color: white; position: relative; overflow: hidden; }
-        .page-hero h1 { font-size: 2.5rem; font-weight: 800; margin: 0 0 12px; }
-        .page-hero p { font-size: 1.125rem; opacity: .9; max-width: 640px; margin: 0 auto; line-height: 1.7; }
-        .page-hero .breadcrumb { font-size: 0.8rem; opacity: .7; margin-bottom: 16px; }
-        .page-hero .breadcrumb a { color: white; text-decoration: none; opacity: .8; }
-        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; padding: 48px 24px; }
-        .contact-card { background: white; border-radius: 20px; padding: 32px; border: 1px solid #e5e7eb; text-align: center; transition: all 0.3s ease; }
-        .contact-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.04); }
-        .contact-card i { font-size: 2.5rem; color: #059669; margin-bottom: 16px; display: block; }
-        .contact-card h2 { font-size: 1.125rem; font-weight: 700; margin: 0 0 8px; color: #0f172a; }
-        .contact-card p { font-size: 0.938rem; color: #475569; margin: 0; line-height: 1.6; }
-        .contact-card a { color: #059669; text-decoration: none; font-weight: 600; }
-        .contact-card a:hover { text-decoration: underline; }
-        .contact-card .label { display: inline-block; font-size: 0.75rem; color: #94a3b8; font-weight: 500; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .seo-content { max-width: 800px; margin: 0 auto; padding: 0 24px 48px; }
-        .seo-content h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 32px 0 12px; }
-        .seo-content p { font-size: 0.938rem; color: #475569; line-height: 1.8; margin-bottom: 16px; text-align: justify; }
-        .seo-content ul { padding-left: 24px; margin-bottom: 16px; }
-        .seo-content li { font-size: 0.938rem; color: #475569; margin-bottom: 8px; line-height: 1.6; }
-        .nav-bar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e5e7eb; padding: 12px 24px; }
-        .nav-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-        .nav-inner a { text-decoration: none; font-weight: 600; font-size: 0.875rem; color: #475569; }
-        .nav-inner a:hover { color: #059669; }
-        .footer-links { border-top: 1px solid #e5e7eb; padding: 24px; text-align: center; }
-        .footer-links a { color: #059669; text-decoration: none; margin: 0 14px; font-size: 0.875rem; font-weight: 500; }
-        .footer-links a:hover { text-decoration: underline; }
-        .office-hours { max-width: 900px; margin: 0 auto; padding: 0 24px 48px; }
-        .office-hours table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; }
-        .office-hours th, .office-hours td { padding: 12px 20px; text-align: left; font-size: 0.875rem; }
-        .office-hours th { background: #f0fdf4; color: #166534; font-weight: 700; }
-        .office-hours td { border-top: 1px solid #f1f5f9; color: #475569; }
-        .faq-mini { max-width: 900px; margin: 0 auto; padding: 0 24px 48px; }
-        .faq-item { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin-bottom: 12px; }
-        .faq-item h3 { font-size: 0.938rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-        .faq-item p { font-size: 0.875rem; color: #475569; line-height: 1.6; }
-        @media (max-width: 640px) {
-            .page-hero h1 { font-size: 1.75rem; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        background: #f8faf8;
+        color: #0f172a;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page-hero {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        padding: 80px 24px;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .page-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0 0 12px;
+      }
+      .page-hero p {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        max-width: 640px;
+        margin: 0 auto;
+        line-height: 1.7;
+      }
+      .page-hero .breadcrumb {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 16px;
+      }
+      .page-hero .breadcrumb a {
+        color: white;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 24px;
+      }
+      .contact-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+      .contact-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+      }
+      .contact-card i {
+        font-size: 2.5rem;
+        color: #059669;
+        margin-bottom: 16px;
+        display: block;
+      }
+      .contact-card h2 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0 0 8px;
+        color: #0f172a;
+      }
+      .contact-card p {
+        font-size: 0.938rem;
+        color: #475569;
+        margin: 0;
+        line-height: 1.6;
+      }
+      .contact-card a {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .contact-card a:hover {
+        text-decoration: underline;
+      }
+      .contact-card .label {
+        display: inline-block;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .seo-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+      }
+      .seo-content h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 32px 0 12px;
+      }
+      .seo-content p {
+        font-size: 0.938rem;
+        color: #475569;
+        line-height: 1.8;
+        margin-bottom: 16px;
+        text-align: justify;
+      }
+      .seo-content ul {
+        padding-left: 24px;
+        margin-bottom: 16px;
+      }
+      .seo-content li {
+        font-size: 0.938rem;
+        color: #475569;
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+      .nav-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 24px;
+      }
+      .nav-inner {
+        max-width: 960px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav-inner a {
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #475569;
+      }
+      .nav-inner a:hover {
+        color: #059669;
+      }
+      .footer-links {
+        border-top: 1px solid #e5e7eb;
+        padding: 24px;
+        text-align: center;
+      }
+      .footer-links a {
+        color: #059669;
+        text-decoration: none;
+        margin: 0 14px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .footer-links a:hover {
+        text-decoration: underline;
+      }
+      .office-hours {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+      }
+      .office-hours table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+      }
+      .office-hours th,
+      .office-hours td {
+        padding: 12px 20px;
+        text-align: left;
+        font-size: 0.875rem;
+      }
+      .office-hours th {
+        background: #f0fdf4;
+        color: #166534;
+        font-weight: 700;
+      }
+      .office-hours td {
+        border-top: 1px solid #f1f5f9;
+        color: #475569;
+      }
+      .faq-mini {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+      }
+      .faq-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 12px;
+      }
+      .faq-item h3 {
+        font-size: 0.938rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+      }
+      .faq-item p {
+        font-size: 0.875rem;
+        color: #475569;
+        line-height: 1.6;
+      }
+      @media (max-width: 640px) {
+        .page-hero h1 {
+          font-size: 1.75rem;
         }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="nav-bar" aria-label="Navigasi">
-        <div class="nav-inner">
-            <a href="{% url 'home' %}" aria-label="Warungio Beranda">← Kembali ke Beranda</a>
-            <div>
-                <a href="{% url 'page-tentang-kami' %}" class="mr-4">Tentang Kami</a>
-                <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
-            </div>
+      <div class="nav-inner">
+        <a href="{% url 'home' %}" aria-label="Warungio Beranda"
+          >← Kembali ke Beranda</a
+        >
+        <div>
+          <a href="{% url 'page-tentang-kami' %}" class="mr-4">Tentang Kami</a>
+          <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
         </div>
+      </div>
     </nav>
 
     <div class="page-hero">
-        <div class="breadcrumb">
-            <a href="{% url 'home' %}">Beranda</a> › Hubungi Kami
-        </div>
-        <h1>Hubungi Tim Warungio</h1>
-        <p>Kami siap membantu Anda 24 jam sehari, 7 hari seminggu. Pilih saluran komunikasi yang paling nyaman untuk Anda.</p>
+      <div class="breadcrumb">
+        <a href="{% url 'home' %}">Beranda</a> › Hubungi Kami
+      </div>
+      <h1>Hubungi Tim Warungio</h1>
+      <p>
+        Kami siap membantu Anda 24 jam sehari, 7 hari seminggu. Pilih saluran
+        komunikasi yang paling nyaman untuk Anda.
+      </p>
     </div>
 
     <div class="contact-grid">
-        <div class="contact-card">
-            <i class="fa-solid fa-envelope"></i>
-            <span class="label">Email Support</span>
-            <h2>Email</h2>
-            <p><a href="mailto:support@warungio.com">support@warungio.com</a></p>
-            <p style="font-size:0.8rem;color:#94a3b8;margin-top:8px;">Respon dalam waktu 1x24 jam</p>
-        </div>
-        <div class="contact-card">
-            <i class="fa-solid fa-phone"></i>
-            <span class="label">Telepon</span>
-            <h2>Telepon</h2>
-            <p><a href="tel:+6281234567890">(021) 1234-5678</a></p>
-            <p style="font-size:0.8rem;color:#94a3b8;margin-top:8px;">Senin - Jumat, 08:00 - 20:00 WIB</p>
-        </div>
-        <div class="contact-card">
-            <i class="fa-brands fa-whatsapp"></i>
-            <span class="label">WhatsApp</span>
-            <h2>WhatsApp</h2>
-            <p><a href="https://wa.me/6281234567890" target="_blank" rel="noopener">+62 812-3456-7890</a></p>
-            <p style="font-size:0.8rem;color:#94a3b8;margin-top:8px;">Respon cepat via chat WhatsApp</p>
-        </div>
-        <div class="contact-card">
-            <i class="fa-solid fa-location-dot"></i>
-            <span class="label">Kantor Pusat</span>
-            <h2>Alamat</h2>
-            <p>Jl. Merdeka No. 123<br>Jakarta Pusat 10110<br>Indonesia</p>
-        </div>
+      <div class="contact-card">
+        <i class="fa-solid fa-envelope"></i>
+        <span class="label">Email Support</span>
+        <h2>Email</h2>
+        <p><a href="mailto:warungio.id@gmail.com">warungio.id@gmail.com</a></p>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px">
+          Respon dalam waktu 1x24 jam
+        </p>
+      </div>
+      <div class="contact-card">
+        <i class="fa-solid fa-phone"></i>
+        <span class="label">Telepon</span>
+        <h2>Telepon</h2>
+        <p><a href="tel:+6281234567890">(021) 1234-5678</a></p>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px">
+          Senin - Jumat, 08:00 - 20:00 WIB
+        </p>
+      </div>
+      <div class="contact-card">
+        <i class="fa-brands fa-whatsapp"></i>
+        <span class="label">WhatsApp</span>
+        <h2>WhatsApp</h2>
+        <p>
+          <a href="https://wa.me/6287833847895" target="_blank" rel="noopener"
+            >+62 878-3384-7895</a
+          >
+        </p>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px">
+          Respon cepat via chat WhatsApp
+        </p>
+      </div>
+      <div class="contact-card">
+        <i class="fa-solid fa-location-dot"></i>
+        <span class="label">Kantor Pusat</span>
+        <h2>Alamat</h2>
+        <p>Jl. Merdeka No. 123<br />Jakarta Pusat 10110<br />Indonesia</p>
+      </div>
     </div>
 
     <div class="office-hours">
-        <h2 style="font-size:1.25rem;font-weight:700;color:#0f172a;margin-bottom:16px;text-align:center;">Jam Operasional Customer Service</h2>
-        <table>
-            <tr><th>Hari</th><th>Jam</th><th>Saluran</th></tr>
-            <tr><td>Senin - Jumat</td><td>08:00 - 20:00 WIB</td><td>Telepon, Email, WhatsApp</td></tr>
-            <tr><td>Sabtu</td><td>09:00 - 17:00 WIB</td><td>Email, WhatsApp</td></tr>
-            <tr><td>Minggu & Hari Libur</td><td>09:00 - 15:00 WIB</td><td>Email, WhatsApp</td></tr>
-            <tr><td>24 Jam</td><td>Kapan Saja</td><td>Pusat Bantuan (Artikel & FAQ)</td></tr>
-        </table>
+      <h2
+        style="
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 16px;
+          text-align: center;
+        "
+      >
+        Jam Operasional Customer Service
+      </h2>
+      <table>
+        <tr>
+          <th>Hari</th>
+          <th>Jam</th>
+          <th>Saluran</th>
+        </tr>
+        <tr>
+          <td>Senin - Jumat</td>
+          <td>08:00 - 20:00 WIB</td>
+          <td>Telepon, Email, WhatsApp</td>
+        </tr>
+        <tr>
+          <td>Sabtu</td>
+          <td>09:00 - 17:00 WIB</td>
+          <td>Email, WhatsApp</td>
+        </tr>
+        <tr>
+          <td>Minggu & Hari Libur</td>
+          <td>09:00 - 15:00 WIB</td>
+          <td>Email, WhatsApp</td>
+        </tr>
+        <tr>
+          <td>24 Jam</td>
+          <td>Kapan Saja</td>
+          <td>Pusat Bantuan (Artikel & FAQ)</td>
+        </tr>
+      </table>
     </div>
 
     <div class="faq-mini">
-        <h2 style="font-size:1.25rem;font-weight:700;color:#0f172a;margin-bottom:20px;text-align:center;">Pertanyaan yang Sering Ditanyakan</h2>
-        <div class="faq-item">
-            <h3>Berapa lama waktu respon customer service?</h3>
-            <p>Tim customer service Warungio berusaha merespon setiap pertanyaan dalam waktu maksimal 1x24 jam. Untuk pertanyaan urgent, kami sarankan menghubungi melalui telepon atau WhatsApp pada jam operasional.</p>
-        </div>
-        <div class="faq-item">
-            <h3>Bagaimana cara melacak status pesanan?</h3>
-            <p>Anda dapat melacak pesanan secara real-time melalui halaman "Pesanan Saya" di dashboard akun Warungio Anda. Jika mengalami kendala, hubungi tim support kami.</p>
-        </div>
-        <div class="faq-item">
-            <h3>Bagaimana jika ada produk yang rusak atau tidak sesuai?</h3>
-            <p>Anda dapat mengajukan pengembalian atau refund melalui halaman "Refund" di akun Anda dalam waktu 7 hari setelah pesanan diterima. Tim kami akan memproses pengajuan Anda dalam waktu 1x24 jam.</p>
-        </div>
+      <h2
+        style="
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 20px;
+          text-align: center;
+        "
+      >
+        Pertanyaan yang Sering Ditanyakan
+      </h2>
+      <div class="faq-item">
+        <h3>Berapa lama waktu respon customer service?</h3>
+        <p>
+          Tim customer service Warungio berusaha merespon setiap pertanyaan
+          dalam waktu maksimal 1x24 jam. Untuk pertanyaan urgent, kami sarankan
+          menghubungi melalui telepon atau WhatsApp pada jam operasional.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>Bagaimana cara melacak status pesanan?</h3>
+        <p>
+          Anda dapat melacak pesanan secara real-time melalui halaman "Pesanan
+          Saya" di dashboard akun Warungio Anda. Jika mengalami kendala, hubungi
+          tim support kami.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>Bagaimana jika ada produk yang rusak atau tidak sesuai?</h3>
+        <p>
+          Anda dapat mengajukan pengembalian atau refund melalui halaman
+          "Refund" di akun Anda dalam waktu 7 hari setelah pesanan diterima. Tim
+          kami akan memproses pengajuan Anda dalam waktu 1x24 jam.
+        </p>
+      </div>
     </div>
 
     <div class="seo-content">
-        <h2>Butuh Bantuan? Kami Siap Membantu Anda</h2>
-        <p>Tim customer service Warungio berkomitmen untuk memberikan pelayanan terbaik bagi seluruh pengguna platform marketplace hyperlocal kami. Apakah Anda memiliki pertanyaan seputar cara berbelanja, mengalami kendala teknis saat melakukan pemesanan, membutuhkan informasi lebih lanjut tentang metode pembayaran, atau ingin bergabung sebagai mitra seller Warungio? Jangan ragu untuk menghubungi kami melalui salah satu saluran komunikasi yang tersedia.</p>
-        <p>Kami memahami bahwa setiap pengalaman belanja online haruslah menyenangkan dan bebas hambatan. Oleh karena itu, tim support kami yang profesional dan ramah siap membantu Anda menyelesaikan setiap permasalahan dengan cepat dan tepat. Untuk pertanyaan yang bersifat umum, Anda juga dapat mengunjungi <a href="{% url 'bantuan-page' %}" style="color:#059669;font-weight:600;">Pusat Bantuan</a> Warungio yang menyediakan kumpulan artikel panduan, tutorial, dan jawaban atas pertanyaan yang sering diajukan.</p>
+      <h2>Butuh Bantuan? Kami Siap Membantu Anda</h2>
+      <p>
+        Tim customer service Warungio berkomitmen untuk memberikan pelayanan
+        terbaik bagi seluruh pengguna platform marketplace hyperlocal kami.
+        Apakah Anda memiliki pertanyaan seputar cara berbelanja, mengalami
+        kendala teknis saat melakukan pemesanan, membutuhkan informasi lebih
+        lanjut tentang metode pembayaran, atau ingin bergabung sebagai mitra
+        seller Warungio? Jangan ragu untuk menghubungi kami melalui salah satu
+        saluran komunikasi yang tersedia.
+      </p>
+      <p>
+        Kami memahami bahwa setiap pengalaman belanja online haruslah
+        menyenangkan dan bebas hambatan. Oleh karena itu, tim support kami yang
+        profesional dan ramah siap membantu Anda menyelesaikan setiap
+        permasalahan dengan cepat dan tepat. Untuk pertanyaan yang bersifat
+        umum, Anda juga dapat mengunjungi
+        <a
+          href="{% url 'bantuan-page' %}"
+          style="color: #059669; font-weight: 600"
+          >Pusat Bantuan</a
+        >
+        Warungio yang menyediakan kumpulan artikel panduan, tutorial, dan
+        jawaban atas pertanyaan yang sering diajukan.
+      </p>
     </div>
 
     <div class="footer-links">
-        <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
-        <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
-        <a href="{% url 'home' %}">Kembali ke Beranda</a>
+      <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
+      <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+      <a href="{% url 'home' %}">Kembali ke Beranda</a>
     </div>
-</body>
+  </body>
 </html>

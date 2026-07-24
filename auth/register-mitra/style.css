@@ -34,7 +34,7 @@ button { cursor: pointer; border: 0; }
     padding: 0 clamp(24px, 5vw, 48px);
     background: rgba(255, 255, 255, 0.98);
     border-bottom: 1px solid #eff2f0;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(6px);
 }
 .brand img { width: 140px; height: auto; }
 .logo-text {

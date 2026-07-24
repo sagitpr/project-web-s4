@@ -29,9 +29,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
-# CRITICAL: Always use explicit -f flags to prevent docker-compose.override.yml
-# from being auto-loaded in production. Base docker-compose.yml now uses
-# warungio.conf (production SSL config) by default.
+# CRITICAL: docker-compose.override.yml has been renamed to docker-compose.dev.yml
+# so it is NEVER auto-loaded. `docker compose up -d` always uses production config.
+# docker-compose.prod.yml adds Let's Encrypt volume (optional, not required).
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 SERVICE_NAME="django"
 HEALTH_CHECK_URL="http://localhost:8000/health/"
@@ -148,10 +148,11 @@ check_production_config() {
         else
             echo -e "  ${RED}❌ PRODUCTION CONFIG NOT DETECTED!${NC}"
             echo "     The mounted warungio.conf does not contain production server_name."
-            echo "     This means docker-compose.override.yml is overriding with dev config!"
+            echo "     This means docker-compose.dev.yml or another override is being used."
             echo ""
-            echo "  Run with explicit -f flags:"
-            echo "     docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d"
+            echo "  Make sure docker-compose.override.yml does not exist:"
+            echo "     ls -la docker-compose*.yml"
+            echo "  (It was renamed to docker-compose.dev.yml which is NOT auto-loaded)"
             return 1
         fi
     fi
