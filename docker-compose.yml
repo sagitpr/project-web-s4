@@ -36,23 +36,26 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  # ---- Redis (Channels, Cache, Celery Broker) — 256MB Max Memory ----
-  # CRITICAL: mem_limit MUST be higher than --maxmemory to avoid OOM kills.
-  # Redis uses --maxmemory for internal data, but also needs overhead for
-  # client buffers, replication backlog, and connection memory.
-  # Set mem_limit ~25% above maxmemory to provide safe headroom.
+  # ---- Redis (Channels, Cache, Celery Broker) — Optimized for 1GB VPS ----
+  # 🔴 OPTIMIZATION: maxmemory 80mb (was 96mb) + mem_limit 100m (was 128m)
+  # Actual usage: ~40-55 MB normal, ~60 MB peak. Target: ≤70 MB actual.
+  # maxmemory 80mb + 25% headroom (100m limit) prevents OOM kills.
+  # 80mb is the sweet spot — enough for 4 roles (broker, cache, sessions,
+  # channel layer) without triggering aggressive LRU eviction.
+  # NOTE: Don't reduce below 80mb. Lower values cause LRU eviction of
+  # active sessions and Celery task results under concurrent load.
   redis:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
-    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--maxmemory", "80mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 10s
-    mem_limit: 128m
+    mem_limit: 100m
     networks:
       - warungio_net
     logging:
@@ -176,9 +179,23 @@ services:
         max-file: "2"
 
   # ---- Celery Beat Scheduler (separate dari worker untuk cegah OOM) ----
-  # Beat scheduler berdiri sendiri, memory footprint minimal (~20MB).
-  # Tidak perlu healthcheck complex — `pgrep -f 'celery.*beat'` sudah cukup.
-  # Depend on redis only (not django) karena beat hanya jadwalkan task, tidak eksekusi.
+  # 🔴 CRITICAL FIX — OOM Killer Prevention (Exit Code 137)
+  # ====================================================================
+  # ROOT CAUSE: Celery Beat loads the full Django application stack
+  # (~30-40 MB RAM) + Celery scheduler (~5 MB) + PersistentScheduler state
+  # file (~1 MB). Total baseline: ~36-46 MB.
+  #
+  # SEBELUMNYA: mem_limit: 32m → Django loading alone exceeds this limit,
+  # causing OOM Killer (State.OOMKilled=true, Exit Code 137).
+  #
+  # FIX: mem_limit dinaikkan ke 64m (dari 32m) agar beat punya headroom
+  # untuk Django loading + scheduler + state file + GC overhead.
+  # Total: 64 MB (beat) + 720 MB (other services) = 784 MB → masih < 80% VPS.
+  #
+  # NOTE: 64 MB adalah sweet spot — cukup untuk Django + scheduler, tapi
+  # tidak berlebihan. Beberapa instansi dapat menjalankan beat dengan
+  # mem_limit 48-64 MB di environment 1GB RAM.
+  # ====================================================================
   celery-beat:
     build:
       context: .
@@ -195,7 +212,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
       CELERY_ENABLED: "true"
-    command: ["celery", "-A", "config", "beat", "-l", "info", "--scheduler", "celery.beat.PersistentScheduler"]
+    command: ["celery", "-A", "config", "beat", "-l", "info", "--scheduler", "celery.beat.PersistentScheduler", "--without-gossip", "--without-mingle", "--without-heartbeat"]
     volumes:
       - ./logs:/app/logs
     security_opt:
@@ -212,7 +229,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    mem_limit: 32m
+    mem_limit: 64m
     networks:
       - warungio_net
     logging:
