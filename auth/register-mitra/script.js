@@ -148,9 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (panel.dataset.panel === '2' && form && form.querySelectorAll('input[name="deliveryServices"]:checked').length === 0) {
       valid = false; setMsg('Pilih minimal satu layanan pengiriman.');
     }
-    if (panel.dataset.panel === '0' && form && (!form.elements.latitude.value || !form.elements.longitude.value)) {
-      valid = false; setMsg('Pilih lokasi toko pada peta terlebih dahulu.');
-    }
+    // Note: Map location is OPTIONAL, not required.
+    // Latitude/longitude will be stored only if the user clicked on the map.
+    // This allows registration without selecting a map location.
     if (panel.dataset.panel === '3' && form && form.elements.accountNumber.value !== form.elements.accountConfirm.value) {
       valid = false; form.elements.accountConfirm.classList.add('invalid');
       setMsg('Nomor rekening dan konfirmasi belum sama.');
