@@ -20,6 +20,7 @@ from drf_spectacular.views import (
 )
 from accounts import views as accounts_views
 from accounts.decorators import buyer_required, seller_required, admin_required
+from accounts import admin_views as accounts_admin_views
 from seo import page_views as seo_views
 
 
@@ -193,8 +194,37 @@ urlpatterns += [
     path('admin-panel/ai/', staff(TemplateView.as_view(template_name='admin/ai/index.html')), name='admin-ai'),
     path('admin-panel/analytics/', staff(TemplateView.as_view(template_name='admin/analytics/index.html')), name='admin-analytics'),
     path('admin-panel/reports/', staff(TemplateView.as_view(template_name='admin/reports/index.html')), name='admin-reports'),
+    # Admin Panel — Forgot Password pages (no auth required)
+    path('admin-panel/password/forgot/', TemplateView.as_view(template_name='admin/forgot-password/index.html'), name='admin-forgot-password'),
+    path('admin-panel/password/verify-otp/', TemplateView.as_view(template_name='admin/forgot-password/verify-otp.html'), name='admin-verify-otp'),
+    path('admin-panel/password/reset/', TemplateView.as_view(template_name='admin/forgot-password/reset-password.html'), name='admin-reset-password'),
+    # Admin Panel — Forgot Password API endpoints
+    path('admin-panel/api/password/forgot/', accounts_views.AdminForgotPasswordView.as_view(), name='admin-api-forgot-password'),
+    path('admin-panel/api/password/verify-otp/', accounts_views.AdminVerifyOTPView.as_view(), name='admin-api-verify-otp'),
+    path('admin-panel/api/password/reset/', accounts_views.AdminResetPasswordView.as_view(), name='admin-api-reset-password'),
     path('admin-panel/security/', staff(TemplateView.as_view(template_name='admin/security/index.html')), name='admin-security'),
     path('admin-panel/audit/', staff(TemplateView.as_view(template_name='admin/audit/index.html')), name='admin-audit'),
+    # Admin Panel — Enterprise Admin Management
+    path('admin-panel/administrators/', staff(TemplateView.as_view(template_name='admin/administrators/index.html')), name='admin-administrators'),
+    path('admin-panel/administrators/create/', staff(TemplateView.as_view(template_name='admin/administrators/create.html')), name='admin-administrators-create'),
+    path('admin-panel/administrators/<int:pk>/', staff(TemplateView.as_view(template_name='admin/administrators/detail.html')), name='admin-administrators-detail'),
+    path('admin-panel/administrators/<int:pk>/edit/', staff(TemplateView.as_view(template_name='admin/administrators/edit.html')), name='admin-administrators-edit'),
+    path('admin-panel/administrators/new-admin-verify/', TemplateView.as_view(template_name='admin/administrators/verify-otp.html'), name='admin-admin-verify-page'),
+    # Admin Panel — Enterprise Admin Management API
+    path('admin-panel/api/administrators/', staff(accounts_admin_views.AdminUserListView.as_view()), name='admin-api-administrators'),
+    path('admin-panel/api/administrators/create/', staff(accounts_admin_views.AdminUserCreateView.as_view()), name='admin-api-administrators-create'),
+    path('admin-panel/api/administrators/<int:pk>/', staff(accounts_admin_views.AdminUserDetailView.as_view()), name='admin-api-administrators-detail'),
+    path('admin-panel/api/administrators/<int:pk>/update/', staff(accounts_admin_views.AdminUserUpdateView.as_view()), name='admin-api-administrators-update'),
+    path('admin-panel/api/administrators/<int:pk>/toggle-status/', staff(accounts_admin_views.AdminUserToggleStatusView.as_view()), name='admin-api-administrators-toggle'),
+    path('admin-panel/api/administrators/<int:pk>/delete/', staff(accounts_admin_views.AdminUserDeleteView.as_view()), name='admin-api-administrators-delete'),
+    path('admin-panel/api/administrators/verify-otp/', accounts_admin_views.AdminVerifyOTPView.as_view(), name='admin-api-admin-verify-otp'),
+    path('admin-panel/api/administrators/resend-otp/', accounts_admin_views.AdminResendOTPView.as_view(), name='admin-api-admin-resend-otp'),
+    path('admin-panel/api/audit-logs/', staff(accounts_admin_views.AdminAuditLogListView.as_view()), name='admin-api-audit-logs'),
+    # Admin Panel — Change Password + Export
+    path('admin-panel/password/change/', staff(TemplateView.as_view(template_name='admin/password/change.html')), name='admin-change-password'),
+    path('admin-panel/api/password/change/', staff(accounts_admin_views.AdminChangePasswordView.as_view()), name='admin-api-change-password'),
+    path('admin-panel/api/administrators/export-csv/', staff(accounts_admin_views.AdminExportCSVView.as_view()), name='admin-api-export-csv'),
+    path('admin-panel/api/administrators/export-excel/', staff(accounts_admin_views.AdminExportExcelView.as_view()), name='admin-api-export-excel'),
     path('admin-panel/engagement/', staff(TemplateView.as_view(template_name='admin/engagement/index.html')), name='admin-engagement'),
     path('admin-panel/settings/', staff(TemplateView.as_view(template_name='admin/settings/index.html')), name='admin-settings'),
     path('admin-panel/refunds/', staff(TemplateView.as_view(template_name='admin/refunds/index.html')), name='admin-refunds'),

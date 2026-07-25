@@ -1,19 +1,472 @@
 {% load static %}{% load seo_tags %}<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    {# ── SEO Meta & Structured Data ── #}
     {% include 'seo/seo_meta.html' %}
     {% include 'seo/seo_schema.html' %}
+    
+    {# ── Override title ── #}
     <title>{{ seo.meta_title }}</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Global CSS Assets -->
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/auth/register-mitra/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+
+    <!-- Tailwind CDN for layout grid -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#16A34A",
+              secondary: "#22C55E",
+              background: "#F8FAF8",
+              surface: "#FFFFFF",
+              "outline-variant": "#E5E7EB"
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        .glass-card-premium {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+        }
+        .topbar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+        }
+        .topbar-container-mitra {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .value-card {
+            transition: all 0.3s ease;
+        }
+        .value-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+        }
+    </style>
+
+    {# ── Google Maps API Key from template context ── #}
+    <meta name="google-maps-api-key" content="{{ google_maps_api_key|default:'' }}" />
 </head>
-<body>
-    <div id="app"></div>
+<body class="bg-background text-[#0F172A] font-sans" style="padding-top: 72px;">
+
+    <!-- Top Navigation Bar (tentang-kami style) -->
+    <div class="topbar-wrapper" role="banner">
+        <div class="topbar-container-mitra">
+            <header class="flex items-center justify-between" style="border:none !important; background:transparent !important; box-shadow:none !important; height:auto; padding:0 !important;">
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2" aria-label="Warungio Beranda">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Logo Warungio" class="w-8 h-8" width="32" height="32" loading="eager">
+                        <span class="text-xl font-extrabold tracking-tight">
+                            <span class="text-[#101820]">Warung</span><span class="text-[#108d35]">io</span>
+                        </span>
+                    </a>
+                </div>
+                <div class="hidden lg:flex items-center gap-6">
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Beranda</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}#fitur">Fitur</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}#bisnis">Untuk Bisnis</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-register-mitra' %}">Daftar Mitra</a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="mailto:warungio.id@gmail.com" class="hidden sm:flex items-center gap-2 text-xs text-slate-400 hover:text-primary transition-colors" aria-label="Hubungi support">
+                        <span class="grid place-items-center w-6 h-6 rounded-full border-2 border-slate-300 font-extrabold text-xs">?</span>
+                        <span class="hidden md:block">Butuh bantuan? <strong class="text-primary text-xs">Hubungi Support</strong></span>
+                    </a>
+                    <span class="hidden sm:block w-px h-8 bg-slate-200"></span>
+                    <div class="flex items-center gap-2">
+                        <a href="{% url 'page-login' %}" class="text-sm font-bold text-primary border border-primary px-4 py-2 rounded-xl hover:bg-primary/5 transition-all">Masuk</a>
+                        <a href="{% url 'page-register' %}" class="text-sm font-bold text-white bg-primary px-4 py-2 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-primary/20">Daftar</a>
+                    </div>
+                </div>
+            </header>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="page">
+        <!-- Intro Section -->
+        <section class="intro reveal">
+            <div class="intro-copy">
+                <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider mb-4">Mitra Warungio</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">Daftar Menjadi <span class="text-primary">Mitra Warungio</span></h1>
+                <p class="text-sm text-slate-500 mt-3 max-w-xl mx-auto">Lengkapi data di bawah ini untuk mulai berjualan dan kembangkan toko Anda bersama Warungio. Semua gratis!</p>
+            </div>
+        </section>
+
+        <div class="content-grid">
+            <aside class="side-column">
+                <figure class="hero-card rounded-2xl overflow-hidden">
+                    <img src="{% static 'images/kebutuhan dapur.png' %}" alt="Tas Warungio berisi sayuran segar" class="w-full h-auto" loading="lazy" />
+                </figure>
+                <section class="benefit-card rounded-2xl border border-slate-100 bg-white p-6 shadow-sm value-card">
+                    <h2 class="text-lg font-extrabold text-green-800 mb-5">Keuntungan Menjadi Mitra Toko</h2>
+                    <article class="flex gap-4 mb-5">
+                        <div class="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-store text-green-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Jangkauan Luas</h3>
+                            <p class="text-xs text-slate-500">Produk Anda dapat dilihat oleh ribuan pelanggan potensial.</p>
+                        </div>
+                    </article>
+                    <article class="flex gap-4 mb-5">
+                        <div class="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-chart-line text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Penjualan Meningkat</h3>
+                            <p class="text-xs text-slate-500">Fitur promosi dan rekomendasi untuk meningkatkan penjualan.</p>
+                        </div>
+                    </article>
+                    <article class="flex gap-4 mb-5">
+                        <div class="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-shield-halved text-amber-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Transaksi Aman</h3>
+                            <p class="text-xs text-slate-500">Pembayaran aman via Midtrans dan dana cepat cair.</p>
+                        </div>
+                    </article>
+                    <article class="flex gap-4 mb-5">
+                        <div class="w-11 h-11 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-headset text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Dukungan 24/7</h3>
+                            <p class="text-xs text-slate-500">Tim support kami siap membantu kapan saja.</p>
+                        </div>
+                    </article>
+                    <blockquote class="text-sm text-slate-500 italic border-l-4 border-primary pl-4 py-3 my-4 bg-green-50/50 rounded-r-xl">
+                        "Bergabunglah dengan ribuan mitra toko lainnya dan raih lebih banyak pelanggan setiap hari."
+                    </blockquote>
+                    <img class="w-48 mx-auto" src="{% static 'images/bergabung-dengan-ribuan-mitra.png' %}" alt="Ilustrasi toko Warungio" loading="lazy" />
+                </section>
+            </aside>
+
+            <form class="partner-form" id="partnerForm" novalidate>
+                <!-- Step 1: Informasi Toko -->
+                <section class="form-card step-panel active" data-panel="0">
+                    <div class="card-heading">
+                        <h2 class="text-xl font-extrabold text-slate-800">Informasi Toko</h2>
+                        <p class="text-sm text-slate-500">Lengkapi informasi dasar toko Anda</p>
+                    </div>
+                    <div class="form-grid">
+                        <label class="field">Nama Toko <b>*</b>
+                            <input name="storeName" type="text" placeholder="Contoh: Toko Sembako Berkah" autocomplete="organization" required />
+                        </label>
+                        <label class="field">Kategori Toko <b>*</b>
+                            <select name="category" required>
+                                <option value="">Pilih kategori toko</option>
+                                <option>Sembako</option>
+                                <option>Sayur dan Buah</option>
+                                <option>Daging dan Ikan</option>
+                                <option>Minuman</option>
+                                <option>Kebutuhan Dapur</option>
+                            </select>
+                        </label>
+                        <label class="field full">Deskripsi Toko <b>*</b>
+                            <textarea name="description" maxlength="300" placeholder="Ceritakan tentang toko Anda, produk yang dijual, keunggulan, dll." required autocomplete="off"></textarea>
+                            <span class="counter">0/300</span>
+                        </label>
+                        <label class="field">Alamat Toko <b>*</b>
+                            <input name="address" type="text" placeholder="Masukkan alamat lengkap toko" autocomplete="street-address" required />
+                        </label>
+                        <label class="field">Kecamatan <b>*</b>
+                            <input name="district" type="text" placeholder="Contoh: Cengkareng" required />
+                        </label>
+                        <label class="field">Kota / Kabupaten <b>*</b>
+                            <input name="city" type="text" placeholder="Contoh: Jakarta Barat" required />
+                        </label>
+                        <label class="field">Provinsi <b>*</b>
+                            <input name="province" type="text" placeholder="Contoh: DKI Jakarta" required />
+                        </label>
+                        <label class="field">Kode Pos <b>*</b>
+                            <input name="postalCode" inputmode="numeric" pattern="[0-9]{5}" placeholder="Contoh: 12345" autocomplete="postal-code" required />
+                        </label>
+                        <div class="field map-field full">
+                            Lokasi Toko (Pin di Peta) <b>*</b>
+                            <div class="map-widget" id="mapWidget" style="position:relative; min-height:280px; border-radius:12px; overflow:hidden; border:1px solid #dce4df; background:#f0f0f0;">
+                                <div id="googleMap" style="width:100%; height:100%; min-height:280px; border-radius:12px;"></div>
+                            </div>
+                            <input type="hidden" name="latitude" value="-6.2088" autocomplete="off" required />
+                            <input type="hidden" name="longitude" value="106.8456" autocomplete="off" required />
+                            <small id="mapStatus" class="text-xs text-slate-400 mt-1 block">Peta sedang dimuat. Klik pada peta untuk menentukan koordinat toko.</small>
+                        </div>
+                        <label class="field">Kontak Toko <b>*</b>
+                            <input name="storePhone" type="tel" placeholder="Contoh: 0812-3456-7890" autocomplete="tel" required />
+                        </label>
+                        <label class="field">Email Toko (Opsional)
+                            <input name="storeEmail" type="email" placeholder="Contoh: tokoberkah@gmail.com" autocomplete="email" />
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Step 2: Data Pemilik -->
+                <section class="form-card step-panel" data-panel="1">
+                    <div class="card-heading">
+                        <h2 class="text-xl font-extrabold text-slate-800">Data Pemilik</h2>
+                        <p class="text-sm text-slate-500">Informasi penanggung jawab toko</p>
+                    </div>
+                    <div class="form-grid">
+                        <label class="field">Nama Pemilik <b>*</b>
+                            <input name="ownerName" type="text" placeholder="Sesuai KTP" autocomplete="name" required />
+                        </label>
+                        <label class="field">Nomor HP Pemilik <b>*</b>
+                            <input name="ownerPhone" type="tel" placeholder="Contoh: 0812-0000-1111" autocomplete="tel" required />
+                        </label>
+                        <label class="field">Email Pemilik <b>*</b>
+                            <input name="ownerEmail" type="email" placeholder="emailpemilik@gmail.com" autocomplete="email" required />
+                        </label>
+                        <label class="field">Nomor KTP <b>*</b>
+                            <input name="identityNumber" inputmode="numeric" pattern="[0-9]{16}" placeholder="16 digit NIK" autocomplete="off" required />
+                        </label>
+                        <label class="field">Kata Sandi Akun <b>*</b>
+                            <input name="ownerPassword" id="regPassword" type="password" placeholder="Minimal 8 karakter" autocomplete="new-password" minlength="8" required />
+                        </label>
+                        <label class="field">Konfirmasi Kata Sandi <b>*</b>
+                            <input name="ownerPassword2" id="regPassword2" type="password" placeholder="Ulangi kata sandi" autocomplete="new-password" minlength="8" required />
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Step 3: Informasi Operasional -->
+                <section class="form-card step-panel" data-panel="2">
+                    <div class="card-heading">
+                        <h2 class="text-xl font-extrabold text-slate-800">Informasi Operasional</h2>
+                        <p class="text-sm text-slate-500">Informasi untuk pengelolaan dan pengiriman</p>
+                    </div>
+                    <div class="form-grid compact">
+                        <label class="field">Jam Operasional <b>*</b>
+                            <span class="time-row flex gap-3">
+                                <select name="openTime" required class="flex-1">
+                                    <option>08:00</option>
+                                    <option>07:00</option>
+                                    <option>09:00</option>
+                                </select>
+                                <select name="closeTime" required class="flex-1">
+                                    <option>22:00</option>
+                                    <option>20:00</option>
+                                    <option>21:00</option>
+                                </select>
+                            </span>
+                        </label>
+                        <label class="field">Min. Pesanan (Rp) <b>*</b>
+                            <input name="minimumOrder" inputmode="numeric" placeholder="Contoh: 25000" autocomplete="off" required />
+                        </label>
+                        <div class="field full check-group">
+                            Layanan Pengiriman <b>*</b>
+                            <label><input type="checkbox" name="deliveryServices" value="Instant" autocomplete="off" /> Instant (Same Day)</label>
+                            <label><input type="checkbox" name="deliveryServices" value="Reguler" autocomplete="off" /> Reguler</label>
+                            <label><input type="checkbox" name="deliveryServices" value="Ambil di Toko" autocomplete="off" /> Ambil di Toko</label>
+                        </div>
+                        <div class="field full check-group">
+                            Area Layanan <b>*</b>
+                            <label><input type="radio" name="serviceArea" value="Seluruh Kota" required autocomplete="off" /> Seluruh Kota</label>
+                            <label><input type="radio" name="serviceArea" value="Area Tertentu" autocomplete="off" /> Area Tertentu</label>
+                            <label><input type="radio" name="serviceArea" value="Pilih Manual" autocomplete="off" /> Pilih Manual</label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 4: Informasi Rekening -->
+                <section class="form-card step-panel" data-panel="3">
+                    <div class="card-heading">
+                        <h2 class="text-xl font-extrabold text-slate-800">Informasi Rekening</h2>
+                        <p class="text-sm text-slate-500">Untuk pencairan dana hasil penjualan</p>
+                    </div>
+                    <div class="form-grid">
+                        <label class="field">Nama Bank <b>*</b>
+                            <select name="bankName" required>
+                                <option value="">Pilih nama bank</option>
+                                <option>BCA</option>
+                                <option>Mandiri</option>
+                                <option>BRI</option>
+                                <option>BNI</option>
+                                <option>BSI</option>
+                            </select>
+                        </label>
+                        <label class="field">Nama Pemilik Rekening <b>*</b>
+                            <input name="accountHolder" type="text" placeholder="Sesuai buku tabungan" autocomplete="name" required />
+                        </label>
+                        <label class="field">Nomor Rekening <b>*</b>
+                            <input name="accountNumber" inputmode="numeric" placeholder="Contoh: 1234567890" autocomplete="off" required />
+                        </label>
+                        <label class="field">Konfirmasi Nomor Rekening <b>*</b>
+                            <input name="accountConfirm" inputmode="numeric" placeholder="Ulangi nomor rekening" autocomplete="off" required />
+                        </label>
+                    </div>
+                    <div class="safe-note flex gap-4 items-center p-5 bg-green-50 rounded-xl border border-green-100 mt-6">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-shield-halved text-green-600"></i>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-green-800">Data Anda aman bersama kami</strong>
+                            <span class="text-xs text-green-600 block">Warungio menjamin keamanan data pribadi dan informasi toko Anda.</span>
+                        </div>
+                    </div>
+                    <label class="agree flex items-center gap-3 mt-6">
+                        <input name="agreement" type="checkbox" autocomplete="off" required class="w-4 h-4 accent-primary" />
+                        <span class="text-sm text-slate-600">Saya menyatakan bahwa semua data yang saya isi adalah benar.</span>
+                    </label>
+                </section>
+
+                <!-- Form Message -->
+                <p class="form-message" id="formMessage" role="status"></p>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button class="btn ghost" id="prevBtn" type="button">
+                        <i class="fa-solid fa-arrow-left"></i> Kembali
+                    </button>
+                    <button class="btn primary" id="nextBtn" type="button">
+                        Lanjutkan <span><i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+                    <button class="btn primary hidden" id="submitBtn" type="submit">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Pendaftaran
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- CTA Strip -->
+        <section class="cta-strip bg-gradient-to-r from-green-50 to-white rounded-2xl p-8 border border-green-100 mt-12 reveal">
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <img src="{% static 'images/phone-home.png' %}" alt="Aplikasi Warungio" class="w-28 h-auto" loading="lazy" />
+                <div class="flex-1 text-center md:text-left">
+                    <h2 class="text-xl font-extrabold text-green-800">Siap Mengembangkan Toko Anda?</h2>
+                    <p class="text-sm text-slate-500 mt-1">Bergabung sekarang dan dapatkan lebih banyak peluang bisnis.</p>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                        <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-check text-green-600"></i></div>
+                        Mudah Digunakan
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                        <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-layer-group text-blue-600"></i></div>
+                        Fitur Lengkap
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                        <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-users text-amber-600"></i></div>
+                        Komunitas Mitra
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (tentang-kami style) -->
+    <footer class="bg-white border-t border-slate-100 mt-16">
+        <div class="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="h-8 w-auto" loading="lazy" width="32" height="32" />
+                        <span class="text-xl font-extrabold"><span class="text-primary">Warung</span>io</span>
+                    </div>
+                    <p class="text-sm text-slate-500 leading-relaxed">Platform belanja kebutuhan sehari-hari yang terdekat, terpercaya, dan terlengkap untuk Anda.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Belanja</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/kategori/sayuran/" class="text-sm text-slate-500 hover:text-primary transition-colors">Sayuran Segar</a></li>
+                        <li><a href="/kategori/buah/" class="text-sm text-slate-500 hover:text-primary transition-colors">Buah Segar</a></li>
+                        <li><a href="/kategori/sembako/" class="text-sm text-slate-500 hover:text-primary transition-colors">Sembako</a></li>
+                        <li><a href="/buyer/products/" class="text-sm text-slate-500 hover:text-primary transition-colors">Semua Produk</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Mitra</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'page-register-mitra' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Daftar Mitra</a></li>
+                        <li><a href="{% url 'page-panduan-seller' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Panduan Seller</a></li>
+                        <li><a href="{% url 'page-tips-sukses' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tips Sukses</a></li>
+                        <li><a href="{% url 'page-komunitas' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Komunitas</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4">Bantuan</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'bantuan-page' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Pusat Bantuan</a></li>
+                        <li><a href="{% url 'page-kontak-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Hubungi Kami</a></li>
+                        <li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Kebijakan Privasi</a></li>
+                        <li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Syarat & Ketentuan</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-100 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-slate-400">&copy; 2026 Warungio. Hak Cipta Dilindungi.</p>
+                <div class="flex gap-4">
+                    <a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Facebook Warungio"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Instagram Warungio"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://twitter.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="Twitter Warungio"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors" aria-label="YouTube Warungio"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/pages/auth/register-mitra/script.js' %}"></script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/pages/auth/register-mitra/script.js' %}"></script>
+
+    <script>
+        // Scroll reveal animation
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.IntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('.reveal').forEach(function(el) {
+                    observer.observe(el);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

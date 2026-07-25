@@ -1,5 +1,5 @@
 {% load static %}{% load seo_tags %}<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,25 +7,114 @@
     {% include 'seo/seo_schema.html' %}
     <title>{{ seo.meta_title }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <style>.page-hero{background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:80px 24px;text-align:center;color:white}.page-hero h1{font-size:2.5rem;font-weight:800;margin:0 0 12px}.page-hero p{font-size:1.125rem;opacity:.9}.page-hero .breadcrumb{font-size:.8rem;opacity:.7;margin-bottom:16px}.page-hero .breadcrumb a{color:#fff;text-decoration:none;opacity:.8}.page-content{max-width:800px;margin:0 auto;padding:48px 24px}.tip-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--color-border);margin-bottom:16px;display:flex;gap:16px;align-items:flex-start}.tip-num{width:40px;height:40px;border-radius:50%;background:var(--color-brand);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}.tip-content h3{font-size:15px;font-weight:700;margin:0 0 6px}.tip-content p{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin:0}.cta-section{text-align:center;background:var(--color-surface-secondary);border-radius:var(--radius-lg);padding:32px;margin:32px 0}.cta-section h2{font-size:20px;font-weight:700;margin:0 0 8px}.cta-section p{font-size:14px;color:var(--color-text-secondary);margin:0 0 16px}.cta-btn{display:inline-block;padding:12px 24px;background:var(--color-brand);color:white;border-radius:var(--radius-lg);text-decoration:none;font-weight:600}.seo-content p{font-size:0.938rem;color:#475569;line-height:1.8;margin-bottom:16px;text-align:justify}.footer-links{border-top:1px solid var(--color-border);padding:24px;text-align:center}.footer-links a{color:var(--color-brand);text-decoration:none;margin:0 12px;font-size:13px}.nav-bar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(6px);border-bottom:1px solid #e5e7eb;padding:12px 24px}.nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}.nav-inner a{text-decoration:none;font-weight:600;font-size:.875rem;color:#475569}.nav-inner a:hover{color:#059669}@media(max-width:640px){.page-hero h1{font-size:1.75rem}}</style>
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { primary: "#16A34A", secondary: "#22C55E", background: "#F8FAF8", surface: "#FFFFFF", "outline-variant": "#E5E7EB" } } } }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8faf8; color: #0f172a; -webkit-font-smoothing: antialiased; }
+        .topbar-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 16px; background: rgba(248,250,248,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(229,231,235,0.6); }
+        .topbar-container { max-width: 1280px; margin: 0 auto; }
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .value-card { transition: all 0.3s ease; }
+        .value-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.06); }
+    </style>
 </head>
-<body>
-    <nav class="nav-bar"><div class="nav-inner"><a href="{% url 'home' %}">← Kembali ke Beranda</a><a href="{% url 'page-komunitas' %}">Komunitas →</a></div></nav>
-    <div class="page-hero"><div class="breadcrumb"><a href="{% url 'home' %}">Beranda</a> › Tips Sukses Seller</div><h1>Tips Sukses untuk Seller</h1><p>Strategi dan praktik terbaik untuk mengembangkan bisnis Anda di Warungio.</p></div>
-    <div class="page-content">
-        <div class="tip-card"><div class="tip-num">1</div><div class="tip-content"><h3>Foto Produk Berkualitas</h3><p>Gunakan foto produk dengan pencahayaan baik dan latar bersih. Produk dengan foto menarik meningkatkan konversi hingga 40%. Gunakan fitur Smart Scan AI untuk analisis kualitas.</p></div></div>
-        <div class="tip-card"><div class="tip-num">2</div><div class="tip-content"><h3>Respons Cepat</h3><p>Balas chat dan pesanan dengan cepat. Seller dengan respons time di bawah 5 menit mendapatkan 2x lebih banyak pesanan. Aktifkan notifikasi push untuk selalu update.</p></div></div>
-        <div class="tip-card"><div class="tip-num">3</div><div class="tip-content"><h3>Kelola Stok dengan Bijak</h3><p>Gunakan fitur Low Stock Alert dan Stock Prediction untuk mengelola inventaris. Jangan sampai kehabisan stok produk favorit pelanggan.</p></div></div>
-        <div class="tip-card"><div class="tip-num">4</div><div class="tip-content"><h3>Manfaatkan Promo</h3><p>Buat promo menarik seperti diskon khusus, gratis ongkir, atau bundle produk. Pantau performa promo di dashboard Analytics.</p></div></div>
-        <div class="tip-card"><div class="tip-num">5</div><div class="tip-content"><h3>Jaga Reputasi</h3><p>Berikan pelayanan terbaik dan tanggapi ulasan pelanggan dengan profesional. Rating tinggi meningkatkan kepercayaan pembeli baru.</p></div></div>
-        <div class="tip-card"><div class="tip-num">6</div><div class="tip-content"><h3>Analisis Data Bisnis</h3><p>Gunakan Seller Report dan AI Business Insight untuk memahami tren penjualan, produk terlaris, dan perilaku pelanggan. Data-driven decision = bisnis yang berkembang.</p></div></div>
-        <div class="seo-content">
-            <p>Menjadi seller sukses di Warungio membutuhkan strategi yang tepat dan konsisten. Dengan menerapkan tips-tips di atas, Anda dapat meningkatkan visibilitas toko, menarik lebih banyak pembeli, dan membangun reputasi yang baik di platform marketplace hyperlocal Warungio. Jangan lupa untuk selalu memantau dashboard analitik Anda secara rutin dan memanfaatkan fitur-fitur AI canggih yang tersedia untuk membantu pengambilan keputusan bisnis yang lebih cerdas dan tepat sasaran.</p>
+<body class="bg-background text-[#0F172A] font-sans" style="padding-top: 80px;">
+
+    <div class="topbar-wrapper" role="banner">
+        <div class="topbar-container">
+            <header class="flex items-center justify-between" style="border:none !important; background:transparent !important; box-shadow:none !important; height:auto; padding:0 !important;">
+                <a href="{% url 'home' %}" class="flex items-center gap-2"><img src="{% static 'images/Warungio L.png' %}" alt="Logo" class="w-8 h-8" width="32" height="32" loading="eager"><span class="text-xl font-extrabold tracking-tight"><span class="text-slate-800">Warung</span><span class="text-primary">io</span></span></a>
+                <div class="hidden lg:flex items-center gap-8">
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Beranda</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-panduan-seller' %}">Panduan Seller</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-komunitas' %}">Komunitas</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-register-mitra' %}">Daftar Mitra</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'page-login' %}" class="text-sm font-bold text-primary border border-primary px-4 py-2 rounded-xl hover:bg-primary/5 transition-all">Masuk</a>
+                    <a href="{% url 'page-register' %}" class="text-sm font-bold text-white bg-primary px-4 py-2 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-primary/20">Daftar</a>
+                </div>
+            </header>
         </div>
-        <div class="cta-section"><h2>Siap Memulai?</h2><p>Gabung dengan ribuan mitra Warungio dan kembangkan bisnis Anda.</p><a class="cta-btn" href="{% url 'page-register-mitra' %}">Daftar Jadi Mitra</a></div>
     </div>
-    <div class="footer-links"><a href="{% url 'page-panduan-seller' %}">Panduan Seller</a><a href="{% url 'page-komunitas' %}">Komunitas</a><a href="{% url 'home' %}">Kembali ke Beranda</a></div>
+
+    <main class="max-w-[1280px] mx-auto px-6 md:px-12 pt-16 pb-16 flex flex-col gap-16">
+        <section class="reveal text-center max-w-3xl mx-auto">
+            <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider mb-4">Tips Sukses</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">Tips Sukses untuk <span class="text-primary">Seller</span></h1>
+            <p class="text-base text-slate-500 mt-4 leading-relaxed">Strategi dan praktik terbaik untuk mengembangkan bisnis Anda di Warungio.</p>
+        </section>
+
+        <section class="reveal">
+            <div class="grid grid-cols-1 gap-5 max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">1</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Foto Produk Berkualitas</h3><p class="text-sm text-slate-500 leading-relaxed">Gunakan foto produk dengan pencahayaan baik dan latar bersih. Produk dengan foto menarik meningkatkan konversi hingga 40%. Gunakan fitur Smart Scan AI untuk analisis kualitas.</p></div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-blue-500 text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">2</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Respons Cepat</h3><p class="text-sm text-slate-500 leading-relaxed">Balas chat dan pesanan dengan cepat. Seller dengan respons time di bawah 5 menit mendapatkan 2x lebih banyak pesanan. Aktifkan notifikasi push untuk selalu update.</p></div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-amber-500 text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">3</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Kelola Stok dengan Bijak</h3><p class="text-sm text-slate-500 leading-relaxed">Gunakan fitur Low Stock Alert dan Stock Prediction untuk mengelola inventaris. Jangan sampai kehabisan stok produk favorit pelanggan.</p></div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-purple-500 text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">4</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Manfaatkan Promo</h3><p class="text-sm text-slate-500 leading-relaxed">Buat promo menarik seperti diskon khusus, gratis ongkir, atau bundle produk. Pantau performa promo di dashboard Analytics.</p></div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-rose-500 text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">5</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Jaga Reputasi</h3><p class="text-sm text-slate-500 leading-relaxed">Berikan pelayanan terbaik dan tanggapi ulasan pelanggan dengan profesional. Rating tinggi meningkatkan kepercayaan pembeli baru.</p></div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm value-card flex gap-5 items-start">
+                    <div class="w-11 h-11 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-lg flex-shrink-0">6</div>
+                    <div><h3 class="font-extrabold text-slate-800 mb-2">Analisis Data Bisnis</h3><p class="text-sm text-slate-500 leading-relaxed">Gunakan Seller Report dan AI Business Insight untuk memahami tren penjualan, produk terlaris, dan perilaku pelanggan. Data-driven decision = bisnis yang berkembang.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal"><div class="bg-white rounded-3xl p-8 md:p-12 border border-slate-100"><p class="text-sm text-slate-500 leading-relaxed">Menjadi seller sukses di Warungio membutuhkan strategi yang tepat dan konsisten. Dengan menerapkan tips-tips di atas, Anda dapat meningkatkan visibilitas toko, menarik lebih banyak pembeli, dan membangun reputasi yang baik di platform marketplace hyperlocal Warungio.</p></div></section>
+
+        <section class="reveal">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 md:p-12 text-center border border-green-100">
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-3">Siap Memulai?</h2>
+                <p class="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed mb-6">Gabung dengan ribuan mitra Warungio dan kembangkan bisnis Anda.</p>
+                <a href="{% url 'page-register-mitra' %}" class="inline-block bg-primary text-white px-8 py-3.5 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/25">Daftar Jadi Mitra</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-slate-100">
+        <div class="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2 md:col-span-1"><div class="flex items-center gap-2 mb-4"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="h-8 w-auto" loading="lazy" width="32" height="32"><span class="text-xl font-extrabold"><span class="text-primary">Warung</span>io</span></div><p class="text-sm text-slate-500 leading-relaxed">Marketplace hyperlocal Indonesia.</p></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Informasi</h4><ul class="space-y-2"><li><a href="{% url 'page-tentang-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tentang Kami</a></li><li><a href="{% url 'page-cara-belanja' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Cara Belanja</a></li><li><a href="{% url 'page-metode-pembayaran' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Metode Pembayaran</a></li><li><a href="{% url 'page-blog' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Blog</a></li></ul></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Bantuan</h4><ul class="space-y-2"><li><a href="{% url 'bantuan-page' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Pusat Bantuan</a></li><li><a href="{% url 'page-kontak-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Hubungi Kami</a></li><li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Kebijakan Privasi</a></li><li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Syarat & Ketentuan</a></li></ul></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Mitra</h4><ul class="space-y-2"><li><a href="{% url 'page-register-mitra' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Daftar Mitra</a></li><li><a href="{% url 'page-panduan-seller' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Panduan Seller</a></li><li><a href="{% url 'page-tips-sukses' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tips Sukses</a></li><li><a href="{% url 'page-komunitas' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Komunitas</a></li></ul></div>
+            </div>
+            <div class="border-t border-slate-100 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"><p class="text-xs text-slate-400">&copy; 2026 Warungio.</p><div class="flex gap-4"><a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-facebook-f"></i></a><a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-instagram"></i></a><a href="https://twitter.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-twitter"></i></a><a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-youtube"></i></a></div></div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.IntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+            }
+        });
+    </script>
 </body>
 </html>

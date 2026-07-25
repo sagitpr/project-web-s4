@@ -46,7 +46,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .response_utils import success_response, error_response
-from .models import User, OTP, LoginAttempt, RegistrationEvent
+from .models import User, OTP, LoginAttempt, RegistrationEvent, AdminAuditLog
 from .services.email_service import send_otp_email
 from .services.whatsapp_service import _whatsapp_configured
 
@@ -534,11 +534,25 @@ class LogoutView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request):
+        user = request.user
         try:
             refresh_token = request.data.get('refresh')
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
+            # Audit log: admin logout (only for admin/staff users)
+            if user.is_authenticated and (user.is_staff or getattr(user, 'role', None) == 'admin'):
+                try:
+                    AdminAuditLog.objects.create(
+                        admin=user,
+                        admin_email=user.email,
+                        action='logout',
+                        description='Logout admin',
+                        ip_address=request.META.get('REMOTE_ADDR'),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')[:200],
+                    )
+                except Exception as e:
+                    logger.warning('Failed to create admin logout audit log: %s', e)
             logout(request)
             return success_response(message='Logout berhasil.')
         except Exception as e:
@@ -1527,8 +1541,25 @@ class AdminLoginView(views.APIView):
     def post(self, request):
         from .serializers_admin import AdminLoginSerializer
 
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+
         serializer = AdminLoginSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        
+        if not serializer.is_valid():
+            # Audit log: login failed
+            email = request.data.get('email', '').strip().lower()
+            try:
+                AdminAuditLog.objects.create(
+                    admin_email=email,
+                    action='login_failed',
+                    description='Login admin gagal — kredensial tidak valid',
+                    ip_address=ip,
+                    user_agent=user_agent,
+                )
+            except Exception as e:
+                logger.warning('Failed to create login_failed audit log: %s', e)
+            raise serializers.ValidationError(serializer.errors)
 
         user = serializer.validated_data['user']
 
@@ -1540,6 +1571,19 @@ class AdminLoginView(views.APIView):
         from django.contrib.auth import login
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
+        # Audit log: admin login success
+        try:
+            AdminAuditLog.objects.create(
+                admin=user,
+                admin_email=user.email,
+                action='login',
+                description='Login admin berhasil',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:200],
+            )
+        except Exception as e:
+            logger.warning('Failed to create admin login audit log: %s', e)
+
         # Extract ?next= parameter for post-login redirect
         next_url = request.GET.get('next', '/admin-panel/')
 
@@ -1549,4 +1593,343 @@ class AdminLoginView(views.APIView):
             refresh=str(refresh),
             user=UserSerializer(user).data,
             redirect_url=next_url,
+        )
+
+
+@extend_schema(exclude=True)
+class AdminForgotPasswordView(views.APIView):
+    """
+    Admin forgot password — send OTP to admin email.
+    
+    Only staff/admin users may request a password reset.
+    Returns consistent response regardless of whether the email
+    exists to prevent user enumeration.
+    """
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'admin_forgot'
+
+    def post(self, request):
+        from .serializers_admin import AdminForgotPasswordSerializer
+
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+
+        serializer = AdminForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+
+        # Cegah user enumeration: selalu return response yang sama
+        user_exists = User.objects.filter(
+            email=email,
+        ).filter(
+            Q(role='admin') | Q(is_staff=True) | Q(is_superuser=True)
+        ).exists()
+        _log_db_operation('admin_forgot_lookup', {'email': email, 'exists': user_exists})
+
+        if user_exists:
+            # Invalidate any previous valid OTPs for this email
+            OTP.objects.filter(
+                email=email, purpose='password_reset', is_valid=True, is_used=False
+            ).update(is_valid=False)
+
+            # Create new reset OTP
+            otp = OTP.objects.create(
+                email=email,
+                purpose='password_reset',
+                ip_address=ip,
+                user_agent=user_agent,
+            )
+            _log_db_operation('admin_otp_create_reset', {'id': otp.id, 'email': email})
+
+            # Dispatch OTP delivery
+            _dispatch_otp_async(
+                email=email,
+                phone=None,
+                otp_code=otp.otp_code,
+                purpose='password_reset',
+                user_full_name=None,
+            )
+
+        response_data = {
+            'message': 'Jika email terdaftar sebagai admin, kode reset password telah dikirim.',
+        }
+
+        if settings.DEBUG and user_exists:
+            response_data['otp_code'] = otp.otp_code
+        if user_exists:
+            response_data['redirect_url'] = f'/admin-panel/password/verify-otp/?email={email}'
+            response_data['requires_otp'] = True
+
+        logger.info(
+            'ADMIN FORGOT PASSWORD — Email: %s | Exists: %s | IP: %s',
+            email, user_exists, ip,
+        )
+
+        return success_response(
+            message=response_data['message'],
+            status_code=status.HTTP_200_OK,
+            **{k: v for k, v in response_data.items() if k != 'message'},
+        )
+
+
+@extend_schema(exclude=True)
+class AdminVerifyOTPView(views.APIView):
+    """
+    Admin OTP verification for password reset.
+    
+    Validates OTP code for admin password reset flow.
+    Returns a verification token on success that can be used
+    in the reset password step.
+    """
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'admin_verify'
+
+    def post(self, request):
+        from .serializers_admin import AdminVerifyOTPSerializer
+
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+
+        serializer = AdminVerifyOTPSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        otp_code = serializer.validated_data['otp_code']
+
+        # Verify OTP — use hash comparison with plaintext fallback
+        otp_code_hash = OTP.hash_otp(otp_code)
+        otp = OTP.objects.filter(
+            email=email,
+            purpose='password_reset',
+            is_valid=True,
+            is_used=False,
+        ).filter(
+            Q(otp_code_hash=otp_code_hash) | Q(otp_code=otp_code)
+        ).order_by('-created_at').first()
+
+        if not otp:
+            logger.warning(
+                'ADMIN OTP VERIFY FAILED — No OTP found | Email: %s | IP: %s',
+                email, ip,
+            )
+            return error_response(
+                message='Kode OTP tidak valid atau sudah digunakan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_not_found',
+            )
+
+        if otp.is_expired():
+            otp.is_valid = False
+            otp.save(update_fields=['is_valid'])
+            logger.warning(
+                'ADMIN OTP VERIFY EXPIRED — OTP ID: %d | Email: %s | IP: %s',
+                otp.id, email, ip,
+            )
+            return error_response(
+                message='Kode OTP sudah kadaluwarsa. Silakan minta OTP baru.',
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                field='otp_code',
+                code='otp_expired',
+                needs_new_otp=True,
+            )
+
+        if otp.is_locked():
+            logger.warning(
+                'ADMIN OTP VERIFY LOCKED — OTP ID: %d | Attempts: %d/%d | Email: %s | IP: %s',
+                otp.id, otp.attempts, otp.max_attempts, email, ip,
+            )
+            return error_response(
+                message='Terlalu banyak percobaan. Silakan minta OTP baru.',
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                field='otp_code',
+                code='otp_locked',
+                needs_new_otp=True,
+            )
+
+        # Verify code against stored hash
+        is_code_valid = (otp.otp_code_hash == otp_code_hash) or (otp.otp_code == otp_code)
+
+        if not is_code_valid:
+            otp.increment_attempts()
+            remaining = otp.max_attempts - otp.attempts
+            logger.warning(
+                'ADMIN OTP VERIFY WRONG CODE — OTP ID: %d | Attempts: %d/%d | Remaining: %d | Email: %s | IP: %s',
+                otp.id, otp.attempts, otp.max_attempts, max(remaining, 0), email, ip,
+            )
+            return error_response(
+                message='Kode OTP tidak valid.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                field='otp_code',
+                code='otp_invalid',
+                remaining_attempts=max(remaining, 0),
+            )
+
+        # Mark OTP as verified — keep it valid for the reset step
+        otp.verified_at = timezone.now()
+        otp.save(update_fields=['verified_at'])
+
+        # Generate a verification token (using Django's signing)
+        from django.core.signing import TimestampSigner
+        signer = TimestampSigner()
+        verification_token = signer.sign(f'{email}:password_reset')
+
+        logger.info(
+            'ADMIN OTP VERIFY SUCCESS — Email: %s | OTP ID: %d | IP: %s',
+            email, otp.id, ip,
+        )
+
+        return success_response(
+            message='Kode OTP valid.',
+            status_code=status.HTTP_200_OK,
+            verified=True,
+            verification_token=verification_token,
+            redirect_url=f'/admin-panel/password/reset/?email={email}&token={verification_token}',
+        )
+
+
+@extend_schema(exclude=True)
+class AdminResetPasswordView(views.APIView):
+    """
+    Admin reset password with OTP verification.
+    
+    Validates verification token + OTP, then updates password.
+    Invalidates all sessions for the user after password change.
+    """
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'admin_reset'
+
+    def post(self, request):
+        from .serializers_admin import AdminResetPasswordSerializer
+
+        ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+
+        serializer = AdminResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        otp_code = serializer.validated_data.get('otp_code', '')
+        new_password = serializer.validated_data['new_password']
+        verification_token = serializer.validated_data.get('verification_token', '')
+
+        # ── STEP 1: Verify the verification token ──
+        from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+        signer = TimestampSigner()
+        try:
+            unsigned = signer.unsign(verification_token, max_age=300)  # 5 minutes
+            expected = f'{email}:password_reset'
+            if unsigned != expected:
+                logger.warning(
+                    'ADMIN RESET — Token mismatch | Email: %s | Expected: %s | Got: %s',
+                    email, expected, unsigned,
+                )
+                return error_response(
+                    message='Token verifikasi tidak valid.',
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code='invalid_token',
+                )
+        except SignatureExpired:
+            return error_response(
+                message='Token verifikasi sudah kadaluwarsa. Silakan ulangi proses reset password.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='token_expired',
+            )
+        except BadSignature:
+            return error_response(
+                message='Token verifikasi tidak valid.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='invalid_token',
+            )
+
+        # ── STEP 2: Verify OTP (optional defense-in-depth) ──
+        # If otp_code is provided, verify it against stored hash.
+        # If not, rely on the verification_token alone (already validated above).
+        otp_query = OTP.objects.filter(
+            email=email,
+            purpose='password_reset',
+            is_used=False,
+            verified_at__isnull=False,
+        )
+
+        if otp_code:
+            otp_code_hash = OTP.hash_otp(otp_code)
+            otp_query = otp_query.filter(
+                Q(otp_code_hash=otp_code_hash) | Q(otp_code=otp_code)
+            )
+
+        otp = otp_query.order_by('-created_at').first()
+
+        if not otp:
+            logger.warning(
+                'ADMIN RESET FAILED — No verified OTP found | Email: %s | IP: %s',
+                email, ip,
+            )
+            return error_response(
+                message='Sesi verifikasi tidak valid. Silakan ulangi proses reset password.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='verification_expired',
+            )
+
+        # ── STEP 3: Update password ──
+        user = User.objects.filter(email=email).first()
+        if not user:
+            logger.error('ADMIN RESET — User not found for email: %s', email)
+            return error_response(
+                message='Pengguna tidak ditemukan.',
+                status_code=status.HTTP_404_NOT_FOUND,
+                code='user_not_found',
+            )
+
+        # Verify user is still admin/staff
+        if user.role != 'admin' and not user.is_staff and not user.is_superuser:
+            logger.warning(
+                'ADMIN RESET BLOCKED — User %s is no longer admin/staff',
+                email,
+            )
+            return error_response(
+                message='Akun ini tidak memiliki akses administrator.',
+                status_code=status.HTTP_403_FORBIDDEN,
+                code='not_admin',
+            )
+
+        # Update password
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        _log_db_operation('admin_password_reset', {'user_id': user.id})
+
+        # Mark OTP as used
+        otp.is_used = True
+        otp.is_valid = False
+        otp.save(update_fields=['is_used', 'is_valid'])
+
+        # ── STEP 4: Invalidate all sessions ──
+        try:
+            from django.contrib.sessions.models import Session
+            from .models import UserSession
+            # Invalidate Django sessions
+            user_sessions = UserSession.objects.filter(user=user, is_active=True)
+            for us in user_sessions:
+                try:
+                    Session.objects.filter(session_key=us.session_key).delete()
+                except Exception:
+                    pass
+            user_sessions.update(is_active=False)
+        except Exception as sess_err:
+            logger.warning('Failed to invalidate sessions: %s', sess_err)
+
+        logger.info(
+            'ADMIN RESET PASSWORD SUCCESS — Email: %s | User ID: %d | IP: %s',
+            email, user.id, ip,
+        )
+
+        return success_response(
+            message='Password berhasil direset. Silakan login dengan password baru.',
+            status_code=status.HTTP_200_OK,
+            redirect_url='/admin-panel/login/',
+            next_action='login',
         )

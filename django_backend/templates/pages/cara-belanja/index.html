@@ -1,174 +1,137 @@
 {% load static %}{% load seo_tags %}<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    {# ── SEO Meta & Structured Data ── #}
     {% include 'seo/seo_meta.html' %}
     {% include 'seo/seo_schema.html' %}
-    
-    {# ── Override title ── #}
     <title>{{ seo.meta_title }}</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/libs-font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { primary: "#16A34A", secondary: "#22C55E", background: "#F8FAF8", surface: "#FFFFFF", "outline-variant": "#E5E7EB" } } } }
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8faf8; color: #0f172a; -webkit-font-smoothing: antialiased; }
-        .page-hero { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 80px 24px; text-align: center; color: white; position: relative; overflow: hidden; }
-        .page-hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%); animation: pulse 8s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .page-hero h1 { font-size: 2.5rem; font-weight: 800; margin: 0 0 12px; position: relative; z-index: 1; }
-        .page-hero p { font-size: 1.125rem; opacity: .9; max-width: 640px; margin: 0 auto; position: relative; z-index: 1; line-height: 1.7; }
-        .page-hero .breadcrumb { font-size: 0.8rem; opacity: .7; margin-bottom: 16px; position: relative; z-index: 1; }
-        .page-hero .breadcrumb a { color: white; text-decoration: none; opacity: .8; }
-        .page-hero .breadcrumb a:hover { opacity: 1; text-decoration: underline; }
-        .steps { max-width: 800px; margin: 0 auto; padding: 48px 24px; }
-        .step { display: flex; gap: 24px; margin-bottom: 36px; align-items: flex-start; padding: 20px; background: white; border-radius: 16px; border: 1px solid #e5e7eb; transition: all 0.3s ease; }
-        .step:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
-        .step-num { width: 52px; height: 52px; border-radius: 50%; background: var(--color-brand, #059669); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; flex-shrink: 0; }
-        .step-content h2 { font-size: 1.125rem; font-weight: 700; margin: 0 0 8px; color: #0f172a; }
-        .step-content p { font-size: 0.938rem; color: #475569; line-height: 1.7; margin: 0; }
-        .tips { background: #f0fdf4; padding: 28px; border-radius: 20px; margin: 32px 0; border: 1px solid #bbf7d0; }
-        .tips h2 { font-size: 1.125rem; font-weight: 700; margin: 0 0 16px; color: #166534; }
-        .tips ul { padding-left: 0; list-style: none; }
-        .tips li { font-size: 0.938rem; color: #475569; margin-bottom: 10px; padding-left: 24px; position: relative; line-height: 1.6; }
-        .tips li::before { content: '✓'; position: absolute; left: 0; color: #059669; font-weight: 700; }
-        .seo-content { max-width: 800px; margin: 0 auto; padding: 0 24px 48px; }
-        .seo-content h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 32px 0 12px; }
-        .seo-content p { font-size: 0.938rem; color: #475569; line-height: 1.8; margin-bottom: 16px; text-align: justify; }
-        .seo-content ul { padding-left: 24px; margin-bottom: 16px; }
-        .seo-content li { font-size: 0.938rem; color: #475569; margin-bottom: 8px; line-height: 1.6; }
-        .cta-section { max-width: 800px; margin: 0 auto; padding: 0 24px 48px; }
-        .cta-card { background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 24px; padding: 48px 32px; text-align: center; color: white; }
-        .cta-card h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
-        .cta-card p { font-size: 0.938rem; opacity: .9; margin-bottom: 24px; }
-        .cta-btn { display: inline-block; padding: 14px 32px; background: white; color: #059669; border-radius: 14px; text-decoration: none; font-weight: 700; transition: all 0.3s ease; }
-        .cta-btn:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-        .footer-links { border-top: 1px solid #e5e7eb; padding: 24px; text-align: center; }
-        .footer-links a { color: #059669; text-decoration: none; margin: 0 14px; font-size: 0.875rem; font-weight: 500; }
-        .footer-links a:hover { text-decoration: underline; }
-        .nav-bar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); border-bottom: 1px solid #e5e7eb; padding: 12px 24px; }
-        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-        .nav-inner a { text-decoration: none; font-weight: 600; font-size: 0.875rem; color: #475569; }
-        .nav-inner a:hover { color: #059669; }
-        @media (max-width: 640px) {
-            .page-hero h1 { font-size: 1.75rem; }
-            .page-hero { padding: 60px 20px; }
-            .step { flex-direction: column; align-items: center; text-align: center; }
-            .footer-links a { display: block; margin: 8px 0; }
-        }
+        .topbar-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 16px; background: rgba(248,250,248,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(229,231,235,0.6); }
+        .topbar-container { max-width: 1280px; margin: 0 auto; }
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .value-card { transition: all 0.3s ease; }
+        .value-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.06); }
+        .step-card-custom { transition: all 0.3s ease; }
+        .step-card-custom:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.06); }
     </style>
 </head>
-<body>
-    <nav class="nav-bar" aria-label="Navigasi">
-        <div class="nav-inner">
-            <a href="{% url 'home' %}" aria-label="Warungio Beranda">← Kembali ke Beranda</a>
-            <div>
-                <a href="{% url 'page-tentang-kami' %}" class="mr-4">Tentang Kami</a>
-                <a href="{% url 'page-metode-pembayaran' %}">Pembayaran</a>
-            </div>
-        </div>
-    </nav>
+<body class="bg-background text-[#0F172A] font-sans" style="padding-top: 80px;">
 
-    <div class="page-hero">
-        <div class="breadcrumb">
-            <a href="{% url 'home' %}">Beranda</a> › Cara Belanja
-        </div>
-        <h1>Cara Belanja di Warungio</h1>
-        <p>Belanja kebutuhan harian jadi lebih mudah dan cepat hanya dalam 5 langkah sederhana. Temukan dan pesan sembako, sayur segar, buah segar, serta kebutuhan rumah tangga langsung dari warung terdekat Anda.</p>
-    </div>
-
-    <div class="steps">
-        <div class="step">
-            <div class="step-num" aria-hidden="true">1</div>
-            <div class="step-content">
-                <h2>Daftar atau Masuk Akun Warungio</h2>
-                <p>Langkah pertama, daftar akun Warungio secara gratis melalui halaman <a href="{% url 'page-register' %}" style="color:#059669;font-weight:600;">pendaftaran</a>. Cukup masukkan email, nama, dan nomor telepon Anda. Verifikasi akun dengan kode OTP yang dikirim ke email atau WhatsApp Anda. Jika sudah memiliki akun, langsung <a href="{% url 'page-login' %}" style="color:#059669;font-weight:600;">masuk</a> dengan email dan password Anda.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-num" aria-hidden="true">2</div>
-            <div class="step-content">
-                <h2>Cari Produk Kebutuhan Harian</h2>
-                <p>Telusuri berbagai produk segar dan kebutuhan harian dari warung terdekat. Gunakan fitur pencarian untuk menemukan produk spesifik seperti "beras 5kg", "sayur bayam", "buah apel", atau "minyak goreng". Filter berdasarkan kategori (Sembako, Sayuran, Buah, Daging, Minuman, Frozen Food) untuk menemukan produk yang Anda butuhkan dengan cepat dan mudah.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-num" aria-hidden="true">3</div>
-            <div class="step-content">
-                <h2>Tambahkan ke Keranjang Belanja</h2>
-                <p>Pilih produk yang diinginkan, atur jumlahnya, lalu klik "Tambah ke Keranjang". Anda dapat menambahkan produk dari berbagai warung berbeda. Review keranjang belanja Anda sebelum melanjutkan ke checkout untuk memastikan semua produk yang dipesan sudah benar dan sesuai dengan kebutuhan.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-num" aria-hidden="true">4</div>
-            <div class="step-content">
-                <h2>Checkout & Pilih Metode Pembayaran</h2>
-                <p>Masukkan alamat pengiriman yang valid, pilih metode pengiriman hyperlocal (GoSend, GrabExpress, Maxim, atau Antar Sendiri), dan pilih metode pembayaran favorit Anda. Warungio mendukung berbagai metode pembayaran: QRIS, GoPay, OVO, DANA, ShopeePay, transfer bank (BCA, Mandiri, BRI, BNI), kartu kredit (Visa, Mastercard, JCB), dan COD (Cash on Delivery). Semua pembayaran online diproses secara aman melalui Midtrans.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-num" aria-hidden="true">5</div>
-            <div class="step-content">
-                <h2>Terima Pesanan & Nikmati!</h2>
-                <p>Lacak pesanan Anda secara real-time melalui fitur tracking. Pesanan Anda akan diantar langsung oleh kurir dari warung ke alamat tujuan. Nikmati kemudahan belanja kebutuhan harian, sembako, sayur segar, buah segar, dan produk rumah tangga lainnya tanpa harus keluar rumah. Berikan ulasan dan rating setelah pesanan diterima untuk membantu warung lain.</p>
-            </div>
-        </div>
-
-        <div class="tips">
-            <h2><i class="fa-solid fa-lightbulb" style="color:#059669;margin-right:8px;"></i> Tips Belanja Hemat di Warungio</h2>
-            <ul>
-                <li>Daftar akun terlebih dahulu untuk pengalaman belanja yang lebih cepat dan personal</li>
-                <li>Manfaatkan fitur favorit untuk menyimpan produk langganan dan memudahkan pemesanan ulang</li>
-                <li>Pantau promo dan diskon spesial setiap hari untuk hemat lebih banyak</li>
-                <li>Gunakan fitur pencarian untuk menemukan produk dengan harga terbaik dari berbagai warung</li>
-                <li>Berikan ulasan setelah menerima pesanan untuk membantu pembeli lain dan meningkatkan kualitas layanan</li>
-                <li>Bergabung dengan program loyalitas untuk mendapatkan poin dan reward eksklusif</li>
-            </ul>
+    <div class="topbar-wrapper" role="banner">
+        <div class="topbar-container">
+            <header class="flex items-center justify-between" style="border:none !important; background:transparent !important; box-shadow:none !important; height:auto; padding:0 !important;">
+                <a href="{% url 'home' %}" class="flex items-center gap-2"><img src="{% static 'images/Warungio L.png' %}" alt="Logo" class="w-8 h-8" width="32" height="32" loading="eager"><span class="text-xl font-extrabold tracking-tight"><span class="text-slate-800">Warung</span><span class="text-primary">io</span></span></a>
+                <div class="hidden lg:flex items-center gap-8">
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'home' %}">Beranda</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-metode-pembayaran' %}">Pembayaran</a>
+                    <a class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors" href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'page-login' %}" class="text-sm font-bold text-primary border border-primary px-4 py-2 rounded-xl hover:bg-primary/5 transition-all">Masuk</a>
+                    <a href="{% url 'page-register' %}" class="text-sm font-bold text-white bg-primary px-4 py-2 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-primary/20">Daftar</a>
+                </div>
+            </header>
         </div>
     </div>
 
-    <div class="seo-content">
-        <h2>Mengapa Belanja di Warungio?</h2>
-        <p>Warungio adalah platform marketplace hyperlocal terkemuka di Indonesia yang menghubungkan Anda dengan warung dan UMKM lokal terdekat. Dengan Warungio, Anda tidak perlu lagi repot keluar rumah untuk berbelanja kebutuhan sehari-hari. Cukup dari ponsel Anda, Anda bisa memesan berbagai macam produk mulai dari sembako (beras, minyak goreng, gula, tepung, telur, susu), sayur segar (bayam, kangkung, sawi, wortel, kol, brokoli, tomat), buah segar (apel, jeruk, pisang, anggur, semangka, melon), daging dan ayam segar, ikan laut, produk frozen food, minuman, bumbu dapur, hingga perlengkapan rumah tangga lainnya.</p>
-        <p>Kami bekerja sama dengan lebih dari 500 warung mitra di 30+ kota di Indonesia untuk memastikan Anda mendapatkan produk berkualitas dengan harga terjangkau. Setiap produk yang dipesan melalui Warungio dijamin kesegarannya dan dikemas dengan standar higienis sebelum dikirimkan ke alamat Anda. Dengan sistem pengiriman hyperlocal yang cepat, pesanan Anda bisa sampai dalam hitungan jam, bukan hari.</p>
-        <h2>Keunggulan Warungio Dibanding Platform Lain</h2>
-        <ul>
-            <li><strong>Hyperlocal:</strong> Terhubung langsung dengan warung dan UMKM di sekitar lokasi Anda untuk pengiriman super cepat</li>
-            <li><strong>Produk Segar:</strong> Sayur, buah, daging, dan bahan makanan segar langsung dari sumbernya setiap hari</li>
-            <li><strong>Harga Bersaing:</strong> Harga langsung dari warung tanpa markup berlebihan, dengan promo dan diskon rutin</li>
-            <li><strong>Pembayaran Aman:</strong> Midtrans sebagai penyedia pembayaran terpercaya dengan enkripsi SSL dan 3D Secure</li>
-            <li><strong>COD Tersedia:</strong> Bayar di tempat saat pesanan tiba untuk kenyamanan dan keamanan bertransaksi</li>
-            <li><strong>Support 24/7:</strong> Tim customer service siap membantu Anda kapan saja melalui chat, telepon, atau WhatsApp</li>
-        </ul>
-    </div>
+    <main class="max-w-[1280px] mx-auto px-6 md:px-12 pt-16 pb-16 flex flex-col gap-16">
+        <section class="reveal text-center max-w-3xl mx-auto">
+            <span class="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-extrabold uppercase tracking-wider mb-4">Cara Belanja</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">Cara Belanja di <span class="text-primary">Warungio</span></h1>
+            <p class="text-base text-slate-500 mt-4 leading-relaxed">Belanja kebutuhan harian jadi lebih mudah dan cepat hanya dalam 5 langkah sederhana. Temukan dan pesan sembako, sayur segar, buah segar, serta kebutuhan rumah tangga langsung dari warung terdekat Anda.</p>
+        </section>
 
-    <div class="cta-section">
-        <div class="cta-card">
-            <h2>Siap Belanja Kebutuhan Harian?</h2>
-            <p>Daftar sekarang dan nikmati kemudahan belanja sembako, sayur segar, buah segar, dan kebutuhan rumah tangga langsung dari warung terdekat!</p>
-            <a href="{% url 'page-register' %}" class="cta-btn">Daftar Gratis Sekarang</a>
+        <section class="reveal">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div class="step-card-custom bg-white rounded-2xl p-7 border border-slate-100 shadow-sm flex gap-6 items-start">
+                    <div class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-extrabold text-2xl flex-shrink-0">1</div>
+                    <div><h3 class="font-extrabold text-slate-800 text-lg mb-2">Daftar atau Masuk Akun Warungio</h3><p class="text-sm text-slate-500 leading-relaxed">Langkah pertama, daftar akun Warungio secara gratis melalui halaman <a href="{% url 'page-register' %}" class="text-primary font-semibold hover:underline">pendaftaran</a>. Cukup masukkan email, nama, dan nomor telepon Anda. Verifikasi akun dengan kode OTP. Jika sudah memiliki akun, langsung <a href="{% url 'page-login' %}" class="text-primary font-semibold hover:underline">masuk</a> dengan email dan password Anda.</p></div>
+                </div>
+                <div class="step-card-custom bg-white rounded-2xl p-7 border border-slate-100 shadow-sm flex gap-6 items-start">
+                    <div class="w-14 h-14 rounded-full bg-blue-500 text-white flex items-center justify-center font-extrabold text-2xl flex-shrink-0">2</div>
+                    <div><h3 class="font-extrabold text-slate-800 text-lg mb-2">Cari Produk Kebutuhan Harian</h3><p class="text-sm text-slate-500 leading-relaxed">Telusuri berbagai produk segar dan kebutuhan harian dari warung terdekat. Gunakan fitur pencarian untuk menemukan produk spesifik seperti "beras 5kg", "sayur bayam", atau "minyak goreng". Filter berdasarkan kategori untuk menemukan produk yang Anda butuhkan dengan cepat.</p></div>
+                </div>
+                <div class="step-card-custom bg-white rounded-2xl p-7 border border-slate-100 shadow-sm flex gap-6 items-start">
+                    <div class="w-14 h-14 rounded-full bg-amber-500 text-white flex items-center justify-center font-extrabold text-2xl flex-shrink-0">3</div>
+                    <div><h3 class="font-extrabold text-slate-800 text-lg mb-2">Tambahkan ke Keranjang Belanja</h3><p class="text-sm text-slate-500 leading-relaxed">Pilih produk yang diinginkan, atur jumlahnya, lalu klik "Tambah ke Keranjang". Anda dapat menambahkan produk dari berbagai warung berbeda. Review keranjang belanja Anda sebelum checkout.</p></div>
+                </div>
+                <div class="step-card-custom bg-white rounded-2xl p-7 border border-slate-100 shadow-sm flex gap-6 items-start">
+                    <div class="w-14 h-14 rounded-full bg-purple-500 text-white flex items-center justify-center font-extrabold text-2xl flex-shrink-0">4</div>
+                    <div><h3 class="font-extrabold text-slate-800 text-lg mb-2">Checkout & Pilih Metode Pembayaran</h3><p class="text-sm text-slate-500 leading-relaxed">Masukkan alamat pengiriman, pilih metode pengiriman hyperlocal, dan pilih metode pembayaran favorit Anda. Warungio mendukung QRIS, GoPay, OVO, DANA, ShopeePay, transfer bank, kartu kredit, dan COD. Semua pembayaran online diproses aman melalui Midtrans.</p></div>
+                </div>
+                <div class="step-card-custom bg-white rounded-2xl p-7 border border-slate-100 shadow-sm flex gap-6 items-start">
+                    <div class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-2xl flex-shrink-0">5</div>
+                    <div><h3 class="font-extrabold text-slate-800 text-lg mb-2">Terima Pesanan & Nikmati!</h3><p class="text-sm text-slate-500 leading-relaxed">Lacak pesanan Anda secara real-time melalui fitur tracking. Pesanan Anda akan diantar langsung oleh kurir dari warung ke alamat tujuan. Nikmati kemudahan belanja kebutuhan harian tanpa harus keluar rumah. Berikan ulasan dan rating setelah pesanan diterima.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal">
+            <div class="bg-green-50 rounded-3xl p-8 border border-green-100 max-w-3xl mx-auto">
+                <h3 class="font-extrabold text-green-800 text-lg mb-4"><i class="fa-solid fa-lightbulb text-primary mr-2"></i> Tips Belanja Hemat di Warungio</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3 text-sm text-slate-500"><span class="text-primary font-bold mt-0.5">✓</span> Daftar akun terlebih dahulu untuk pengalaman belanja yang lebih cepat</li>
+                    <li class="flex items-start gap-3 text-sm text-slate-500"><span class="text-primary font-bold mt-0.5">✓</span> Manfaatkan fitur favorit untuk menyimpan produk langganan</li>
+                    <li class="flex items-start gap-3 text-sm text-slate-500"><span class="text-primary font-bold mt-0.5">✓</span> Pantau promo dan diskon spesial setiap hari untuk hemat lebih banyak</li>
+                    <li class="flex items-start gap-3 text-sm text-slate-500"><span class="text-primary font-bold mt-0.5">✓</span> Bergabung dengan program loyalitas untuk mendapatkan poin dan reward eksklusif</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="reveal">
+            <div class="bg-white rounded-3xl p-8 md:p-12 border border-slate-100">
+                <h2 class="text-2xl font-extrabold tracking-tight mb-6 text-slate-800">Mengapa Belanja di Warungio?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-500 leading-relaxed">
+                    <p>Warungio adalah platform marketplace hyperlocal terkemuka di Indonesia yang menghubungkan Anda dengan warung dan UMKM lokal terdekat. Dengan Warungio, Anda tidak perlu lagi repot keluar rumah untuk berbelanja kebutuhan sehari-hari. Cukup dari ponsel Anda, Anda bisa memesan berbagai macam produk mulai dari sembako, sayur segar, buah segar, daging dan ayam segar, hingga perlengkapan rumah tangga lainnya.</p>
+                    <p>Kami bekerja sama dengan lebih dari 500 warung mitra di 30+ kota di Indonesia untuk memastikan Anda mendapatkan produk berkualitas dengan harga terjangkau. Setiap produk dijamin kesegarannya dan dikemas dengan standar higienis. Dengan sistem pengiriman hyperlocal yang cepat, pesanan Anda bisa sampai dalam hitungan jam, bukan hari.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 md:p-12 text-center border border-green-100">
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-3">Siap Belanja Kebutuhan Harian?</h2>
+                <p class="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed mb-6">Daftar sekarang dan nikmati kemudahan belanja sembako, sayur segar, dan kebutuhan rumah tangga langsung dari warung terdekat!</p>
+                <a href="{% url 'page-register' %}" class="inline-block bg-primary text-white px-8 py-3.5 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/25">Daftar Gratis Sekarang</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-slate-100">
+        <div class="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="col-span-2 md:col-span-1"><div class="flex items-center gap-2 mb-4"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="h-8 w-auto" loading="lazy" width="32" height="32"><span class="text-xl font-extrabold"><span class="text-primary">Warung</span>io</span></div><p class="text-sm text-slate-500 leading-relaxed">Marketplace hyperlocal Indonesia.</p></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Informasi</h4><ul class="space-y-2"><li><a href="{% url 'page-tentang-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tentang Kami</a></li><li><a href="{% url 'page-cara-belanja' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Cara Belanja</a></li><li><a href="{% url 'page-metode-pembayaran' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Metode Pembayaran</a></li><li><a href="{% url 'page-blog' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Blog</a></li></ul></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Bantuan</h4><ul class="space-y-2"><li><a href="{% url 'bantuan-page' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Pusat Bantuan</a></li><li><a href="{% url 'page-kontak-kami' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Hubungi Kami</a></li><li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Kebijakan Privasi</a></li><li><a href="{% url 'page-kebijakan' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Syarat & Ketentuan</a></li></ul></div>
+                <div><h4 class="font-bold text-slate-800 text-sm mb-4">Mitra</h4><ul class="space-y-2"><li><a href="{% url 'page-register-mitra' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Daftar Mitra</a></li><li><a href="{% url 'page-panduan-seller' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Panduan Seller</a></li><li><a href="{% url 'page-tips-sukses' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Tips Sukses</a></li><li><a href="{% url 'page-komunitas' %}" class="text-sm text-slate-500 hover:text-primary transition-colors">Komunitas</a></li></ul></div>
+            </div>
+            <div class="border-t border-slate-100 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"><p class="text-xs text-slate-400">&copy; 2026 Warungio.</p><div class="flex gap-4"><a href="https://facebook.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-facebook-f"></i></a><a href="https://instagram.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-instagram"></i></a><a href="https://twitter.com/warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-twitter"></i></a><a href="https://youtube.com/@warungio" target="_blank" rel="noopener" class="text-slate-400 hover:text-primary transition-colors"><i class="fa-brands fa-youtube"></i></a></div></div>
         </div>
-    </div>
-
-    <div class="footer-links">
-        <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
-        <a href="{% url 'page-metode-pembayaran' %}">Metode Pembayaran</a>
-        <a href="{% url 'home' %}">Kembali ke Beranda</a>
-    </div>
+    </footer>
 
     <script>
-        document.querySelectorAll('a[href^="#"]').forEach(function(a) {
-            a.addEventListener('click', function(e) {
-                var t = document.querySelector(this.getAttribute('href'));
-                if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.IntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+            }
         });
     </script>
 </body>

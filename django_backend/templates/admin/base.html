@@ -49,6 +49,7 @@
 
             <div class="section-label">Management</div>
             <a href="{% url 'admin-users' %}" class="{% if active_page == 'users' %}active{% endif %}"><i class="fa-solid fa-users" style="width:18px;"></i> Users</a>
+            <a href="{% url 'admin-administrators' %}" class="{% if active_page == 'administrators' %}active{% endif %}"><i class="fa-solid fa-user-shield" style="width:18px;"></i> Administrator</a>
             <a href="{% url 'admin-marketplace' %}" class="{% if active_page == 'marketplace' %}active{% endif %}"><i class="fa-solid fa-store" style="width:18px;"></i> Marketplace</a>
             <a href="{% url 'admin-orders' %}" class="{% if active_page == 'orders' %}active{% endif %}"><i class="fa-solid fa-receipt" style="width:18px;"></i> Orders</a>
             <a href="{% url 'admin-payments' %}" class="{% if active_page == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card" style="width:18px;"></i> Payments</a>

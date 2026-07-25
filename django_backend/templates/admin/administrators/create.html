@@ -1,0 +1,177 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}Tambah Administrator - Warungio Admin{% endblock %}
+{% block page_title %}Tambah Administrator Baru{% endblock %}
+{% block extra_styles %}
+<style>
+.form-card{max-width:640px;margin:0 auto}
+.form-section{margin-bottom:24px}
+.form-section h3{font-size:15px;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--color-border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:13px;font-weight:600;color:var(--color-text-secondary)}
+.form-input,.form-select{width:100%;padding:10px 14px;border:1.5px solid var(--color-border);border-radius:12px;font-family:inherit;font-size:14px;color:var(--color-text-primary);background:var(--color-surface);outline:none;transition:all .2s}
+.form-input:focus,.form-select:focus{border-color:var(--color-brand);box-shadow:0 0 0 3px rgba(22,163,74,0.08)}
+.form-input.error{border-color:var(--color-danger);box-shadow:0 0 0 3px rgba(239,68,68,0.08)}
+.form-help{font-size:12px;color:var(--color-text-tertiary);margin-top:2px}
+.form-error{font-size:12px;color:var(--color-danger);margin-top:2px;display:none}
+.password-strength{display:flex;gap:4px;margin-top:8px}
+.strength-bar{height:4px;flex:1;border-radius:2px;background:var(--color-border);transition:all .3s}
+.btn-primary{padding:12px 24px;border-radius:12px;border:none;background:var(--color-brand);color:white;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--color-brand-dark);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-secondary{padding:12px 24px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-primary);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn-secondary:hover{background:var(--color-gray-50)}
+.success-banner{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:20px;display:none;align-items:flex-start;gap:10px}
+.success-banner.show{display:flex}
+.success-banner i{color:#16a34a;font-size:20px;flex-shrink:0}
+.success-banner h4{font-weight:700;font-size:14px;color:#166534;margin-bottom:4px}
+.success-banner p{font-size:13px;color:#166534}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<a href="{% url 'admin-administrators' %}" class="btn-secondary" style="margin-bottom:20px;display:inline-flex"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+
+<div class="card form-card">
+    <div class="card-header"><h3 style="margin:0;font-size:16px"><i class="fa-solid fa-user-shield"></i> Informasi Administrator Baru</h3></div>
+    <div class="card-body">
+        <div class="success-banner" id="successBanner">
+            <i class="fa-solid fa-check-circle"></i>
+            <div>
+                <h4>Administrator Berhasil Dibuat!</h4>
+                <p id="successMessage">Email verifikasi telah dikirim ke administrator baru.</p>
+                <div style="margin-top:12px;display:flex;gap:8px">
+                    <a href="{% url 'admin-administrators' %}" class="btn-primary" style="padding:8px 16px;font-size:12px"><i class="fa-solid fa-list"></i> Kembali ke Daftar</a>
+                </div>
+            </div>
+        </div>
+
+        <form id="createAdminForm" autocomplete="off" novalidate>
+            <div class="form-section">
+                <h3>Akun</h3>
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label class="form-label" for="fullName">Nama Lengkap <span style="color:var(--color-danger)">*</span></label>
+                        <input type="text" id="fullName" name="full_name" class="form-input" placeholder="Nama lengkap administrator" required>
+                        <div class="form-error" id="fullNameError"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email <span style="color:var(--color-danger)">*</span></label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="admin@warungio.com" required autocomplete="off">
+                        <div class="form-error" id="emailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="Otomatis dari email" autocomplete="off">
+                        <span class="form-help">Kosongkan untuk menggunakan username dari email</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Nomor HP (Opsional)</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="0821xxxxxx" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Password</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password <span style="color:var(--color-danger)">*</span></label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+                        <div id="passwordStrength" class="password-strength">
+                            <span class="strength-bar"></span>
+                            <span class="strength-bar"></span>
+                            <span class="strength-bar"></span>
+                            <span class="strength-bar"></span>
+                        </div>
+                        <span class="form-help" id="strengthText">Masukkan password</span>
+                        <div class="form-error" id="passwordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password2">Konfirmasi Password <span style="color:var(--color-danger)">*</span></label>
+                        <input type="password" id="password2" name="password2" class="form-input" placeholder="Ketik ulang password" required autocomplete="new-password">
+                        <div class="form-error" id="password2Error"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:20px;border-top:1px solid var(--color-border)">
+                <a href="{% url 'admin-administrators' %}" class="btn-secondary">Batal</a>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <i class="fa-solid fa-plus"></i> <span>Buat Administrator</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showStrength(pw){
+    const bars=document.querySelectorAll('.strength-bar');
+    const txt=document.getElementById('strengthText');
+    let score=0;
+    if(pw.length>=8)score++;if(pw.length>=12)score++;
+    if(/[A-Z]/.test(pw))score++;if(/[a-z]/.test(pw))score++;
+    if(/[0-9]/.test(pw))score++;if(/[^A-Za-z0-9]/.test(pw))score++;
+    const labels={0:'Masukkan password',1:'Lemah',2:'Sedang',3:'Kuat',4:'Kuat',5:'Sangat Kuat',6:'Sangat Kuat'};
+    const colors={0:'var(--color-border)',1:'#ef4444',2:'#f59e0b',3:'#22c55e',4:'#22c55e',5:'#16a34a',6:'#16a34a'};
+    const filled=Math.min(Math.ceil(score/1.5),4);
+    bars.forEach((b,i)=>{b.style.background=i<filled?colors[score]:'var(--color-border)'});
+    txt.textContent=pw?labels[score]||'Kuat':'Masukkan password';
+    txt.style.color=pw?colors[score]:'var(--color-text-tertiary)';
+}
+
+document.getElementById('password').addEventListener('input',function(){showStrength(this.value)});
+
+document.getElementById('createAdminForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    document.querySelectorAll('.form-error').forEach(el=>{el.style.display='none';el.previousElementSibling?.classList?.remove('error')});
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+    const data={
+        full_name: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        password: document.getElementById('password').value,
+        password2: document.getElementById('password2').value,
+    };
+    if(!data.username) delete data.username;
+    if(!data.phone) delete data.phone;
+
+    try{
+        const token=localStorage.getItem('warungio_access_token');
+        const res=await fetch('/admin-panel/api/administrators/create/',{
+            method:'POST',
+            headers:token?{Authorization:'Bearer '+token,'Content-Type':'application/json'}:{'Content-Type':'application/json'},
+            credentials:'include',
+            body:JSON.stringify(data),
+        });
+        const d=await res.json();
+        if(d.success){
+            document.getElementById('createAdminForm').style.display='none';
+            const banner=document.getElementById('successBanner');
+            document.getElementById('successMessage').textContent=d.message||'Email verifikasi telah dikirim.';
+            banner.classList.add('show');
+        }else{
+            if(d.errors){
+                Object.keys(d.errors).forEach(field=>{
+                    const el=document.getElementById(field+'Error');
+                    const inp=document.getElementById(field);
+                    if(el){el.textContent=Array.isArray(d.errors[field])?d.errors[field][0]:d.errors[field];el.style.display='block'}
+                    if(inp)inp.classList.add('error');
+                });
+            }
+            alert(d.message||'Gagal membuat administrator');
+            btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i> <span>Buat Administrator</span>';
+        }
+    }catch(e){alert('Gagal terhubung ke server');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i> <span>Buat Administrator</span>'}
+});
+</script>
+{% endblock %}

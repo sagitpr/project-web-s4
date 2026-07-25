@@ -1,0 +1,123 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}Ubah Password - Warungio Admin{% endblock %}
+{% block page_title %}Ubah Password{% endblock %}
+{% block extra_styles %}
+<style>
+.form-card{max-width:480px;margin:0 auto}
+.form-group{margin-bottom:20px}
+.form-label{font-size:13px;font-weight:600;color:var(--color-text-secondary);display:block;margin-bottom:6px}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid var(--color-border);border-radius:12px;font-family:inherit;font-size:14px;color:var(--color-text-primary);background:var(--color-surface);outline:none;transition:all .2s}
+.form-input:focus{border-color:var(--color-brand);box-shadow:0 0 0 3px rgba(22,163,74,0.08)}
+.form-input.error{border-color:var(--color-danger)}
+.password-strength{display:flex;gap:4px;margin-top:8px}
+.strength-bar{height:4px;flex:1;border-radius:2px;background:var(--color-border);transition:all .3s}
+.btn-primary{padding:12px 24px;border-radius:12px;border:none;background:var(--color-brand);color:white;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--color-brand-dark);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.error-box{display:none;padding:14px 16px;border-radius:12px;font-size:13px;color:#991b1b;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);margin-bottom:20px;align-items:flex-start;gap:10px}
+.error-box.show{display:flex}
+.success-box{display:none;text-align:center;padding:40px}
+.success-box.show{display:block}
+.success-box .icon{width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-box .icon i{color:#16a34a;font-size:28px}
+.success-box h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.success-box p{font-size:14px;color:var(--color-text-tertiary);margin-bottom:20px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="card form-card">
+    <div class="card-header"><h3 style="margin:0;font-size:16px"><i class="fa-solid fa-key"></i> Ubah Password Administrator</h3></div>
+    <div class="card-body">
+        <div class="error-box" id="errorBox"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="errorText"></span></div>
+        <div class="success-box" id="successBox">
+            <div class="icon"><i class="fa-solid fa-check"></i></div>
+            <h3>Password Berhasil Diubah!</h3>
+            <p>Password Anda telah berhasil diperbarui. Silakan login kembali menggunakan password baru.</p>
+            <a href="/admin-panel/login/" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Login Ulang</a>
+        </div>
+        <form id="changePasswordForm" autocomplete="off">
+            <div class="form-group">
+                <label class="form-label" for="oldPassword">Password Lama</label>
+                <input type="password" id="oldPassword" name="old_password" class="form-input" placeholder="Masukkan password lama" required autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="newPassword">Password Baru</label>
+                <input type="password" id="newPassword" name="new_password" class="form-input" placeholder="Min. 8 karakter" required autocomplete="new-password">
+                <div class="password-strength" id="passwordStrength">
+                    <span class="strength-bar"></span><span class="strength-bar"></span><span class="strength-bar"></span><span class="strength-bar"></span>
+                </div>
+                <span class="form-help" id="strengthText" style="font-size:12px;color:var(--color-text-tertiary)">Masukkan password baru</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="newPassword2">Konfirmasi Password Baru</label>
+                <input type="password" id="newPassword2" name="new_password2" class="form-input" placeholder="Ketik ulang password baru" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-primary" id="submitBtn" style="width:100%"><i class="fa-solid fa-save"></i> <span>Simpan Password Baru</span></button>
+        </form>
+    </div>
+</div>
+
+<script>
+function calcStrength(pw){
+    const bars=document.querySelectorAll('.strength-bar');
+    const txt=document.getElementById('strengthText');
+    let score=0;
+    if(pw.length>=8)score++;if(pw.length>=12)score++;
+    if(/[A-Z]/.test(pw))score++;if(/[a-z]/.test(pw))score++;
+    if(/[0-9]/.test(pw))score++;if(/[^A-Za-z0-9]/.test(pw))score++;
+    const labels={0:'Masukkan password',1:'Lemah',2:'Sedang',3:'Kuat',4:'Kuat',5:'Sangat Kuat',6:'Sangat Kuat'};
+    const colors={0:'var(--color-border)',1:'#ef4444',2:'#f59e0b',3:'#22c55e',4:'#22c55e',5:'#16a34a',6:'#16a34a'};
+    const filled=Math.min(Math.ceil(score/1.5),4);
+    bars.forEach((b,i)=>{b.style.background=i<filled?colors[score]:'var(--color-border)'});
+    txt.textContent=pw?labels[score]||'Kuat':'Masukkan password baru';
+    txt.style.color=pw?colors[score]:'var(--color-text-tertiary)';
+}
+document.getElementById('newPassword').addEventListener('input',function(){calcStrength(this.value)});
+
+document.getElementById('changePasswordForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    const errorBox=document.getElementById('errorBox'),errorText=document.getElementById('errorText');
+    const btn=document.getElementById('submitBtn');
+    errorBox.classList.remove('show');
+    document.querySelectorAll('.form-input').forEach(i=>i.classList.remove('error'));
+
+    const data={
+        old_password: document.getElementById('oldPassword').value,
+        new_password: document.getElementById('newPassword').value,
+        new_password2: document.getElementById('newPassword2').value,
+    };
+    if(!data.old_password||!data.new_password||!data.new_password2){
+        errorText.textContent='Semua field harus diisi.';errorBox.classList.add('show');return;
+    }
+    if(data.new_password!==data.new_password2){
+        errorText.textContent='Konfirmasi password tidak cocok.';errorBox.classList.add('show');
+        document.getElementById('newPassword2').classList.add('error');return;
+    }
+
+    btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+    try{
+        const token=localStorage.getItem('warungio_access_token');
+        const res=await fetch('/admin-panel/api/password/change/',{
+            method:'POST',
+            headers:token?{Authorization:'Bearer '+token,'Content-Type':'application/json'}:{'Content-Type':'application/json'},
+            credentials:'include',
+            body:JSON.stringify(data),
+        });
+        const d=await res.json();
+        if(d.success){
+            document.getElementById('changePasswordForm').style.display='none';
+            document.getElementById('successBox').classList.add('show');
+        }else{
+            errorText.textContent=d.message||'Gagal mengubah password';
+            errorBox.classList.add('show');
+            if(d.field)document.getElementById(d.field==='old_password'?'oldPassword':'newPassword').classList.add('error');
+            btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-save"></i> <span>Simpan Password Baru</span>';
+        }
+    }catch(e){
+        errorText.textContent='Gagal terhubung ke server.';
+        errorBox.classList.add('show');
+        btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-save"></i> <span>Simpan Password Baru</span>';
+    }
+});
+</script>
+{% endblock %}

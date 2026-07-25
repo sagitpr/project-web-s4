@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}Edit Administrator - Warungio Admin{% endblock %}
+{% block page_title %}Edit Administrator{% endblock %}
+{% block extra_styles %}
+<style>
+.form-card{max-width:520px;margin:0 auto}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:20px}
+.form-label{font-size:13px;font-weight:600;color:var(--color-text-secondary)}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid var(--color-border);border-radius:12px;font-family:inherit;font-size:14px;color:var(--color-text-primary);background:var(--color-surface);outline:none;transition:all .2s}
+.form-input:focus{border-color:var(--color-brand);box-shadow:0 0 0 3px rgba(22,163,74,0.08)}
+.btn-primary{padding:12px 24px;border-radius:12px;border:none;background:var(--color-brand);color:white;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--color-brand-dark)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{padding:12px 24px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-primary);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+</style>
+{% endblock %}
+{% block content %}
+<div id="editContent">
+    <div style="text-align:center;padding:60px"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--color-text-tertiary)"></i></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', async function(){
+    const pk = window.location.pathname.split('/').filter(Boolean).slice(-3,-2)[0];
+    try{
+        const token=localStorage.getItem('warungio_access_token');
+        const res=await fetch(`/admin-panel/api/administrators/${pk}/`,{headers:token?{Authorization:'Bearer '+token}:{},credentials:'include'});
+        const d=await res.json();
+        const a=d.admin||d;
+        renderForm(a, pk);
+    }catch(e){
+        document.getElementById('editContent').innerHTML=`<div class="card" style="padding:40px;text-align:center"><p>Gagal memuat data</p></div>`;
+    }
+});
+
+function renderForm(a, pk){
+    document.getElementById('editContent').innerHTML=`
+    <a href="/admin-panel/administrators/${pk}/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-primary);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:20px"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+    <div class="card form-card"><div class="card-header"><h3 style="margin:0;font-size:16px"><i class="fa-solid fa-pen"></i> Edit: ${a.full_name||a.email}</h3></div>
+    <div class="card-body">
+        <form id="editForm">
+            <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" id="fullName" class="form-input" value="${a.full_name||''}"></div>
+            <div class="form-group"><label class="form-label">Nomor HP</label><input type="tel" id="phone" class="form-input" value="${a.phone||''}"></div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:20px;border-top:1px solid var(--color-border)">
+                <a href="/admin-panel/administrators/${pk}/" class="btn-secondary">Batal</a>
+                <button type="submit" class="btn-primary" id="saveBtn"><i class="fa-solid fa-save"></i> Simpan</button>
+            </div>
+        </form>
+    </div></div>`;
+
+    document.getElementById('editForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        const btn=document.getElementById('saveBtn');btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+        try{
+            const token=localStorage.getItem('warungio_access_token');
+            const res=await fetch(`/admin-panel/api/administrators/${pk}/update/`,{
+                method:'PATCH',
+                headers:token?{Authorization:'Bearer '+token,'Content-Type':'application/json'}:{'Content-Type':'application/json'},
+                credentials:'include',
+                body:JSON.stringify({
+                    full_name: document.getElementById('fullName').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                }),
+            });
+            const d=await res.json();
+            if(d.success){window.location.href=`/admin-panel/administrators/${pk}/`}
+            else{alert(d.message||'Gagal menyimpan');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-save"></i> Simpan'}
+        }catch(e){alert('Gagal terhubung ke server');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-save"></i> Simpan'}
+    });
+}
+</script>
+{% endblock %}

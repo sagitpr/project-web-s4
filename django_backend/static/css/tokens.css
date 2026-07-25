@@ -159,6 +159,7 @@
   --glass-border: rgba(255, 255, 255, 0.20);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   --glass-blur: blur(16px);
+  --glass-blur-sm: blur(8px);
 
   /* ── Premium Easing Curves ── */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -190,6 +191,10 @@
   --section-py-md: 64px;
   --section-py-lg: 96px;
   --section-py-xl: 128px;
+
+  /* ── Premium Focus Ring ── */
+  --focus-ring: 0 0 0 3px rgba(22, 163, 74, 0.15);
+  --focus-ring-danger: 0 0 0 3px rgba(239, 68, 68, 0.15);
 
   /* ── Legacy Aliases (backward compatibility) ── */
   --primary: var(--color-brand);

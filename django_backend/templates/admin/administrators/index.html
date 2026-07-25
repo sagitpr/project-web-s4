@@ -1,0 +1,298 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}Manajemen Administrator - Warungio Admin{% endblock %}
+{% block page_title %}Manajemen Administrator{% endblock %}
+{% block extra_styles %}
+<style>
+.adm-table{width:100%;border-collapse:collapse}
+.adm-table th{text-align:left;padding:12px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);background:var(--color-gray-50);border-bottom:1px solid var(--color-border);white-space:nowrap}
+.adm-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--color-border);vertical-align:middle}
+.adm-table tr:hover td{background:rgba(22,163,74,0.02)}
+.adm-table tr:last-child td{border-bottom:none}
+.adm-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--color-gray-100);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--color-brand);flex-shrink:0}
+.adm-avatar-img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.adm-user-cell{display:flex;align-items:center;gap:10px}
+.adm-user-name{font-weight:600;color:var(--color-text-primary);font-size:13px}
+.adm-user-email{font-size:11px;color:var(--color-text-tertiary)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-yellow{background:#fef3c7;color:#d97706}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-gray{background:#f1f5f9;color:#64748b}
+.badge-blue{background:#dbeafe;color:#2563eb}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer;transition:all .15s;text-decoration:none;color:var(--color-text-primary)}
+.btn-sm:hover{background:var(--color-gray-50);border-color:var(--color-brand-light)}
+.btn-sm.primary{background:var(--color-brand);color:white;border-color:var(--color-brand)}
+.btn-sm.primary:hover{background:var(--color-brand-dark)}
+.btn-sm.danger{color:#dc2626;border-color:#fee2e2}
+.btn-sm.danger:hover{background:#fee2e2}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.filter-btn:hover{border-color:var(--color-brand-light);color:var(--color-brand)}
+.filter-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0}
+.page-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface);font-size:13px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.page-btn:hover{border-color:var(--color-brand-light);color:var(--color-brand)}
+.page-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed}
+.empty-state{text-align:center;padding:60px 20px;color:var(--color-text-tertiary)}
+.empty-state i{font-size:48px;margin-bottom:16px;opacity:0.3}
+.empty-state h3{font-size:18px;font-weight:700;color:var(--color-text-secondary);margin-bottom:8px}
+.skeleton{display:inline-block;background:linear-gradient(90deg,var(--color-gray-100) 25%,var(--color-gray-50) 50%,var(--color-gray-100) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.dropdown{position:relative;display:inline-block}
+.dropdown-menu{display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.08);min-width:180px;z-index:100;padding:4px}
+.dropdown-menu.open{display:block}
+.dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;font-weight:500;color:var(--color-text-primary);text-decoration:none;cursor:pointer;border-radius:8px;transition:all .1s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.dropdown-item:hover{background:var(--color-gray-50)}
+.dropdown-item.danger{color:#dc2626}
+.dropdown-item.danger:hover{background:#fee2e2}
+@media(max-width:768px){.filter-bar{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.adm-table{font-size:12px}.adm-table th,.adm-table td{padding:8px 10px}.hide-mobile{display:none}}
+</style>
+{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+        <h2 style="font-size:20px;font-weight:800;margin:0">Administrator</h2>
+        <span id="adminCount" class="badge badge-blue" style="font-size:12px;padding:4px 12px">...</span>
+    </div>
+    <a href="{% url 'admin-administrators-create' %}" class="btn-sm primary" style="padding:8px 18px">
+        <i class="fa-solid fa-plus"></i> Tambah Administrator
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header" style="flex-wrap:wrap;gap:12px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="searchInput" placeholder="Cari administrator..." class="form-input" style="width:220px;min-height:36px;padding:6px 12px;font-size:13px">
+            <select id="roleFilter" class="form-select" style="width:auto;min-height:36px;padding:6px 12px;font-size:13px">
+                <option value="">Semua Role</option>
+                <option value="super_admin">Super Admin</option>
+                <option value="staff">Staff</option>
+            </select>
+            <select id="statusFilter" class="form-select" style="width:auto;min-height:36px;padding:6px 12px;font-size:13px">
+                <option value="">Semua Status</option>
+                <option value="active">Aktif</option>
+                <option value="inactive">Nonaktif</option>
+                <option value="unverified">Pending</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="adm-table" id="adminTable">
+            <thead>
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>Administrator</th>
+                    <th class="hide-mobile">Role</th>
+                    <th>Status</th>
+                    <th class="hide-mobile">Terakhir Login</th>
+                    <th class="hide-mobile">Bergabung</th>
+                    <th style="width:60px">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="adminTableBody">
+                <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Memuat data...</h3></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--color-border);flex-wrap:wrap;gap:8px">
+        <span id="paginationInfo" style="font-size:12px;color:var(--color-text-tertiary)">Memuat...</span>
+        <div class="pagination" id="paginationControls"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center">
+    <div style="background:var(--color-surface);border-radius:16px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15)">
+        <div style="text-align:center;margin-bottom:20px">
+            <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="fa-solid fa-trash" style="color:#dc2626;font-size:22px"></i></div>
+            <h3 style="font-size:18px;font-weight:700;margin-bottom:4px">Hapus Administrator?</h3>
+            <p style="font-size:13px;color:var(--color-text-tertiary)">Tindakan ini akan menonaktifkan akun administrator. <span id="deleteTargetName" style="font-weight:600"></span></p>
+        </div>
+        <div style="display:flex;gap:10px">
+            <button onclick="closeDeleteModal()" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-surface);font-weight:600;cursor:pointer">Batal</button>
+            <button id="confirmDeleteBtn" style="flex:1;padding:10px;border-radius:12px;border:none;background:#dc2626;color:white;font-weight:700;cursor:pointer">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1, totalPages = 1, deleteTargetId = null;
+
+function formatDate(iso) {
+    if (!iso) return '<span style="color:var(--color-text-disabled)">—</span>';
+    const d = new Date(iso);
+    return d.toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function timeAgo(iso) {
+    if (!iso) return 'Belum pernah login';
+    const d = new Date(iso), n = new Date();
+    const s = Math.floor((n-d)/1000);
+    if(s<60)return s+' detik lalu';const m=Math.floor(s/60);
+    if(m<60)return m+' menit lalu';const h=Math.floor(m/60);
+    if(h<24)return h+' jam lalu';const day=Math.floor(h/24);
+    if(day<30)return day+' hari lalu';
+    return formatDate(iso);
+}
+
+function getInitials(name) {
+    if(!name)return 'A';
+    return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function showError(msg) {
+    document.getElementById('adminTableBody').innerHTML = 
+        `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--color-danger)"></i><h3>Gagal Memuat Data</h3><p style="font-size:13px">${msg}</p></div></td></tr>`;
+}
+
+async function loadAdmins(page) {
+    const search = document.getElementById('searchInput').value;
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    currentPage = page || 1;
+
+    const params = new URLSearchParams({page:currentPage, per_page:20, sort:'-date_joined'});
+    if(search) params.set('search', search);
+    if(role) params.set('role', role);
+    if(status) params.set('status', status);
+
+    document.getElementById('adminTableBody').innerHTML = 
+        `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Memuat data...</h3></div></td></tr>`;
+
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const res = await fetch(`/admin-panel/api/administrators/?${params}`, {
+            headers: token ? {Authorization:'Bearer '+token} : {},
+            credentials:'include'
+        });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const d = await res.json();
+        if(!d.success) throw new Error(d.message);
+
+        renderAdmins(d.administrators, d.pagination);
+    } catch(e) {
+        showError(e.message||'Terjadi kesalahan jaringan');
+    }
+}
+
+function renderAdmins(admins, pagination) {
+    const tbody = document.getElementById('adminTableBody');
+    if (!admins || admins.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-users-slash"></i><h3>Tidak Ada Administrator</h3><p style="font-size:13px">Belum ada administrator yang ditemukan</p></div></td></tr>`;
+        document.getElementById('adminCount').textContent = '0';
+        document.getElementById('paginationInfo').textContent = 'Tidak ada data';
+        document.getElementById('paginationControls').innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    admins.forEach((a, i) => {
+        const statusClass = !a.is_active ? 'badge-red' : !a.is_verified ? 'badge-yellow' : 'badge-green';
+        const statusText = !a.is_active ? 'Nonaktif' : !a.is_verified ? 'Pending' : 'Aktif';
+        const avatarHtml = a.profile_photo
+            ? `<img src="${a.profile_photo}" alt="" class="adm-avatar-img">`
+            : `<div class="adm-avatar">${getInitials(a.full_name)}</div>`;
+
+        html += `<tr>
+            <td style="text-align:center;color:var(--color-text-tertiary);font-size:12px">${(currentPage-1)*20 + i + 1}</td>
+            <td><div class="adm-user-cell">${avatarHtml}<div><div class="adm-user-name">${a.full_name||a.username||'N/A'}</div><div class="adm-user-email">${a.email}</div></div></div></td>
+            <td class="hide-mobile"><span class="badge ${a.is_superuser?'badge-yellow':'badge-blue'}">${a.role_display||(a.is_superuser?'Super Admin':'Admin')}</span></td>
+            <td><span class="badge ${statusClass}">${statusText}</span></td>
+            <td class="hide-mobile" style="font-size:12px;color:var(--color-text-tertiary)">${timeAgo(a.last_login)}</td>
+            <td class="hide-mobile" style="font-size:12px;color:var(--color-text-tertiary)">${formatDate(a.date_joined)}</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn-sm" onclick="toggleDropdown(this)" style="padding:4px 8px"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="dropdown-menu">
+                        <a href="/admin-panel/administrators/${a.id}/" class="dropdown-item"><i class="fa-solid fa-eye"></i> Detail</a>
+                        <a href="/admin-panel/administrators/${a.id}/edit/" class="dropdown-item"><i class="fa-solid fa-pen"></i> Edit</a>
+                        <button class="dropdown-item ${a.is_active?'danger':''}" onclick="${a.is_active?`confirmDelete(${a.id},'${a.full_name||a.email}')`:`toggleStatus(${a.id})`}">
+                            <i class="fa-solid ${a.is_active?'fa-ban':'fa-check'}"></i> ${a.is_active?'Nonaktifkan':'Aktifkan'}
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+    document.getElementById('adminCount').textContent = pagination.total.toLocaleString('id-ID');
+    document.getElementById('paginationInfo').textContent = `Halaman ${pagination.page} dari ${pagination.total_pages} (${pagination.total} total)`;
+    renderPagination(pagination);
+}
+
+function renderPagination(p) {
+    let html = '';
+    html += `<button class="page-btn" onclick="loadAdmins(${p.page-1})" ${p.has_prev?'':'disabled'}><i class="fa-solid fa-chevron-left"></i></button>`;
+    for(let i=Math.max(1,p.page-2); i<=Math.min(p.total_pages,p.page+2); i++) {
+        html += `<button class="page-btn ${i===p.page?'active':''}" onclick="loadAdmins(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="loadAdmins(${p.page+1})" ${p.has_next?'':'disabled'}><i class="fa-solid fa-chevron-right"></i></button>`;
+    document.getElementById('paginationControls').innerHTML = html;
+}
+
+function toggleDropdown(el) {
+    el.nextElementSibling.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    if(!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-menu.open').forEach(m=>m.classList.remove('open'));
+    }
+});
+
+function confirmDelete(id, name) {
+    deleteTargetId = id;
+    document.getElementById('deleteTargetName').textContent = name||'';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+function closeDeleteModal() {
+    deleteTargetId = null;
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if(!deleteTargetId) return;
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const res = await fetch(`/admin-panel/api/administrators/${deleteTargetId}/delete/`, {
+            method:'DELETE',
+            headers: token ? {Authorization:'Bearer '+token,'Content-Type':'application/json'} : {'Content-Type':'application/json'},
+            credentials:'include'
+        });
+        const d = await res.json();
+        closeDeleteModal();
+        if(d.success) { loadAdmins(currentPage); }
+        else { alert(d.message||'Gagal menghapus'); }
+    } catch(e) { alert('Gagal menghapus'); closeDeleteModal(); }
+});
+
+async function toggleStatus(id) {
+    if(!confirm('Yakin ingin mengubah status administrator ini?')) return;
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const res = await fetch(`/admin-panel/api/administrators/${id}/toggle-status/`, {
+            method:'POST',
+            headers: token ? {Authorization:'Bearer '+token,'Content-Type':'application/json'} : {'Content-Type':'application/json'},
+            credentials:'include'
+        });
+        const d = await res.json();
+        if(d.success) { loadAdmins(currentPage); }
+        else { alert(d.message||'Gagal mengubah status'); }
+    } catch(e) { alert('Gagal mengubah status'); }
+}
+
+['searchInput','roleFilter','statusFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', ()=>loadAdmins(1));
+    if(el && el.tagName==='SELECT') el.addEventListener('change', ()=>loadAdmins(1));
+});
+
+// Debounced search
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(()=>loadAdmins(1), 400);
+});
+
+document.addEventListener('DOMContentLoaded', ()=>loadAdmins(1));
+</script>
+{% endblock %}

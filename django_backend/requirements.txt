@@ -24,3 +24,4 @@ whitenoise>=6.6
 uvicorn[standard]>=0.24  # ASGI server (Gunicorn worker — REQUIRED for production)
 requests>=2.32.0
 hiredis>=3.0  # C-based Redis parser (optional but recommended for performance)
+openpyxl>=3.1.5  # Excel (.xlsx) export for Admin Management

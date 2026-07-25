@@ -1,0 +1,134 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Email Administrator - Warungio</title>
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{font-size:16px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+        body{font-family:var(--font-sans);min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff 0%,#f0fdf4 30%,#e8f5e9 60%,#f0fdf4 100%);color:var(--color-text-primary);padding:20px;position:relative}
+        @media(prefers-color-scheme:dark){body{background:linear-gradient(160deg,#0a0f0b 0%,#0d1a10 30%,#0f1f12 60%,#0a0f0b 100%);color:var(--color-text-inverse)}}
+        .bg-pattern{position:fixed;inset:0;pointer-events:none;z-index:0}
+        .bg-pattern::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 15% 25%,rgba(22,163,74,0.06) 0%,transparent 50%),radial-gradient(circle at 85% 75%,rgba(22,163,74,0.04) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(22,163,74,0.03) 0%,transparent 60%)}
+        .card{position:relative;z-index:2;width:100%;max-width:440px;background:rgba(255,255,255,0.88);backdrop-filter:blur(8px);border-radius:24px;padding:44px 36px 36px;box-shadow:0 20px 60px -12px rgba(0,0,0,0.12),0 0 0 1px rgba(22,163,74,0.06);overflow:hidden}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--color-brand),#4ade80,var(--color-brand),transparent);opacity:.6}
+        @media(prefers-color-scheme:dark){.card{background:rgba(15,23,42,0.90);box-shadow:0 20px 60px -12px rgba(0,0,0,0.35)}}
+        .header{text-align:center;margin-bottom:28px}
+        .logo{width:56px;height:56px;object-fit:contain;margin-bottom:16px}
+        h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+        h1 span{color:var(--color-brand)}
+        .subtitle{font-size:.8125rem;color:var(--color-text-tertiary)}
+        .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-brand-dark);background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.12);margin-bottom:24px}
+        .otp-input{width:200px;text-align:center;padding:16px 20px;font-size:1.75rem;font-weight:800;letter-spacing:12px;border:2px solid var(--color-border);border-radius:16px;font-family:inherit;color:var(--color-text-primary);background:rgba(255,255,255,0.9);outline:none;transition:all .2s;caret-color:var(--color-brand);display:block;margin:0 auto}
+        .otp-input:focus{border-color:var(--color-brand);box-shadow:0 0 0 3px rgba(22,163,74,0.08)}
+        .otp-input.error{border-color:var(--color-danger)}
+        .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border:none;border-radius:16px;font-family:inherit;font-size:.9375rem;font-weight:700;color:white;background:linear-gradient(135deg,var(--color-brand) 0%,#1a8a4a 100%);cursor:pointer;margin-top:20px;min-height:52px;transition:all .2s}
+        .btn:hover{transform:translateY(-1.5px);box-shadow:0 8px 24px rgba(22,163,74,0.3)}
+        .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .error{display:none;align-items:flex-start;gap:10px;padding:14px 16px;border-radius:12px;font-size:.8125rem;color:#991b1b;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);margin-bottom:20px}
+        .error.show{display:flex}
+        .success{display:none;text-align:center;padding:40px 20px}
+        .success.show{display:block}
+        .success .icon{width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+        .success .icon i{color:#16a34a;font-size:28px}
+        .success h2{font-size:1.25rem;font-weight:800;margin-bottom:8px}
+        .success p{font-size:.875rem;color:var(--color-text-tertiary);margin-bottom:20px}
+        .resend{text-align:center;margin-top:16px;font-size:.8125rem}
+        .resend button{background:none;border:none;color:var(--color-brand);font-weight:600;cursor:pointer;font-family:inherit;font-size:.8125rem}
+        .resend button:disabled{opacity:.5;cursor:not-allowed}
+        @media(max-width:480px){.card{padding:32px 24px 28px}.otp-input{width:160px;font-size:1.5rem;letter-spacing:8px}h1{font-size:1.375rem}}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    </style>
+</head>
+<body>
+<div class="bg-pattern" aria-hidden="true"></div>
+
+<div class="card" id="verifyCard">
+    <div class="header">
+        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="logo">
+        <h1>Verifikasi <span>Email</span></h1>
+        <div class="subtitle">Masukkan kode OTP 6 digit untuk verifikasi akun administrator</div>
+    </div>
+    <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Verifikasi Email Administrator</div>
+
+    <div class="error" id="errorMsg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="errorText"></span></div>
+
+    <div id="formContent">
+        <input type="text" id="otpInput" class="otp-input" placeholder="000000" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autofocus>
+        <p style="text-align:center;font-size:.75rem;color:var(--color-text-tertiary);margin-top:8px">Kode dikirim ke <strong id="emailDisplay">email</strong></p>
+        <button class="btn" id="verifyBtn">Verifikasi Kode</button>
+        <div class="resend"><span>Tidak menerima kode? </span><button id="resendBtn">Kirim Ulang</button></div>
+    </div>
+
+    <div class="success" id="successContent">
+        <div class="icon"><i class="fa-solid fa-check"></i></div>
+        <h2>Email Terverifikasi!</h2>
+        <p>Akun administrator Anda telah berhasil diverifikasi. Silakan login untuk mengakses Admin Panel.</p>
+        <a href="/admin-panel/login/?verified=1" class="btn" style="text-decoration:none">Login ke Admin Panel</a>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+const params=new URLSearchParams(window.location.search);
+const email=params.get('email')||'';
+const vid=params.get('vid')||'';
+if(!email)window.location.href='/admin-panel/administrators/';
+
+document.getElementById('emailDisplay').textContent=email;
+
+const otpInput=document.getElementById('otpInput');
+const verifyBtn=document.getElementById('verifyBtn');
+const errorMsg=document.getElementById('errorMsg');
+const errorText=document.getElementById('errorText');
+const resendBtn=document.getElementById('resendBtn');
+
+function showError(msg){errorText.textContent=msg;errorMsg.classList.add('show')}
+function clearError(){errorMsg.classList.remove('show');otpInput.classList.remove('error')}
+
+otpInput.addEventListener('input',function(){
+    this.value=this.value.replace(/\D/g,'').slice(0,6);
+    clearError();
+    if(this.value.length===6)setTimeout(()=>document.getElementById('verifyBtn').click(),200);
+});
+
+verifyBtn.addEventListener('click',async function(){
+    const code=otpInput.value.trim();
+    if(code.length!==6){showError('Kode OTP harus 6 digit.');return}
+    verifyBtn.disabled=true;verifyBtn.textContent='Memverifikasi...';
+    try{
+        const res=await fetch('/admin-panel/api/administrators/verify-otp/',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+            body:JSON.stringify({email,otp_code:code,verification_id:vid?parseInt(vid):undefined}),
+        });
+        const d=await res.json();
+        if(d.success&&d.verified){
+            document.getElementById('formContent').style.display='none';
+            document.getElementById('successContent').classList.add('show');
+        }else{
+            showError(d.message||'Kode OTP tidak valid.');
+            otpInput.value='';otpInput.focus();
+            verifyBtn.disabled=false;verifyBtn.textContent='Verifikasi Kode';
+        }
+    }catch(e){showError('Gagal terhubung ke server.');verifyBtn.disabled=false;verifyBtn.textContent='Verifikasi Kode'}
+});
+
+resendBtn.addEventListener('click',async function(){
+    resendBtn.disabled=true;resendBtn.textContent='Mengirim...';
+    try{
+        const res=await fetch('/admin-panel/api/administrators/resend-otp/',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({email,verification_id:vid?parseInt(vid):undefined}),
+        });
+        const d=await res.json();
+        if(d.success){showError('Kode baru telah dikirim!');setTimeout(clearError,3000)}
+        else showError(d.message||'Gagal mengirim ulang');
+    }catch(e){showError('Gagal terhubung ke server.')}
+    finally{resendBtn.disabled=false;resendBtn.textContent='Kirim Ulang'}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,601 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lupa Password — Warungio Admin</title>
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           WARUNGIO ADMIN FORGOT PASSWORD — Enterprise Authentication
+           Glassmorphism · Premium Branding · Dark Mode · Responsive
+           ═══════════════════════════════════════════════════════════════ */
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-primary);
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+            background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 30%, #e8f5e9 60%, #f0fdf4 100%);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(160deg, #0a0f0b 0%, #0d1a10 30%, #0f1f12 60%, #0a0f0b 100%);
+                color: var(--color-text-inverse);
+            }
+        }
+
+        .bg-pattern {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .bg-pattern::before {
+            content: ''; position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle at 15% 25%, rgba(22, 163, 74, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 85% 75%, rgba(22, 163, 74, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.03) 0%, transparent 60%);
+        }
+        .bg-pattern::after {
+            content: ''; position: absolute; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(22, 163, 74, 0.015) 40px, rgba(22, 163, 74, 0.015) 41px),
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(22, 163, 74, 0.015) 40px, rgba(22, 163, 74, 0.015) 41px);
+        }
+
+        .bg-orb {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+            filter: blur(80px); opacity: 0.35;
+        }
+        .bg-orb--1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(22, 163, 74, 0.12) 0%, transparent 70%);
+            top: -150px; right: -100px;
+            animation: orbFloat 20s ease-in-out infinite alternate;
+        }
+        .bg-orb--2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+            bottom: -100px; left: -80px;
+            animation: orbFloat 25s ease-in-out infinite alternate-reverse;
+        }
+        .bg-orb--3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(22, 163, 74, 0.06) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+            100% { transform: translate(15px, -10px) scale(1.02); }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .bg-pattern::before {
+                background-image:
+                    radial-gradient(circle at 15% 25%, rgba(22, 163, 74, 0.10) 0%, transparent 50%),
+                    radial-gradient(circle at 85% 75%, rgba(22, 163, 74, 0.07) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.05) 0%, transparent 60%);
+            }
+            .bg-pattern::after { opacity: 0.3; }
+            .bg-orb--1 { background: radial-gradient(circle, rgba(22, 163, 74, 0.20) 0%, transparent 70%); }
+            .bg-orb--2 { background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%); }
+            .bg-orb--3 { background: radial-gradient(circle, rgba(22, 163, 74, 0.12) 0%, transparent 70%); }
+        }
+
+        .login-wrapper {
+            position: relative; z-index: 2; width: 100%; max-width: 440px; margin: auto; padding: 20px 0;
+        }
+
+        .login-card-outer {
+            position: relative; padding: 2px; border-radius: 24px;
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(22, 163, 74, 0.10) 100%);
+            box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.06), 0 20px 60px -12px rgba(0,0,0,0.12), 0 8px 24px -6px rgba(0,0,0,0.06);
+            transition: box-shadow 0.3s var(--ease-smooth);
+        }
+        .login-card-outer:hover {
+            box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.10), 0 24px 72px -12px rgba(0,0,0,0.16), 0 8px 28px -6px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            .login-card-outer {
+                background: linear-gradient(135deg, rgba(22, 163, 74, 0.25) 0%, rgba(255,255,255,0.03) 50%, rgba(22, 163, 74, 0.18) 100%);
+                box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.10), 0 20px 60px -12px rgba(0,0,0,0.35), 0 8px 24px -6px rgba(0,0,0,0.20);
+            }
+            .login-card-outer:hover {
+                box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.18), 0 24px 72px -12px rgba(0,0,0,0.40), 0 8px 28px -6px rgba(0,0,0,0.25);
+            }
+        }
+
+        .login-card {
+            position: relative; border-radius: 22px; padding: 44px 36px 36px;
+            background: rgba(255,255,255,0.88); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9); overflow: hidden;
+        }
+        .login-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--color-brand), #4ade80, var(--color-brand), transparent);
+            opacity: 0.6;
+        }
+        @media (prefers-color-scheme: dark) {
+            .login-card {
+                background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+            }
+        }
+
+        .login-header { text-align: center; margin-bottom: 36px; }
+        .login-logo {
+            width: 56px; height: 56px; object-fit: contain; margin-bottom: 16px;
+            filter: drop-shadow(0 2px 8px rgba(22, 163, 74, 0.15));
+            transition: transform 0.3s var(--ease-spring);
+        }
+        .login-logo:hover { transform: scale(1.04); }
+        .login-title {
+            font-size: 1.5rem; font-weight: 800; letter-spacing: var(--tracking-tight);
+            color: var(--color-text-primary); line-height: 1.3; margin-bottom: 4px;
+        }
+        .login-title .brand-highlight { color: var(--color-brand); }
+        .login-subtitle {
+            font-size: 0.8125rem; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.02em;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .login-title { color: #f1f5f9; }
+            .login-logo { filter: drop-shadow(0 2px 12px rgba(22, 163, 74, 0.25)); }
+        }
+
+        .security-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px 5px 10px; margin-bottom: 28px;
+            border-radius: var(--radius-full); font-size: 0.6875rem; font-weight: 600;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            color: var(--color-brand-dark);
+            background: rgba(22, 163, 74, 0.08);
+            border: 1px solid rgba(22, 163, 74, 0.12);
+        }
+        @media (prefers-color-scheme: dark) {
+            .security-badge {
+                color: var(--color-brand-light);
+                background: rgba(22, 163, 74, 0.12);
+                border-color: rgba(22, 163, 74, 0.18);
+            }
+        }
+
+        .error-alert {
+            display: none; align-items: flex-start; gap: 10px; padding: 14px 16px; margin-bottom: 24px;
+            border-radius: var(--radius-lg); font-size: 0.8125rem; line-height: 1.5;
+            color: #991b1b; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .error-alert.is-visible { display: flex; animation: errorSlideIn 0.35s var(--ease-out); }
+        @keyframes errorSlideIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-color-scheme: dark) {
+            .error-alert { color: #fca5a5; background: rgba(239, 68, 68, 0.10); border-color: rgba(239, 68, 68, 0.18); }
+        }
+
+        .success-alert {
+            display: none; align-items: flex-start; gap: 10px; padding: 14px 16px; margin-bottom: 24px;
+            border-radius: var(--radius-lg); font-size: 0.8125rem; line-height: 1.5;
+            color: #166534; background: rgba(22, 163, 74, 0.08); border: 1px solid rgba(22, 163, 74, 0.15);
+        }
+        .success-alert.is-visible { display: flex; animation: errorSlideIn 0.35s var(--ease-out); }
+        @media (prefers-color-scheme: dark) {
+            .success-alert { color: #86efac; background: rgba(22, 163, 74, 0.10); border-color: rgba(22, 163, 74, 0.18); }
+        }
+
+        .login-form { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.01em;
+        }
+        @media (prefers-color-scheme: dark) { .form-label { color: #cbd5e1; } }
+
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--color-text-tertiary); pointer-events: none;
+            transition: color 0.2s var(--ease-out); display: flex; align-items: center; justify-content: center;
+        }
+
+        .form-input {
+            width: 100%; padding: 13px 14px 13px 44px;
+            border: 1.5px solid var(--color-border); border-radius: var(--radius-xl, 16px);
+            font-family: inherit; font-size: 0.9375rem; font-weight: 500;
+            color: var(--color-text-primary); background: rgba(255,255,255,0.9);
+            outline: none; transition: all 0.2s var(--ease-out);
+            -webkit-appearance: none; appearance: none;
+        }
+        .form-input::placeholder { color: var(--color-text-disabled); font-weight: 400; }
+        .form-input:hover { border-color: var(--color-primary-300, #86efac); background: rgba(255,255,255,0.85); }
+        .form-input:focus {
+            border-color: var(--color-brand); background: rgba(255,255,255,0.95);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .form-input:focus ~ .input-icon, .form-input:focus-within ~ .input-icon { color: var(--color-brand); }
+        .form-input.error { border-color: var(--color-danger); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08); }
+        @media (prefers-color-scheme: dark) {
+            .form-input { background: rgba(30, 41, 59, 0.7); border-color: rgba(148, 163, 184, 0.15); color: #f1f5f9; }
+            .form-input::placeholder { color: rgba(148, 163, 184, 0.4); }
+            .form-input:hover { border-color: rgba(22, 163, 74, 0.3); background: rgba(30, 41, 59, 0.85); }
+            .form-input:focus { border-color: var(--color-brand); background: rgba(30, 41, 59, 0.95); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12); }
+        }
+
+        .form-help {
+            font-size: 0.75rem; font-weight: 500; color: var(--color-text-tertiary);
+            line-height: 1.5; margin-top: -8px;
+        }
+        @media (prefers-color-scheme: dark) { .form-help { color: rgba(148, 163, 184, 0.6); } }
+
+        .btn-submit {
+            position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 15px 24px; border: none; border-radius: var(--radius-xl, 16px);
+            font-family: inherit; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.01em;
+            color: white; background: linear-gradient(135deg, var(--color-brand) 0%, #1a8a4a 100%);
+            cursor: pointer; transition: all 0.25s var(--ease-out);
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+            -webkit-appearance: none; appearance: none; min-height: 52px;
+        }
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1.5px);
+            box-shadow: 0 8px 24px rgba(22, 163, 74, 0.30), inset 0 1px 0 rgba(255,255,255,0.18);
+            background: linear-gradient(135deg, var(--color-brand-dark) 0%, #0d7a3d 100%);
+        }
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.20), inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+        .btn-submit:focus-visible { outline: 3px solid rgba(22, 163, 74, 0.3); outline-offset: 2px; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        @media (prefers-color-scheme: dark) {
+            .btn-submit { background: linear-gradient(135deg, var(--color-brand) 0%, #15803d 100%); }
+        }
+
+        .btn-loading .btn-text { opacity: 0; }
+        .btn-loading .btn-spinner { display: flex; }
+        .btn-spinner {
+            display: none; position: absolute; align-items: center; justify-content: center; gap: 6px;
+        }
+        .spinner-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: white;
+            animation: dotBounce 1.2s var(--ease-in-out) infinite;
+        }
+        .spinner-dot:nth-child(1) { animation-delay: 0s; }
+        .spinner-dot:nth-child(2) { animation-delay: 0.15s; }
+        .spinner-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .access-panel {
+            display: flex; align-items: center; justify-content: center; gap: 16px;
+            margin-top: 24px; padding: 12px 16px; border-radius: var(--radius-lg);
+            background: rgba(22, 163, 74, 0.04); border: 1px solid rgba(22, 163, 74, 0.08);
+        }
+        .access-panel-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; font-weight: 500; color: var(--color-text-tertiary);
+        }
+        .access-panel-item svg { flex-shrink: 0; }
+        @media (prefers-color-scheme: dark) {
+            .access-panel { background: rgba(22, 163, 74, 0.06); border-color: rgba(22, 163, 74, 0.10); }
+            .access-panel-item { color: rgba(148, 163, 184, 0.7); }
+        }
+
+        .login-footer { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.04); }
+        .login-footer p { font-size: 0.75rem; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.01em; }
+        .login-footer a { color: var(--color-text-link); text-decoration: none; font-weight: 600; transition: color 0.2s var(--ease-out); }
+        .login-footer a:hover { color: var(--color-brand-dark); }
+        .login-footer a:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; border-radius: 2px; }
+        @media (prefers-color-scheme: dark) {
+            .login-footer { border-top-color: rgba(255,255,255,0.04); }
+            .login-footer p { color: rgba(148, 163, 184, 0.5); }
+            .login-footer a { color: var(--color-brand-light); }
+            .login-footer a:hover { color: var(--color-brand); }
+        }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary);
+            text-decoration: none; transition: color 0.2s var(--ease-out);
+            margin-bottom: 24px;
+        }
+        .back-link:hover { color: var(--color-brand); }
+        .back-link:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; border-radius: 2px; }
+
+        .step-indicator {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 28px;
+        }
+        .step-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--color-border);
+            transition: all 0.3s var(--ease-out);
+        }
+        .step-dot.active { width: 24px; border-radius: 4px; background: var(--color-brand); }
+        .step-dot.done { background: var(--color-brand-light); }
+
+        .mobile-break { display: none; }
+        @media (max-width: 480px) {
+            .mobile-break { display: inline; }
+            body { padding: 12px; }
+            .login-card { padding: 32px 24px 28px; }
+            .login-title { font-size: 1.375rem; }
+            .login-logo { width: 48px; height: 48px; }
+            .login-header { margin-bottom: 28px; }
+            .login-form { gap: 16px; }
+            .form-input { padding: 12px 14px 12px 40px; font-size: 0.875rem; }
+            .btn-submit { padding: 14px 20px; font-size: 0.875rem; min-height: 48px; }
+            .access-panel { flex-direction: column; gap: 8px; }
+        }
+        @media (min-width: 481px) and (max-width: 768px) { .login-card { padding: 40px 32px 32px; } }
+        @media (min-width: 769px) { .login-card { padding: 44px 40px 36px; } }
+
+        .skip-link {
+            position: fixed; top: -100%; left: 16px; z-index: 9999;
+            padding: 10px 20px; border-radius: var(--radius-lg);
+            background: var(--color-brand); color: white;
+            font-size: 0.875rem; font-weight: 600; text-decoration: none;
+            transition: top 0.2s var(--ease-out);
+        }
+        .skip-link:focus { top: 16px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+            .bg-orb { animation: none !important; }
+        }
+        :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+        :focus:not(:focus-visible) { outline: none; }
+    </style>
+</head>
+<body>
+    <a href="#forgot-form-content" class="skip-link">Lompat ke form lupa password</a>
+
+    <div class="bg-pattern" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--1" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--2" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb--3" aria-hidden="true"></div>
+
+    <main class="login-wrapper" id="forgot-form-content" role="main">
+        <div class="login-card-outer" role="region" aria-label="Form Lupa Password Admin Warungio">
+            <div class="login-card">
+                <!-- Step Indicator -->
+                <div class="step-indicator" aria-hidden="true">
+                    <span class="step-dot active"></span>
+                    <span class="step-dot"></span>
+                    <span class="step-dot"></span>
+                </div>
+
+                <!-- Header -->
+                <div class="login-header">
+                    <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="login-logo" width="56" height="56" loading="eager">
+                    <h1 class="login-title">
+                        <span class="brand-highlight">Lupa</span> Password
+                    </h1>
+                    <div class="login-subtitle">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>Reset Password Administrator</span>
+                    </div>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="security-badge" role="status">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>Verifikasi Email Administrator</span>
+                </div>
+
+                <!-- Back Link -->
+                <a href="/admin-panel/login/" class="back-link" aria-label="Kembali ke halaman login admin">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Kembali ke Login
+                </a>
+
+                <!-- Error Alert -->
+                <div id="forgotError" class="error-alert" role="alert" aria-live="assertive">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <span id="errorMessage"></span>
+                </div>
+
+                <!-- Success Alert -->
+                <div id="forgotSuccess" class="success-alert" role="alert" aria-live="assertive">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span id="successMessage"></span>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <form id="forgotForm" class="login-form" autocomplete="off" novalidate aria-label="Form lupa password admin">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Administrator</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                            </svg>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="admin@warungio.com" required autocomplete="email" aria-required="true" autocapitalize="off" spellcheck="false">
+                        </div>
+                        <span class="form-help">Masukkan email administrator yang terdaftar. Kami akan mengirimkan kode OTP ke email tersebut.</span>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="sendBtn">
+                        <span class="btn-text">
+                            Kirim Kode Reset
+                            <span class="btn-icon-arrow" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="btn-spinner" aria-hidden="true">
+                            <span class="spinner-dot"></span>
+                            <span class="spinner-dot"></span>
+                            <span class="spinner-dot"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Access Panel -->
+                <div class="access-panel" role="group" aria-label="Informasi keamanan">
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span>SSL Encrypted</span>
+                    </span>
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>OTP 5 Menit</span>
+                    </span>
+                    <span class="access-panel-item">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>Admin Only</span>
+                    </span>
+                </div>
+
+                <!-- Footer -->
+                <footer class="login-footer" role="contentinfo">
+                    <p>
+                        &copy; 2026 <a href="https://warungio.com" target="_blank" rel="noopener noreferrer">Warungio</a>.
+                        All rights reserved.
+                        <br class="mobile-break">
+                        Hanya untuk administrator yang berwenang.
+                    </p>
+                </footer>
+            </div>
+        </div>
+    </main>
+
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var form = document.getElementById('forgotForm');
+        var emailInput = document.getElementById('email');
+        var btn = document.getElementById('sendBtn');
+        var errorEl = document.getElementById('forgotError');
+        var errorMessageEl = document.getElementById('errorMessage');
+        var successEl = document.getElementById('forgotSuccess');
+        var successMessageEl = document.getElementById('successMessage');
+
+        function showError(message) {
+            successEl.classList.remove('is-visible');
+            errorMessageEl.textContent = message;
+            errorEl.classList.add('is-visible');
+        }
+
+        function showSuccess(message) {
+            errorEl.classList.remove('is-visible');
+            successMessageEl.textContent = message;
+            successEl.classList.add('is-visible');
+        }
+
+        function clearAlerts() {
+            errorEl.classList.remove('is-visible');
+            successEl.classList.remove('is-visible');
+        }
+
+        function setLoading(isLoading) {
+            btn.disabled = isLoading;
+            btn.classList.toggle('btn-loading', isLoading);
+            btn.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearAlerts();
+
+            var email = emailInput.value.trim();
+
+            if (!email) {
+                showError('Email harus diisi.');
+                emailInput.focus();
+                return;
+            }
+
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Format email tidak valid.');
+                emailInput.focus();
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                var response = await fetch('/admin-panel/api/password/forgot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ email: email }),
+                });
+
+                var data = await response.json();
+
+                if (data.success) {
+                    showSuccess('Jika email terdaftar sebagai admin, kode OTP telah dikirim. Silakan periksa email Anda.');
+
+                    // Redirect to verify OTP page after brief delay
+                    if (data.redirect_url) {
+                        setTimeout(function() {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
+                    }
+                } else {
+                    showError(data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+                }
+            } catch (err) {
+                showError('Gagal terhubung ke server. Silakan coba lagi.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            clearAlerts();
+        });
+
+        // Auto-focus
+        emailInput.focus();
+    })();
+    </script>
+</body>
+</html>

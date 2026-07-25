@@ -553,3 +553,242 @@ class RegistrationEvent(models.Model):
 
     def __str__(self):
         return f'{self.get_event_type_display()} - {self.email or self.phone}'
+
+
+# =============================================================================
+# ENTERPRISE ADMIN MANAGEMENT
+# =============================================================================
+
+class AdminRole(models.Model):
+    """
+    Enterprise RBAC — defines admin roles with granular permissions.
+    
+    Roles hierarchy (by level):
+        super_admin (100) — Full access, can manage other admins
+        admin       (80)  — Full system access except admin management
+        moderator   (60)  — Content moderation, user management
+        support     (50)  — Customer support, order inquiries
+        finance     (40)  — Payment, refund, financial reports
+        content     (30)  — Content management, SEO, promotions
+        viewer      (10)  — Read-only access to reports and analytics
+    
+    Admins can only manage accounts with a LOWER level than their own.
+    """
+    LEVEL_CHOICES = [
+        (100, 'Super Admin'),
+        (80,  'Admin'),
+        (60,  'Moderator'),
+        (50,  'Support'),
+        (40,  'Finance'),
+        (30,  'Content Manager'),
+        (10,  'Viewer'),
+    ]
+
+    PERMISSION_CHOICES = [
+        ('view_dashboard', 'View Dashboard'),
+        ('manage_products', 'Manage Products'),
+        ('manage_orders', 'Manage Orders'),
+        ('manage_payments', 'Manage Payments'),
+        ('manage_users', 'Manage Users'),
+        ('manage_sellers', 'Manage Sellers'),
+        ('manage_buyers', 'Manage Buyers'),
+        ('manage_content', 'Manage Content'),
+        ('manage_promotions', 'Manage Promotions'),
+        ('manage_reports', 'Manage Reports'),
+        ('manage_ai', 'Manage AI'),
+        ('manage_system', 'Manage System'),
+        ('manage_administrators', 'Manage Administrators'),
+        ('view_audit_logs', 'View Audit Logs'),
+        ('export_data', 'Export Data'),
+    ]
+
+    # Each role has a fixed name and level
+    name = models.CharField(max_length=30, unique=True, verbose_name='Nama Role')
+    level = models.IntegerField(choices=LEVEL_CHOICES, unique=True, verbose_name='Level')
+    description = models.TextField(blank=True, verbose_name='Deskripsi')
+    permissions = models.JSONField(
+        default=list, blank=True,
+        verbose_name='Permissions',
+        help_text='Daftar permission yang dimiliki role ini'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'admin_roles'
+        verbose_name = 'Role Administrator'
+        verbose_name_plural = 'Role Administrator'
+        ordering = ['-level']
+
+    def __str__(self):
+        return f'{self.get_level_display()} (Level {self.level})'
+
+    def has_permission(self, permission):
+        """Check if this role has a specific permission."""
+        return permission in self.permissions
+
+    @classmethod
+    def get_default_permissions(cls, level):
+        """Return default permission set for a given level."""
+        all_perms = [p[0] for p in cls.PERMISSION_CHOICES]
+        
+        if level >= 100:  # Super Admin
+            return all_perms
+        if level >= 80:  # Admin
+            return [p for p in all_perms if p != 'manage_administrators']
+        if level >= 60:  # Moderator
+            return ['view_dashboard', 'manage_products', 'manage_orders', 'manage_users',
+                    'manage_sellers', 'manage_buyers', 'manage_content', 'view_audit_logs']
+        if level >= 50:  # Support
+            return ['view_dashboard', 'manage_orders', 'manage_users',
+                    'manage_buyers', 'manage_sellers']
+        if level >= 40:  # Finance
+            return ['view_dashboard', 'manage_payments', 'manage_reports', 'manage_orders', 'export_data']
+        if level >= 30:  # Content Manager
+            return ['view_dashboard', 'manage_content', 'manage_promotions',
+                    'manage_products', 'manage_sellers', 'export_data']
+        # Viewer (10)
+        return ['view_dashboard', 'manage_reports', 'view_audit_logs', 'export_data']
+
+
+class AdminAuditLog(models.Model):
+    """
+    Enterprise audit trail for all administrator actions.
+    
+    Records every action performed by admin users for compliance
+    and security monitoring. Logs are immutable — never deleted.
+    """
+    ACTION_CHOICES = [
+        ('login', 'Login'),
+        ('login_failed', 'Login Gagal'),
+        ('logout', 'Logout'),
+        ('create_admin', 'Membuat Admin'),
+        ('update_admin', 'Mengubah Admin'),
+        ('delete_admin', 'Menghapus Admin'),
+        ('activate_admin', 'Mengaktifkan Admin'),
+        ('deactivate_admin', 'Menonaktifkan Admin'),
+        ('change_password', 'Mengubah Password'),
+        ('reset_password', 'Reset Password'),
+        ('change_role', 'Mengubah Role'),
+        ('verify_admin', 'Verifikasi Admin'),
+        ('admin_verified_otp', 'Admin Verifikasi OTP'),
+        ('system_config', 'Konfigurasi Sistem'),
+    ]
+
+    admin = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='audit_logs', verbose_name='Administrator'
+    )
+    admin_email = models.EmailField(verbose_name='Email Admin')
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES, verbose_name='Aksi')
+    description = models.TextField(blank=True, verbose_name='Deskripsi')
+    
+    # Target of the action (if applicable)
+    target_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='targeted_audit_logs', verbose_name='Target'
+    )
+    target_email = models.EmailField(blank=True, null=True, verbose_name='Email Target')
+    
+    # Request context
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    device_type = models.CharField(max_length=20, blank=True, null=True)
+    browser = models.CharField(max_length=50, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Details stored as JSON for flexibility
+    details = models.JSONField(default=dict, blank=True, verbose_name='Detail')
+    
+    # Automatic timestamp (immutable)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'admin_audit_logs'
+        verbose_name = 'Log Audit Admin'
+        verbose_name_plural = 'Log Audit Admin'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['admin', 'created_at']),
+            models.Index(fields=['action', 'created_at']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['admin_email']),
+        ]
+
+    def __str__(self):
+        return f'{self.admin_email} — {self.get_action_display()} at {self.created_at.strftime("%Y-%m-%d %H:%M")}'
+
+
+class AdminVerification(models.Model):
+    """
+    Tracks email verification for newly created admin accounts.
+    
+    When a Super Admin creates a new admin account, a verification
+    token/OTP is generated and sent to the new admin's email.
+    The new admin must verify their email before first login.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('verified', 'Terverifikasi'),
+        ('expired', 'Kadaluwarsa'),
+    ]
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='admin_verifications'
+    )
+    email = models.EmailField(verbose_name='Email')
+    otp_code = models.CharField(max_length=6, verbose_name='Kode OTP')
+    otp_code_hash = models.CharField(max_length=64, verbose_name='Hash OTP')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    attempts = models.IntegerField(default=0)
+    max_attempts = models.IntegerField(default=5)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+    
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_verifications'
+    )
+
+    class Meta:
+        db_table = 'admin_verifications'
+        verbose_name = 'Verifikasi Admin'
+        verbose_name_plural = 'Verifikasi Admin'
+
+    def __str__(self):
+        return f'Verifikasi {self.email} — {self.get_status_display()}'
+
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+
+    def is_locked(self):
+        return self.attempts >= self.max_attempts
+
+    def increment_attempts(self):
+        self.attempts += 1
+        if self.attempts >= self.max_attempts:
+            self.status = 'expired'
+        self.save(update_fields=['attempts', 'status'])
+
+    @staticmethod
+    def generate_otp():
+        import secrets
+        return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+
+    @staticmethod
+    def hash_otp(code):
+        import hashlib
+        return hashlib.sha256(code.encode()).hexdigest()
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        from datetime import timedelta
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=15)
+        if not self.otp_code:
+            self.otp_code = self.generate_otp()
+            self.otp_code_hash = self.hash_otp(self.otp_code)
+        super().save(*args, **kwargs)

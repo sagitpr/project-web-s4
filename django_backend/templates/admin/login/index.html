@@ -925,7 +925,7 @@
                             <input type="checkbox" id="rememberMe" name="remember" aria-label="Ingat saya di perangkat ini">
                             <span class="remember-label">Ingat Saya</span>
                         </label>
-                        <a href="javascript:void(0)" class="forgot-link" id="forgotPassword" aria-label="Lupa password admin">
+                        <a href="/admin-panel/password/forgot/" class="forgot-link" aria-label="Lupa password admin">
                             Lupa Password?
                         </a>
                     </div>
@@ -1138,13 +1138,6 @@
             }
         });
 
-        // ── Forgot Password Handler ──
-        forgotLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Optional: redirect to a forgot password page
-            // For now, show a helpful message
-            showError('Fitur reset password admin sedang dalam pengembangan. Hubungi administrator sistem.');
-        });
 
         // ── Keyboard shortcut: Ctrl+Enter to submit ──
         form.addEventListener('keydown', function(e) {

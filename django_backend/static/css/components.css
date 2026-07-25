@@ -92,7 +92,27 @@
   width: 42px;
   height: 42px;
   padding: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg);}
+
+/* ── Active press state for all interactive elements ── */
+.btn:active,
+.card:active,
+.stat-card:active,
+.filter-btn:active,
+.tab:active {
+  transform: scale(0.98);
+}
+
+/* ── Focus-visible ring for keyboard navigation ── */
+.btn:focus-visible,
+.form-input:focus-visible,
+.form-select:focus-visible,
+.form-textarea:focus-visible,
+.filter-btn:focus-visible,
+.tab:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ── Cards ── */
@@ -191,12 +211,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 10px;
+  padding: 3px 11px;
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 .badge-green { background: var(--color-success-soft); color: var(--color-brand-dark); }
 .badge-yellow { background: var(--color-warning-soft); color: #92400e; }
@@ -733,6 +754,11 @@ table.w-table tbody tr:last-child td {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-xl);
+  transition: box-shadow var(--duration-300) var(--ease-out), transform var(--duration-200) var(--ease-out);
+}
+.glass-card:hover {
+  box-shadow: var(--shadow-bezel-lg);
+  transform: translateY(-2px);
 }
 
 /* ── Utilities ── */
