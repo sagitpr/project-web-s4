@@ -11,7 +11,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView, RedirectView
 from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 )
@@ -175,10 +174,13 @@ urlpatterns += [
     path('seller/refunds/<int:pk>/', login_required(TemplateView.as_view(template_name='seller/refunds/detail.html')), name='page-seller-refund-detail'),
 ]
 
-# ── Admin Panel Pages (staff-only, with dedicated admin login) ──
-# Unauthenticated users are redirected to the dedicated admin login page.
-# Admins never see the public landing page.
-staff = staff_member_required(login_url='/admin-panel/login/')
+# ── Admin Panel Pages (admin-only, with dedicated admin login) ──
+# Uses admin_required decorator from accounts/decorators.py which is CONSISTENT
+# with RoleBasedRedirectMiddleware — both check:
+#   user.is_staff or user.is_superuser or role == 'admin'
+# This prevents redirect loops caused by staff_member_required (which only checks is_staff)
+# when an admin user has role='admin' but is_staff=False.
+staff = admin_required
 
 urlpatterns += [
     # Dedicated admin login page (separated from public /auth/login/)

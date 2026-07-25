@@ -4,6 +4,7 @@ Payments URL configuration for Warungio Marketplace.
 
 from django.urls import path
 from . import views
+from . import pos_views
 
 urlpatterns = [
     path('methods/', views.PaymentMethodListView.as_view(), name='payment-methods'),
@@ -30,4 +31,7 @@ urlpatterns = [
     # Wallet Endpoints (database-driven, not device_info)
     path('wallet/balance/', views.WalletBalanceView.as_view(), name='wallet-balance'),
     path('wallet/transactions/', views.WalletTransactionListView.as_view(), name='wallet-transactions'),
+
+    # POS Offline Transaction
+    path('pos/complete/', pos_views.POSCompleteSaleView.as_view(), name='pos-complete-sale'),
 ]

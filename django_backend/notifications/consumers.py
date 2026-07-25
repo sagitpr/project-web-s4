@@ -171,6 +171,27 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'action': event.get('action', 'stock_updated'),
         }))
 
+    async def voice_notification(self, event):
+        """
+        Send voice/TTS notification to WebSocket for seller dashboard.
+        
+        The frontend VoiceNotificationManager listens for this event and
+        speaks the text using the Web Speech API.
+        
+        Only sellers receive voice notifications for their own store's
+        transactions (online payments and offline POS sales).
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'voice_notification',
+            'voice_type': event.get('voice_type', 'tts'),
+            'transaction_type': event.get('transaction_type'),
+            'text': event.get('text', ''),
+            'amount': event.get('amount', 0),
+            'order_number': event.get('order_number', ''),
+            'customer_name': event.get('customer_name', ''),
+            'transaction_id': event.get('transaction_id', ''),
+        }))
+
     @database_sync_to_async
     def get_unread_count(self):
         return Notification.objects.filter(

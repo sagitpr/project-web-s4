@@ -24,6 +24,10 @@
   var RealAPI = {};
 
   // ---- Auth ----
+  RealAPI.checkAvailability = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/auth/check-availability/', { method: 'POST', body: JSON.stringify(data) });
+  };
   RealAPI.register = function (data) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/auth/register/', { method: 'POST', body: JSON.stringify(data) });

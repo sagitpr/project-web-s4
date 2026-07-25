@@ -630,6 +630,23 @@ def process_webhook_notification(data: dict) -> dict:
                                      'status': 'paid',
                                      'message': f'Pembayaran untuk {order.order_number} dikonfirmasi!',}
                                 )
+                                # Broadcast voice notification for successful payment
+                                try:
+                                    from notifications.voice_service import broadcast_online_order_voice
+                                    customer_name = None
+                                    if order.recipient_name:
+                                        customer_name = order.recipient_name
+                                    elif order.user:
+                                        customer_name = order.user.full_name or order.user.email
+                                    broadcast_online_order_voice(
+                                        seller_user_id=order.store.user_id,
+                                        customer_name=customer_name,
+                                        amount=int(order.total_price),
+                                        order_number=order.order_number,
+                                        transaction_id=f'voice-{order.id}-{order.order_number}',
+                                    )
+                                except Exception as voice_err:
+                                    logger.warning('Voice notification broadcast failed: %s', voice_err)
                         except Exception as exc:
                             logger.warning('Seller WS fail: %s', exc)
 

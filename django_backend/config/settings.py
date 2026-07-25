@@ -323,6 +323,16 @@ if _redis_available:
 CACHE_TTL = 60 * 15  # 15 minutes default
 
 # =============================================================================
+# VOICE NOTIFICATION (Web Speech API — browser-native TTS, no external API)
+# =============================================================================
+# Uses the Web Speech API (SpeechSynthesis) built into all modern browsers.
+# No API key, no cloud service, no SDK — 100% browser-native.
+# Toggle this off to disable all voice notification broadcasts server-wide.
+VOICE_NOTIFICATION_ENABLED = os.environ.get(
+    'VOICE_NOTIFICATION_ENABLED', 'true'
+).lower() == 'true'
+
+# =============================================================================
 # CELERY (Async Tasks)
 # =============================================================================
 CELERY_BROKER_URL = REDIS_URL

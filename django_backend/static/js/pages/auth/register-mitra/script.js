@@ -287,9 +287,8 @@
       if (panel.dataset.panel === '2' && form && form.querySelectorAll('input[name="deliveryServices"]:checked').length === 0) {
         valid = false; setMsg('Pilih minimal satu layanan pengiriman.');
       }
-      if (panel.dataset.panel === '0' && form && (!form.elements.latitude.value || !form.elements.longitude.value)) {
-        valid = false; setMsg('Pilih lokasi toko pada peta terlebih dahulu.');
-      }
+      // Maps is OPTIONAL — skip coordinate validation entirely.
+      // Sellers can set their location later in store settings.
       if (panel.dataset.panel === '3' && form && form.elements.accountNumber.value !== form.elements.accountConfirm.value) {
         valid = false; form.elements.accountConfirm.classList.add('invalid');
         setMsg('Nomor rekening dan konfirmasi belum sama.');
