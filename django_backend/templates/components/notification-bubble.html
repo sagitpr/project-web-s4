@@ -1,0 +1,25 @@
+{% load static %}
+{# ──────────────────────────────────────────────────────────────────── #}
+{# Warungio Floating Notification Bubble — Reusable Template Include   #}
+{# Usage: {% include "components/notification-bubble.html" %}          #}
+{# Place before closing </body> tag for optimal loading.               #}
+{# ──────────────────────────────────────────────────────────────────── #}
+
+{# ── Notification Bell Badge (place in navbar/topbar) ── #}
+{% block notification_bell %}
+{% if user.is_authenticated %}
+<div id="notifBell" style="position:relative; cursor:pointer; display:inline-flex; align-items:center; padding:6px;" onclick="window.location.href='{% url 'admin-notifications' %}'" title="Notifikasi">
+    <i class="fa-regular fa-bell" style="font-size:20px; color:var(--color-text-secondary);"></i>
+    <span class="notif-bell-badge hidden" id="notifBellBadge">0</span>
+</div>
+{% endif %}
+{% endblock %}
+
+{# ── Notification Bubble Container (floating, fixed position) ── #}
+<div class="notif-bubble-container" id="notifBubbleContainer" role="log" aria-live="polite" aria-label="Notifikasi"></div>
+
+{# ── Styles ── #}
+<link rel="stylesheet" href="{% static 'css/notification-bubble.css' %}">
+
+{# ── Scripts ── #}
+<script src="{% static 'js/notification-bubble.js' %}" defer></script>

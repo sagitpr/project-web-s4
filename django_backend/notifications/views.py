@@ -2,6 +2,7 @@
 Notifications views for Warungio Marketplace.
 """
 
+from django.db.models import Count, Q
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
@@ -22,7 +23,7 @@ class NotificationListView(generics.ListAPIView):
         if getattr(self, "swagger_fake_view", False):
             return Notification.objects.none()
 
-        qs = Notification.objects.filter(user=self.request.user)
+        qs = Notification.objects.filter(user=self.request.user).select_related('user')
         
         # Filter by type
         ntype = self.request.query_params.get('type')
@@ -70,20 +71,28 @@ class NotificationUnreadCountView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
-        total_unread = Notification.objects.filter(
+        # Single annotated query — replaces 6 separate COUNT queries
+        qs = Notification.objects.filter(
             user=request.user, is_read=False
-        ).count()
+        )
         
-        types = ['order', 'payment', 'chat', 'promo', 'system']
-        type_counts = {}
-        for ntype in types:
-            type_counts[f'{ntype}_unread'] = Notification.objects.filter(
-                user=request.user, is_read=False, notification_type=ntype
-            ).count()
+        # Get total + per-type counts in one query using aggregation
+        counts = qs.aggregate(
+            total_unread=Count('id'),
+            order_unread=Count('id', filter=Q(notification_type='order')),
+            payment_unread=Count('id', filter=Q(notification_type='payment')),
+            chat_unread=Count('id', filter=Q(notification_type='chat')),
+            promo_unread=Count('id', filter=Q(notification_type='promo')),
+            system_unread=Count('id', filter=Q(notification_type='system')),
+        )
         
         return Response({
-            'total_unread': total_unread,
-            **type_counts,
+            'total_unread': counts['total_unread'],
+            'order_unread': counts['order_unread'],
+            'payment_unread': counts['payment_unread'],
+            'chat_unread': counts['chat_unread'],
+            'promo_unread': counts['promo_unread'],
+            'system_unread': counts['system_unread'],
         })
 
 

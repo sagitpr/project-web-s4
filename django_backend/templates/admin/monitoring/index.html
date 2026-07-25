@@ -1,76 +1,208 @@
-{% load static %}<!DOCTYPE html>
-<html lang="id">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Monitoring - Warungio Admin</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{% static 'css/tokens.css' %}"><link rel="stylesheet" href="{% static 'css/components.css' %}"><link rel="stylesheet" href="{% static 'css/style.css' %}"><link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-<style>.admin-sidebar{width:var(--sidebar-width);background:var(--color-gray-900);color:white;position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}.admin-sidebar a{color:rgba(255,255,255,0.7);text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--radius-lg);font-size:var(--text-sm);transition:all .15s}.admin-sidebar a:hover{background:rgba(255,255,255,0.08);color:white}.admin-sidebar a.active{background:var(--color-brand);color:white}.admin-sidebar .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.35);padding:16px 16px 6px;font-weight:600}.admin-main{flex:1;margin-left:var(--sidebar-width);min-height:100vh;background:var(--color-surface-secondary)}.admin-topbar{padding:12px 24px;background:var(--color-surface);border-bottom:1px solid var(--color-border)}.admin-content{padding:24px}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}.stat-card{padding:20px;background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border)}.stat-card .num{font-size:28px;font-weight:800}.stat-card .lbl{font-size:12px;color:var(--color-text-tertiary);margin-top:4px}.stat-card .sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}.status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.status-healthy{background:#22c55e}.status-degraded{background:#f59e0b}.status-down{background:#ef4444}.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:24px}.card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);overflow:hidden}.card-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between}.card-body{padding:20px}.service-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-gray-100);font-size:13px}.service-item:last-child{border-bottom:none}@media(max-width:768px){.admin-sidebar{transform:translateX(-100%)}.admin-sidebar.open{transform:translateX(0)}.admin-main{margin-left:0}}</style>
-</head>
-<body>
-<aside class="admin-sidebar" id="adminSidebar">
-<div style="padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)"><div style="display:flex;align-items:center;gap:10px"><img alt=""  src="{% static 'images/Warungio L.png' %}" style="height:28px;filter:brightness(0)invert(1)"><div><div style="font-size:16px;font-weight:800;color:white"><span style="color:var(--color-brand)">Warung</span>io</div><small style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:.06em;text-transform:uppercase">Admin Panel</small></div></div></div>
-<nav style="flex:1;padding:12px">
-<div class="section-label">Overview</div>
-<a href="{% url 'admin-dashboard' %}"><i class="fa-solid fa-gauge-high" style="width:18px"></i> Dashboard</a>
-<div class="section-label">System</div>
-<a href="{% url 'admin-suppliers' %}"><i class="fa-solid fa-truck-field" style="width:18px"></i> Suppliers</a>
-<a href="{% url 'admin-loyalty' %}"><i class="fa-solid fa-gem" style="width:18px"></i> Loyalty</a>
-<a href="{% url 'admin-monitoring' %}" class="active"><i class="fa-solid fa-desktop" style="width:18px"></i> Monitoring</a>
-<a href="{% url 'admin-security' %}"><i class="fa-solid fa-shield-halved" style="width:18px"></i> Security</a>
-<a href="{% url 'admin-audit' %}"><i class="fa-solid fa-clipboard-list" style="width:18px"></i> Audit Logs</a>
-<a href="{% url 'admin-settings' %}"><i class="fa-solid fa-gear" style="width:18px"></i> Settings</a>
-</nav></aside>
-<div class="admin-main">
-<div class="admin-topbar"><h1 style="font-size:18px;font-weight:700;margin:0">Server Monitoring</h1></div>
-<div class="admin-content">
-<div class="stats-grid">
-<div class="stat-card"><div class="num" style="color:#22c55e" id="healthStatus">●</div><div class="lbl">System Status</div><div class="sub" id="statusLabel">Healthy</div></div>
-<div class="stat-card"><div class="num" id="uptimePercent">99.97%</div><div class="lbl">Uptime (30 hari)</div></div>
-<div class="stat-card"><div class="num" id="apiLatency">0ms</div><div class="lbl">API Latency</div></div>
-<div class="stat-card"><div class="num" id="activeUsers">0</div><div class="lbl">Active Users</div></div>
-<div class="stat-card"><div class="num" id="errorCount" style="color:#ef4444">0</div><div class="lbl">Errors (24h)</div></div>
-<div class="stat-card"><div class="num" id="dbConn">0</div><div class="lbl">DB Connections</div></div>
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Monitoring - Warungio Admin{% endblock %}
+{% block page_title %}Server Monitoring{% endblock %}
+
+{% block extra_styles %}
+<style>
+.monitor-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:24px; }
+.monitor-stat {
+    background:var(--admin-card-bg); border-radius:var(--admin-radius-lg);
+    border:1px solid var(--admin-border); padding:18px 20px;
+    box-shadow:var(--admin-shadow); text-align:center;
+}
+.monitor-stat .num { font-size:28px; font-weight:800; line-height:1.2; }
+.monitor-stat .lbl { font-size:12px; color:var(--admin-text-muted); margin-top:6px; }
+.monitor-stat .sub { font-size:11px; color:var(--admin-text-muted); margin-top:2px; }
+.status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.status-dot.healthy { background:#22c55e; }
+.status-dot.degraded { background:#f59e0b; }
+.status-dot.down { background:#ef4444; }
+
+.service-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 0; border-bottom:1px solid var(--admin-border);
+    font-size:13px;
+}
+.service-item:last-child { border-bottom:none; }
+
+.performance-bar { margin-bottom:14px; }
+.performance-bar:last-child { margin-bottom:0; }
+.performance-bar .bar-label {
+    display:flex; justify-content:space-between;
+    font-size:12px; margin-bottom:6px;
+}
+.performance-bar .bar-label span:first-child { color:var(--admin-text); font-weight:500; }
+.performance-bar .bar-label span:last-child { color:var(--admin-text-muted); font-weight:600; }
+.performance-bar .bar-track {
+    height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;
+}
+.performance-bar .bar-fill {
+    height:100%; border-radius:999px; transition:width 1s ease;
+}
+
+.error-item {
+    padding:10px 0; border-bottom:1px solid var(--admin-border);
+    font-size:12px; display:flex; align-items:flex-start; gap:10px;
+}
+.error-item:last-child { border-bottom:none; }
+.error-item .err-time { color:var(--admin-text-muted); white-space:nowrap; flex-shrink:0; }
+
+@media (max-width:1024px) {
+    .monitor-stats { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:640px) {
+    .monitor-stats { grid-template-columns:repeat(2,1fr); }
+    .monitor-stat .num { font-size:22px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="monitor-stats">
+    <div class="monitor-stat">
+        <div class="num" style="color:#22c55e" id="healthStatus">●</div>
+        <div class="lbl">System Status</div>
+        <div class="sub" id="statusLabel">Healthy</div>
+    </div>
+    <div class="monitor-stat">
+        <div class="num" id="uptimePercent">99.97%</div>
+        <div class="lbl">Uptime (30 hari)</div>
+    </div>
+    <div class="monitor-stat">
+        <div class="num" id="apiLatency">0ms</div>
+        <div class="lbl">API Latency</div>
+    </div>
+    <div class="monitor-stat">
+        <div class="num" id="activeUsers">0</div>
+        <div class="lbl">Active Users</div>
+    </div>
+    <div class="monitor-stat">
+        <div class="num" style="color:#ef4444" id="errorCount">0</div>
+        <div class="lbl">Errors (24h)</div>
+    </div>
+    <div class="monitor-stat">
+        <div class="num" id="dbConn">0</div>
+        <div class="lbl">DB Connections</div>
+    </div>
 </div>
-<div class="card-grid">
-<div class="card"><div class="card-header">📡 Service Status</div>
-<div class="card-body" id="serviceList">
-<div class="service-item"><span><span class="status-dot status-healthy"></span>API Server</span><span style="font-size:12px;color:var(--color-text-tertiary)">45ms</span></div>
-<div class="service-item"><span><span class="status-dot status-healthy"></span>Database</span><span style="font-size:12px;color:var(--color-text-tertiary)">12ms</span></div>
-<div class="service-item"><span><span class="status-dot status-healthy"></span>Redis Cache</span><span style="font-size:12px;color:var(--color-text-tertiary)">2ms</span></div>
-<div class="service-item"><span><span class="status-dot status-healthy"></span>WebSocket</span><span style="font-size:12px;color:var(--color-text-tertiary)">8ms</span></div>
-<div class="service-item"><span><span class="status-dot status-healthy"></span>File Storage</span><span style="font-size:12px;color:var(--color-text-tertiary)">35ms</span></div>
-</div></div>
-<div class="card"><div class="card-header">⚠️ Recent Errors</div>
-<div class="card-body" id="errorList"><p style="font-size:13px;color:var(--color-text-tertiary);margin:0">Tidak ada error dalam 24 jam terakhir.</p></div></div>
-<div class="card"><div class="card-header">⏱ Performance</div>
-<div class="card-body">
-<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>CPU Usage</span><span id="cpuValue">23%</span></div><div style="height:6px;background:var(--color-gray-100);border-radius:3px;overflow:hidden"><div id="cpuBar" style="height:100%;width:23%;background:var(--color-brand);border-radius:3px;transition:width 1s"></div></div></div>
-<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>Memory Usage</span><span id="memValue">62%</span></div><div style="height:6px;background:var(--color-gray-100);border-radius:3px;overflow:hidden"><div id="memBar" style="height:100%;width:62%;background:#f59e0b;border-radius:3px;transition:width 1s"></div></div></div>
-<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>Disk Usage</span><span id="diskValue">45%</span></div><div style="height:6px;background:var(--color-gray-100);border-radius:3px;overflow:hidden"><div id="diskBar" style="height:100%;width:45%;background:#2563eb;border-radius:3px;transition:width 1s"></div></div></div>
-</div></div>
-</div></div></div>
-<script src="{% static 'js/auth.js' %}"></script><script src="{% static 'js/api.js' %}"></script>
+
+<div class="grid-3">
+    <div class="card">
+        <div class="card-header">📡 Service Status</div>
+        <div class="card-body" id="serviceList">
+            <div class="service-item"><span><span class="status-dot healthy"></span>API Server</span><span style="font-size:12px;color:var(--admin-text-muted)">45ms</span></div>
+            <div class="service-item"><span><span class="status-dot healthy"></span>Database</span><span style="font-size:12px;color:var(--admin-text-muted)">12ms</span></div>
+            <div class="service-item"><span><span class="status-dot healthy"></span>Redis Cache</span><span style="font-size:12px;color:var(--admin-text-muted)">2ms</span></div>
+            <div class="service-item"><span><span class="status-dot healthy"></span>WebSocket</span><span style="font-size:12px;color:var(--admin-text-muted)">8ms</span></div>
+            <div class="service-item"><span><span class="status-dot healthy"></span>File Storage</span><span style="font-size:12px;color:var(--admin-text-muted)">35ms</span></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">⚠️ Recent Errors</div>
+        <div class="card-body" id="errorList">
+            <p style="font-size:13px;color:var(--admin-text-muted);margin:0">Tidak ada error dalam 24 jam terakhir.</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">⏱ Performance</div>
+        <div class="card-body">
+            <div class="performance-bar">
+                <div class="bar-label"><span>CPU Usage</span><span id="cpuValue">23%</span></div>
+                <div class="bar-track"><div class="bar-fill" id="cpuBar" style="width:23%;background:var(--admin-primary);"></div></div>
+            </div>
+            <div class="performance-bar">
+                <div class="bar-label"><span>Memory Usage</span><span id="memValue">62%</span></div>
+                <div class="bar-track"><div class="bar-fill" id="memBar" style="width:62%;background:var(--admin-orange);"></div></div>
+            </div>
+            <div class="performance-bar">
+                <div class="bar-label"><span>Disk Usage</span><span id="diskValue">45%</span></div>
+                <div class="bar-track"><div class="bar-fill" id="diskBar" style="width:45%;background:var(--admin-blue);"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
 <script>
-async function loadHealth(){try{
-    const data=await fetch('/api/monitoring/health/').then(r=>r.json());
-    if(data.status==='healthy'){document.getElementById('healthStatus').textContent='●';document.getElementById('healthStatus').style.color='#22c55e';document.getElementById('statusLabel').textContent='Healthy'}
-    else{document.getElementById('healthStatus').textContent='●';document.getElementById('healthStatus').style.color='#f59e0b';document.getElementById('statusLabel').textContent='Degraded'}
-    // DB connection count is set by loadDashboard, which has more detailed data
-    // Only show health label if dashboard hasn't loaded yet
-    if(!window._dashboardLoaded && data.checks?.database){
-        document.getElementById('dbConn').textContent=data.checks.database.status==='healthy'?'Connected':'Down'
+async function loadHealth() {
+    try {
+        const data = await fetch('/api/monitoring/health/').then(r => r.json());
+        if (data.status === 'healthy') {
+            document.getElementById('healthStatus').textContent = '●';
+            document.getElementById('healthStatus').style.color = '#22c55e';
+            document.getElementById('statusLabel').textContent = 'Healthy';
+        } else {
+            document.getElementById('healthStatus').textContent = '●';
+            document.getElementById('healthStatus').style.color = '#f59e0b';
+            document.getElementById('statusLabel').textContent = 'Degraded';
+        }
+        if (!window._dashLoaded && data.checks?.database) {
+            document.getElementById('dbConn').textContent = data.checks.database.status === 'healthy' ? 'Connected' : 'Down';
+        }
+    } catch(e) {
+        console.warn('Health check error:', e);
     }
-}catch(e){}}
-async function loadDashboard(){try{
-    const resp=await fetch('/api/monitoring/dashboard/').then(r=>r.json());
-    if(resp.performance){document.getElementById('apiLatency').textContent=resp.performance.api_latency_ms+'ms';document.getElementById('activeUsers').textContent=resp.overview.active_tasks || '0';document.getElementById('errorCount').textContent=resp.errors.total_24h || 0;document.getElementById('cpuValue').textContent=resp.performance.cpu_usage+'%';document.getElementById('cpuBar').style.width=resp.performance.cpu_usage+'%';document.getElementById('memValue').textContent=resp.performance.memory_usage+'%';document.getElementById('memBar').style.width=resp.performance.memory_usage+'%';document.getElementById('uptimePercent').textContent=resp.overview.uptime_today ? resp.overview.uptime_today+'%' : '99.97%';document.getElementById('dbConn').textContent=resp.overview.db_connections || '0'}
-    // Populate services from dashboard data
-    if(resp.services && resp.services.length){var sl=document.getElementById('serviceList');sl.innerHTML='';resp.services.forEach(function(s){sl.innerHTML+='<div class="service-item"><span><span class="status-dot status-'+s.status+'"></span>'+s.name+'</span><span style="font-size:12px;color:var(--color-text-tertiary)">'+s.response_time_ms+'ms</span></div>'})}
-    // Populate recent errors
-    if(resp.errors && resp.errors.recent && resp.errors.recent.length){var el=document.getElementById('errorList');el.innerHTML='';resp.errors.recent.slice(0,5).forEach(function(e){el.innerHTML+='<div style="padding:8px 0;border-bottom:1px solid var(--color-gray-100);font-size:12px;display:flex;align-items:center;gap:8px"><span class="status-dot status-'+e.severity+'"></span><span style="flex:1">'+e.message.substring(0,120)+'</span><span style="color:var(--color-text-tertiary);white-space:nowrap">'+new Date(e.created_at).toLocaleTimeString('id-ID')+'</span></div>'})}else{document.getElementById('errorList').innerHTML='<p style="font-size:13px;color:var(--color-text-tertiary);margin:0">Tidak ada error dalam 24 jam terakhir.</p>'}
-window._dashboardLoaded=true;
-}catch(e){console.warn('Dashboard load fallback:',e)}window._dashboardLoaded=false}
-document.addEventListener('DOMContentLoaded',()=>{loadHealth();loadDashboard()});
+}
+
+async function loadDashboard() {
+    try {
+        const resp = await fetch('/api/monitoring/dashboard/').then(r => r.json());
+        if (resp.performance) {
+            document.getElementById('apiLatency').textContent = resp.performance.api_latency_ms + 'ms';
+            document.getElementById('activeUsers').textContent = resp.overview.active_tasks || '0';
+            document.getElementById('errorCount').textContent = resp.errors.total_24h || 0;
+            document.getElementById('cpuValue').textContent = resp.performance.cpu_usage + '%';
+            document.getElementById('cpuBar').style.width = resp.performance.cpu_usage + '%';
+            document.getElementById('memValue').textContent = resp.performance.memory_usage + '%';
+            document.getElementById('memBar').style.width = resp.performance.memory_usage + '%';
+            document.getElementById('uptimePercent').textContent = resp.overview.uptime_today ? resp.overview.uptime_today + '%' : '99.97%';
+            document.getElementById('dbConn').textContent = resp.overview.db_connections || '0';
+        }
+        // Services
+        if (resp.services && resp.services.length) {
+            var sl = document.getElementById('serviceList');
+            sl.innerHTML = '';
+            resp.services.forEach(function(s) {
+                sl.innerHTML += '<div class="service-item"><span><span class="status-dot ' + s.status + '"></span>' + escapeHtml(s.name) + '</span><span style="font-size:12px;color:var(--admin-text-muted)">' + s.response_time_ms + 'ms</span></div>';
+            });
+        }
+        // Errors
+        if (resp.errors && resp.errors.recent && resp.errors.recent.length) {
+            var el = document.getElementById('errorList');
+            el.innerHTML = '';
+            resp.errors.recent.slice(0, 5).forEach(function(e) {
+                el.innerHTML += '<div class="error-item"><span class="status-dot ' + e.severity + '"></span><span style="flex:1">' + escapeHtml((e.message || '').substring(0, 120)) + '</span><span class="err-time">' + (e.created_at ? new Date(e.created_at).toLocaleTimeString('id-ID') : '') + '</span></div>';
+            });
+        } else {
+            document.getElementById('errorList').innerHTML = '<p style="font-size:13px;color:var(--admin-text-muted);margin:0">Tidak ada error dalam 24 jam terakhir.</p>';
+        }
+        window._dashLoaded = true;
+    } catch(e) {
+        console.warn('Dashboard load fallback:', e);
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadHealth();
+    loadDashboard();
+    // Auto-refresh every 60 seconds
+    if (window._monitorRefresh) clearInterval(window._monitorRefresh);
+    window._monitorRefresh = setInterval(function() {
+        loadHealth();
+        loadDashboard();
+    }, 60000);
+});
 </script>
-</body>
-</html>
+{% endblock %}

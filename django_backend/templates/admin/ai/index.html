@@ -4,37 +4,62 @@
 {% block page_title %}AI Management{% endblock %}
 
 {% block content %}
-<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
-    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-microchip"></i></div><div class="stat-content"><div class="stat-label">AI Status</div><div class="stat-value" id="aiStatus">Memeriksa...</div><div class="stat-trend" id="aiStatusDetail" style="font-size:11px;color:var(--color-text-tertiary);"></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-brain"></i></div><div class="stat-content"><div class="stat-label">API Key Set</div><div class="stat-value" id="aiKeyStatus">--</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-server"></i></div><div class="stat-content"><div class="stat-label">AI Provider</div><div class="stat-value" id="aiProvider" style="font-size:16px;">Gemini</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Features Active</div><div class="stat-value" id="aiFeaturesActive">13</div><div class="stat-trend" style="font-size:11px;color:var(--color-text-tertiary);">All AI features</div></div></div>
+<div class="stats-grid cols-4">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-microchip"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">AI Status</div>
+            <div class="stat-value" id="aiStatus" style="font-size:18px;">Memeriksa...</div>
+            <div class="stat-trend" id="aiStatusDetail" style="font-size:11px;color:var(--admin-text-muted);"></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-brain"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">API Key</div>
+            <div class="stat-value" id="aiKeyStatus" style="font-size:18px;">--</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-server"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Provider</div>
+            <div class="stat-value" id="aiProvider" style="font-size:18px;">Gemini</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-clock"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Active Features</div>
+            <div class="stat-value" id="aiFeaturesActive" style="font-size:18px;">13</div>
+            <div class="stat-trend" style="font-size:11px;color:var(--admin-text-muted);">All AI features</div>
+        </div>
+    </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+<div class="grid-2">
     <div class="card">
         <div class="card-header"><h3>AI Features Status</h3></div>
         <div class="card-body">
-            <div style="display:flex; flex-direction:column; gap:16px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;"><i class="fa-solid fa-robot"></i></div>
-                        <div><p style="font-size:13px;font-weight:600;margin:0;">Smart Scan AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Product quality analysis</p></div>
-                    </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="stat-card" style="padding:12px 16px;border:1px solid var(--admin-border);align-items:center;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;flex-shrink:0;"><i class="fa-solid fa-robot"></i></div>
+                    <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">Smart Scan AI</div><div style="font-size:11px;color:var(--admin-text-muted);">Product quality analysis</div></div>
                     <span class="badge badge-green">Active</span>
                 </div>
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;"><i class="fa-solid fa-comments"></i></div>
-                        <div><p style="font-size:13px;font-weight:600;margin:0;">Chat AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Customer support assistant</p></div>
-                    </div>
+                <div class="stat-card" style="padding:12px 16px;border:1px solid var(--admin-border);align-items:center;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#2563eb;flex-shrink:0;"><i class="fa-solid fa-comments"></i></div>
+                    <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">Chat AI</div><div style="font-size:11px;color:var(--admin-text-muted);">Customer support assistant</div></div>
                     <span class="badge badge-green">Active</span>
                 </div>
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--color-gray-50); border-radius:var(--radius-lg);">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;"><i class="fa-solid fa-chart-simple"></i></div>
-                        <div><p style="font-size:13px;font-weight:600;margin:0;">Recommendation AI</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">Product recommendations</p></div>
-                    </div>
+                <div class="stat-card" style="padding:12px 16px;border:1px solid var(--admin-border);align-items:center;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;"><i class="fa-solid fa-chart-simple"></i></div>
+                    <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">Recommendation AI</div><div style="font-size:11px;color:var(--admin-text-muted);">Product recommendations</div></div>
+                    <span class="badge badge-green">Active</span>
+                </div>
+                <div class="stat-card" style="padding:12px 16px;border:1px solid var(--admin-border);align-items:center;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;color:#7c3aed;flex-shrink:0;"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">OCR Scanner</div><div style="font-size:11px;color:var(--admin-text-muted);">Product label scanning</div></div>
                     <span class="badge badge-green">Active</span>
                 </div>
             </div>
@@ -43,7 +68,7 @@
     <div class="card">
         <div class="card-header"><h3>Platform Health</h3></div>
         <div class="card-body" id="aiHealthBody">
-            <div style="text-align:center;padding:20px;color:var(--color-text-tertiary);">
+            <div style="text-align:center;padding:20px;color:var(--admin-text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;margin-bottom:12px;"></i>
                 <p>Memeriksa koneksi AI...</p>
             </div>
@@ -60,7 +85,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         const headers = {};
         if (token) headers['Authorization'] = 'Bearer ' + token;
 
-        // Try AI health endpoint
         const aiResp = await fetch('/api/ai/health/', { headers, credentials: 'include' });
         const aiData = await aiResp.json();
 
@@ -72,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('aiKeyStatus').style.color = '#16a34a';
             document.getElementById('aiHealthBody').innerHTML = 
                 '<div style="text-align:center;padding:20px;"><p style="color:#16a34a;font-weight:600;font-size:16px;"><i class="fa-solid fa-circle-check"></i> AI Service Connected</p>' +
-                '<p style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px;">' + (aiData.test_response || 'Gemini API verifikasi sukses') + '</p></div>';
+                '<p style="font-size:12px;color:var(--admin-text-muted);margin-top:8px;">' + (aiData.test_response || 'Gemini API verifikasi sukses') + '</p></div>';
         } else if (aiData.status === 'unconfigured') {
             document.getElementById('aiStatus').textContent = '⚠️ Not Configured';
             document.getElementById('aiStatus').style.color = '#d97706';
@@ -80,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('aiKeyStatus').style.color = '#dc2626';
             document.getElementById('aiHealthBody').innerHTML = 
                 '<div style="text-align:center;padding:20px;"><p style="color:#d97706;font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> AI Not Configured</p>' +
-                '<p style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px;">Set GEMINI_KEY in .env file</p></div>';
+                '<p style="font-size:12px;color:var(--admin-text-muted);margin-top:8px;">Set GEMINI_KEY in .env file</p></div>';
         } else {
             document.getElementById('aiStatus').textContent = '❌ Error';
             document.getElementById('aiStatus').style.color = '#dc2626';
@@ -93,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('aiKeyStatus').textContent = 'N/A';
         document.getElementById('aiHealthBody').innerHTML = 
             '<div style="text-align:center;padding:20px;"><p style="color:#dc2626;"><i class="fa-solid fa-circle-exclamation"></i> AI Service Unreachable</p>' +
-            '<p style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px;">' + e.message + '</p></div>';
+            '<p style="font-size:12px;color:var(--admin-text-muted);margin-top:8px;">' + e.message + '</p></div>';
     }
 });
 </script>

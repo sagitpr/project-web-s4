@@ -294,7 +294,9 @@ class SalesAnalyticsView(generics.ListAPIView):
             return SalesAnalytics.objects.none()
 
         store = self.request.user.store
-        return SalesAnalytics.objects.filter(store=store).order_by('-date')
+        return SalesAnalytics.objects.filter(store=store).select_related(
+            'store'
+        ).order_by('-date')
 
 
 @extend_schema(exclude=True)

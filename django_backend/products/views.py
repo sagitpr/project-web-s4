@@ -338,9 +338,11 @@ class SellerStoreReviewListView(generics.ListAPIView):
 
 class PromoListView(generics.ListAPIView):
     """List active promos."""
-    queryset = Promo.objects.filter(is_active=True)
     serializer_class = PromoSerializer
     permission_classes = (permissions.AllowAny,)
+
+    def get_queryset(self):
+        return Promo.objects.filter(is_active=True).select_related('store')
 
 
 @extend_schema(exclude=True)
@@ -350,7 +352,9 @@ class SellerPromoListCreateView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get_queryset(self):
-        return Promo.objects.filter(store__user=self.request.user).order_by('-created_at')
+        return Promo.objects.filter(store__user=self.request.user).select_related(
+            'store'
+        ).order_by('-created_at')
 
     def perform_create(self, serializer):
         store = self.request.user.store

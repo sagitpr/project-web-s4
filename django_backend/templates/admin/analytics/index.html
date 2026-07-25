@@ -3,52 +3,100 @@
 {% block title %}Analytics - Warungio Admin{% endblock %}
 {% block page_title %}Analytics{% endblock %}
 
+{% block extra_styles %}
+<style>
+.insight-card {
+    padding:16px 20px;
+    background:var(--admin-bg);
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:13px;
+}
+.insight-card:hover { background:#f1f5f9; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="stats-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px;">
-    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div><div class="stat-content"><div class="stat-label">Total Users</div><div class="stat-value" id="analyticsTotalUsers"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsUserGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-store"></i></div><div class="stat-content"><div class="stat-label">Active Stores</div><div class="stat-value" id="analyticsStores"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsStoreGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div><div class="stat-content"><div class="stat-label">Total Orders</div><div class="stat-value" id="analyticsOrders"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div><div class="stat-trend up" id="analyticsOrderGrowth"><i class="fa-solid fa-arrow-up"></i> --</div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div><div class="stat-content"><div class="stat-label">Revenue (30d)</div><div class="stat-value" id="analyticsRevenue"><span class="skeleton" style="display:inline-block;width:80px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Pending Stores</div><div class="stat-value" id="analyticsPending"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
+<div class="stats-grid cols-5">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="analyticsTotalUsers"><span class="skeleton" style="width:60px;height:26px;"></span></div>
+            <div class="stat-trend up" id="analyticsUserGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Active Stores</div>
+            <div class="stat-value" id="analyticsStores"><span class="skeleton" style="width:60px;height:26px;"></span></div>
+            <div class="stat-trend up" id="analyticsStoreGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value" id="analyticsOrders"><span class="skeleton" style="width:60px;height:26px;"></span></div>
+            <div class="stat-trend up" id="analyticsOrderGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Revenue (30d)</div>
+            <div class="stat-value" id="analyticsRevenue" style="font-size:20px;"><span class="skeleton" style="width:80px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fa-solid fa-clock"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Pending Stores</div>
+            <div class="stat-value" id="analyticsPending"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+        </div>
+    </div>
 </div>
 
-<div style="display:grid; grid-template-columns:2fr 1fr; gap:24px; margin-bottom:24px;">
+<div class="grid-2">
     <div class="card">
         <div class="card-header"><h3>Platform Overview</h3></div>
         <div class="card-body" style="padding:0;">
-            <div style="display:flex; flex-direction:column;">
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:600;">Buyers</span>
-                    <span class="badge badge-green" id="analyticsBuyers">--</span>
-                </div>
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:600;">Sellers</span>
-                    <span class="badge badge-blue" id="analyticsSellers">--</span>
-                </div>
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:600;">New Users (30d)</span>
-                    <span class="badge badge-purple" id="analyticsNewUsers">--</span>
-                </div>
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:600;">New Stores (30d)</span>
-                    <span class="badge badge-yellow" id="analyticsNewStores">--</span>
-                </div>
-                <div style="padding:14px 20px; display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:13px;font-weight:600;">Orders (30d)</span>
-                    <span class="badge badge-green" id="analyticsOrders30d">--</span>
-                </div>
+            <div class="insight-card" style="border-radius:0;border-bottom:1px solid var(--admin-border);">
+                <span style="font-weight:600;">Buyers</span>
+                <span class="badge badge-green" id="analyticsBuyers" style="font-size:13px;padding:4px 16px;">--</span>
+            </div>
+            <div class="insight-card" style="border-radius:0;border-bottom:1px solid var(--admin-border);">
+                <span style="font-weight:600;">Sellers</span>
+                <span class="badge badge-blue" id="analyticsSellers" style="font-size:13px;padding:4px 16px;">--</span>
+            </div>
+            <div class="insight-card" style="border-radius:0;border-bottom:1px solid var(--admin-border);">
+                <span style="font-weight:600;">New Users (30d)</span>
+                <span class="badge badge-purple" id="analyticsNewUsers" style="font-size:13px;padding:4px 16px;">--</span>
+            </div>
+            <div class="insight-card" style="border-radius:0;border-bottom:1px solid var(--admin-border);">
+                <span style="font-weight:600;">New Stores (30d)</span>
+                <span class="badge badge-yellow" id="analyticsNewStores" style="font-size:13px;padding:4px 16px;">--</span>
+            </div>
+            <div class="insight-card" style="border-radius:0;">
+                <span style="font-weight:600;">Orders (30d)</span>
+                <span class="badge badge-green" id="analyticsOrders30d" style="font-size:13px;padding:4px 16px;">--</span>
             </div>
         </div>
     </div>
     <div class="card">
         <div class="card-header"><h3>Top Stores (30d)</h3></div>
         <div class="card-body" style="padding:0;">
-            <div class="table-wrap"><table class="w-table">
-                <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
-                <tbody id="analyticsTopStoresBody">
-                    <tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Memuat data...</td></tr>
-                </tbody>
-            </table></div>
+            <div class="table-wrap">
+                <table class="w-table">
+                    <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
+                    <tbody id="analyticsTopStoresBody">
+                        <tr><td colspan="3" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -59,42 +107,49 @@ document.addEventListener('DOMContentLoaded', async function() {
         const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
           ? window.WarungioAuth.getAccessToken() 
           : localStorage.getItem('warungio_access_token');
-        const headers = {};
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
 
         const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load');
         const d = await res.json();
 
-        document.getElementById('analyticsTotalUsers').textContent = d.total_users.toLocaleString('id-ID');
-        document.getElementById('analyticsStores').textContent = d.active_stores.toLocaleString('id-ID');
-        document.getElementById('analyticsOrders').textContent = d.total_orders.toLocaleString('id-ID');
-        document.getElementById('analyticsRevenue').textContent = d.revenue_30d_formatted;
-        document.getElementById('analyticsPending').textContent = d.pending_stores;
-        document.getElementById('analyticsBuyers').textContent = d.total_buyers.toLocaleString('id-ID');
-        document.getElementById('analyticsSellers').textContent = d.total_sellers.toLocaleString('id-ID');
-        document.getElementById('analyticsNewUsers').textContent = d.new_users_30d;
-        document.getElementById('analyticsNewStores').textContent = d.new_stores_30d;
-        document.getElementById('analyticsOrders30d').textContent = d.orders_30d;
+        document.getElementById('analyticsTotalUsers').textContent = (d.total_users || 0).toLocaleString('id-ID');
+        document.getElementById('analyticsStores').textContent = (d.active_stores || 0).toLocaleString('id-ID');
+        document.getElementById('analyticsOrders').textContent = (d.total_orders || 0).toLocaleString('id-ID');
+        document.getElementById('analyticsRevenue').textContent = d.revenue_30d_formatted || 'Rp 0';
+        document.getElementById('analyticsPending').textContent = d.pending_stores || 0;
+        document.getElementById('analyticsBuyers').textContent = (d.total_buyers || 0).toLocaleString('id-ID');
+        document.getElementById('analyticsSellers').textContent = (d.total_sellers || 0).toLocaleString('id-ID');
+        document.getElementById('analyticsNewUsers').textContent = d.new_users_30d || 0;
+        document.getElementById('analyticsNewStores').textContent = d.new_stores_30d || 0;
+        document.getElementById('analyticsOrders30d').textContent = (d.orders_30d || 0).toLocaleString('id-ID');
 
-        document.getElementById('analyticsUserGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.new_users_30d + ' baru';
-        document.getElementById('analyticsStoreGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.new_stores_30d + ' baru';
-        document.getElementById('analyticsOrderGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + d.order_growth + '%';
+        document.getElementById('analyticsUserGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (d.new_users_30d || 0) + ' baru';
+        document.getElementById('analyticsStoreGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (d.new_stores_30d || 0) + ' baru';
+        document.getElementById('analyticsOrderGrowth').innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (d.order_growth || 0) + '%';
 
         const topBody = document.getElementById('analyticsTopStoresBody');
         topBody.innerHTML = '';
         if (d.top_stores && d.top_stores.length > 0) {
-            d.top_stores.forEach(s => {
-                topBody.innerHTML += '<tr><td><div style="font-weight:600;">' + s.store_name + '</div></td><td>' + s.order_count + '</td><td>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</td></tr>';
+            d.top_stores.forEach(function(s) {
+                topBody.innerHTML += '<tr><td><span style="font-weight:600;">' + escapeHtml(s.store_name) + '</span></td><td>' + s.order_count + '</td><td><strong>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</strong></td></tr>';
             });
         } else {
-            topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data toko</td></tr>';
+            topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Belum ada data toko</td></tr>';
         }
     } catch (e) {
-        document.querySelectorAll('#analyticsTotalUsers, #analyticsStores, #analyticsOrders, #analyticsRevenue').forEach(el => {
+        document.querySelectorAll('[id^="analytics"]').forEach(function(el) {
             if (el) el.textContent = 'N/A';
         });
     }
 });
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
 </script>
 {% endblock %}

@@ -3,22 +3,53 @@
 {% block title %}Marketplace - Warungio Admin{% endblock %}
 {% block page_title %}Marketplace Management{% endblock %}
 {% block content %}
-<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
-    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-store"></i></div><div class="stat-content"><div class="stat-label">Active Stores</div><div class="stat-value" id="mktActiveStores"><span class="skeleton" style="display:inline-block;width:50px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-clock"></i></div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value" id="mktPendingStores"><span class="skeleton" style="display:inline-block;width:30px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-box"></i></div><div class="stat-content"><div class="stat-label">New Stores (30d)</div><div class="stat-value" id="mktNewStores"><span class="skeleton" style="display:inline-block;width:30px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-tag"></i></div><div class="stat-content"><div class="stat-label">Top Store Revenue</div><div class="stat-value" id="mktTopRevenue" style="font-size:16px;"><span class="skeleton" style="display:inline-block;width:70px;height:24px;"></span></div></div></div>
+<div class="stats-grid cols-4">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-store"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Active Stores</div>
+            <div class="stat-value" id="mktActiveStores"><span class="skeleton" style="width:60px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-clock"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="mktPendingStores"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-box"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">New Stores (30d)</div>
+            <div class="stat-value" id="mktNewStores"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-tag"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Top Store Revenue</div>
+            <div class="stat-value" id="mktTopRevenue" style="font-size:18px;"><span class="skeleton" style="width:80px;height:26px;"></span></div>
+        </div>
+    </div>
 </div>
 
 <div class="card">
-    <div class="card-header"><h3>Top Stores (30d)</h3></div>
+    <div class="card-header">
+        <h3>Top Stores (30d)</h3>
+        <a href="#" class="btn btn-sm btn-outline">Export <i class="fa-solid fa-download"></i></a>
+    </div>
     <div class="card-body" style="padding:0;">
-        <div class="table-wrap"><table class="w-table">
-            <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
-            <tbody id="mktTopStoresBody">
-                <tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Memuat data...</td></tr>
-            </tbody>
-        </table></div>
+        <div class="table-wrap">
+            <table class="w-table">
+                <thead>
+                    <tr><th>#</th><th>Store</th><th>Owner</th><th>Orders</th><th>Revenue</th></tr>
+                </thead>
+                <tbody id="mktTopStoresBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -28,16 +59,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
           ? window.WarungioAuth.getAccessToken() 
           : localStorage.getItem('warungio_access_token');
-        const headers = {};
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
 
         const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load');
         const d = await res.json();
 
-        document.getElementById('mktActiveStores').textContent = d.active_stores.toLocaleString('id-ID');
-        document.getElementById('mktPendingStores').textContent = d.pending_stores;
-        document.getElementById('mktNewStores').textContent = d.new_stores_30d;
+        document.getElementById('mktActiveStores').textContent = (d.active_stores || 0).toLocaleString('id-ID');
+        document.getElementById('mktPendingStores').textContent = d.pending_stores || 0;
+        document.getElementById('mktNewStores').textContent = d.new_stores_30d || 0;
         document.getElementById('mktTopRevenue').textContent = d.top_stores && d.top_stores[0] 
             ? 'Rp ' + Number(d.top_stores[0].revenue).toLocaleString('id-ID') 
             : 'Rp 0';
@@ -45,18 +76,31 @@ document.addEventListener('DOMContentLoaded', async function() {
         const topBody = document.getElementById('mktTopStoresBody');
         topBody.innerHTML = '';
         if (d.top_stores && d.top_stores.length > 0) {
-            d.top_stores.forEach(s => {
-                topBody.innerHTML += '<tr><td><div style="font-weight:600;">' + s.store_name + '</div></td><td>' + s.order_count + '</td><td>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</td></tr>';
+            d.top_stores.forEach(function(s, i) {
+                topBody.innerHTML += '<tr>' +
+                    '<td><span class="badge badge-gray">#' + (i+1) + '</span></td>' +
+                    '<td><span style="font-weight:600;">' + escapeHtml(s.store_name) + '</span></td>' +
+                    '<td>' + escapeHtml(s.owner_name || '-') + '</td>' +
+                    '<td>' + s.order_count + '</td>' +
+                    '<td><strong>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</strong></td>' +
+                '</tr>';
             });
         } else {
-            topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data toko</td></tr>';
+            topBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Belum ada data toko</td></tr>';
         }
     } catch (e) {
-        ['mktActiveStores','mktPendingStores','mktNewStores'].forEach(id => {
-            const el = document.getElementById(id);
+        ['mktActiveStores','mktPendingStores','mktNewStores'].forEach(function(id) {
+            var el = document.getElementById(id);
             if (el) el.textContent = 'N/A';
         });
     }
 });
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
 </script>
 {% endblock %}

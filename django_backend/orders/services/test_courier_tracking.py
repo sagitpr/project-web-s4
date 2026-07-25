@@ -185,6 +185,7 @@ class TestGetHyperlocalTracking:
             'status', 'milestones', 'driver_name', 'driver_phone',
             'pickup_code', 'estimated_time', 'estimated_pickup',
             'estimated_delivery', 'source',
+            'latitude', 'longitude',
         }
         assert set(result.keys()) == expected_keys
         assert result['source'] == 'hyperlocal'

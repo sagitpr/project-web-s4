@@ -2,171 +2,390 @@
 {% load static %}
 {% block title %}Dashboard - Warungio Admin{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
-{% block sidebar_links %}{{ block.super }}{% endblock %}
 
-{% block extra_head %}
-<script src="{% static 'js/api.js' %}"></script>
+{% block extra_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4/dist/Chart.min.css">
+<style>
+.dash-welcome { margin-bottom: 24px; }
+.dash-welcome h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.dash-welcome p { color: var(--admin-text-muted); font-size: 14px; }
+
+.dash-chart-container { position: relative; height: 280px; width: 100%; }
+.dash-chart-container canvas { max-height: 280px; }
+
+.quick-activity-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--admin-border);
+    font-size: 13px;
+}
+.quick-activity-item:last-child { border-bottom: none; }
+.quick-activity-item .activity-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--admin-primary);
+}
+
+.balance-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+.balance-item {
+    padding: 14px;
+    background: var(--admin-bg);
+    border-radius: 12px;
+    text-align: center;
+}
+.balance-item .num { font-size: 18px; font-weight: 800; }
+.balance-item .lbl { font-size: 11px; color: var(--admin-text-muted); margin-top: 4px; }
+
+.status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--admin-bg);
+    border-radius: 12px;
+    font-size: 13px;
+}
+.status-item .s-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.s-dot.green { background: var(--admin-primary); }
+.s-dot.yellow { background: var(--admin-orange); }
+.s-dot.red { background: var(--admin-red); }
+.s-dot.blue { background: var(--admin-blue); }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+<!-- Welcome -->
+<div class="dash-welcome">
+    <h2>Selamat Datang, {{ request.user.get_full_name|default:'Admin' }} 👋</h2>
+    <p>Berikut ringkasan aktivitas marketplace Warungio hari ini.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid cols-4">
     <div class="stat-card">
-        <div class="stat-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div>
         <div class="stat-content">
             <div class="stat-label">Total Users</div>
-            <div class="stat-value" id="totalUsers"><div class="skeleton" style="height:28px;width:80px;"></div></div>
-            <div class="stat-trend" id="userGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+            <div class="stat-value" id="totalUsers"><span class="skeleton" style="width:70px;height:26px;"></span></div>
+            <div class="stat-trend up" id="userGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background:#dbeafe; color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+        <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
         <div class="stat-content">
             <div class="stat-label">Active Stores</div>
-            <div class="stat-value" id="activeStores"><div class="skeleton" style="height:28px;width:80px;"></div></div>
-            <div class="stat-trend" id="storeGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+            <div class="stat-value" id="activeStores"><span class="skeleton" style="width:70px;height:26px;"></span></div>
+            <div class="stat-trend up" id="storeGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div>
+        <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-cart-shopping"></i></div>
         <div class="stat-content">
             <div class="stat-label">Total Orders</div>
-            <div class="stat-value" id="totalOrders"><div class="skeleton" style="height:28px;width:80px;"></div></div>
-            <div class="stat-trend" id="orderGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
+            <div class="stat-value" id="totalOrders"><span class="skeleton" style="width:70px;height:26px;"></span></div>
+            <div class="stat-trend up" id="orderGrowth"><i class="fa-solid fa-arrow-up"></i> --</div>
         </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#fce7f3; color:#db2777;"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+    <div class="stat-card balance-card">
         <div class="stat-content">
             <div class="stat-label">Revenue (30d)</div>
-            <div class="stat-value" id="totalRevenue"><div class="skeleton" style="height:28px;width:100px;"></div></div>
-            <div class="stat-trend" id="revenueLabel" style="color:var(--color-text-tertiary); font-size:11px;">30 hari terakhir</div>
+            <div class="stat-value" id="totalRevenue"><span class="skeleton" style="width:100px;height:26px;"></span></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">30 hari terakhir</div>
         </div>
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+<!-- Main Grid -->
+<div class="grid-2" style="margin-bottom:24px;">
+    <!-- Revenue Chart -->
     <div class="card">
-        <div class="card-header"><h3>Revenue Overview</h3></div>
-        <div class="card-body" style="height:250px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);">
-            <div style="text-align:center;" id="revenueChart">
-                <i class="fa-solid fa-chart-column fa-3x" style="color:var(--color-gray-200);margin-bottom:12px;"></i>
-                <p>Memuat data...</p>
+        <div class="card-header">
+            <h3>Revenue Overview</h3>
+            <div style="display:flex;gap:8px;">
+                <select id="chartPeriod" class="form-select" style="width:auto;min-height:32px;padding:4px 10px;font-size:12px;" onchange="loadAdminDashboard()">
+                    <option value="7">7 Hari</option>
+                    <option value="30" selected>30 Hari</option>
+                    <option value="90">90 Hari</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="dash-chart-container">
+                <canvas id="revenueChart"></canvas>
             </div>
         </div>
     </div>
+
+    <!-- Quick Stats -->
     <div class="card">
-        <div class="card-header"><h3>Quick Stats</h3></div>
+        <div class="card-header"><h3>Platform Overview</h3></div>
         <div class="card-body" style="padding:0;">
-            <div style="display:flex; flex-direction:column;" id="quickStats">
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between;">
-                    <div><p style="font-size:13px;font-weight:600;margin:0;">Buyers</p></div>
-                    <span class="badge badge-green" id="totalBuyers">--</span>
+            <div style="display:flex;flex-direction:column;">
+                <div style="padding:16px 24px;border-bottom:1px solid var(--admin-border);display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-weight:600;font-size:14px;">Buyers</span>
+                    <span class="badge badge-green" id="totalBuyers" style="font-size:13px;padding:4px 14px;">--</span>
                 </div>
-                <div style="padding:14px 20px; border-bottom:1px solid var(--color-border-light); display:flex; align-items:center; justify-content:space-between;">
-                    <div><p style="font-size:13px;font-weight:600;margin:0;">Sellers</p></div>
-                    <span class="badge badge-blue" id="totalSellers">--</span>
+                <div style="padding:16px 24px;border-bottom:1px solid var(--admin-border);display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-weight:600;font-size:14px;">Sellers</span>
+                    <span class="badge badge-blue" id="totalSellers" style="font-size:13px;padding:4px 14px;">--</span>
                 </div>
-                <div style="padding:14px 20px; display:flex; align-items:center; justify-content:space-between;">
-                    <div><p style="font-size:13px;font-weight:600;margin:0;">Pending Verifications</p></div>
-                    <span class="badge badge-yellow" id="pendingStores">--</span>
+                <div style="padding:16px 24px;border-bottom:1px solid var(--admin-border);display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-weight:600;font-size:14px;">Pending Verifications</span>
+                    <span class="badge badge-yellow" id="pendingStores" style="font-size:13px;padding:4px 14px;">--</span>
+                </div>
+                <div style="padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-weight:600;font-size:14px;">Orders (30d)</span>
+                    <span class="badge badge-purple" id="orders30d" style="font-size:13px;padding:4px 14px;">--</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px;">
+<!-- Second Row -->
+<div class="grid-2" style="margin-bottom:24px;">
+    <!-- Top Stores -->
     <div class="card">
-        <div class="card-header"><h3>Top Stores (30d)</h3></div>
+        <div class="card-header">
+            <h3>Top Stores (30d)</h3>
+            <a href="{% url 'admin-marketplace' %}" class="btn btn-sm btn-outline">Lihat Semua</a>
+        </div>
         <div class="card-body" style="padding:0;">
-            <div class="table-wrap"><table class="w-table">
-                <thead><tr><th>Store</th><th>Orders</th><th>Revenue</th></tr></thead>
-                <tbody id="topStoresBody">
-                    <tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Memuat data...</td></tr>
-                </tbody>
-            </table></div>
+            <div class="table-wrap">
+                <table class="w-table">
+                    <thead>
+                        <tr><th>Store</th><th>Orders</th><th>Revenue</th></tr>
+                    </thead>
+                    <tbody id="topStoresBody">
+                        <tr><td colspan="3" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Platform Health -->
     <div class="card">
         <div class="card-header"><h3>Platform Health</h3></div>
-        <div class="card-body" style="height:100px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);">
-            <div style="text-align:center;" id="healthStatus">
-                <p>Menunggu data...</p>
+        <div class="card-body">
+            <div style="text-align:center;padding:8px;" id="healthStatus">
+                <span class="skeleton" style="width:200px;height:20px;"></span>
+            </div>
+            <div class="status-grid">
+                <div class="status-item"><span class="s-dot green"></span> API Server</div>
+                <div class="status-item"><span class="s-dot green"></span> Database</div>
+                <div class="status-item"><span class="s-dot green"></span> Redis Cache</div>
+                <div class="status-item"><span class="s-dot green"></span> WebSocket</div>
+            </div>
+            <div class="balance-breakdown">
+                <div class="balance-item">
+                    <div class="num" id="totalProducts" style="color:var(--admin-primary);">--</div>
+                    <div class="lbl">Total Products</div>
+                </div>
+                <div class="balance-item">
+                    <div class="num" id="totalRevenueRaw" style="color:var(--admin-blue);">--</div>
+                    <div class="lbl">Total Revenue</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/api.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
-    async function loadAdminDashboard() {
-        try {
-            // Coba ambil token JWT dari localStorage (via auth.js's consistent key)
-            const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
-              ? window.WarungioAuth.getAccessToken() 
-              : localStorage.getItem('warungio_access_token');
-            const headers = {};
-            if (token) {
-                headers['Authorization'] = 'Bearer ' + token;
-            }
+let revenueChartInstance = null;
 
-            const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
-            if (!res.ok) throw new Error('Failed to load stats');
-            const data = await res.json();
+window.loadAdminDashboard = async function() {
+    try {
+        const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
+          ? window.WarungioAuth.getAccessToken() 
+          : localStorage.getItem('warungio_access_token');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
 
-            // Update stat cards
-            document.getElementById('totalUsers').textContent = data.total_users.toLocaleString('id-ID');
-            document.getElementById('activeStores').textContent = data.active_stores.toLocaleString('id-ID');
-            document.getElementById('totalOrders').textContent = data.total_orders.toLocaleString('id-ID');
-            document.getElementById('totalRevenue').textContent = data.revenue_30d_formatted;
+        const period = (document.getElementById('chartPeriod')?.value) || '30';
 
-            // Growth trends
-            const userGrowthEl = document.getElementById('userGrowth');
-            userGrowthEl.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + data.new_users_30d + ' baru (30d)';
-            userGrowthEl.className = 'stat-trend up';
+        // Load admin stats
+        const statRes = await fetch('/api/monitoring/admin-stats/?period=' + period, { headers, credentials: 'include' });
+        if (!statRes.ok) throw new Error('Failed to load stats');
+        const data = await statRes.json();
 
-            const storeGrowthEl = document.getElementById('storeGrowth');
-            storeGrowthEl.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + data.new_stores_30d + ' baru (30d)';
-            storeGrowthEl.className = 'stat-trend up';
+        // Update stat cards
+        animateNumber('totalUsers', data.total_users || 0);
+        animateNumber('activeStores', data.active_stores || 0);
+        animateNumber('totalOrders', data.total_orders || 0);
+        document.getElementById('totalRevenue').textContent = data.revenue_30d_formatted || 'Rp 0';
 
-            const orderGrowthEl = document.getElementById('orderGrowth');
-            orderGrowthEl.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + data.order_growth + '%';
-            orderGrowthEl.className = 'stat-trend up';
+        // Growth trends
+        const ug = document.getElementById('userGrowth');
+        ug.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (data.new_users_30d || 0) + ' baru (30d)';
+        ug.className = 'stat-trend up';
 
-            // Quick stats
-            document.getElementById('totalBuyers').textContent = data.total_buyers.toLocaleString('id-ID');
-            document.getElementById('totalSellers').textContent = data.total_sellers.toLocaleString('id-ID');
-            document.getElementById('pendingStores').textContent = data.pending_stores;
+        const sg = document.getElementById('storeGrowth');
+        sg.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (data.new_stores_30d || 0) + ' baru (30d)';
+        sg.className = 'stat-trend up';
 
-            // Top stores table
-            const topBody = document.getElementById('topStoresBody');
-            topBody.innerHTML = '';
-            if (data.top_stores && data.top_stores.length > 0) {
-                data.top_stores.forEach(s => {
-                    topBody.innerHTML += '<tr><td><div style="font-weight:600;">' + s.store_name + '</div></td><td>' + s.order_count + '</td><td>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</td></tr>';
-                });
-            } else {
-                topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data toko</td></tr>';
-            }
+        const og = document.getElementById('orderGrowth');
+        og.innerHTML = '<i class="fa-solid fa-arrow-up"></i> ' + (data.order_growth || 0) + '%';
+        og.className = 'stat-trend up';
 
-            // Health status
-            document.getElementById('healthStatus').innerHTML = '<p style="color:#16a34a;font-weight:600;"><i class="fa-solid fa-circle-check"></i> Semua sistem berjalan normal</p>';
+        // Quick stats
+        document.getElementById('totalBuyers').textContent = (data.total_buyers || 0).toLocaleString('id-ID');
+        document.getElementById('totalSellers').textContent = (data.total_sellers || 0).toLocaleString('id-ID');
+        document.getElementById('pendingStores').textContent = data.pending_stores || 0;
+        document.getElementById('orders30d').textContent = (data.orders_30d || 0).toLocaleString('id-ID');
 
-            // Revenue chart placeholder
-            document.getElementById('revenueChart').innerHTML = '<p style="color:var(--color-text-tertiary);">Rp ' + Number(data.revenue_30d).toLocaleString('id-ID') + ' pendapatan 30 hari terakhir</p>';
+        // Balance breakdown
+        document.getElementById('totalProducts').textContent = (data.total_products || 0).toLocaleString('id-ID');
+        document.getElementById('totalRevenueRaw').textContent = 'Rp ' + Number(data.revenue_30d || 0).toLocaleString('id-ID');
 
-        } catch (err) {
-            console.warn('Admin dashboard load error:', err);
-            // Fallback: show loading error state
-            document.getElementById('totalUsers').innerHTML = '<span style="color:var(--color-text-tertiary);font-size:14px;">Gagal muat</span>';
-            document.getElementById('activeStores').innerHTML = '<span style="color:var(--color-text-tertiary);font-size:14px;">Gagal muat</span>';
-            document.getElementById('totalOrders').innerHTML = '<span style="color:var(--color-text-tertiary);font-size:14px;">Gagal muat</span>';
-            document.getElementById('totalRevenue').innerHTML = '<span style="color:var(--color-text-tertiary);font-size:14px;">Gagal muat</span>';
-            document.getElementById('healthStatus').innerHTML = '<p style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat data dashboard</p>';
+        // Top stores table
+        const topBody = document.getElementById('topStoresBody');
+        topBody.innerHTML = '';
+        if (data.top_stores && data.top_stores.length > 0) {
+            data.top_stores.forEach(function(s, i) {
+                topBody.innerHTML += '<tr>' +
+                    '<td><div style="display:flex;align-items:center;gap:10px;"><span class="badge badge-gray">#' + (i+1) + '</span> <span style="font-weight:600;">' + escapeHtml(s.store_name) + '</span></div></td>' +
+                    '<td>' + s.order_count + '</td>' +
+                    '<td><strong>Rp ' + Number(s.revenue).toLocaleString('id-ID') + '</strong></td>' +
+                '</tr>';
+            });
+        } else {
+            topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--admin-text-muted);padding:20px;">Belum ada data toko</td></tr>';
         }
-    }
 
-    loadAdminDashboard();
+        // Health status
+        document.getElementById('healthStatus').innerHTML = 
+            '<p style="color:#16a34a;font-weight:600;font-size:15px;"><i class="fa-solid fa-circle-check"></i> All Systems Normal</p>';
+
+        // Revenue Chart
+        if (data.revenue_chart && data.revenue_chart.labels) {
+            renderRevenueChart(data.revenue_chart);
+        }
+
+    } catch (err) {
+        console.warn('Admin dashboard load error:', err);
+        document.querySelectorAll('.stat-value').forEach(function(el) {
+            if (el.querySelector('.skeleton')) {
+                el.innerHTML = '<span style="color:var(--admin-text-muted);font-size:14px;">Gagal</span>';
+            }
+        });
+        document.getElementById('healthStatus').innerHTML = 
+            '<p style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat data</p>';
+    }
+};
+
+function renderRevenueChart(chartData) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    if (revenueChartInstance) {
+        revenueChartInstance.destroy();
+    }
+    revenueChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels || [],
+            datasets: [{
+                label: 'Revenue',
+                data: chartData.daily_sales || [],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointBackgroundColor: '#22c55e',
+                borderWidth: 2,
+            }, {
+                label: 'Orders',
+                data: chartData.daily_orders || [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.05)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 2,
+                pointBackgroundColor: '#3b82f6',
+                borderWidth: 2,
+                yAxisID: 'y1',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            if (ctx.datasetIndex === 0) return 'Revenue: Rp ' + Number(ctx.raw).toLocaleString('id-ID');
+                            return 'Orders: ' + ctx.raw;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: function(v) { return 'Rp' + (v/1000).toFixed(0) + 'k'; }, font: { size: 10 } },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    ticks: { font: { size: 10 } },
+                    grid: { display: false }
+                },
+                x: {
+                    ticks: { font: { size: 10 }, maxTicksLimit: 10 },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+function animateNumber(elId, value) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = value.toLocaleString('id-ID');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+// Load on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.loadAdminDashboard) loadAdminDashboard();
 });
 </script>
 {% endblock %}

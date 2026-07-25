@@ -1,0 +1,210 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Customer Support - Warungio Admin{% endblock %}
+{% block page_title %}Customer Support Center{% endblock %}
+
+{% block extra_styles %}
+<style>
+.support-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.support-grid { display:grid; grid-template-columns:2fr 1fr; gap:24px; margin-bottom:24px; }
+.support-table-wrap { overflow-x:auto; }
+@media (max-width:1024px) {
+    .support-stats { grid-template-columns:repeat(2,1fr); }
+    .support-grid { grid-template-columns:1fr; }
+}
+@media (max-width:640px) {
+    .support-stats { grid-template-columns:1fr; }
+}
+.tab-bar {
+    display:flex; gap:4px; background:var(--admin-bg);
+    padding:4px; border-radius:12px; margin-bottom:20px;
+    overflow-x:auto;
+}
+.tab-bar .tab {
+    padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600;
+    cursor:pointer; white-space:nowrap; border:none; background:transparent;
+    color:var(--admin-text-muted); transition:all 0.2s;
+}
+.tab-bar .tab.active { background:white; color:var(--admin-primary); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.tab-bar .tab:hover:not(.active) { color:var(--admin-text); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tab-bar" id="supportTabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="tickets">Tickets</button>
+    <button class="tab" data-tab="complaints">Complaints</button>
+    <button class="tab" data-tab="reports">Reports</button>
+    <button class="tab" data-tab="disputes">Disputes</button>
+</div>
+
+<!-- Dashboard Tab -->
+<div class="tab-content" id="tab-dashboard">
+    <div class="support-stats">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-ticket"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Open Tickets</div>
+                <div class="stat-value" id="openTickets"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" id="pendingTickets"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fee2e2;color:#ef4444;"><i class="fa-solid fa-exclamation"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Urgent</div>
+                <div class="stat-value" id="urgentTickets"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">Unassigned</div>
+                <div class="stat-value" id="unassignedTickets"><span class="skeleton" style="width:40px;height:26px;"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="support-grid">
+        <div class="card">
+            <div class="card-header"><h3>Recent Tickets</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div class="support-table-wrap">
+                    <table class="w-table">
+                        <thead><tr><th>ID</th><th>Subject</th><th>Status</th><th>Priority</th><th>Assigned</th></tr></thead>
+                        <tbody id="recentTicketsBody">
+                            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--admin-text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>Quick Overview</h3></div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="stat-card" style="padding:14px;border:1px solid var(--admin-border);">
+                        <div class="stat-content"><div class="stat-label">Total Tickets</div><div class="stat-value" id="totalTickets" style="font-size:20px;">--</div></div>
+                    </div>
+                    <div class="stat-card" style="padding:14px;border:1px solid var(--admin-border);">
+                        <div class="stat-content"><div class="stat-label">SLA Breaches (30d)</div><div class="stat-value" id="slaBreaches" style="font-size:20px;color:var(--admin-red);">--</div></div>
+                    </div>
+                    <div class="stat-card" style="padding:14px;border:1px solid var(--admin-border);">
+                        <div class="stat-content"><div class="stat-label">Avg Response</div><div class="stat-value" id="avgResponse" style="font-size:20px;">--</div></div>
+                    </div>
+                    <div class="stat-card" style="padding:14px;border:1px solid var(--admin-border);">
+                        <div class="stat-content"><div class="stat-label">Pending Reports</div><div class="stat-value" id="pendingReports" style="font-size:20px;color:var(--admin-orange);">--</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tickets Tab -->
+<div class="tab-content" id="tab-tickets" style="display:none;">
+    <div class="card">
+        <div class="card-header"><h3>All Support Tickets</h3></div>
+        <div class="card-body" style="padding:0;">
+            <div class="support-table-wrap">
+                <table class="w-table">
+                    <thead><tr><th>ID</th><th>Subject</th><th>User</th><th>Category</th><th>Status</th><th>Priority</th><th>Assigned</th><th>Created</th></tr></thead>
+                    <tbody id="allTicketsBody">
+                        <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--admin-text-muted);">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    document.getElementById('supportTabs').addEventListener('click', function(e) {
+        if (e.target.classList.contains('tab')) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+            var tabName = e.target.getAttribute('data-tab');
+            document.getElementById('tab-' + tabName).style.display = 'block';
+        }
+    });
+
+    // Load data
+    loadSupportDashboard();
+    loadAllTickets();
+});
+
+async function loadSupportDashboard() {
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/support/dashboard/', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        const d = await res.json();
+
+        document.getElementById('openTickets').textContent = d.open_tickets || 0;
+        document.getElementById('pendingTickets').textContent = d.pending_tickets || 0;
+        document.getElementById('urgentTickets').textContent = d.urgent_tickets || 0;
+        document.getElementById('unassignedTickets').textContent = d.unassigned_tickets || 0;
+        document.getElementById('totalTickets').textContent = (d.total_tickets || 0).toLocaleString('id-ID');
+        document.getElementById('slaBreaches').textContent = d.sla_breach_count || 0;
+        document.getElementById('avgResponse').textContent = (d.avg_response_time_hours || 0) + 'h';
+        document.getElementById('pendingReports').textContent = d.pending_reports || 0;
+    } catch(e) {
+        console.warn('Support dashboard error:', e);
+    }
+}
+
+async function loadAllTickets() {
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/support/tickets/all/', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        const tickets = await res.json();
+
+        // Recent tickets (first 5)
+        var recentBody = document.getElementById('recentTicketsBody');
+        recentBody.innerHTML = '';
+        (tickets.results || tickets).slice(0, 5).forEach(function(t) {
+            recentBody.innerHTML += '<tr><td>#' + t.id + '</td><td><span style="font-weight:600;">' + escapeHtml(t.subject) + '</span></td><td><span class="badge badge-' + (t.support_status === 'open' ? 'green' : t.support_status === 'pending' ? 'yellow' : 'gray') + '">' + t.support_status + '</span></td><td><span class="badge badge-' + (t.priority === 'urgent' ? 'red' : t.priority === 'high' ? 'orange' : 'gray') + '">' + t.priority + '</span></td><td>' + (t.assigned_to || '-') + '</td></tr>';
+        });
+        if (!(tickets.results || tickets).length) {
+            recentBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--admin-text-muted);">No tickets yet</td></tr>';
+        }
+
+        // All tickets (full list)
+        var allBody = document.getElementById('allTicketsBody');
+        allBody.innerHTML = '';
+        (tickets.results || tickets).forEach(function(t) {
+            allBody.innerHTML += '<tr><td>#' + t.id + '</td><td><span style="font-weight:600;">' + escapeHtml(t.subject) + '</span></td><td>' + escapeHtml(t.user_name || '-') + '</td><td>' + (t.category || '-') + '</td><td><span class="badge badge-' + (t.support_status === 'open' ? 'green' : t.support_status === 'pending' ? 'yellow' : 'gray') + '">' + t.support_status + '</span></td><td><span class="badge badge-' + (t.priority === 'urgent' ? 'red' : t.priority === 'high' ? 'orange' : 'gray') + '">' + t.priority + '</span></td><td>' + (t.assigned_to_name || '-') + '</td><td>' + new Date(t.created_at).toLocaleDateString('id-ID') + '</td></tr>';
+        });
+        if (!(tickets.results || tickets).length) {
+            allBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--admin-text-muted);">No tickets yet</td></tr>';
+        }
+    } catch(e) {
+        console.warn('Tickets load error:', e);
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

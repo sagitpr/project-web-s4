@@ -9,83 +9,553 @@
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
     <style>
-    .admin-sidebar { width:var(--sidebar-width); background:var(--color-gray-900); color:white; position:fixed; top:0; left:0; bottom:0; z-index:90; display:flex; flex-direction:column; overflow-y:auto; }
-    .admin-sidebar a { color:rgba(255,255,255,0.7); text-decoration:none; display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:500; transition:all 0.15s; }
-    .admin-sidebar a:hover { background:rgba(255,255,255,0.08); color:white; }
-    .admin-sidebar a.active { background:var(--color-brand); color:white; font-weight:600; }
-    .admin-sidebar .section-label { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(255,255,255,0.35); padding:16px 16px 6px; font-weight:600; }
-    .admin-main { flex:1; margin-left:var(--sidebar-width); min-height:100vh; background:var(--color-surface-secondary); }
-    .admin-topbar { display:flex; align-items:center; justify-content:space-between; background:var(--color-surface); border-bottom:1px solid var(--color-border); padding:12px 24px; position:sticky; top:0; z-index:50; }
-    .admin-content { padding:24px; }
-    .admin-mobile-toggle { display:none; width:40px; height:40px; border-radius:var(--radius-lg); border:none; background:var(--color-gray-100); cursor:pointer; align-items:center; justify-content:center; }
-    @media (max-width:768px) {
-        .admin-sidebar { transform:translateX(-100%); transition:transform 0.3s var(--ease-out); }
-        .admin-sidebar.open { transform:translateX(0); }
-        .admin-main { margin-left:0 !important; }
-        .admin-mobile-toggle { display:flex !important; }
+    /* ── Admin Layout: White Sidebar (Seller Panel Match) ── */
+    :root {
+        --admin-sidebar-w: 260px;
+        --admin-primary: #22c55e;
+        --admin-primary-dark: #16a34a;
+        --admin-bg: #f8fafc;
+        --admin-card-bg: #ffffff;
+        --admin-text: #1e293b;
+        --admin-text-muted: #64748b;
+        --admin-border: #e2e8f0;
+        --admin-sidebar-bg: #ffffff;
+        --admin-sidebar-text: #64748b;
+        --admin-sidebar-active: #f0fdf4;
+        --admin-sidebar-active-text: #16a34a;
+        --admin-red: #ef4444;
+        --admin-orange: #f59e0b;
+        --admin-blue: #3b82f6;
+        --admin-purple: #7c3aed;
+        --admin-radius: 12px;
+        --admin-radius-lg: 16px;
+        --admin-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        --admin-shadow-lg: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+        background: var(--admin-bg);
+        color: var(--admin-text);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Sidebar ── */
+    .admin-sidebar {
+        width: var(--admin-sidebar-w);
+        background: var(--admin-sidebar-bg);
+        border-right: 1px solid var(--admin-border);
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 90;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 16px;
+        overflow-y: auto;
+    }
+    .admin-sidebar .logo-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 4px;
+        margin-bottom: 28px;
+    }
+    .admin-sidebar .logo-wrap img {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+    }
+    .admin-sidebar .logo-text {
+        display: flex;
+        flex-direction: column;
+    }
+    .admin-sidebar .brand-name {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--admin-text);
+    }
+    .admin-sidebar .brand-name span {
+        color: var(--admin-primary);
+    }
+    .admin-sidebar .brand-tagline {
+        font-size: 11px;
+        color: var(--admin-text-muted);
+        margin-top: 1px;
+    }
+    .admin-sidebar nav {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        flex: 1;
+    }
+    .admin-sidebar .section-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--admin-text-muted);
+        padding: 20px 12px 6px;
+        font-weight: 700;
+        opacity: 0.6;
+    }
+    .admin-sidebar nav a {
+        color: var(--admin-sidebar-text);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .admin-sidebar nav a:hover {
+        background: var(--admin-sidebar-active);
+        color: var(--admin-sidebar-active-text);
+    }
+    .admin-sidebar nav a.active {
+        background: var(--admin-sidebar-active);
+        color: var(--admin-sidebar-active-text);
+        font-weight: 600;
+    }
+    .admin-sidebar nav a i {
+        width: 18px;
+        text-align: center;
+        font-size: 14px;
+    }
+    .admin-sidebar .sidebar-footer {
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid var(--admin-border);
+    }
+    .admin-sidebar .sidebar-footer a {
+        color: var(--admin-text-muted);
+        font-size: 12px;
+    }
+
+    /* ── Main Content ── */
+    .admin-main {
+        flex: 1;
+        margin-left: var(--admin-sidebar-w);
+        min-height: 100vh;
+        background: var(--admin-bg);
+    }
+    .admin-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--admin-card-bg);
+        border-bottom: 1px solid var(--admin-border);
+        padding: 16px 28px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+    .admin-topbar h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--admin-text);
+        margin: 0;
+    }
+    .admin-topbar .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .admin-topbar .live-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--admin-text-muted);
+    }
+    .admin-topbar .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--admin-primary);
+        animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .admin-topbar .admin-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        background: var(--admin-bg);
+        padding: 6px 16px 6px 6px;
+        border-radius: 999px;
+        border: 1px solid var(--admin-border);
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .admin-topbar .admin-profile:hover {
+        border-color: var(--admin-primary);
+    }
+    .admin-topbar .admin-profile img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .admin-content {
+        padding: 28px;
+        max-width: 1440px;
+    }
+    .admin-mobile-toggle {
+        display: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--admin-border);
+        background: var(--admin-card-bg);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-text);
+        font-size: 18px;
+    }
+    #sidebarOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 89;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+        .admin-sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+        .admin-sidebar.open { transform: translateX(0); }
+        .admin-main { margin-left: 0 !important; }
+        .admin-mobile-toggle { display: flex !important; }
+        #sidebarOverlay.open { display: block !important; }
+        .admin-content { padding: 20px; }
+    }
+    @media (max-width: 640px) {
+        .admin-topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+        .admin-topbar h1 { font-size: 16px; }
+        .admin-content { padding: 16px; }
+    }
+
+    /* ── Card System (Seller Panel Match) ── */
+    .card {
+        background: var(--admin-card-bg);
+        border-radius: var(--admin-radius-lg);
+        border: 1px solid var(--admin-border);
+        box-shadow: var(--admin-shadow);
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--admin-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .card-header h2, .card-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--admin-text);
+    }
+    .card-body { padding: 20px 24px; }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+        display: grid;
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+    .stats-grid.cols-2 { grid-template-columns: repeat(2,1fr); }
+    .stats-grid.cols-3 { grid-template-columns: repeat(3,1fr); }
+    .stats-grid.cols-4 { grid-template-columns: repeat(4,1fr); }
+    .stats-grid.cols-5 { grid-template-columns: repeat(5,1fr); }
+    .stats-grid.cols-6 { grid-template-columns: repeat(6,1fr); }
+
+    .stat-card {
+        background: var(--admin-card-bg);
+        border-radius: var(--admin-radius-lg);
+        border: 1px solid var(--admin-border);
+        padding: 20px 22px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        box-shadow: var(--admin-shadow);
+        transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+        box-shadow: var(--admin-shadow-lg);
+        transform: translateY(-2px);
+    }
+    .stat-card .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .stat-card .stat-content { flex: 1; min-width: 0; }
+    .stat-card .stat-label { font-size: 12px; color: var(--admin-text-muted); letter-spacing: 0.01em; }
+    .stat-card .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--admin-text);
+        margin: 4px 0;
+        line-height: 1.2;
+    }
+    .stat-card .stat-trend {
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .stat-card .stat-trend.up { color: var(--admin-primary); }
+    .stat-card .stat-trend.down { color: var(--admin-red); }
+
+    .stat-card.balance-card {
+        background: #0f172a;
+        color: white;
+    }
+    .stat-card.balance-card .stat-label { color: #94a3b8; }
+    .stat-card.balance-card .stat-value { color: white; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    .w-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .w-table th {
+        text-align: left;
+        padding: 12px 16px;
+        color: var(--admin-text-muted);
+        font-weight: 600;
+        font-size: 12px;
+        border-bottom: 1px solid var(--admin-border);
+        white-space: nowrap;
+    }
+    .w-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--admin-border);
+        color: var(--admin-text);
+    }
+    .w-table tr:last-child td { border-bottom: none; }
+    .w-table tr:hover td { background: #f8fafc; }
+
+    /* ── Badges ── */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        gap: 4px;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-purple { background: #ede9fe; color: #6d28d9; }
+    .badge-orange { background: #ffedd5; color: #9a3412; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+
+    /* ── Forms ── */
+    .form-input, .form-select {
+        border: 1px solid var(--admin-border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--admin-text);
+        background: white;
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--admin-primary);
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    }
+    .form-input::placeholder { color: #94a3b8; }
+
+    /* ── Buttons ── */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    .btn-primary { background: var(--admin-primary); color: white; }
+    .btn-primary:hover { background: var(--admin-primary-dark); }
+    .btn-outline { background: transparent; border: 1px solid var(--admin-border); color: var(--admin-text); }
+    .btn-outline:hover { border-color: var(--admin-primary); color: var(--admin-primary); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background: var(--admin-red); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* ── Skeleton ── */
+    .skeleton {
+        display: inline-block;
+        background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 6px;
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* ── Grid layout ── */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+    .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    @media (max-width: 1024px) {
+        .grid-2, .grid-3, .grid-half { grid-template-columns: 1fr; }
+        .stats-grid.cols-4, .stats-grid.cols-5, .stats-grid.cols-6 { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 640px) {
+        .stats-grid.cols-2, .stats-grid.cols-3, .stats-grid.cols-4, .stats-grid.cols-5, .stats-grid.cols-6 {
+            grid-template-columns: 1fr;
+        }
+        .stat-card .stat-value { font-size: 20px; }
     }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
-    <!-- Sidebar -->
+    <!-- Sidebar (White, Matching Seller Panel) -->
     <aside class="admin-sidebar" id="adminSidebar">
-        <div style="padding:20px 16px; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" style="height:28px; width:auto; filter:brightness(0) invert(1);">
-                <div>
-                    <div style="font-size:16px; font-weight:800; color:white;"><span style="color:var(--color-brand);">Warung</span>io</div>
-                    <small style="font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.06em; text-transform:uppercase;">Admin Panel</small>
-                </div>
+        <div class="logo-wrap">
+            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio">
+            <div class="logo-text">
+                <div class="brand-name"><span>Warung</span>io</div>
+                <small class="brand-tagline">Admin Panel</small>
             </div>
         </div>
-        <nav style="flex:1; padding:12px; display:flex; flex-direction:column; gap:1px;">
+        <nav>
             {% block sidebar_links %}
             <div class="section-label">Overview</div>
-            <a href="{% url 'admin-dashboard' %}" class="{% if active_page == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high" style="width:18px;"></i> Dashboard</a>
-            <a href="{% url 'admin-analytics' %}" class="{% if active_page == 'analytics' %}active{% endif %}"><i class="fa-solid fa-chart-line" style="width:18px;"></i> Analytics</a>
-            <a href="{% url 'admin-reports' %}" class="{% if active_page == 'reports' %}active{% endif %}"><i class="fa-solid fa-file-lines" style="width:18px;"></i> Reports</a>
+            <a href="{% url 'admin-dashboard' %}">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="{% url 'admin-analytics' %}">
+                <i class="fa-solid fa-chart-line"></i> Analytics
+            </a>
+            <a href="{% url 'admin-reports' %}">
+                <i class="fa-solid fa-file-lines"></i> Reports
+            </a>
 
             <div class="section-label">Management</div>
-            <a href="{% url 'admin-users' %}" class="{% if active_page == 'users' %}active{% endif %}"><i class="fa-solid fa-users" style="width:18px;"></i> Users</a>
-            <a href="{% url 'admin-administrators' %}" class="{% if active_page == 'administrators' %}active{% endif %}"><i class="fa-solid fa-user-shield" style="width:18px;"></i> Administrator</a>
-            <a href="{% url 'admin-marketplace' %}" class="{% if active_page == 'marketplace' %}active{% endif %}"><i class="fa-solid fa-store" style="width:18px;"></i> Marketplace</a>
-            <a href="{% url 'admin-orders' %}" class="{% if active_page == 'orders' %}active{% endif %}"><i class="fa-solid fa-receipt" style="width:18px;"></i> Orders</a>
-            <a href="{% url 'admin-payments' %}" class="{% if active_page == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card" style="width:18px;"></i> Payments</a>
-            <a href="{% url 'admin-notifications' %}" class="{% if active_page == 'notifications' %}active{% endif %}"><i class="fa-solid fa-bell" style="width:18px;"></i> Notifications</a>
+            <a href="{% url 'admin-users' %}">
+                <i class="fa-solid fa-users"></i> Users
+            </a>
+            <a href="{% url 'admin-administrators' %}">
+                <i class="fa-solid fa-user-shield"></i> Administrators
+            </a>
+            <a href="{% url 'admin-marketplace' %}">
+                <i class="fa-solid fa-store"></i> Marketplace
+            </a>
+            <a href="{% url 'admin-orders' %}">
+                <i class="fa-solid fa-receipt"></i> Orders
+            </a>
+            <a href="{% url 'admin-support' %}">
+                <i class="fa-solid fa-headset"></i> Support Center
+            </a>
+            <a href="{% url 'admin-payments' %}">
+                <i class="fa-solid fa-credit-card"></i> Payments
+            </a>
+            <a href="{% url 'admin-notifications' %}">
+                <i class="fa-solid fa-bell"></i> Notifications
+            </a>
+            <a href="{% url 'admin-suppliers' %}">
+                <i class="fa-solid fa-truck-field"></i> Suppliers
+            </a>
+
+            <div class="section-label">Finance</div>
+            <a href="{% url 'admin-loyalty' %}">
+                <i class="fa-solid fa-gem"></i> Loyalty
+            </a>
+            <a href="{% url 'admin-refunds' %}">
+                <i class="fa-solid fa-rotate-left"></i> Refunds
+            </a>
+            <a href="{% url 'admin-engagement' %}">
+                <i class="fa-solid fa-heart"></i> Engagement
+            </a>
 
             <div class="section-label">System</div>
-            <a href="{% url 'admin-ai' %}" class="{% if active_page == 'ai' %}active{% endif %}"><i class="fa-solid fa-brain" style="width:18px;"></i> AI Management</a>
-            <a href="{% url 'admin-security' %}" class="{% if active_page == 'security' %}active{% endif %}"><i class="fa-solid fa-shield-halved" style="width:18px;"></i> Security</a>
-            <a href="{% url 'admin-audit' %}" class="{% if active_page == 'audit' %}active{% endif %}"><i class="fa-solid fa-clipboard-list" style="width:18px;"></i> Audit Logs</a>
-            <a href="{% url 'admin-settings' %}" class="{% if active_page == 'settings' %}active{% endif %}"><i class="fa-solid fa-gear" style="width:18px;"></i> Settings</a>
+            <a href="{% url 'admin-ai' %}">
+                <i class="fa-solid fa-brain"></i> AI Management
+            </a>
+            <a href="{% url 'admin-monitoring' %}">
+                <i class="fa-solid fa-desktop"></i> Monitoring
+            </a>
+            <a href="{% url 'admin-security' %}">
+                <i class="fa-solid fa-shield-halved"></i> Security
+            </a>
+            <a href="{% url 'admin-audit' %}">
+                <i class="fa-solid fa-clipboard-list"></i> Audit Logs
+            </a>
 
-            <div style="flex:1;"></div>
-            <div class="section-label">Quick Links</div>
-            <a href="/admin/" target="_blank"><i class="fa-solid fa-database" style="width:18px;"></i> Django Admin</a>
-            <a href="/"><i class="fa-solid fa-arrow-left" style="width:18px;"></i> Back to Site</a>
+            <div class="section-label">Settings</div>
+            <a href="{% url 'admin-settings' %}">
+                <i class="fa-solid fa-gear"></i> Settings
+            </a>
+            <a href="/admin/" target="_blank">
+                <i class="fa-solid fa-database"></i> Django Admin
+            </a>
             {% endblock %}
         </nav>
+        <div class="sidebar-footer">
+            <a href="/"><i class="fa-solid fa-arrow-left"></i> Back to Site</a>
+        </div>
     </aside>
 
-    <!-- Main -->
+    <!-- Main Content -->
     <div class="admin-main">
         <div class="admin-topbar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="admin-mobile-toggle" id="adminMenuToggle" onclick="document.getElementById('adminSidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open');">
+                <button class="admin-mobile-toggle" onclick="toggleSidebar()">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <h1 style="font-size:18px; font-weight:700; color:var(--color-text-primary); margin:0;">{% block page_title %}Admin Dashboard{% endblock %}</h1>
+                <h1>{% block page_title %}Admin Dashboard{% endblock %}</h1>
             </div>
-            <div style="display:flex; align-items:center; gap:16px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></div>
-                    <span style="font-size:13px; color:var(--color-text-secondary);">Live</span>
+            <div class="topbar-right">
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span>Live</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                    <img src="{% static 'images/av-siti.png' %}" alt="Admin" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
-                    <span style="font-size:13px; font-weight:600; color:var(--color-text-primary);">Admin</span>
+                <div class="admin-profile">
+                    <div style="position:relative;">
+                        <img src="{% static 'images/av-siti.png' %}" alt="Admin">
+                        <span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--admin-primary);border:2px solid white;"></span>
+                    </div>
+                    <span>{{ request.user.get_full_name|default:request.user.username|default:'Admin' }}</span>
                 </div>
             </div>
         </div>
@@ -94,8 +564,43 @@
         </div>
     </div>
 
-    <div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:89;" onclick="document.getElementById('adminSidebar').classList.remove('open'); this.classList.remove('open');"></div>
+    <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+    <script>
+    function toggleSidebar() {
+        document.getElementById('adminSidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+    function closeSidebar() {
+        document.getElementById('adminSidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    // ── Highlight active sidebar link (longest URL match wins) ──
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentPath = window.location.pathname;
+        var bestMatch = null;
+        var bestScore = -1;
+        document.querySelectorAll('.admin-sidebar nav a').forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (!href || href === '/') return;
+            var score = 0;
+            if (currentPath === href) {
+                score = href.length + 1000; // exact match wins
+            } else if (currentPath.startsWith(href)) {
+                score = href.length;
+            }
+            if (score > bestScore) { bestScore = score; bestMatch = link; }
+        });
+        if (bestMatch) bestMatch.classList.add('active');
+
+        // ── Auto-refresh dashboard data every 60 seconds ──
+        if (window.loadAdminDashboard) {
+            if (window._dashboardRefreshInterval) clearInterval(window._dashboardRefreshInterval);
+            window._dashboardRefreshInterval = setInterval(window.loadAdminDashboard, 60000);
+        }
+    });
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

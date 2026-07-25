@@ -115,3 +115,11 @@ def buyer_client(db, buyer_user):
     client = APIClient()
     client.force_authenticate(user=buyer_user)
     return client
+
+
+@pytest.fixture
+def authed_client(db, verified_user):
+    """Provide an API client authenticated as verified_user (alias for compatibility)."""
+    client = APIClient()
+    client.force_authenticate(user=verified_user)
+    return client

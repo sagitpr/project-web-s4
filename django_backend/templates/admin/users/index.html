@@ -3,25 +3,57 @@
 {% block title %}Users - Warungio Admin{% endblock %}
 {% block page_title %}User Management{% endblock %}
 {% block content %}
-<div class="stats-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
-    <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div><div class="stat-content"><div class="stat-label">Total Users</div><div class="stat-value" id="usersTotal"><span class="skeleton" style="display:inline-block;width:60px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-tie"></i></div><div class="stat-content"><div class="stat-label">Sellers</div><div class="stat-value" id="usersSellers"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-user"></i></div><div class="stat-content"><div class="stat-label">Buyers</div><div class="stat-value" id="usersBuyers"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-user-plus"></i></div><div class="stat-content"><div class="stat-label">New (30d)</div><div class="stat-value" id="usersNew"><span class="skeleton" style="display:inline-block;width:40px;height:24px;"></span></div></div></div>
+<div class="stats-grid cols-4">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="usersTotal"><span class="skeleton" style="width:60px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fa-solid fa-user-tie"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Sellers</div>
+            <div class="stat-value" id="usersSellers"><span class="skeleton" style="width:50px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-user"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">Buyers</div>
+            <div class="stat-value" id="usersBuyers"><span class="skeleton" style="width:50px;height:26px;"></span></div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3;color:#db2777;"><i class="fa-solid fa-user-plus"></i></div>
+        <div class="stat-content">
+            <div class="stat-label">New (30d)</div>
+            <div class="stat-value" id="usersNew"><span class="skeleton" style="width:50px;height:26px;"></span></div>
+        </div>
+    </div>
 </div>
 
 <div class="card">
-    <div class="card-header" style="flex-wrap:wrap; gap:12px;">
-        <h3>User Overview</h3>
-        <div style="display:flex; gap:10px;">
-            <div style="position:relative;"><i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:13px;"></i><input type="text" placeholder="Search users..." class="form-input" style="width:260px;min-height:38px;padding:8px 12px 8px 34px;"></div>
-            <select class="form-select" style="width:auto;min-height:38px;padding:8px 12px;"><option>All Roles</option><option>Buyer</option><option>Seller</option><option>Admin</option></select>
+    <div class="card-header" style="flex-wrap:wrap;gap:12px;">
+        <h3>Users Overview</h3>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <div style="position:relative;">
+                <i class="fa-solid fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--admin-text-muted);font-size:13px;"></i>
+                <input type="text" placeholder="Search users..." class="form-input" style="width:240px;min-height:36px;padding:8px 12px 8px 34px;">
+            </div>
+            <select class="form-select" style="width:auto;min-height:36px;padding:8px 12px;">
+                <option>All Roles</option>
+                <option>Buyer</option>
+                <option>Seller</option>
+                <option>Admin</option>
+            </select>
         </div>
     </div>
     <div class="card-body">
-        <p style="font-size:13px;color:var(--color-text-tertiary);text-align:center;padding:20px;">
-            <i class="fa-solid fa-database"></i> Untuk manajemen pengguna detail, gunakan 
-            <a href="/admin/" target="_blank" style="color:var(--color-brand);font-weight:600;">Django Admin Panel</a>
+        <p style="font-size:13px;color:var(--admin-text-muted);text-align:center;padding:20px;">
+            <i class="fa-solid fa-database"></i> Untuk manajemen pengguna detail, gunakan
+            <a href="/admin/" target="_blank" style="color:var(--admin-primary);font-weight:600;">Django Admin Panel</a>
         </p>
     </div>
 </div>
@@ -32,20 +64,20 @@ document.addEventListener('DOMContentLoaded', async function() {
         const token = (window.WarungioAuth && window.WarungioAuth.getAccessToken) 
           ? window.WarungioAuth.getAccessToken() 
           : localStorage.getItem('warungio_access_token');
-        const headers = {};
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
 
         const res = await fetch('/api/monitoring/admin-stats/', { headers, credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load');
         const d = await res.json();
 
-        document.getElementById('usersTotal').textContent = d.total_users.toLocaleString('id-ID');
-        document.getElementById('usersSellers').textContent = d.total_sellers.toLocaleString('id-ID');
-        document.getElementById('usersBuyers').textContent = d.total_buyers.toLocaleString('id-ID');
-        document.getElementById('usersNew').textContent = d.new_users_30d;
+        document.getElementById('usersTotal').textContent = (d.total_users || 0).toLocaleString('id-ID');
+        document.getElementById('usersSellers').textContent = (d.total_sellers || 0).toLocaleString('id-ID');
+        document.getElementById('usersBuyers').textContent = (d.total_buyers || 0).toLocaleString('id-ID');
+        document.getElementById('usersNew').textContent = d.new_users_30d || 0;
     } catch (e) {
-        ['usersTotal','usersSellers','usersBuyers','usersNew'].forEach(id => {
-            const el = document.getElementById(id);
+        ['usersTotal','usersSellers','usersBuyers','usersNew'].forEach(function(id) {
+            var el = document.getElementById(id);
             if (el) el.textContent = 'N/A';
         });
     }

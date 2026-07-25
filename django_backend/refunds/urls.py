@@ -16,7 +16,7 @@ urlpatterns = [
     path('<int:pk>/seller-action/', views.SellerRefundActionView.as_view(), name='seller-refund-action'),
 
     # Admin
-    path('admin/all/', views.AdminRefundListView.as_view(), name='admin-refunds'),
+    path('admin/all/', views.AdminRefundListView.as_view(), name='admin-refund-list'),
     path('<int:pk>/admin-action/', views.AdminRefundActionView.as_view(), name='admin-refund-action'),
 
     # Stats

@@ -7,7 +7,9 @@ from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
 from .models import (
     HelpCategory, HelpArticle, FAQ, BannerPromo,
-    ContactInfo, SupportInfo, ChatQuickReply, SupportTicket
+    ContactInfo, SupportInfo, ChatQuickReply, SupportTicket,
+    Complaint, ReportProduct, ReportSeller, ReportBuyer,
+    Dispute, InternalNote,
 )
 
 
@@ -105,3 +107,118 @@ class ChatQuickReplySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatQuickReply
         fields = ('id', 'category', 'category_display', 'label', 'message_template', 'sort_order')
+
+
+# =============================================================================
+# CUSTOMER SUPPORT CENTER SERIALIZERS
+# =============================================================================
+
+
+class SupportTicketDetailSerializer(serializers.ModelSerializer):
+    """Enhanced support ticket serializer with assignment and SLA details."""
+    user_name = serializers.CharField(source='user.full_name', read_only=True, allow_null=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True, allow_null=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    status_display = serializers.CharField(source='get_support_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+
+    class Meta:
+        model = SupportTicket
+        fields = '__all__'
+        read_only_fields = ('user', 'created_at', 'updated_at', 'first_response_at', 'resolved_at', 'sla_met')
+
+
+class TicketAssignSerializer(serializers.Serializer):
+    """Serializer for assigning a ticket to an admin."""
+    assigned_to_id = serializers.IntegerField(required=True)
+    note = serializers.CharField(required=False, allow_blank=True)
+
+
+class ComplaintSerializer(serializers.ModelSerializer):
+    """Complaint serializer."""
+    user_name = serializers.CharField(source='user.full_name', read_only=True, allow_null=True)
+    complaint_type_display = serializers.CharField(source='get_complaint_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Complaint
+        fields = '__all__'
+        read_only_fields = ('user', 'assigned_to', 'status', 'resolved_at', 'created_at', 'updated_at')
+
+
+class ReportProductSerializer(serializers.ModelSerializer):
+    """Product report serializer."""
+    reporter_name = serializers.CharField(source='reporter.full_name', read_only=True, allow_null=True)
+    reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = ReportProduct
+        fields = '__all__'
+        read_only_fields = ('reporter', 'status', 'moderated_by', 'created_at', 'updated_at')
+
+
+class ReportSellerSerializer(serializers.ModelSerializer):
+    """Seller report serializer."""
+    reporter_name = serializers.CharField(source='reporter.full_name', read_only=True, allow_null=True)
+    reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = ReportSeller
+        fields = '__all__'
+        read_only_fields = ('reporter', 'status', 'moderated_by', 'created_at', 'updated_at')
+
+
+class ReportBuyerSerializer(serializers.ModelSerializer):
+    """Buyer report serializer."""
+    reporter_name = serializers.CharField(source='reporter.full_name', read_only=True, allow_null=True)
+    reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = ReportBuyer
+        fields = '__all__'
+        read_only_fields = ('reporter', 'status', 'moderated_by', 'created_at', 'updated_at')
+
+
+class DisputeSerializer(serializers.ModelSerializer):
+    """Dispute resolution serializer."""
+    opened_by_name = serializers.CharField(source='opened_by.full_name', read_only=True, allow_null=True)
+    against_name = serializers.CharField(source='against_user.full_name', read_only=True, allow_null=True)
+    dispute_type_display = serializers.CharField(source='get_dispute_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    resolution_display = serializers.CharField(source='get_resolution_display', read_only=True, allow_null=True)
+
+    class Meta:
+        model = Dispute
+        fields = '__all__'
+        read_only_fields = ('mediator', 'resolution', 'resolved_at', 'created_at', 'updated_at')
+
+
+class InternalNoteSerializer(serializers.ModelSerializer):
+    """Internal note serializer."""
+    author_name = serializers.CharField(source='author.full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = InternalNote
+        fields = '__all__'
+        read_only_fields = ('author', 'created_at', 'updated_at')
+
+
+class SupportDashboardSerializer(serializers.Serializer):
+    """Support center dashboard stats."""
+    total_tickets = serializers.IntegerField()
+    open_tickets = serializers.IntegerField()
+    pending_tickets = serializers.IntegerField()
+    solved_tickets = serializers.IntegerField()
+    urgent_tickets = serializers.IntegerField()
+    unassigned_tickets = serializers.IntegerField()
+    avg_response_time_hours = serializers.FloatField()
+    sla_breach_count = serializers.IntegerField()
+    total_complaints = serializers.IntegerField()
+    pending_complaints = serializers.IntegerField()
+    total_reports = serializers.IntegerField()
+    pending_reports = serializers.IntegerField()

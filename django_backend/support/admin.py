@@ -6,7 +6,10 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     HelpCategory, HelpArticle, FAQ, BannerPromo,
-    ContactInfo, SupportInfo, ChatQuickReply
+    ContactInfo, SupportInfo, ChatQuickReply,
+    SupportTicket, SupportConversation, SupportMessage,
+    Complaint, ReportProduct, ReportSeller, ReportBuyer,
+    Dispute, InternalNote,
 )
 
 
@@ -93,3 +96,68 @@ class ChatQuickReplyAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_active')
     search_fields = ('label', 'message_template')
     list_editable = ('sort_order', 'is_active')
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(admin.ModelAdmin):
+    list_display = ('id', 'subject', 'user', 'category', 'support_status', 'priority', 'assigned_to', 'created_at')
+    list_filter = ('support_status', 'priority', 'category')
+    search_fields = ('subject', 'message', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(SupportConversation)
+class SupportConversationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'subject', 'user', 'is_active', 'is_resolved', 'created_at')
+    list_filter = ('is_active', 'is_resolved')
+
+
+@admin.register(SupportMessage)
+class SupportMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'conversation', 'sender', 'is_from_user', 'is_read', 'created_at')
+    list_filter = ('is_read', 'is_from_user')
+
+
+@admin.register(Complaint)
+class ComplaintAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'complaint_type', 'status', 'assigned_to', 'order', 'created_at')
+    list_filter = ('status', 'complaint_type')
+    search_fields = ('description', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ReportProduct)
+class ReportProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'product', 'reporter', 'reason', 'status', 'risk_score', 'created_at')
+    list_filter = ('status', 'reason', 'is_auto_flagged')
+    search_fields = ('description', 'product__name', 'reporter__email')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(ReportSeller)
+class ReportSellerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'seller', 'store', 'reporter', 'reason', 'status', 'created_at')
+    list_filter = ('status', 'reason')
+    search_fields = ('description', 'seller__email')
+
+
+@admin.register(ReportBuyer)
+class ReportBuyerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'buyer', 'reporter', 'reason', 'status', 'created_at')
+    list_filter = ('status', 'reason')
+    search_fields = ('description', 'buyer__email')
+
+
+@admin.register(Dispute)
+class DisputeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order', 'dispute_type', 'status', 'opened_by', 'mediator', 'created_at')
+    list_filter = ('status', 'dispute_type')
+    search_fields = ('description',)
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(InternalNote)
+class InternalNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'note_type', 'reference_id', 'author', 'created_at')
+    list_filter = ('note_type',)
+    search_fields = ('content',)

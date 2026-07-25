@@ -116,6 +116,7 @@ urlpatterns += [
     path('auth/otp/', TemplateView.as_view(template_name='auth/otp/index.html'), name='page-otp'),
     path('auth/reset-password/', TemplateView.as_view(template_name='auth/reset-password/index.html'), name='page-reset-password'),
     path('auth/register-mitra/', TemplateView.as_view(template_name='auth/register-mitra/index.html'), name='page-register-mitra'),
+    path('auth/logout/', accounts_views.LogoutView.as_view(), name='page-logout'),
     path('social-callback/apple.html', TemplateView.as_view(template_name='auth/social-callback/apple.html'), name='page-apple-callback'),
     # Buyer pages (protected with buyer_required decorator + login_required fallback)
     path('buyer/home/', login_required(buyer_required(TemplateView.as_view(template_name='home/index.html'))), name='page-buyer-home'),
@@ -225,6 +226,7 @@ urlpatterns += [
     path('admin-panel/api/password/change/', staff(accounts_admin_views.AdminChangePasswordView.as_view()), name='admin-api-change-password'),
     path('admin-panel/api/administrators/export-csv/', staff(accounts_admin_views.AdminExportCSVView.as_view()), name='admin-api-export-csv'),
     path('admin-panel/api/administrators/export-excel/', staff(accounts_admin_views.AdminExportExcelView.as_view()), name='admin-api-export-excel'),
+    path('admin-panel/support/', staff(TemplateView.as_view(template_name='admin/support/index.html')), name='admin-support'),
     path('admin-panel/engagement/', staff(TemplateView.as_view(template_name='admin/engagement/index.html')), name='admin-engagement'),
     path('admin-panel/settings/', staff(TemplateView.as_view(template_name='admin/settings/index.html')), name='admin-settings'),
     path('admin-panel/refunds/', staff(TemplateView.as_view(template_name='admin/refunds/index.html')), name='admin-refunds'),

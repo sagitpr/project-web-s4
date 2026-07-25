@@ -27,6 +27,8 @@ class ConversationListView(generics.ListAPIView):
 
         return Conversation.objects.filter(
             participants=self.request.user
+        ).select_related('last_sender').prefetch_related(
+            'participants'
         ).order_by('-last_message_at')
 
 
@@ -47,7 +49,9 @@ class ConversationDetailView(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Conversation.objects.filter(participants=self.request.user)
+        return Conversation.objects.filter(participants=self.request.user).select_related(
+            'last_sender'
+        ).prefetch_related('participants')
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
@@ -73,7 +77,7 @@ class MessageListView(generics.ListAPIView):
         return Message.objects.filter(
             conversation_id=conv_id,
             conversation__participants=self.request.user
-        ).order_by('created_at')
+        ).select_related('sender', 'receiver').order_by('created_at')
 
 
 class MessageCreateView(generics.CreateAPIView):

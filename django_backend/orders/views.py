@@ -370,11 +370,30 @@ class OrderCreateView(views.APIView):
                 payment_method=serializer.validated_data['payment_method'],
             )
 
+            # ── LOCK all product rows BEFORE checking stock ──
+            # This prevents race conditions where two concurrent buyers
+            # both pass the available_stock check for the last item.
+            # select_for_update() acquires a row-level lock that blocks
+            # concurrent transactions until this transaction completes.
+            product_ids = list(set(item.product_id for item in items))
+            if product_ids:
+                locked_products = {
+                    p.id: p
+                    for p in Product.objects.select_for_update().filter(id__in=product_ids).order_by('id')
+                }
+            else:
+                locked_products = {}
+
             # Create order items
             for cart_item in items:
-                product = cart_item.product
+                # Use the locked product object for race-condition-free stock check
+                locked_product = locked_products.get(cart_item.product_id)
+                if locked_product:
+                    product = locked_product
+                else:
+                    product = cart_item.product
                 price = float(product.price)
-                
+
                 if product.available_stock < cart_item.qty:
                     raise ValidationError(
                         f"Stok {product.product_name} tidak mencukupi. "

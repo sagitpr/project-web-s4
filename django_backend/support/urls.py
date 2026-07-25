@@ -26,4 +26,29 @@ urlpatterns = [
     path('tickets/', views.SupportTicketUserView.as_view(), name='support-ticket-list'),
     path('tickets/all/', views.SupportTicketAdminView.as_view(), name='support-ticket-admin'),
     path('tickets/<int:pk>/', views.SupportTicketDetailView.as_view(), name='support-ticket-detail'),
+    
+    # Customer Support Center — Dashboard
+    path('dashboard/', views.SupportDashboardView.as_view(), name='support-dashboard'),
+    
+    # Customer Support Center — Ticket Management
+    path('tickets/<int:pk>/assign/', views.SupportTicketAssignView.as_view(), name='support-ticket-assign'),
+    path('tickets/<int:pk>/resolve/', views.SupportTicketResolveView.as_view(), name='support-ticket-resolve'),
+    
+    # Customer Support Center — Complaints
+    path('complaints/', views.ComplaintListView.as_view(), name='support-complaint-list'),
+    path('complaints/<int:pk>/', views.ComplaintDetailView.as_view(), name='support-complaint-detail'),
+    
+    # Customer Support Center — Reports
+    path('reports/products/', views.ReportProductListView.as_view(), name='support-report-product'),
+    path('reports/products/<int:pk>/moderate/', views.ReportProductModerateView.as_view(), name='support-report-product-moderate'),
+    path('reports/sellers/', views.ReportSellerListView.as_view(), name='support-report-seller'),
+    path('reports/buyers/', views.ReportBuyerListView.as_view(), name='support-report-buyer'),
+    
+    # Customer Support Center — Disputes
+    path('disputes/', views.DisputeListView.as_view(), name='support-dispute-list'),
+    path('disputes/<int:pk>/', views.DisputeDetailView.as_view(), name='support-dispute-detail'),
+    path('disputes/<int:pk>/resolve/', views.DisputeResolveView.as_view(), name='support-dispute-resolve'),
+    
+    # Customer Support Center — Internal Notes
+    path('notes/', views.InternalNoteListView.as_view(), name='support-internal-notes'),
 ]

@@ -99,7 +99,9 @@ class TestCompleteBuyerSellerJourney(TestCase):
         seller_user = User.objects.get(id=seller_user_id)
         self.assertEqual(seller_user.role, 'seller')
         self.assertFalse(seller_user.is_verified)
-        self.assertTrue(seller_user.is_active)
+        # CRITICAL: User starts as INACTIVE until OTP is verified.
+        # This prevents login before email/phone verification.
+        self.assertFalse(seller_user.is_active)
         qs = OTP.objects.filter(email=self.seller_email, purpose='registration')
         self.assertEqual(qs.count(), 1)
         self.assertTrue(qs.first().is_valid)
