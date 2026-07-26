@@ -102,46 +102,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /** Validate redirect URL — only allow relative paths to prevent open redirect */
-  function isValidRedirect(url) {
-    if (!url || typeof url !== 'string') return false;
-    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://');
-  }
-
-  /**
-   * Validate that the next URL matches the user's role.
-   * A buyer → /buyer/*, seller → /seller/*, admin → /admin/*
-   */
-  function isRoleAllowedRedirect(nextUrl, role) {
-    if (!nextUrl || !role) return false;
-    if (role === 'buyer') return nextUrl.startsWith('/buyer/');
-    if (role === 'seller') return nextUrl.startsWith('/seller/');
-    if (role === 'admin') return nextUrl.startsWith('/admin/');
-    return false;
-  }
-
-  // ── Helper: handle auth response and redirect ──
+  // ── Helper: handle auth response — redirect based on user role from API ──
+  // Social login (Google, Facebook, Apple) returns the user's role in the API response.
+  // The role is the SINGLE SOURCE OF TRUTH (from database, not query params or localStorage).
+  // Uses centralized getRoleDashboardUrl() which maps role→URL:
+  //   buyer  → /buyer/home/
+  //   seller → /seller/dashboard/
+  //   admin  → /admin/
+  //   no role → / (Landing Page — the only public homepage)
   function handleAuthResponse(data) {
     window.WarungioAuth.login(data.access, data.refresh, data.user);
-    const role = data.user.role;
-    
+
     const params = new URLSearchParams(window.location.search);
     const nextUrl = params.get('next');
-    // Only allow next parameter if it matches the user's role
-    if (nextUrl && isValidRedirect(nextUrl) && isRoleAllowedRedirect(nextUrl, role)) {
+    
+    // Determine the user's actual role from the API response (database)
+    var actualRole = data.user ? data.user.role : null;
+    
+    // Only allow ?next= if it matches the user's role (cross-role guard)
+    if (nextUrl && window.WarungioAuth && typeof window.WarungioAuth.isValidRedirect === 'function' && typeof window.WarungioAuth.isRoleAllowedRedirect === 'function') {
+      if (window.WarungioAuth.isValidRedirect(nextUrl) && window.WarungioAuth.isRoleAllowedRedirect(nextUrl, actualRole)) {
+        window.location.href = nextUrl;
+        return;
+      }
+    } else if (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//') && !nextUrl.includes('://') && nextUrl.startsWith('/buyer/')) {
+      // Legacy fallback (only if auth.js not loaded)
       window.location.href = nextUrl;
       return;
     }
 
-    if (role === 'buyer') {
-      window.location.href = '/buyer/home/';
-    } else if (role === 'seller') {
-      window.location.href = '/seller/dashboard/';
-    } else if (role === 'admin') {
-      window.location.href = '/admin/';
-    } else {
-      window.location.href = '/';
+    // Use centralized helper with the API-provided role (source of truth)
+    if (window.WarungioAuth && typeof window.WarungioAuth.getRoleDashboardUrl === 'function') {
+      window.location.href = window.WarungioAuth.getRoleDashboardUrl(actualRole);
+      return;
     }
+
+    // Hard fallback (should not be reached if auth.js is loaded)
+    if (actualRole === 'buyer') { window.location.href = '/buyer/home/'; return; }
+    if (actualRole === 'seller') { window.location.href = '/seller/dashboard/'; return; }
+    if (actualRole === 'admin') { window.location.href = '/admin/'; return; }
+    window.location.href = '/';
+  }
+
+  /**
+   * Handle registration response: redirect to OTP page using backend-provided URL.
+   * The backend returns { requires_otp: true, redirect_url: "/auth/otp/?email=..." }
+   * The frontend MUST use the backend-provided redirect_url, NEVER construct its own.
+   */
+  function handleRegisterResponse(data, email) {
+    // If backend provides a redirect_url, use it directly
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+      return;
+    }
+    
+    // Fallback: construct redirect URL manually (only if backend didn't provide one)
+    const params = new URLSearchParams(window.location.search);
+    const nextUrl = params.get('next');
+    var redirectUrl = '/auth/otp/?email=' + encodeURIComponent(email) + '&purpose=registration';
+    if (nextUrl) {
+      redirectUrl += '&next=' + encodeURIComponent(nextUrl);
+    }
+    window.location.href = redirectUrl;
   }
 
   if (eyeBtn && passwordInput) {
@@ -182,6 +204,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ── Detect registration role from page URL or query param ──
+  // /auth/register/ → buyer (default)
+  // /auth/register-mitra/ or ?role=seller → seller
+  var detectedRole = 'buyer';
+  var pathname = window.location.pathname || '';
+  if (pathname.indexOf('mitra') !== -1 || pathname.indexOf('seller') !== -1) {
+    detectedRole = 'seller';
+  }
+  var roleParam = new URLSearchParams(window.location.search).get('role');
+  if (roleParam === 'seller' || roleParam === 'buyer') {
+    detectedRole = roleParam;
+  }
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -209,32 +244,23 @@ document.addEventListener('DOMContentLoaded', () => {
         password,
         password2: password,
         address,
-        role: 'buyer',
+        role: detectedRole,
       });
-
-      console.log('REGISTER SUCCESS');
-      console.log(data);
-
-      // Save password for auto-login after OTP verification
-      sessionStorage.setItem('register_password', password);
 
       showToastNotification(
         'Registrasi Berhasil',
         'Kode OTP telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam untuk melakukan verifikasi akun.'
       );
 
-      const params = new URLSearchParams(window.location.search);
-      const nextUrl = params.get('next');
-      const redirectUrl =
-        '/auth/otp/?email=' +
-        encodeURIComponent(email) +
-        (data.otp_code ? '&otp=' + encodeURIComponent(data.otp_code) : '') +
-        (nextUrl ? '&next=' + encodeURIComponent(nextUrl) : '');
-
-      console.log('REDIRECT TO =', redirectUrl);
-
+      // CRITICAL: Use backend-provided redirect_url. Never construct manually.
+      // The backend ensures the redirect goes to the correct OTP page.
+      // Append otp_code for DEBUG mode (frontend development convenience).
+      if (data.redirect_url && data.otp_code) {
+        var separator = data.redirect_url.indexOf('?') === -1 ? '?' : '&';
+        data.redirect_url += separator + 'otp=' + encodeURIComponent(data.otp_code);
+      }
       setTimeout(() => {
-        window.location.href = redirectUrl;
+        handleRegisterResponse(data, email);
       }, 2000);
     } catch (err) {
       setMessage(err.message);
@@ -254,22 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gsiReady || gsiInitializing) return;
     gsiInitializing = true;
 
+    // Fetch Google Client ID FIRST (before waiting for google.accounts)
+    // This prevents the config from being missed if google.accounts script
+    // fails to load (e.g., blocked by ad blocker or CSP)
     (async function setup() {
-      // 1. Wait for google.accounts to be available
-      var maxAttempts = 50;
-      var attempts = 0;
-      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
-        await new Promise(function (r) { return setTimeout(r, 100); });
-        attempts++;
-      }
-
-      if (typeof google === 'undefined' || !google.accounts) {
-        console.warn('Google Identity Services library not loaded — Google login unavailable');
-        gsiInitializing = false;
-        return;
-      }
-
-      // 2. Fetch Google Client ID from backend (only once)
       try {
         if (typeof WarungioAPI !== 'undefined' && WarungioAPI.getSocialAuthConfig) {
           var config = await WarungioAPI.getSocialAuthConfig('google');
@@ -281,8 +295,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Failed to fetch Google config:', e);
       }
 
+      // 2. Wait for google.accounts to be available (up to 5 seconds)
+      var maxAttempts = 50;
+      var attempts = 0;
+      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
+        await new Promise(function (r) { return setTimeout(r, 100); });
+        attempts++;
+      }
+
+      if (typeof google === 'undefined' || !google.accounts) {
+        if (gsiClientId) {
+          console.warn('Google GSI library not loaded (client_id available but GSI blocked)');
+        } else {
+          console.warn('Google Identity Services library not loaded — Google login unavailable');
+        }
+        gsiInitializing = false;
+        return;
+      }
+
       if (!gsiClientId) {
-        console.error('Google Client ID not configured — Google login unavailable');
+        console.warn('Google Client ID not available — Google login unavailable');
         gsiInitializing = false;
         return;
       }

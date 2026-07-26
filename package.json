@@ -4,7 +4,8 @@
   "description": "Backend Express untuk Warungio, berjalan berdampingan dengan backend PHP lama.",
   "scripts": {
     "start": "echo 'Warungio uses Django backend. Run: cd django_backend && python manage.py runserver 0.0.0.0:8000'",
-    "dev": "echo 'Warungio uses Django backend. Run: cd django_backend && python manage.py runserver 0.0.0.0:8000'"
+    "dev": "echo 'Warungio uses Django backend. Run: cd django_backend && python manage.py runserver 0.0.0.0:8000'",
+    "build:css": "tailwindcss -i django_backend/static/css/tailwind-input.css -o django_backend/static/css/tailwind.css --minify"
   },
   "keywords": [
     "warungio",
@@ -23,6 +24,23 @@
     "mysql2": "latest"
   },
   "devDependencies": {
-    "nodemon": "latest"
-  }
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.11",
+    "autoprefixer": "^10.5.4",
+    "nodemon": "latest",
+    "postcss": "^8.5.23",
+    "tailwindcss": "^3.4.19"
+  },
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sagitpr/project-web-s4.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sagitpr/project-web-s4/issues"
+  },
+  "homepage": "https://github.com/sagitpr/project-web-s4#readme"
 }

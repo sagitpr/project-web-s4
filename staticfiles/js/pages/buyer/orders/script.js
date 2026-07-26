@@ -5,7 +5,8 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Auth guard: redirect to login if not authenticated
-  if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
+  if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -438,6 +439,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ── Load User Profile ──
+  async function loadUserProfile() {
+    try {
+      const u = await WarungioAPI.checkAuth();
+      if (u && u.user) {
+        const userNameEl = document.getElementById('userName');
+        const userAvatarEl = document.getElementById('userAvatar');
+        const userRoleBadge = document.getElementById('userRoleBadge');
+
+        const displayName = u.user.full_name || u.user.email;
+        if (userNameEl) userNameEl.textContent = `Hai, ${displayName}`;
+        if (u.user.profile_photo && userAvatarEl) {
+          userAvatarEl.src = u.user.profile_photo;
+        }
+        if (userRoleBadge) {
+          userRoleBadge.textContent = u.user.role === 'seller' ? 'Penjual' : 'Member';
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load user profile:', err);
+    }
+  }
+
   // Initial Load
+  bindDropdownMenu();
+  await loadUserProfile();
   loadOrders('all');
 });

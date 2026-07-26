@@ -11,10 +11,7 @@
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = { theme: { extend: { colors: { primary: "#16A34A", secondary: "#22C55E", background: "#F8FAF8", surface: "#FFFFFF", "outline-variant": "#E5E7EB" } } } }
-    </script>
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     <style>
         body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8faf8; color: #0f172a; -webkit-font-smoothing: antialiased; }
         .topbar-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 16px; background: rgba(248,250,248,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(229,231,235,0.6); }
@@ -61,53 +58,53 @@
             <p class="text-base text-slate-500 mt-4 leading-relaxed">Tips belanja hemat, resep masak sehat, panduan bisnis UMKM, dan informasi terbaru seputar Warungio.</p>
         </section>
 
-        <!-- Blog Posts Grid (placeholder — actual content coming soon) -->
+        <!-- Blog Posts Grid — linked to real content pages -->
         <section class="reveal">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <a href="{% url 'page-tips-sukses' %}" class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden block">
                     <div class="h-48 bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
-                        <i class="fa-solid fa-newspaper text-5xl text-green-300"></i>
+                        <i class="fa-solid fa-lightbulb text-5xl text-green-300"></i>
                     </div>
                     <div class="p-6">
-                        <span class="text-xs font-bold text-primary uppercase tracking-wider">Tips Belanja</span>
-                        <h3 class="font-extrabold text-slate-800 text-lg mt-2 mb-2">Konten Segera Hadir</h3>
-                        <p class="text-sm text-slate-500 leading-relaxed">Artikel tips belanja hemat, resep masak, dan panduan bisnis UMKM akan segera hadir.</p>
+                        <span class="text-xs font-bold text-primary uppercase tracking-wider">Tips Sukses</span>
+                        <h3 class="font-extrabold text-slate-800 text-lg mt-2 mb-2">Tips Sukses Seller Warungio</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">Strategi dan praktik terbaik untuk mengembangkan bisnis Anda di Warungio. Baca tips lengkapnya di sini.</p>
                     </div>
-                </div>
-                <div class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                </a>
+                <a href="{% url 'page-panduan-seller' %}" class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden block">
                     <div class="h-48 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
                         <i class="fa-solid fa-store text-5xl text-blue-300"></i>
                     </div>
                     <div class="p-6">
-                        <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Bisnis UMKM</span>
+                        <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Panduan</span>
                         <h3 class="font-extrabold text-slate-800 text-lg mt-2 mb-2">Panduan Seller Warungio</h3>
-                        <p class="text-sm text-slate-500 leading-relaxed">Pelajari strategi dan tips sukses mengembangkan bisnis UMKM bersama Warungio.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed">Mulai dan kembangkan bisnis Anda dengan panduan lengkap untuk mitra seller Warungio.</p>
                     </div>
-                </div>
-                <div class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                </a>
+                <a href="{% url 'page-cara-belanja' %}" class="blog-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden block">
                     <div class="h-48 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-                        <i class="fa-solid fa-lightbulb text-5xl text-amber-300"></i>
+                        <i class="fa-solid fa-cart-shopping text-5xl text-amber-300"></i>
                     </div>
                     <div class="p-6">
-                        <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Inspirasi</span>
-                        <h3 class="font-extrabold text-slate-800 text-lg mt-2 mb-2">Kisah Sukses Mitra</h3>
-                        <p class="text-sm text-slate-500 leading-relaxed">Inspirasi dan cerita sukses dari mitra Warungio di seluruh Indonesia.</p>
+                        <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Belanja</span>
+                        <h3 class="font-extrabold text-slate-800 text-lg mt-2 mb-2">Cara Belanja di Warungio</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">Panduan lengkap cara belanja kebutuhan harian dari warung dan UMKM terdekat di Warungio.</p>
                     </div>
-                </div>
+                </a>
             </div>
         </section>
 
-        <!-- Notification Banner -->
+        <!-- CTA Banner -->
         <section class="reveal">
             <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 md:p-12 text-center border border-green-100">
                 <div class="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-5">
                     <i class="fa-solid fa-bullhorn text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-extrabold text-slate-800 mb-3">Pantau Terus Halaman Ini!</h2>
-                <p class="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">Konten blog akan segera hadir. Pantau terus halaman ini untuk mendapatkan artikel tips belanja hemat, resep masak sehat, panduan bisnis UMKM, dan informasi terbaru seputar pengembangan Warungio sebagai marketplace hyperlocal terkemuka di Indonesia.</p>
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-3">Siap Mulai Berjualan?</h2>
+                <p class="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">Gabung jadi mitra Warungio dan jangkau ribuan pelanggan potensial di sekitar lokasi toko Anda. Daftar gratis!</p>
                 <div class="flex flex-wrap gap-3 justify-center mt-6">
-                    <a href="{% url 'page-tips-sukses' %}" class="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-all text-sm">Tips Sukses Seller</a>
-                    <a href="{% url 'page-cara-belanja' %}" class="bg-white text-primary border border-primary px-6 py-3 rounded-xl font-bold hover:bg-primary/5 transition-all text-sm">Cara Belanja</a>
+                    <a href="{% url 'page-register-mitra' %}" class="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-all text-sm">Daftar Jadi Mitra</a>
+                    <a href="{% url 'page-tips-sukses' %}" class="bg-white text-primary border border-primary px-6 py-3 rounded-xl font-bold hover:bg-primary/5 transition-all text-sm">Tips Sukses</a>
                 </div>
             </div>
         </section>

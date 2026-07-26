@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         if (window.WarungioAuth) {
           window.WarungioAuth.logout();
-          window.location.href = '/home/';
+          // logout() already redirects to '/', no need to override
         }
       });
     }
@@ -213,9 +213,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userLocationEl = document.getElementById('userLocation');
     if (userLocationEl) {
       if (coords) {
-        userLocationEl.innerHTML = `Samping Anda`;
+        userLocationEl.innerHTML = `Lokasi Aktif`;
       } else {
-        userLocationEl.innerHTML = `Jakarta, ID`;
+        userLocationEl.innerHTML = `Pilih Lokasi...`;
       }
     }
   }
@@ -246,34 +246,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       list.forEach(s => {
-        const rating = Number(s.rating_avg || 4.7).toFixed(1);
-        const distance = coords ? '0.8 km' : 'Dekat Anda';
+        const banner = s.banner || `/static/images/promosi-toko.png`;
+        const category = s.category_name || (s.id === 1 ? 'Toko Sembako' : 'Warung Segar');
+        const city = s.city || (s.id === 1 ? 'Bandung' : 'Jakarta Pusat');
+        const rating = Number(s.rating_avg || 4.5).toFixed(1);
         const deliveryTime = s.is_open ? '10-20 min' : 'Tutup';
-        const freeOngkir = 'Gratis Ongkir';
-        const logo = s.logo || `/static/images/store-icon-T.png`;
-        
+        const favClass = s.is_favorite ? 'is-fav' : '';
+
         const card = document.createElement('div');
         card.className = 'warung-card';
         card.innerHTML = `
-          <div class="warung-card-logo-row">
-            <img src="${logo}" alt="${s.store_name}" class="warung-logo-img" loading="lazy">
-            <button class="btn-favorite-store" data-id="${s.id}"><i class="fa-regular fa-heart"></i></button>
+          <div class="relative h-[120px] rounded-xl overflow-hidden mb-3 image-container" style="position: relative;">
+            <img src="${banner}" alt="${s.store_name} Banner" class="w-full h-full object-cover" onerror="this.src='/static/images/promosi-toko.png'" style="width: 100%; height: 100%; object-fit: cover;">
+            <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-red-500 transition-all btn-favorite-store ${favClass}" data-id="${s.id}" style="position: absolute; top: 8px; right: 8px; border: none; z-index: 10;">
+              <i class="fa-${favClass ? 'solid' : 'regular'} fa-heart"></i>
+            </button>
           </div>
-          <div>
-            <h4 class="warung-store-name">
-              ${s.store_name}
-              <i class="fa-solid fa-circle-check verified-store-badge" title="Terverifikasi"></i>
-            </h4>
-            <span class="warung-store-city">${s.city || 'Mitra Warungio'}</span>
+          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px;">
+            <span class="inline-block self-start px-2 py-0.5 bg-slate-50 text-[10px] font-extrabold text-[#16A34A] rounded" style="align-self: flex-start; background: #DCFCE7; color: #16A34A; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">${category}</span>
+            <h4 class="font-extrabold text-slate-800 text-sm truncate" style="font-weight: 800; color: #0F172A; margin: 0; font-size: 14px;">${s.store_name}</h4>
+            <span class="text-xs text-slate-400 font-medium" style="font-size: 12px; color: #64748B; font-weight: 500;">${city}</span>
+            <div class="flex items-center gap-3 text-[11px] text-slate-500 mt-1" style="display: flex; align-items: center; gap: 12px; font-size: 11px; color: #64748B; font-weight: 600;">
+              <span class="flex items-center gap-1 text-amber-500"><i class="fa-solid fa-star"></i> ${rating}</span>
+              <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${deliveryTime}</span>
+              <span class="flex items-center gap-1 text-primary"><i class="fa-solid fa-truck-fast"></i> Gratis Ongkir</span>
+            </div>
           </div>
-          <div class="warung-meta-row">
-            <span class="meta-item-star"><i class="fa-solid fa-star"></i> ${rating}</span>
-            <span class="meta-divider">|</span>
-            <span class="meta-item-time">${deliveryTime}</span>
-            <span class="meta-divider">|</span>
-            <span class="meta-item-free-shipping">${freeOngkir}</span>
-          </div>
-          <button class="btn-visit-store">Kunjungi Warung</button>
         `;
 
         card.addEventListener('click', () => {
@@ -720,7 +718,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Handle Add to Cart API Call ──
   async function handleQuickAddToCart(productId) {
     if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-      window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+      window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
       return;
     }
     
@@ -870,7 +868,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btn.addEventListener('click', async () => {
       if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-        window.location.href = '/auth/login/';
+        window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
         return;
       }
 
@@ -978,8 +976,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!window.snap || !window.snap.pay) {
             await new Promise((resolve, reject) => {
               const script = document.createElement('script');
-              var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
-              script.src = snapBaseUrl + '/snap/snap.js';
+              // Load Snap JS from backend-provided URL (NEVER fall back to sandbox)
+              // Uses window.WARUNGIO_SNAP_JS_URL if set by websocket.js config fetch
+              var snapJsUrl = window.WARUNGIO_SNAP_JS_URL || (
+                window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com'
+              ) + '/snap/snap.js';
+              script.src = snapJsUrl;
               script.setAttribute('data-client-key', midtransClientKey);
               script.onload = resolve;
               script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));
@@ -1137,20 +1139,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ── Setup Carousel Navigation controls ──
-  function setupCarouselNav(trackId, prevBtnId, nextBtnId) {
+  // ── Setup Carousel Pagination Dots ──
+  function setupCarouselDots(trackId, dotsContainerId) {
     const track = document.getElementById(trackId);
-    const prevBtn = document.getElementById(prevBtnId);
-    const nextBtn = document.getElementById(nextBtnId);
-    
-    if (track && prevBtn && nextBtn) {
-      prevBtn.addEventListener('click', () => {
-        track.scrollBy({ left: -320, behavior: 'smooth' });
+    const dotsContainer = document.getElementById(dotsContainerId);
+    if (!track || !dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    const numDots = 5;
+    const dots = [];
+
+    for (let i = 0; i < numDots; i++) {
+      const dot = document.createElement('span');
+      dot.className = `w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${i === 0 ? 'bg-primary w-4' : 'bg-slate-300'}`;
+      dot.addEventListener('click', () => {
+        const scrollWidth = track.scrollWidth - track.clientWidth;
+        const targetScroll = (scrollWidth / (numDots - 1)) * i;
+        track.scrollTo({ left: targetScroll, behavior: 'smooth' });
       });
-      nextBtn.addEventListener('click', () => {
-        track.scrollBy({ left: 320, behavior: 'smooth' });
-      });
+      dotsContainer.appendChild(dot);
+      dots.push(dot);
     }
+
+    track.addEventListener('scroll', () => {
+      const scrollWidth = track.scrollWidth - track.clientWidth;
+      if (scrollWidth <= 0) return;
+      const progress = track.scrollLeft / scrollWidth;
+      const activeIndex = Math.min(Math.round(progress * (numDots - 1)), numDots - 1);
+
+      dots.forEach((dot, idx) => {
+        if (idx === activeIndex) {
+          dot.className = 'w-4 h-2 rounded-full bg-primary transition-all duration-300 cursor-pointer';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-slate-300 transition-all duration-300 cursor-pointer';
+        }
+      });
+    });
   }
 
   // ── Setup Carousel Auto-Scroll (Pause on hover) ──
@@ -1210,8 +1234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggleAuthStates();
   bindDropdownMenu();
   bindWalletTopUp();
-  startCountdown();
-  startDealsCountdown();
   setupCategoryChips();
   setupButtonRipple();
 
@@ -1256,8 +1278,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadStores(), loadFreshProducts(), loadBestDeals()]);
 
   // Setup carousels
-  setupCarouselNav('warungGrid', 'warungPrevBtn', 'warungNextBtn');
-  setupCarouselNav('bestDealsGrid', 'dealsPrevBtn', 'dealsNextBtn');
+  setupCarouselDots('warungGrid', 'warungCarouselDots');
+  setupCarouselDots('bestDealsGrid', 'dealsCarouselDots');
   setupCarouselAutoScroll('warungGrid');
   setupCarouselAutoScroll('bestDealsGrid');
 

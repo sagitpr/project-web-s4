@@ -48,7 +48,8 @@
      */
 
     // ── Display Ad Slots (responsive) ──
-    // ⚠️  Replace placeholder slot IDs with real AdSense ad unit IDs
+    displaySlots: {
+      // ⚠️  Replace placeholder slot IDs with real AdSense ad unit IDs
       // Landing Page
       landingAfterHero:     { slot: '8639756788997808_1', format: 'auto',     desktop: '728x90',   mobile: '320x100' },
       landingAfterFeatures: { slot: '8639756788997808_2', format: 'auto',     desktop: '728x90',   mobile: '320x100' },

@@ -27,23 +27,8 @@
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
-    <!-- Tailwind Play CDN for layout grid rendering -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#16A34A",
-              secondary: "#22C55E",
-              background: "#F8FAF8",
-              surface: "#FFFFFF",
-              "outline-variant": "#E5E7EB"
-            }
-          }
-        }
-      }
-    </script>
+    <!-- Local Tailwind CSS build for layout grid rendering -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
 
     <style>
         .glass-card-premium {

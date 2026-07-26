@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Auth check
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -276,8 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       btnDetailCancel.disabled = true;
       btnDetailCancel.textContent = 'Membatalkan...';
-      
-      await WarungioAPI.updateOrderStatus(selectedOrderId, 'cancelled', '', '', 'Seller requested cancel', detailNotes.value);
+
+      await WarungioAPI.updateOrderStatus(
+        selectedOrderId,
+        'cancelled',
+        '',                   // courier
+        '',                   // tracking number
+        'other',              // cancel_reason (enum: out_of_stock, seller_unavailable, wrong_price, address_invalid, product_damaged, other)
+        detailNotes?.value || 'Dibatalkan oleh penjual',  // cancel_reason_text
+        {}                    // extraFields
+      );
       
       window.WarungioToast?.show('Pesanan berhasil dibatalkan.', 'success');
       if (detailPanel) detailPanel.style.display = 'none';
@@ -295,8 +303,19 @@ document.addEventListener('DOMContentLoaded', () => {
   btnDetailProcess?.addEventListener('click', async () => {
     if (!selectedOrderId) return;
     const nextStatus = btnDetailProcess.getAttribute('data-target-status');
-    const shipMethod = detailShippingSelect?.value || 'antar_sendiri';
-    const notesVal = detailNotes?.value || '';
+    let shipMethod = detailShippingSelect?.value || '';
+    let extraFields = {};
+
+    // Set appropriate fields based on next status
+    if (nextStatus === 'on_delivery') {
+      extraFields.tracking_number = `TRK-${selectedOrderId}`;
+      extraFields.estimated_time = '30-60 menit';
+    }
+    if (nextStatus === 'courier_pickup') {
+      extraFields.courier = shipMethod;
+      extraFields.driver_name = document.getElementById('detail-driver-name')?.value || '';
+      extraFields.driver_phone = document.getElementById('detail-driver-phone')?.value || '';
+    }
 
     try {
       btnDetailProcess.disabled = true;
@@ -304,13 +323,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Call API status transition
       await WarungioAPI.updateOrderStatus(
-        selectedOrderId, 
-        nextStatus, 
-        shipMethod, 
-        `TRK-${selectedOrderId}`, // tracking number fallback
-        '', 
-        '', 
-        { notes: notesVal }
+        selectedOrderId,
+        nextStatus,
+        shipMethod,
+        nextStatus === 'on_delivery' ? `TRK-${selectedOrderId}` : '',
+        '',
+        '',
+        extraFields
       );
 
       window.WarungioToast?.show(`Status pesanan diperbarui ke "${STATUS_LABELS[nextStatus]}".`, 'success');
@@ -365,6 +384,55 @@ document.addEventListener('DOMContentLoaded', () => {
     activeDate = dateFilter.value;
     fetchOrders();
   });
+
+  // ── Real-time WebSocket order updates ──
+  // Automatically refresh the orders list and stats when:
+  //   - A new order is placed → order_update with status='pending'
+  //   - Order status changes → order_update (processed, shipped, completed, cancelled)
+  //   - Payment is confirmed → payment_update (paid)
+  //
+  // Events are broadcast by the backend via NotificationConsumer WebSocket.
+  // The client (WarungioWS) is already connected — we just subscribe to events.
+
+  var _wsRetries = 0;
+  var _wsMaxRetries = 10;
+
+  function setupRealtimeUpdates() {
+    if (typeof WarungioWS === 'undefined' || typeof WarungioWS.on !== 'function') {
+      // WebSocket not yet initialized — retry after a short delay
+      if (++_wsRetries >= _wsMaxRetries) return;
+      setTimeout(setupRealtimeUpdates, 1000);
+      return;
+    }
+
+    // When any order is created or status changes, refresh the full list
+    WarungioWS.on('order_update', function (data) {
+      console.info('[Orders WS] Order update:', data.order_number, '→', data.status);
+
+      // Show brief toast for significant events
+      if (data.status === 'pending') {
+        window.WarungioToast?.show('Pesanan baru masuk: ' + (data.order_number || ''), 'info');
+      }
+
+      // Refresh the entire orders list to stay in sync
+      fetchOrders();
+    });
+
+    // Also refresh on payment confirmation (pending → paid)
+    WarungioWS.on('payment_update', function (data) {
+      console.info('[Orders WS] Payment update:', data.order_number, '→', data.status);
+      fetchOrders();
+    });
+
+    // When WebSocket reconnects after disconnection, refresh to catch missed updates
+    WarungioWS.on('connected', function () {
+      console.info('[Orders WS] Reconnected — refreshing orders');
+      fetchOrders();
+    });
+  }
+
+  // Initialize real-time WebSocket subscriptions
+  setupRealtimeUpdates();
 
   // Initialize page
   fetchOrders();

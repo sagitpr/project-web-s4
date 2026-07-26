@@ -5,7 +5,7 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/?redirect=' + encodeURIComponent(window.location.pathname);
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -44,6 +44,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let snapScriptLoaded = false;
 
   function showToast(text, type) {
+    // Delegate to shared utility — eliminates duplicate code
+    if (window.WarungioAuthUI) {
+      WarungioAuthUI.showToast(text, type || 'success');
+      return;
+    }
+    // Fallback
     if (!toast) return;
     toast.textContent = text;
     toast.className = 'toast ' + (type || 'success');
@@ -106,11 +112,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function getShippingFee() {
+    var selectedRadio = document.querySelector('input[name="shipping"]:checked');
+    if (!selectedRadio) return 0;
+    var parentLabel = selectedRadio.closest('.shipping-option');
+    if (parentLabel) {
+      var feeEl = parentLabel.querySelector('.ship-fee');
+      if (feeEl && !feeEl.classList.contains('free')) {
+        var feeText = feeEl.textContent.replace(/[^0-9]/g, '');
+        return parseInt(feeText) || 0;
+      }
+    }
+    return 0;
+  }
+
   function updateTotals() {
     var subtotal = cartItems.reduce(function(sum, i) {
       return sum + (Number(i.product_price || i.price || 0) * i.qty);
     }, 0);
-    var total = Math.max(0, subtotal - voucherDiscount);
+    var shippingCost = getShippingFee();
+    var total = Math.max(0, subtotal + shippingCost - voucherDiscount);
     checkoutSubtotal.textContent = toRupiah(subtotal);
     checkoutTotal.textContent = toRupiah(total);
 
@@ -336,7 +357,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       var script = document.createElement('script');
       // Use the snap_js_url from payment config, fallback to sandbox
-      var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.sandbox.midtrans.com';
+      // Use backend-provided Snap URL; production is the source of truth.
+      // NEVER fall back to sandbox — in production, this exposes sandbox URLs.
+      var snapBaseUrl = window.WARUNGIO_SNAP_BASE_URL || 'https://app.midtrans.com';
       script.src = snapBaseUrl + '/snap/snap.js';
       script.setAttribute('data-client-key', clientKey);
       script.onload = function() {
@@ -501,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /** Helper: redirect to order-success page with params */
   function redirectToSuccess(allOrderIds, allOrderNumbers, status) {
-    window.location.href = '../order-success/index.html' +
+    window.location.href = '/buyer/order-success/' +
       '?orders=' + encodeURIComponent(allOrderIds.join(',')) +
       '&numbers=' + encodeURIComponent(allOrderNumbers.join(',')) +
       '&payment=midtrans&status=' + status;

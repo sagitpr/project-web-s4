@@ -280,22 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gsiReady || gsiInitializing) return;
     gsiInitializing = true;
 
+    // Fetch Google Client ID FIRST (before waiting for google.accounts)
+    // This prevents the config from being missed if google.accounts script
+    // fails to load (e.g., blocked by ad blocker or CSP)
     (async function setup() {
-      // 1. Wait for google.accounts to be available
-      var maxAttempts = 50;
-      var attempts = 0;
-      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
-        await new Promise(function (r) { return setTimeout(r, 100); });
-        attempts++;
-      }
-
-      if (typeof google === 'undefined' || !google.accounts) {
-        console.warn('Google Identity Services library not loaded — Google login unavailable');
-        gsiInitializing = false;
-        return;
-      }
-
-      // 2. Fetch Google Client ID from backend (only once)
       try {
         if (typeof WarungioAPI !== 'undefined' && WarungioAPI.getSocialAuthConfig) {
           var config = await WarungioAPI.getSocialAuthConfig('google');
@@ -307,8 +295,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Failed to fetch Google config:', e);
       }
 
+      // 2. Wait for google.accounts to be available (up to 5 seconds)
+      var maxAttempts = 50;
+      var attempts = 0;
+      while ((typeof google === 'undefined' || !google.accounts) && attempts < maxAttempts) {
+        await new Promise(function (r) { return setTimeout(r, 100); });
+        attempts++;
+      }
+
+      if (typeof google === 'undefined' || !google.accounts) {
+        if (gsiClientId) {
+          console.warn('Google GSI library not loaded (client_id available but GSI blocked)');
+        } else {
+          console.warn('Google Identity Services library not loaded — Google login unavailable');
+        }
+        gsiInitializing = false;
+        return;
+      }
+
       if (!gsiClientId) {
-        console.error('Google Client ID not configured — Google login unavailable');
+        console.warn('Google Client ID not available — Google login unavailable');
         gsiInitializing = false;
         return;
       }

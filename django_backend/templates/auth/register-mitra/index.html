@@ -23,23 +23,8 @@
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
 
-    <!-- Tailwind CDN for layout grid -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#16A34A",
-              secondary: "#22C55E",
-              background: "#F8FAF8",
-              surface: "#FFFFFF",
-              "outline-variant": "#E5E7EB"
-            }
-          }
-        }
-      }
-    </script>
+    <!-- Local Tailwind CSS build -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
 
     <style>
         .glass-card-premium {
@@ -445,8 +430,8 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
     <script src="{% static 'js/pages/auth/register-mitra/script.js' %}"></script>
 

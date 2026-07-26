@@ -17,9 +17,9 @@
   const profileMessage = $('#profileMessage');
   const saveProfileBtn = $('#saveProfileBtn');
 
-  // Topbar
-  const topbarUserName = $('#topbarUserName');
-  const topbarUserAvatar = $('#topbarUserAvatar');
+  // Topbar (standard IDs for auth-ui.js compatibility)
+  const userNameEl = $('#userName');
+  const userAvatarEl = $('#userAvatar');
 
   // Password Modal
   const passwordModal = $('#passwordModal');
@@ -61,7 +61,7 @@
   if (changePwdBtn) changePwdBtn.dataset.originalText = 'Ubah Kata Sandi';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -107,17 +107,18 @@
       business_description: user.business_description || '',
     };
 
-    // Render values
-    if (topbarUserName) {
-      topbarUserName.textContent = `Hai, ${user.full_name ? user.full_name.split(' ')[0] : 'User'}`;
-    }
-    
+    // Render values — topbar handled by WarungioAuthUI, only set if needed as fallback
     const avatarSrc = user.profile_photo
       ? (user.profile_photo.startsWith('http') ? user.profile_photo : window.location.origin + user.profile_photo)
       : '/static/images/av-siti.png';
       
     if (profileAvatar) profileAvatar.src = avatarSrc;
-    if (topbarUserAvatar) topbarUserAvatar.src = avatarSrc;
+    if (userAvatarEl) userAvatarEl.src = avatarSrc;
+
+    const userRoleBadge = document.getElementById('userRoleBadge');
+    if (userRoleBadge) {
+      userRoleBadge.textContent = user.role === 'seller' ? 'Penjual' : 'Member';
+    }
 
     // Fields
     const fields = {
@@ -273,7 +274,7 @@
       const data = await WarungioAPI.uploadProfilePhoto(file);
       const avatarSrc = window.location.origin + data.profile_photo + '?t=' + Date.now();
       if (profileAvatar) profileAvatar.src = avatarSrc;
-      if (topbarUserAvatar) topbarUserAvatar.src = avatarSrc;
+      if (userAvatarEl) userAvatarEl.src = avatarSrc;
 
       const user = window.WarungioAuth.getUser();
       if (user && data.profile_photo) user.profile_photo = data.profile_photo;
@@ -284,6 +285,6 @@
     }
   });
 
-  // Init
+  // Init — dropdown & logout handled by WarungioAuthUI.init()
   loadProfile();
 })();

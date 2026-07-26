@@ -3,21 +3,10 @@
  * Connected to Django analytics API and product management.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const DEFAULT_DATA = {
-    products: [
-      { name: 'Selada Keriting', cat: 'Sayuran', status: 'Kurang Segar', statusClass: 'status-orange', issue: 'Kesegaran menurun', action: 'Perbarui Foto' },
-      { name: 'Stok Telur Ayam', cat: 'Sembako', status: 'Stok Rendah', statusClass: 'status-yellow', issue: 'Stok di bawah minimum', action: 'Restock' },
-      { name: 'Cabai Rawit Merah', cat: 'Bumbu', status: 'Tidak Layak', statusClass: 'status-red', issue: 'Kualitas tidak memenuhi standar', action: 'Hapus' },
-    ],
-    activities: [
-      { msg: 'Pesanan baru #INV/240501/0012', time: '10 Mei 2024, 10:30' },
-      { msg: 'Produk Bayam Hijau Segar Lolos Quality Check', time: '10 Mei 2024, 09:45' },
-      { msg: 'Pesanan #INV/240501/0011 dikirim', time: '09 Mei 2024, 18:45' },
-    ]
-  };
+  const LOADING_ERROR_MSG = 'Gagal memuat data. Silakan refresh halaman.';
 
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 
@@ -28,20 +17,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let chartInstance = null;
   let salesChartInstance = null;
 
-  function initChart(feasible = 78, moderate = 42, low = 8, rejected = 10) {
+  function initChart(feasible = 0, moderate = 0, low = 0, rejected = 0) {
     const ctx = document.getElementById('eligibilityChart')?.getContext('2d');
     if (!ctx) return;
     if (chartInstance) chartInstance.destroy();
+    // Only render chart if there is actual data
+    const total = feasible + moderate + low + rejected;
+    const chartData = total > 0
+      ? [feasible, moderate, low, rejected]
+      : [1]; // Placeholder dot when no data
+    const chartColors = total > 0
+      ? ['#22c55e', '#a3e635', '#facc15', '#ef4444']
+      : ['#e5e7eb'];
     chartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
         datasets: [{
-          data: [feasible, moderate, low, rejected],
-          backgroundColor: ['#22c55e', '#a3e635', '#facc15', '#ef4444'],
+          data: chartData,
+          backgroundColor: chartColors,
           borderWidth: 0, cutout: '80%',
         }]
       },
-      options: { plugins: { tooltip: { enabled: false } }, cutout: '80%' }
+      options: { plugins: { tooltip: { enabled: total > 0 } }, cutout: '80%' }
     });
   }
   initChart();
@@ -82,21 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadSalesChart();
 
-  function renderProducts(data) {
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-    (data.products || []).forEach(p => {
-      tableBody.innerHTML += '<tr><td><b>' + p.name + '</b></td><td>' + p.cat + '</td><td><span class="status-pill ' + p.statusClass + '">' + p.status + '</span></td><td>' + p.issue + '</td><td><button class="btn-action">' + p.action + '</button></td></tr>';
-    });
-  }
-
-  function renderActivities(data) {
-    if (!actList) return;
-    actList.innerHTML = '';
-    (data.activities || []).forEach(a => {
-      actList.innerHTML += '<div class="activity-item"><b>' + a.msg + '</b><small>' + a.time + '</small></div>';
-    });
-  }
+  // renderProducts dan renderActivities dihapus — data palsu (DEFAULT_DATA) diganti
+  // dengan error state yang jujur: "Gagal memuat data" atau "Belum ada data"
 
   function showAddMsg(text, type) {
     if (!addProductMessage) return;
@@ -113,6 +97,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   showLoadingSkeleton();
 
+  // ── Load store profile (shop name, ID, wallet balance) ──
+  async function loadStoreProfile() {
+    try {
+      const store = await WarungioAPI.getMyStore();
+      const shopNameEl = document.getElementById('shopName');
+      const shopIdEl = document.getElementById('shopId');
+      const logoEl = document.getElementById('headerStoreLogo');
+      if (shopNameEl && store) {
+        shopNameEl.textContent = store.store_name || 'Warung';
+      }
+      if (shopIdEl && store) {
+        shopIdEl.textContent = 'ID: ' + (store.slug ? store.slug.toUpperCase() : 'WRG' + (store.id || ''));
+      }
+      if (logoEl && store && store.store_logo) {
+        logoEl.src = store.store_logo;
+        logoEl.style.display = 'inline-block';
+      }
+
+      // Load wallet balance separately
+      try {
+        const wallet = await WarungioAPI.getWalletBalance();
+        const balanceEl = document.getElementById('store-balance');
+        if (balanceEl && wallet) {
+          balanceEl.textContent = 'Rp ' + Number(wallet.balance || 0).toLocaleString('id-ID');
+        }
+      } catch (e) {
+        // Wallet API unavailable — keep skeleton
+      }
+    } catch (e) {
+      console.warn('Store profile load failed:', e);
+    }
+  }
+
   async function loadDashboardData() {
     try {
       const data = await WarungioAPI.getDashboardSummary('month');
@@ -121,13 +138,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const ordersEl = document.getElementById('new-orders');
       const productsEl = document.getElementById('active-products');
       const ratingEl = document.getElementById('store-rating');
-      const balanceEl = document.getElementById('store-balance');
 
       if (salesEl) salesEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
       if (ordersEl) ordersEl.textContent = data.total_orders || 0;
       if (productsEl) productsEl.textContent = data.total_products || 0;
       if (ratingEl) ratingEl.textContent = Number(data.average_rating || 0).toFixed(1);
-      if (balanceEl) balanceEl.textContent = 'Rp ' + Number(data.total_sales || 0).toLocaleString('id-ID');
+
+      // ── Trends: compare current period vs previous period ──
+      const deltaSales = Number(data.sales_trend_percent || 0);
+      const deltaOrders = Number(data.order_trend_percent || 0);
+      renderTrend('sales-trend', deltaSales, 'dari bulan lalu');
+      renderTrend('orders-trend', deltaOrders, 'dari bulan lalu');
+
+      const productsTrendEl = document.getElementById('products-trend');
+      if (productsTrendEl) {
+        productsTrendEl.textContent = data.total_products ? data.total_products + ' produk aktif' : 'Belum ada produk';
+        productsTrendEl.className = 'stat-trend';
+      }
+
+      const reviewCount = data.total_reviews || data.review_count || 0;
+      const ratingTrendEl = document.getElementById('rating-trend');
+      if (ratingTrendEl) {
+        ratingTrendEl.textContent = '(' + Number(reviewCount).toLocaleString('id-ID') + ' ulasan)';
+        ratingTrendEl.className = 'stat-trend';
+      }
 
       if (actList) {
         actList.innerHTML = '';
@@ -136,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actList.innerHTML += '<div class="activity-item"><b>Pesanan #' + o.order_number + '</b><small>' + new Date(o.created_at).toLocaleString('id-ID') + ' - Rp ' + Number(o.total_price).toLocaleString('id-ID') + '</small></div>';
           });
         } else {
-          renderActivities(DEFAULT_DATA);
+          actList.innerHTML = '<div class="activity-item" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada aktivitas terbaru</div>';
         }
       }
 
@@ -145,14 +179,35 @@ document.addEventListener('DOMContentLoaded', () => {
         data.top_products.forEach(p => {
           tableBody.innerHTML += '<tr><td><b>' + p.product_name + '</b></td><td>Terjual: ' + p.total_sold + '</td><td><span class="status-pill status-green">Laris</span></td><td>Penjualan: Rp ' + Number(p.total_revenue).toLocaleString('id-ID') + '</td><td><button class="btn-action">Detail</button></td></tr>';
         });
-      } else {
-        renderProducts(DEFAULT_DATA);
+        const badgeEl = document.getElementById('actionBadge');
+        if (badgeEl) badgeEl.textContent = data.top_products.length;
+      } else if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Belum ada data produk</td></tr>';
+        const badgeEl = document.getElementById('actionBadge');
+        if (badgeEl) badgeEl.textContent = '0';
       }
+
+      // ── Quality chart from real quality data ──
+      refreshQualityChartFromData(data);
     } catch (err) {
       console.warn('Dashboard load fallback:', err);
-      renderProducts(DEFAULT_DATA);
-      renderActivities(DEFAULT_DATA);
+      if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat data produk. ' + LOADING_ERROR_MSG + '</td></tr>';
+      if (actList) actList.innerHTML = '<div class="activity-item" style="text-align:center;color:#ef4444;padding:20px;">Gagal memuat aktivitas. ' + LOADING_ERROR_MSG + '</div>';
     }
+  }
+
+  function renderTrend(elId, pctChange, suffix) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (pctChange === 0 || isNaN(pctChange)) {
+      el.textContent = 'Belum ada data';
+      el.className = 'stat-trend';
+      return;
+    }
+    const isUp = pctChange > 0;
+    const icon = isUp ? '<i class="fa-solid fa-arrow-up"></i>' : '<i class="fa-solid fa-arrow-down"></i>';
+    el.innerHTML = icon + ' ' + Math.abs(pctChange).toFixed(1) + '% ' + suffix;
+    el.className = 'stat-trend ' + (isUp ? 'up' : 'down');
   }
 
   addProductForm?.addEventListener('submit', async (e) => {
@@ -272,15 +327,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!selectedProductId) return;
 
     btnManualConfirmSave.disabled = true;
-    btnManualConfirmSave.textContent = 'Menyimpan...';
-
-    try {
-      const mockImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-      const finalRes = await WarungioAPI.processSmartScan(mockImg, selectedProductId, 'manual', {
+    btnManualConfirmSave.textContent = 'Menyimpan...';    try {
+      const finalRes = await WarungioAPI.processSmartScan(null, selectedProductId, 'manual', {
         barcode: confirmBarcodeInp?.value || '8991234567890',
         expiration_date: confirmExpDateInp?.value || '2027-12-31',
         bpom_number: confirmBpomInp?.value || 'MD 231456789012'
-      });      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
+      });
+
+      if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'none';
 
       playScanSound(); // 🔊 Tit_kasir! Manual confirm success sound
 
@@ -330,8 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(async () => {
       try {
-        const mockImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-        
         // Options setup for custom testing values
         let options = {};
         if (activeScanMode === 'computer_vision') {
@@ -353,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        const res = await WarungioAPI.processSmartScan(mockImg, selectedProductId, activeScanMode, options);
+        const res = await WarungioAPI.processSmartScan(null, selectedProductId, activeScanMode, options);
         
         if (activeScanMode === 'ocr' && res.confidence_uncertain) {
           // Force manual confirmation when OCR results have uncertain confidence
@@ -503,14 +555,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function refreshQualityChart() {
-    try {
-      const data = await WarungioAPI.getDashboardSummary('month');
-      initChart(82, 40, 6, 8);
-    } catch (err) {
-      initChart(82, 40, 6, 8);
+  function refreshQualityChartFromData(data) {
+    const qualityStats = data.quality_summary || {};
+    const feasible = qualityStats.fresh || 0;
+    const moderate = qualityStats.normal || 0;
+    const low = qualityStats.warning || 0;
+    const rejected = qualityStats.rejected || 0;
+    const total = feasible + moderate + low + rejected || 1;
+
+    initChart(feasible, moderate, low, rejected);
+
+    // Update labels with real counts
+    document.getElementById('qualityFeasible').textContent = feasible;
+    document.getElementById('qualityModerate').textContent = moderate;
+    document.getElementById('qualityLow').textContent = low;
+    document.getElementById('qualityRejected').textContent = rejected;
+
+    // Update progress bars
+    document.getElementById('qualityBarFeasible').style.width = (feasible / total * 100) + '%';
+    document.getElementById('qualityBarModerate').style.width = (moderate / total * 100) + '%';
+    document.getElementById('qualityBarLow').style.width = (low / total * 100) + '%';
+    document.getElementById('qualityBarRejected').style.width = (rejected / total * 100) + '%';
+
+    // Center percentage
+    const pctEl = document.getElementById('eligibilityPct');
+    if (pctEl) {
+      const totalProducts = feasible + moderate + low + rejected;
+      const healthyPct = totalProducts > 0 ? Math.round((feasible / totalProducts) * 100) : 0;
+      pctEl.textContent = healthyPct + '%';
     }
   }
 
+  loadStoreProfile();
   loadDashboardData();
 });

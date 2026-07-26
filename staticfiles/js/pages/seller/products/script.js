@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // Auth check
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-    window.location.href = '/auth/login/';
+    window.location.href = '/?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
 

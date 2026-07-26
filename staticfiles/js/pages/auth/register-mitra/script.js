@@ -1,13 +1,10 @@
 /**
  * Partner Registration page — Warungio
  * Registers seller + creates store via Django REST API.
- * Cascading region dropdowns: Province → City → District → Village
+ * Text inputs for region fields (no longer cascading dropdowns).
  */
 (function() {
   'use strict';
-
-  const REGIONS_API = '/api/regions/';
-  const CACHE_TTL = 30 * 60 * 1000; // 30 min cache for region data
 
   // ══════════════════════════════════════════════════════════════════════════
   //  GOOGLE MAPS — defined at script parse time (before DOMContentLoaded)
@@ -162,14 +159,13 @@
     }
   };
 
-  /** Geocoding helper — reverse geocode coordinates to fill address + auto-select region */
+  /** Geocoding helper — reverse geocode coordinates to fill address + region text inputs */
   function _reverseGeocode(lat, lng, form) {
     if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) return;
     var geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: { lat: lat, lng: lng } }, function(results, status) {
       if (status !== 'OK' || !results || !results[0]) {
         if (status === 'ZERO_RESULTS') {
-          // No results for this location (e.g., middle of ocean) — not an error
           return;
         }
         if (status === 'OVER_QUERY_LIMIT' || status === 'REQUEST_DENIED') {
@@ -182,9 +178,7 @@
         form.elements.address.value = addr;
         form.elements.address.dispatchEvent(new Event('input'));
       }
-      // Parse address components for Indonesian hierarchy:
-      //   level_1 = Provinsi, level_2 = Kota/Kab, level_3 = Kecamatan,
-      //   level_4 = Desa/Kelurahan, sublocality_level_1 = kelurahan (Jakarta)
+      // Parse address components for Indonesian hierarchy and fill text inputs directly
       var components = results[0].address_components || [];
       var province = '', city = '', district = '', village = '', postalCode = '';
       components.forEach(function(c) {
@@ -197,219 +191,29 @@
         if (types.indexOf('sublocality_level_2') !== -1 && !village) village = c.long_name;
         if (types.indexOf('postal_code') !== -1) postalCode = c.long_name;
       });
-      // Fill postal code from geocoding result
-      if (form && form.elements.postalCode && postalCode) {
-        form.elements.postalCode.value = postalCode;
-      }
-      // Auto-select in region dropdowns
-      if (province && typeof autoSelectRegion === 'function') {
-        autoSelectRegion(province, city, district);
-      }
-    });
-  }
-
-  // ── In-memory cache ──
-  const cache = {};
-
-  function cacheGet(key) {
-    const entry = cache[key];
-    if (!entry) return null;
-    if (Date.now() - entry.ts > CACHE_TTL) { delete cache[key]; return null; }
-    return entry.data;
-  }
-
-  function cacheSet(key, data) { cache[key] = { data, ts: Date.now() }; }
-
-  // ── API helpers ──
-  async function fetchJSON(url) {
-    const cached = cacheGet(url);
-    if (cached) return cached;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-    const data = await resp.json();
-    // Defensive: unwrap {count, results} format if returned
-    // Some API paths return flat array directly, others may return wrapped
-    const unwrapped = (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.results))
-      ? data.results
-      : data;
-    cacheSet(url, unwrapped);
-    return unwrapped;
-  }
-
-  async function loadProvinces() {
-    return fetchJSON(REGIONS_API + 'provinces/');
-  }
-
-  async function loadRegencies(provCode) {
-    return fetchJSON(REGIONS_API + 'regencies/?province=' + provCode);
-  }
-
-  async function loadDistricts(regencyCode) {
-    return fetchJSON(REGIONS_API + 'districts/?regency=' + regencyCode);
-  }
-
-  async function loadVillages(districtCode) {
-    return fetchJSON(REGIONS_API + 'villages/?district=' + districtCode);
-  }
-
-  // ── Select helpers ──
-  function populateSelect(select, items, nameKey, valueKey, placeholder) {
-    const val = select.value;
-    select.innerHTML = '<option value="">' + placeholder + '</option>';
-    items.forEach(function(item) {
-      var opt = document.createElement('option');
-      // value = Kemendagri code (for hidden input sync), text = display name
-      opt.value = item[valueKey || 'code'];
-      opt.textContent = item[nameKey || 'display_name'] || item.name;
-      select.appendChild(opt);
-    });
-    // Try to restore previous value
-    if (val) { select.value = val; }
-  }
-
-  function disableSelect(select, placeholder) {
-    select.disabled = true;
-    select.innerHTML = '<option value="">' + placeholder + '</option>';
-    select.value = '';
-  }
-
-  function clearDependent(startSelect) {
-    var sel = startSelect;
-    while (sel && sel.dataset.next) {
-      var next = document.getElementById(sel.dataset.next);
-      if (!next) break;
-      var placeholder = next.dataset.placeholder || '— Pilih dulu —';
-      disableSelect(next, placeholder);
-      var hid = next.parentElement.querySelector('input[type="hidden"]');
-      if (hid) hid.value = '';
-      sel = next;
-    }
-  }
-
-  // ── Load chain ──
-  async function onProvinceChange(select) {
-    var provCode = select.value;
-    var hidden = select.parentElement.querySelector('input[type="hidden"]');
-    if (hidden) { hidden.value = provCode; }
-
-    var citySelect = document.getElementById('regionCity');
-    clearDependent(select);
-    if (!provCode) { disableSelect(citySelect, '— Pilih Provinsi dulu —'); return; }
-
-    citySelect.disabled = true;
-    citySelect.innerHTML = '<option value="">Memuat data...</option>';
-    try {
-      var cities = await loadRegencies(provCode);
-      populateSelect(citySelect, cities, 'display_name', 'code', '— Pilih Kota/Kab —');
-      citySelect.disabled = false;
-    } catch (e) {
-      disableSelect(citySelect, 'Gagal memuat data');
-      console.error('Load regencies error:', e);
-    }
-  }
-
-  async function onCityChange(select) {
-    var cityCode = select.value;
-    var hidden = select.parentElement.querySelector('input[type="hidden"]');
-    if (hidden) { hidden.value = cityCode; }
-
-    var distSelect = document.getElementById('regionDistrict');
-    clearDependent(select);
-    if (!cityCode) { disableSelect(distSelect, '— Pilih Kota dulu —'); return; }
-
-    distSelect.disabled = true;
-    distSelect.innerHTML = '<option value="">Memuat data...</option>';
-    try {
-      var districts = await loadDistricts(cityCode);
-      populateSelect(distSelect, districts, 'display_name', 'code', '— Pilih Kecamatan —');
-      distSelect.disabled = false;
-    } catch (e) {
-      disableSelect(distSelect, 'Gagal memuat data');
-      console.error('Load districts error:', e);
-    }
-  }
-
-  async function onDistrictChange(select) {
-    var distCode = select.value;
-    var hidden = select.parentElement.querySelector('input[type="hidden"]');
-    if (hidden) { hidden.value = distCode; }
-
-    var villageSelect = document.getElementById('regionVillage');
-    clearDependent(select);
-    if (!distCode) { disableSelect(villageSelect, '— Pilih Kecamatan dulu —'); return; }
-
-    villageSelect.disabled = true;
-    villageSelect.innerHTML = '<option value="">Memuat data...</option>';
-    try {
-      var villages = await loadVillages(distCode);
-      populateSelect(villageSelect, villages, 'display_name', 'code', '— Pilih Desa/Kel —');
-      villageSelect.disabled = false;
-    } catch (e) {
-      disableSelect(villageSelect, 'Gagal memuat data');
-      console.error('Load villages error:', e);
-    }
-  }
-
-  function onVillageChange(select) {
-    var hidden = select.parentElement.querySelector('input[type="hidden"]');
-    if (hidden) { hidden.value = select.value; }
-  }
-
-  // ── Try to auto-select region from address components (reverse geocode result) ──
-  async function autoSelectRegion(provinceName, cityName, districtName) {
-    // Load provinces and find match
-    try {
-      var provinces = await loadProvinces();
-      var province = provinces.find(function(p) {
-        return p.name.toUpperCase() === provinceName.toUpperCase() ||
-               p.name.toUpperCase().includes(provinceName.toUpperCase());
-      });
-      if (!province) return;
-
-      var provSelect = document.getElementById('regionProvince');
-      provSelect.value = province.code;
-      provSelect.dispatchEvent(new Event('change'));
-
-      // Wait for cities to load, then select
-      setTimeout(async function() {
-        var citySelect = document.getElementById('regionCity');
-        if (!cityName || citySelect.options.length < 2) return;
-
-        var matchCity = null;
-        for (var i = 0; i < citySelect.options.length; i++) {
-          var opt = citySelect.options[i];
-          var cleanName = opt.textContent.replace(/^(Kota |Kab\. )/, '');
-          if (cleanName.toUpperCase() === cityName.toUpperCase() ||
-              cityName.toUpperCase().includes(cleanName.toUpperCase())) {
-            matchCity = opt.value;
-            break;
-          }
+      // Fill text inputs directly
+      if (form) {
+        if (form.elements.province && province) {
+          form.elements.province.value = province;
+          form.elements.province.dispatchEvent(new Event('input'));
         }
-        if (!matchCity) return;
-
-        citySelect.value = matchCity;
-        citySelect.dispatchEvent(new Event('change'));
-
-        // Wait for districts to load
-        setTimeout(function() {
-          var distSelect = document.getElementById('regionDistrict');
-          if (!districtName || distSelect.options.length < 2) return;
-
-          for (var j = 0; j < distSelect.options.length; j++) {
-            var o = distSelect.options[j];
-            var cleanDist = o.textContent.replace(/^Kec\. /, '');
-            if (cleanDist.toUpperCase() === districtName.toUpperCase() ||
-                districtName.toUpperCase().includes(cleanDist.toUpperCase())) {
-              distSelect.value = o.value;
-              distSelect.dispatchEvent(new Event('change'));
-              break;
-            }
-          }
-        }, 300);
-      }, 300);
-    } catch (e) {
-      console.error('Auto-select region error:', e);
-    }
+        if (form.elements.city && city) {
+          form.elements.city.value = city;
+          form.elements.city.dispatchEvent(new Event('input'));
+        }
+        if (form.elements.district && district) {
+          form.elements.district.value = district;
+          form.elements.district.dispatchEvent(new Event('input'));
+        }
+        if (form.elements.village && village) {
+          form.elements.village.value = village;
+          form.elements.village.dispatchEvent(new Event('input'));
+        }
+        if (form.elements.postalCode && postalCode) {
+          form.elements.postalCode.value = postalCode;
+        }
+      }
+    });
   }
 
   // ── DOM Ready ──
@@ -424,64 +228,6 @@
     var counter = document.querySelector('.counter');
     var storageKey = 'warungio_partner_registration_draft';
     var currentStep = 0;
-
-    // Map & marker
-    // (partnerFormMap, partnerFormMarker, partnerFormMapInitialized defined at top level)
-
-    // ── Wire up cascading region selects ──
-    var provSelect = document.getElementById('regionProvince');
-    var citySelect = document.getElementById('regionCity');
-    var distSelect = document.getElementById('regionDistrict');
-    var villageSelect = document.getElementById('regionVillage');
-
-    if (provSelect) {
-      // Set data-next chain for clearDependent
-      provSelect.dataset.next = 'regionCity';
-      citySelect.dataset.next = 'regionDistrict';
-      distSelect.dataset.next = 'regionVillage';
-      // Placeholders
-      citySelect.dataset.placeholder = '— Pilih Provinsi dulu —';
-      distSelect.dataset.placeholder = '— Pilih Kota dulu —';
-      villageSelect.dataset.placeholder = '— Pilih Kecamatan dulu —';
-
-      provSelect.addEventListener('change', function() { onProvinceChange(this); });
-      citySelect.addEventListener('change', function() { onCityChange(this); });
-      distSelect.addEventListener('change', function() { onDistrictChange(this); });
-      villageSelect.addEventListener('change', function() { onVillageChange(this); });
-
-      // Load provinces on page load
-      (async function() {
-        provSelect.disabled = true;
-        provSelect.innerHTML = '<option value="">Memuat data provinsi...</option>';
-        try {
-          var provinces = await loadProvinces();
-          if (Array.isArray(provinces) && provinces.length > 0) {
-            populateSelect(provSelect, provinces, 'name', 'code', '— Pilih Provinsi —');
-          } else {
-            provSelect.innerHTML = '<option value="">Data provinsi tidak tersedia</option>';
-            console.warn('Provinces API returned empty or non-array:', provinces);
-          }
-          provSelect.disabled = false;
-        } catch (e) {
-          provSelect.innerHTML = '<option value="">Gagal memuat provinsi</option>';
-          provSelect.title = e.message || 'Koneksi gagal';
-          console.error('Load provinces error:', e);
-          // Retry once after 3 seconds
-          setTimeout(async function() {
-            try {
-              var provinces = await loadProvinces();
-              if (Array.isArray(provinces) && provinces.length > 0) {
-                populateSelect(provSelect, provinces, 'name', 'code', '— Pilih Provinsi —');
-                provSelect.disabled = false;
-                provSelect.title = '';
-              }
-            } catch (e2) {
-              console.warn('Province retry also failed:', e2);
-            }
-          }, 3000);
-        }
-      })();
-    }
 
     // ── Helpers ──
     var requiredByPanel = function(panel) {
@@ -506,8 +252,6 @@
     var updateCounter = function() {
       if (counter) counter.textContent = (description ? description.value.length : 0) + '/300';
     };
-
-    // reverseGeocode, gm_authFailure, initializeMap — defined at top level of IIFE
 
     // ── Step navigation ──
     var setStep = function(index) {
@@ -543,9 +287,8 @@
       if (panel.dataset.panel === '2' && form && form.querySelectorAll('input[name="deliveryServices"]:checked').length === 0) {
         valid = false; setMsg('Pilih minimal satu layanan pengiriman.');
       }
-      if (panel.dataset.panel === '0' && form && (!form.elements.latitude.value || !form.elements.longitude.value)) {
-        valid = false; setMsg('Pilih lokasi toko pada peta terlebih dahulu.');
-      }
+      // Maps is OPTIONAL — skip coordinate validation entirely.
+      // Sellers can set their location later in store settings.
       if (panel.dataset.panel === '3' && form && form.elements.accountNumber.value !== form.elements.accountConfirm.value) {
         valid = false; form.elements.accountConfirm.classList.add('invalid');
         setMsg('Nomor rekening dan konfirmasi belum sama.');
@@ -565,19 +308,6 @@
           return;
         }
         payload[key] = value;
-      });
-      // Override region name fields with display text from selected options
-      // (select value = code, but serializer expects name in city/province/district/village)
-      ['province', 'city', 'district', 'village'].forEach(function(key) {
-        var el = form.elements[key];
-        if (el && el.tagName === 'SELECT' && el.selectedIndex >= 0) {
-          payload[key] = el.options[el.selectedIndex].textContent || '';
-        }
-      });
-      // Ensure region codes are included from hidden inputs
-      ['province_code', 'city_code', 'district_code', 'village_code'].forEach(function(key) {
-        var el = form.elements[key];
-        if (el && el.value) payload[key] = el.value;
       });
       return payload;
     };
@@ -625,67 +355,147 @@
       });
     }
 
+    // ── Availability tracking flags ──
+    var _emailAvailable = true;
+    var _phoneAvailable = true;
+
+    // ── Real-time email/phone availability check on blur ──
+    var checkFieldAvailability = async function(field, value) {
+      if (!value || value.length < 3) return;
+      var fieldName = field.name;
+      var fieldContainer = field.closest('.field');
+      if (!fieldContainer) return;
+
+      // Remove any existing availability error
+      var existingError = fieldContainer.querySelector('.availability-error');
+      if (existingError) existingError.remove();
+      fieldContainer.classList.remove('invalid');
+
+      try {
+        var payload = fieldName === 'ownerEmail' ? { email: value } : { phone: value };
+        var result = await WarungioAPI.checkAvailability(payload);
+        if (result && result.available === false) {
+          if (fieldName === 'ownerEmail') _emailAvailable = false;
+          else _phoneAvailable = false;
+          fieldContainer.classList.add('invalid');
+          var errorEl = document.createElement('span');
+          errorEl.className = 'availability-error';
+          errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;';
+          errorEl.textContent = result.message || 'Sudah terdaftar.';
+          fieldContainer.appendChild(errorEl);
+        } else {
+          if (fieldName === 'ownerEmail') _emailAvailable = true;
+          else _phoneAvailable = true;
+        }
+      } catch (err) {
+        if (err && (err.available === false || err.code === 'email_taken' || err.code === 'phone_taken')) {
+          if (fieldName === 'ownerEmail') _emailAvailable = false;
+          else _phoneAvailable = false;
+          fieldContainer.classList.add('invalid');
+          var errorEl = document.createElement('span');
+          errorEl.className = 'availability-error';
+          errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;';
+          errorEl.textContent = err.message || (fieldName === 'ownerEmail' ? 'Email ini sudah terdaftar.' : 'Nomor HP ini sudah terdaftar.');
+          fieldContainer.appendChild(errorEl);
+          return;
+        }
+        // Network error — silently ignore, allow submission to proceed
+        console.warn('Availability check failed:', err);
+      }
+    };
+
+    // Attach blur listeners to email and phone fields
+    if (form) {
+      var emailField = form.elements.ownerEmail;
+      var phoneField = form.elements.ownerPhone;
+      if (emailField) {
+        emailField.addEventListener('blur', function() { checkFieldAvailability(emailField, emailField.value); });
+      }
+      if (phoneField) {
+        phoneField.addEventListener('blur', function() { checkFieldAvailability(phoneField, phoneField.value); });
+      }
+    }
+
+    // ── Duplicate submission guard ──
+    var _submitting = false;
+
     // ── Submit ──
     if (form) {
       form.addEventListener('submit', async function(event) {
         event.preventDefault();
+
+        // Guard: prevent duplicate submissions
+        if (_submitting) return;
         if (!validatePanel(panels[currentStep])) return;
+        // Guard: block submission if email or phone is already taken
+        if (!_emailAvailable) {
+          setMsg('Email ini sudah terdaftar. Gunakan email lain atau masuk.', 'error');
+          return;
+        }
+        if (!_phoneAvailable) {
+          setMsg('Nomor HP ini sudah terdaftar. Gunakan nomor lain atau masuk.', 'error');
+          return;
+        }
 
         var data = collectFormData();
+        _submitting = true;
         if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Mendaftarkan...'; }
         setMsg('Mendaftarkan mitra toko...', 'success');
 
         try {
+          // Validate passwords match
+          if (data.ownerPassword !== data.ownerPassword2) {
+            setMsg('Kata sandi dan konfirmasi tidak sama.', 'error');
+            _submitting = false;
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Kirim Pendaftaran'; }
+            return;
+          }
+          if (!data.ownerPassword || data.ownerPassword.length < 8) {
+            setMsg('Kata sandi minimal 8 karakter.', 'error');
+            _submitting = false;
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Kirim Pendaftaran'; }
+            return;
+          }
+
           // Step 1: Register user as seller
-          var registerData = await WarungioAPI.register({
+          // Backend RegisterView automatically creates and sends the OTP
+          // with requires_otp=true and redirect_url in the response
+          var registerResult = await WarungioAPI.register({
             full_name: data.ownerName,
             email: data.ownerEmail,
             phone: data.ownerPhone,
-            password: data.ownerPassword || 'Toko12345!',
-            password2: data.ownerPassword || 'Toko12345!',
+            password: data.ownerPassword,
+            password2: data.ownerPassword2,
             address: data.address,
             role: 'seller',
           });
 
-          // Store JWT tokens
-          if (registerData.access && registerData.refresh && window.WarungioAuth) {
-            window.WarungioAuth.login(registerData.access, registerData.refresh, registerData.user);
-          }
-
-          // Step 2: Create store with full region data
-          var storeData = await WarungioAPI.createStore({
-            store_name: data.storeName,
-            category: data.category,
-            description: data.description,
-            address: data.address,
-            province: data.province,
-            province_code: data.province_code || '',
-            city: data.city,
-            city_code: data.city_code || '',
-            district: data.district,
-            district_code: data.district_code || '',
-            village: data.village,
-            village_code: data.village_code || '',
-            postal_code: data.postalCode,
-            latitude: parseFloat(data.latitude),
-            longitude: parseFloat(data.longitude),
-            phone: data.storePhone,
-            email: data.storeEmail,
-            open_time: data.openTime,
-            close_time: data.closeTime,
-            minimum_order: parseInt(data.minimumOrder) || 0,
-            delivery_services: data.deliveryServices || [],
-            service_area: data.serviceArea,
-            bank_name: data.bankName,
-            account_number: data.accountNumber,
-            account_holder: data.accountHolder,
-          });
-
+          // Store is auto-created by the backend after OTP verification.
+          // Do NOT call createStore here — the backend handles it in OTPVerifyView.
+          // Save all form data + password for auto-login and store setup after OTP
+          sessionStorage.setItem('register_password', data.ownerPassword);
+          sessionStorage.setItem('warungio_partner_registration_data', JSON.stringify(data));
+          
           setMsg('Pendaftaran mitra berhasil!', 'success');
           localStorage.removeItem(storageKey);
-          setTimeout(function() { window.location.href = '/seller/dashboard/'; }, 2000);
+          
+          // CRITICAL: Use backend-provided redirect_url for OTP page.
+          // Never construct the URL manually — the backend ensures correct parameters.
+          if (registerResult && registerResult.redirect_url) {
+            var redirectUrl = registerResult.redirect_url;
+            // Append OTP code for DEBUG mode
+            if (registerResult.otp_code) {
+              var separator = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+              redirectUrl += separator + 'otp=' + encodeURIComponent(registerResult.otp_code);
+            }
+            window.location.href = redirectUrl;
+          } else {
+            // Fallback (only if backend didn't provide redirect_url)
+            window.location.href = '/auth/otp/?email=' + encodeURIComponent(data.ownerEmail) + '&purpose=registration&role=seller';
+          }
         } catch (err) {
           setMsg(err.message || 'Pendaftaran gagal. Silakan coba lagi.', 'error');
+          _submitting = false;
           if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Daftar Sekarang'; }
         }
       });

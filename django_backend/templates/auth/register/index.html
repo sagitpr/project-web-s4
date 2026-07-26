@@ -67,6 +67,7 @@
                 <div id="formMessage" class="form-message" style="display:none;"></div>
 
                 <form class="login-form" id="registerForm" novalidate>
+                    {% csrf_token %}
                     <div class="input-group">
                         <label for="name">Nama Lengkap</label>
                         <div class="input-shell">
@@ -168,8 +169,8 @@
         </div>
     </div>
 
-    <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
     <script src="{% static 'js/pages/auth/register/script.js' %}"></script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
 </body>

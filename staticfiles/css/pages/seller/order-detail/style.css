@@ -1,2 +1,17 @@
-/* Seller order detail page */
-@import url("../orders/style.css");
+/* ============================================================
+   Warungio Seller Dashboard — Detail Pesanan Page Styles
+   ============================================================ */
+
+.detail-placeholder {
+  margin: 20px 28px;
+}
+.placeholder-content {
+  color: var(--color-text-tertiary, #94a3b8);
+  text-align: center;
+  padding: 40px;
+}
+.placeholder-content i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 12px;
+}
