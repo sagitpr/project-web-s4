@@ -38,7 +38,7 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Favorit Saya</h1>
-                        <p class="text-sm text-slate-500 mt-1">Semua produk dan warung yang telah Anda simpan akan muncul di sini untuk memudahkan pembelian kembali.</p>
+                        <p class="text-sm text-slate-500 mt-1">Produk dan warung favorit Anda tersimpan di sini.</p>
                     </div>
                     <div class="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm">
                         <span class="text-primary text-2xl font-extrabold" id="favProductCountBadge">0</span>
@@ -52,13 +52,7 @@
                         <!-- Horizontal Scroll Category Chips -->
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin hide-scrollbar" id="favCategoryFilter">
                             <button class="px-5 py-2 bg-primary text-white rounded-full font-bold text-xs whitespace-nowrap active filter-btn-chip" data-category="all">Semua</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="1">Sayuran</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="2">Buah</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="3">Daging</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="4">Sembako</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="5">Minuman</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="6">Frozen Food</button>
-                            <button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="others">Lainnya</button>
+                            <!-- Categories loaded dynamically from API -->
                         </div>
 
                         <!-- Checkboxes & Sorting dropdown -->
@@ -157,7 +151,7 @@
     </div>
 
     <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;"></div>
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
@@ -210,29 +204,11 @@
 
         function showToast(msg, type) {
             const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type || 'info'} flex items-center gap-2 p-4 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300`;
-            
-            if (type === 'success') {
-                toast.style.background = '#dcfce7';
-                toast.style.color = '#166534';
-                toast.style.borderColor = '#bbf7d0';
-            } else if (type === 'error') {
-                toast.style.background = '#fee2e2';
-                toast.style.color = '#991b1b';
-                toast.style.borderColor = '#fecaca';
-            } else {
-                toast.style.background = '#dbeafe';
-                toast.style.color = '#1e40af';
-                toast.style.borderColor = '#bfdbfe';
-            }
-
-            toast.innerHTML = `<span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            var t = document.createElement('div');
+            t.className = 'toast toast-' + (type || 'info');
+            t.innerHTML = '<span>' + msg + '</span>';
+            container.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
         }
 
         async function loadFavorites() {
@@ -519,8 +495,27 @@
         }
 
         // Setup filter handlers
-        function setupFilters() {
-            // Category chips
+        async function loadCategoryChips() {
+            try {
+                var cats = await WarungioAPI.getCategories();
+                var list = cats.results || cats || [];
+                var filterContainer = document.getElementById('favCategoryFilter');
+                if (filterContainer && list.length > 0) {
+                    // Keep 'Semua' button, replace the rest with API categories
+                    var html = '<button class="px-5 py-2 bg-primary text-white rounded-full font-bold text-xs whitespace-nowrap active filter-btn-chip" data-category="all">Semua</button>';
+                    list.forEach(function(c) {
+                        html += '<button class="px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn-chip" data-category="' + c.id + '">' + (c.name || c.category_name) + '</button>';
+                    });
+                    filterContainer.innerHTML = html;
+                    // Re-bind click handlers
+                    bindCategoryChips();
+                }
+            } catch(e) {
+                console.warn('Failed to load categories:', e);
+            }
+        }
+
+        function bindCategoryChips() {
             const chips = document.querySelectorAll('#favCategoryFilter .filter-btn-chip');
             chips.forEach(chip => {
                 chip.addEventListener('click', () => {
@@ -535,6 +530,9 @@
                     applyFilters();
                 });
             });
+        }
+
+        function setupFilters() {
 
             // Checkboxes
             checkProduk.addEventListener('change', () => {
@@ -639,6 +637,7 @@
             });
 
             // Initialize filters & data
+            await loadCategoryChips();
             setupFilters();
             await loadFavorites();
         });

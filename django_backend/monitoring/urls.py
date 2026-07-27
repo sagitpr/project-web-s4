@@ -39,5 +39,6 @@ urlpatterns = [
     # Admin Dashboard stats (real data from database)
     path('admin-stats/', views.AdminDashboardStatsView.as_view(), name='admin-dashboard-stats'),
 
-    # Mock endpoint removed for production
+    # Admin Delivery Monitoring
+    path('admin-deliveries/', views.AdminDeliveryMonitorView.as_view(), name='admin-delivery-monitor'),
 ]

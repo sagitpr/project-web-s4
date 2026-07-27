@@ -1,14 +1,62 @@
 document.addEventListener('DOMContentLoaded', function () {
-  var reviews = [
-    { id: 1, customer: 'Siti Aisyah', tag: 'Pelanggan Setia', avatar: '/static/images/av-siti.png', product: 'Paket Sayur Segar', qty: '1 kg', rating: 5, text: 'Sayuran segar banget, pengiriman cepat dan aman. Terima kasih!', date: '18 Mei 2025', time: '09:15 WIB', replied: true, reply: 'Terima kasih Bu Siti. Kami senang produk sampai dalam kondisi segar.', order: '#WRG-250518-001', images: ['/static/images/vegetable.png', '/static/images/paket-sayur.png', '/static/images/fruit.png'] },
-    { id: 2, customer: 'Andi Pratama', tag: 'Pelanggan Baru', avatar: '/static/images/av-kelvin.png', product: 'Paket Bumbu Dapur', qty: '1 paket', rating: 4, text: 'Produk bagus dan sesuai deskripsi. Harga juga terjangkau.', date: '17 Mei 2025', time: '16:40 WIB', replied: true, reply: 'Terima kasih Pak Andi. Kami tunggu pesanan berikutnya.', order: '#WRG-250517-014', images: ['/static/images/kebutuhan dapur.png', '/static/images/food.png'] },
-    { id: 3, customer: 'Dewi Lestari', tag: 'Pelanggan Setia', avatar: '/static/images/av-ara.png', product: 'Telur Ayam Kampung', qty: '10 butir', rating: 3, text: 'Kualitas ok, tapi kemasan sedikit penyok.', date: '16 Mei 2025', time: '11:20 WIB', replied: true, reply: 'Mohon maaf Bu Dewi. Kami akan perkuat kemasan untuk pengiriman berikutnya.', order: '#WRG-250516-027', images: ['/static/images/sembako.png'] },
-    { id: 4, customer: 'Budi Santoso', tag: 'Pelanggan Baru', avatar: '/static/images/av-budi.png', product: 'Buah Jeruk Manis', qty: '1 kg', rating: 2, text: 'Pengiriman lama dari estimasi yang dijanjikan.', date: '15 Mei 2025', time: '08:35 WIB', replied: false, reply: '', order: '#WRG-250515-009', images: ['/static/images/fruit.png'] },
-    { id: 5, customer: 'Rizky Maulana', tag: 'Pelanggan Setia', avatar: '/static/images/av-stev.png', product: 'Paket Buah Segar', qty: '1 paket', rating: 5, text: 'Mantap! Langganan terus di sini.', date: '14 Mei 2025', time: '19:10 WIB', replied: false, reply: '', order: '#WRG-250514-033', images: ['/static/images/vega-fresh.png', '/static/images/fruit.png'] },
-    { id: 6, customer: 'Melinda Putri', tag: 'Pelanggan Setia', avatar: '/static/images/av-melinda.png', product: 'Daging Sapi Slice', qty: '500 gr', rating: 1, text: 'Produk tidak sedingin biasanya saat diterima.', date: '13 Mei 2025', time: '12:05 WIB', replied: false, reply: '', order: '#WRG-250513-018', images: ['/static/images/meat.png'] }
-  ];
-
+  var reviews = [];
   var selectedId = null;
+  var storeName = 'Warung Saya';
+
+  // Load reviews from API
+  async function loadReviews() {
+    if (!window.WarungioAPI) {
+      document.getElementById('reviewsBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:34px;color:#94a3b8">Memuat ulasan...</td></tr>';
+      return;
+    }
+    try {
+      // Load store profile for name
+      try {
+        var store = await WarungioAPI.getMyStore();
+        if (store && store.store_name) storeName = store.store_name;
+        var nameEl = document.querySelector('.store-head h2');
+        if (nameEl) {
+          nameEl.innerHTML = (store.store_name || 'Warung Saya') + ' <span>Aktif</span>';
+        }
+        var idEl = document.getElementById('storeIdDisplay');
+        if (idEl) {
+          idEl.textContent = (store.slug ? store.slug.toUpperCase() : (store.id ? 'WRG' + store.id : '---'));
+        }
+        var avatarEl = document.querySelector('.user-info img');
+        if (avatarEl && store.store_logo) avatarEl.src = store.store_logo;
+        var nameDisplay = document.querySelector('.user-info div strong');
+        if (nameDisplay) nameDisplay.textContent = store.store_name || 'Seller';
+      } catch (e) { /* keep defaults */ }
+
+      var data = await WarungioAPI.getStoreReviews();
+      reviews = Array.isArray(data) ? data : (data.results || []);
+
+      // Map API response to review format
+      reviews = reviews.map(function(r, idx) {
+        return {
+          id: r.id || (idx + 1),
+          customer: r.user_name || r.user?.full_name || 'Pembeli',
+          tag: r.user_tag || 'Pelanggan',
+          avatar: r.user_avatar || r.user?.profile_photo || '/static/images/store-icon-T.png',
+          product: r.product_name || r.product?.product_name || 'Produk',
+          qty: r.quantity ? r.quantity + ' item' : '1 item',
+          rating: r.rating || 5,
+          text: r.comment || r.review_text || '',
+          date: r.created_at ? new Date(r.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '',
+          time: r.created_at ? new Date(r.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) + ' WIB' : '',
+          replied: !!r.reply,
+          reply: r.reply || '',
+          order: r.order_number || '#WRG-000000',
+          images: r.images || []
+        };
+      });
+    } catch (err) {
+      console.warn('Failed to load reviews from API, using empty state:', err);
+      reviews = [];
+    }
+    renderMetrics();
+    renderReviews();
+  }
   var searchInput = document.getElementById('searchInput');
   var ratingFilter = document.getElementById('ratingFilter');
   var statusFilter = document.getElementById('statusFilter');
@@ -147,29 +195,80 @@ document.addEventListener('DOMContentLoaded', function () {
     var r = reviews.find(function (item) { return item.id === selectedId; });
     if (!r) return;
     var apology = r.rating <= 3 ? 'Mohon maaf atas kendala yang dialami. ' : '';
-    replyInput.value = 'Halo ' + r.customer + ', terima kasih sudah memberikan ulasan untuk ' + r.product + '. ' + apology + 'Masukan Anda sangat berarti untuk menjaga kualitas layanan Warung Bu Sari.';
+    replyInput.value = 'Halo ' + r.customer + ', terima kasih sudah memberikan ulasan untuk ' + r.product + '. ' + apology + 'Masukan Anda sangat berarti untuk menjaga kualitas layanan ' + storeName + '.';
   });
 
   saveReplyBtn.addEventListener('click', function () {
     var r = reviews.find(function (item) { return item.id === selectedId; });
     if (!r || !replyInput.value.trim()) return toast('Balasan belum diisi.');
-    r.reply = replyInput.value.trim();
-    r.replied = true;
-    renderMetrics();
-    renderReviews();
-    openModal(r.id);
-    toast('Balasan tersimpan.');
+    var replyText = replyInput.value.trim();
+    
+    // Save to API
+    var btn = saveReplyBtn;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+    
+    var apiCall = window.WarungioAPI && window.WarungioAPI.replyToReview
+      ? WarungioAPI.replyToReview(r.id, { reply: replyText })
+      : Promise.resolve();
+    
+    apiCall.then(function() {
+      r.reply = replyText;
+      r.replied = true;
+      renderMetrics();
+      renderReviews();
+      openModal(r.id);
+      toast('Balasan tersimpan.');
+    }).catch(function(err) {
+      console.warn('Failed to save reply to API:', err);
+      // Still save locally as fallback
+      r.reply = replyText;
+      r.replied = true;
+      renderMetrics();
+      renderReviews();
+      openModal(r.id);
+      toast('Balasan tersimpan (lokal).');
+    }).finally(function() {
+      btn.disabled = false;
+      // Restore original label based on modal state
+      var currentR = reviews.find(function (item) { return item.id === selectedId; });
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (currentR && currentR.replied ? 'Edit Reply' : 'Reply');
+    });
   });
 
   deleteReplyBtn.addEventListener('click', function () {
     var r = reviews.find(function (item) { return item.id === selectedId; });
     if (!r) return;
-    r.reply = '';
-    r.replied = false;
-    renderMetrics();
-    renderReviews();
-    openModal(r.id);
-    toast('Balasan dihapus.');
+    
+    // Delete from API
+    var btn = deleteReplyBtn;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghapus...';
+    
+    var apiCall = window.WarungioAPI && window.WarungioAPI.replyToReview
+      ? WarungioAPI.replyToReview(r.id, { reply: '' })
+      : Promise.resolve();
+    
+    apiCall.then(function() {
+      r.reply = '';
+      r.replied = false;
+      renderMetrics();
+      renderReviews();
+      openModal(r.id);
+      toast('Balasan dihapus.');
+    }).catch(function(err) {
+      console.warn('Failed to delete reply from API:', err);
+      // Still delete locally as fallback
+      r.reply = '';
+      r.replied = false;
+      renderMetrics();
+      renderReviews();
+      openModal(r.id);
+      toast('Balasan dihapus (lokal).');
+    }).finally(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete Reply';
+    });
   });
 
   [searchInput, ratingFilter, statusFilter].forEach(function (el) {
@@ -177,6 +276,6 @@ document.addEventListener('DOMContentLoaded', function () {
     el.addEventListener('change', renderReviews);
   });
 
-  renderMetrics();
-  renderReviews();
+  // Load from API instead of hardcoded data
+  loadReviews();
 });

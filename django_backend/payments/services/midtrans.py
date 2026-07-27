@@ -619,6 +619,39 @@ def process_webhook_notification(data: dict) -> dict:
                         message=f'Pembayaran untuk pesanan {order.order_number} berhasil!'
                     )
 
+                    # ── AUTO-BOOK COURIER AFTER PAYMENT ──
+                    # If this order uses hyperlocal delivery (GrabExpress/GoSend/Mitra),
+                    # automatically book a courier after payment is confirmed.
+                    if order and order.courier and order.courier in ('grabexpress', 'gosend'):
+                        try:
+                            from orders.services.delivery_client import auto_book_courier
+                            delivery_result = auto_book_courier(
+                                order,
+                                courier_code=order.courier,
+                                service_type='Instant'
+                            )
+                            if delivery_result:
+                                logger.info(f'Auto-book courier success for order #{order.id}: {order.courier}')
+                                # Notify seller that courier is booked
+                                try:
+                                    channel_layer = get_channel_layer()
+                                    if channel_layer and order.store and order.store.user_id:
+                                        async_to_sync(channel_layer.group_send)(
+                                            f'notifications_{order.store.user_id}',
+                                            {'type': 'delivery_update',
+                                             'order_id': order.id,
+                                             'order_number': order.order_number,
+                                             'delivery_status': 'courier_booked',
+                                             'courier': order.courier,
+                                             'message': f'Kurir {order.courier} otomatis dipesan!'}
+                                        )
+                                except Exception as ws_err:
+                                    logger.warning('Auto-book courier WS fail: %s', ws_err)
+                            else:
+                                logger.warning(f'Auto-book courier FAILED for order #{order.id}: {order.courier}')
+                        except Exception as book_err:
+                            logger.error(f'Auto-book courier exception for order #{order.id}: {book_err}')
+
                     if order.store and order.store.user_id:
                         try:
                             channel_layer = get_channel_layer()

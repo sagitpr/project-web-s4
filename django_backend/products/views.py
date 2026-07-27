@@ -110,7 +110,9 @@ class ProductFeaturedView(generics.ListAPIView):
 )
 class ProductDetailView(generics.RetrieveAPIView):
     """Get product detail."""
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).select_related(
+        'store', 'category'
+    )
     serializer_class = ProductDetailSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'pk'
@@ -118,7 +120,9 @@ class ProductDetailView(generics.RetrieveAPIView):
 
 class ProductBySlugView(generics.RetrieveAPIView):
     """Get product by slug."""
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).select_related(
+        'store', 'category'
+    )
     serializer_class = ProductDetailSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'slug'
@@ -145,7 +149,9 @@ class ProductManageView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsStoreOwner)
 
     def get_queryset(self):
-        return Product.objects.filter(store__user=self.request.user)
+        return Product.objects.filter(store__user=self.request.user).select_related(
+            'store', 'category'
+        )
 
     @transaction.atomic
     def perform_destroy(self, instance):

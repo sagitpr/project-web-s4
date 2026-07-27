@@ -28,13 +28,17 @@
     <div class="topbar-actions">
         <!-- Authenticated Actions (Toggled by JS) -->
         <div id="authHeaderActions" style="display: none; align-items: center; gap: 14px;">
+            <button class="icon-btn-premium" onclick="window.location.href='/buyer/chat/'" title="Chat">
+                <i class="fa-regular fa-comment-dots"></i>
+                <span class="icon-badge badge-green" id="chatBadgeHeader" style="display:none;">0</span>
+            </button>
             <button class="icon-btn-premium" onclick="window.location.href='/buyer/cart/'">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="icon-badge badge-green" id="cartBadgeHeader">0</span>
             </button>
-            <button class="icon-btn-premium">
+            <button class="icon-btn-premium" id="notificationBtn">
                 <i class="fa-regular fa-bell"></i>
-                <span class="icon-badge badge-green">1</span>
+                <span class="icon-badge badge-green" id="notifBadgeHeader">0</span>
             </button>
             
             <div class="profile-dropdown-wrapper">

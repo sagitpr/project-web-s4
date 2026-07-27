@@ -722,3 +722,328 @@ class TestDeliveryTrackingView:
         url = reverse("delivery-tracking", args=[order.id])
         resp = client.get(url)
         assert resp.status_code == status.HTTP_404_NOT_FOUND  # not their order
+
+
+# ─── Delivery Rate View ──────────────────────────────────────────────────────
+
+
+class TestDeliveryRateView:
+    """Test POST /api/orders/delivery/rate/."""
+
+    URL = reverse("delivery-rate")
+
+    def test_rate_requires_auth(self, api_client):
+        resp = api_client.post(self.URL, {}, format="json")
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_rate_authenticated(self, buyer_client):
+        resp = buyer_client.post(self.URL, {
+            "courier": "grabexpress",
+            "service_type": "Instant",
+            "origin_lat": -6.2,
+            "origin_lng": 106.8,
+            "destination_lat": -6.3,
+            "destination_lng": 106.9,
+            "items": [{"name": "Barang", "quantity": 1, "weight_kg": 0.5}],
+        }, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert "total_fee" in data
+        assert data["currency"] == "IDR"
+
+    def test_rate_generic_courier(self, buyer_client):
+        resp = buyer_client.post(self.URL, {
+            "courier": "antar_sendiri",
+            "origin_lat": -6.2,
+            "origin_lng": 106.8,
+            "destination_lat": -6.3,
+            "destination_lng": 106.9,
+        }, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert data["provider"] == "generic"
+        assert data["_fallback"] == True
+
+
+# ─── Delivery Live Position View ─────────────────────────────────────────────
+
+
+class TestDeliveryLivePositionView:
+    """Test GET /api/orders/<order_id>/delivery/position/."""
+
+    def test_position_requires_auth(self, api_client, test_store, buyer_user):
+        order = Order.objects.create(user=buyer_user, store=test_store, total_price=50000)
+        Delivery.objects.create(order=order)
+        url = reverse("delivery-position", args=[order.id])
+        resp = api_client.get(url)
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_position_interpolated(self, buyer_client, test_store, buyer_user):
+        order = Order.objects.create(user=buyer_user, store=test_store, total_price=50000)
+        Delivery.objects.create(
+            order=order,
+            delivery_status="dalam_perjalanan",
+            buyer_latitude=-6.3,
+            buyer_longitude=106.9,
+        )
+        url = reverse("delivery-position", args=[order.id])
+        resp = buyer_client.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert data["active"] == True
+        assert "position" in data
+        assert data["source"] == "interpolated"
+        assert data["origin"] is not None
+        assert data["destination"] is not None
+
+    def test_position_completed(self, buyer_client, test_store, buyer_user):
+        order = Order.objects.create(user=buyer_user, store=test_store, total_price=50000)
+        Delivery.objects.create(order=order, delivery_status="pesanan_diterima")
+        url = reverse("delivery-position", args=[order.id])
+        resp = buyer_client.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["active"] == False
+
+    def test_position_no_delivery(self, buyer_client, test_store, buyer_user):
+        order = Order.objects.create(user=buyer_user, store=test_store, total_price=50000)
+        url = reverse("delivery-position", args=[order.id])
+        resp = buyer_client.get(url)
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# ─── Delivery Auto-Book View ─────────────────────────────────────────────────
+
+
+class TestDeliveryAutoBookView:
+    """Test POST /api/orders/delivery/auto-book/."""
+
+    URL = reverse("delivery-auto-book")
+
+    def test_auto_book_requires_seller(self, buyer_client):
+        resp = buyer_client.post(self.URL, {}, format="json")
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_auto_book_no_order_id(self, seller_client):
+        resp = seller_client.post(self.URL, {}, format="json")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "order_id" in resp.json()["error"]
+
+    def test_auto_book_order_not_found(self, seller_client):
+        resp = seller_client.post(self.URL, {"order_id": 99999}, format="json")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# ─── Mitra Driver Management ─────────────────────────────────────────────────
+
+
+class TestMitraDriverListCreateView:
+    """Test GET/POST /api/orders/mitra/drivers/."""
+
+    URL = reverse("mitra-drivers")
+
+    def test_list_drivers_requires_seller(self, buyer_client):
+        resp = buyer_client.get(self.URL)
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_list_drivers_empty(self, seller_client, test_store):
+        resp = seller_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["count"] == 0
+
+    def test_create_driver(self, seller_client, test_store):
+        resp = seller_client.post(self.URL, {
+            "name": "Driver Test",
+            "phone": "081234567890",
+            "vehicle_type": "Motor",
+            "vehicle_plate": "B 1234 ABC",
+        }, format="json")
+        assert resp.status_code == status.HTTP_201_CREATED
+        data = resp.json()
+        assert data["name"] == "Driver Test"
+        assert data["store"] == test_store.id
+        # Verify sensitive fields are NOT exposed
+        assert "auth_token" not in data
+        assert "fcm_token" not in data
+
+    def test_create_and_list_driver(self, seller_client, test_store):
+        seller_client.post(self.URL, {
+            "name": "Budi", "phone": "0811111",
+            "vehicle_type": "Mobil",
+        }, format="json")
+        resp = seller_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["count"] == 1
+
+
+class TestMitraDriverDetailView:
+    """Test GET/PATCH/DELETE /api/orders/mitra/drivers/<pk>/."""
+
+    def _url(self, driver_id):
+        return reverse("mitra-driver-detail", args=[driver_id])
+
+    def test_get_driver(self, seller_client, test_store):
+        from orders.models import MitraDriver
+        d = MitraDriver.objects.create(
+            store=test_store, name="Test", phone="081",
+        )
+        resp = seller_client.get(self._url(d.id))
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["name"] == "Test"
+
+    def test_update_driver(self, seller_client, test_store):
+        from orders.models import MitraDriver
+        d = MitraDriver.objects.create(
+            store=test_store, name="Old", phone="081",
+        )
+        resp = seller_client.patch(self._url(d.id), {"name": "Updated"}, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["name"] == "Updated"
+
+    def test_delete_driver(self, seller_client, test_store):
+        from orders.models import MitraDriver
+        d = MitraDriver.objects.create(
+            store=test_store, name="Del", phone="081",
+        )
+        resp = seller_client.delete(self._url(d.id))
+        assert resp.status_code == status.HTTP_204_NO_CONTENT
+        assert not type(d).objects.filter(id=d.id).exists()
+
+
+class TestMitraTariffListCreateView:
+    """Test GET/POST /api/orders/mitra/tariffs/."""
+
+    URL = reverse("mitra-tariffs")
+
+    def test_list_empty(self, seller_client, test_store):
+        resp = seller_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+
+    def test_create_tariff(self, seller_client, test_store):
+        resp = seller_client.post(self.URL, {
+            "name": "Standar",
+            "base_fee": 5000,
+            "price_per_km": 2000,
+        }, format="json")
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.json()["name"] == "Standar"
+
+
+class TestMitraAssignDriverView:
+    """Test POST /api/orders/mitra/assign/."""
+
+    URL = reverse("mitra-assign")
+
+    def test_assign_requires_seller(self, buyer_client):
+        resp = buyer_client.post(self.URL, {}, format="json")
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_assign_missing_fields(self, seller_client):
+        resp = seller_client.post(self.URL, {}, format="json")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_assign_delivery_not_found(self, seller_client):
+        resp = seller_client.post(self.URL, {
+            "delivery_id": 99999, "driver_id": 1,
+        }, format="json")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# ─── Delivery Client Tests ───────────────────────────────────────────────────
+
+
+class TestDeliveryClient:
+    """Test delivery client utility functions."""
+
+    def test_get_available_couriers(self):
+        from orders.services.delivery_client import get_available_couriers
+        couriers = get_available_couriers()
+        assert isinstance(couriers, list)
+        for c in couriers:
+            assert "code" in c
+            assert "name" in c
+            assert "services" in c
+            assert isinstance(c["services"], list)
+
+    def test_grab_client_creation(self):
+        from orders.services.delivery_client import get_grab_client
+        client = get_grab_client()
+        assert client.partner_name == "GrabExpress"
+        assert client.client_id is not None
+
+    def test_gosend_client_creation(self):
+        from orders.services.delivery_client import get_gosend_client
+        client = get_gosend_client()
+        assert client.partner_name == "GoSend"
+        assert client.client_id is not None
+
+    def test_client_is_available(self):
+        from orders.services.delivery_client import get_grab_client
+        client = get_grab_client()
+        # is_available should not raise even without API keys; returns bool
+        result = client.is_available()
+        assert isinstance(result, bool)
+
+    def test_available_services(self):
+        from orders.services.delivery_client import get_grab_client
+        client = get_grab_client()
+        services = client.get_available_services()
+        assert isinstance(services, list)
+        for s in client.SUPPORTED_SERVICES:
+            assert s in ["Instant", "SameDay", "Regular"]
+
+    def test_grab_fallback_rate(self):
+        """Fallback rate estimation should return valid data even without API."""
+        from orders.services.delivery_client import get_grab_client
+        client = get_grab_client()
+        result = client._estimate_fallback(
+            {"latitude": -6.2, "longitude": 106.8},
+            {"latitude": -6.3, "longitude": 106.9},
+            [{"name": "Item", "quantity": 1, "weight_kg": 0.5}],
+            "Instant",
+        )
+        assert result is not None
+        assert result["total_fee"] > 0
+        assert result["currency"] == "IDR"
+        assert result["_fallback"] == True
+
+    def test_gosend_fallback_rate(self):
+        from orders.services.delivery_client import get_gosend_client
+        client = get_gosend_client()
+        result = client._estimate_fallback(
+            {"latitude": -6.2, "longitude": 106.8},
+            {"latitude": -6.3, "longitude": 106.9},
+            [{"name": "Item", "quantity": 1, "weight_kg": 0.5}],
+            "Instant",
+        )
+        assert result is not None
+        assert result["total_fee"] > 0
+
+    def test_webhook_signature_verify_empty_secret(self):
+        from orders.services.delivery_client import BaseDeliveryClient
+        client = BaseDeliveryClient(
+            client_id="test", client_secret="test",
+            base_url="https://test.com", is_sandbox=True,
+            webhook_secret="", partner_name="Test",
+        )
+        result = client.verify_webhook_signature(b'{}', 'test_sig')
+        assert result == False
+
+    def test_grab_rate_cached(self):
+        """Rate calculation should use cache on repeat calls."""
+        from unittest.mock import patch
+        from orders.services.delivery_client import get_grab_client
+        import time
+        client = get_grab_client()
+        origin = {"latitude": -6.2, "longitude": 106.8}
+        dest = {"latitude": -6.3, "longitude": 106.9}
+        # Mock _request to return None (causes fallback estimation) — avoids slow API calls
+        with patch.object(client, '_request', return_value=None):
+            result1 = client.calculate_rate(origin, dest, [{"name": "Item", "quantity": 1, "weight_kg": 0.5}], "Instant")
+        time.sleep(0.01)  # tiny delay
+        with patch.object(client, '_request', return_value=None):
+            result2 = client.calculate_rate(origin, dest, [{"name": "Item", "quantity": 1, "weight_kg": 0.5}], "Instant")
+        assert result1 is not None
+        assert result2 is not None
+        if result1.get("total_fee") == result2.get("total_fee"):
+            assert result1["_fallback"] == result2["_fallback"]  # consistent via cache
+

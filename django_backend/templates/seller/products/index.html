@@ -58,21 +58,21 @@
                     <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
                     <div class="shop-status-block">
                         <div class="shop-name-row">
-                            <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                            <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
                             <span class="badge-active">Aktif</span>
                         </div>
-                        <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                     </div>
                 </div>
                 <div class="header-right">
-                    <div id="notif-container" class="notif-wrap"></div>
-                    <div class="profile-block">
-                        <div class="avatar-wrap">
-                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
-                            <div class="status-online"></div>
+                    <div id="notif-container" class="notif-wrap">                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img" id="profileAvatar">
+                                <div class="status-online"></div>
                         </div>
                         <div class="profile-info">
-                            <span class="profile-name">Bu Sari</span>
+                            <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                             <span class="profile-role">Seller</span>
                         </div>
                         <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -145,9 +145,6 @@
                 </div>
                 <select class="form-select" id="category-filter" style="width:auto;min-width:140px;">
                     <option value="">Semua Kategori</option>
-                    <option value="Sayuran">Sayuran</option>
-                    <option value="Buah">Buah</option>
-                    <option value="Sembako">Sembako</option>
                 </select>
             </div>
         </div>
@@ -252,9 +249,6 @@
                 <label><span>Kategori</span>
                     <select id="edit-category" required>
                         <option value="">Pilih Kategori</option>
-                        <option value="Sayuran">Sayuran</option>
-                        <option value="Buah">Buah</option>
-                        <option value="Sembako">Sembako</option>
                     </select>
                 </label>
             </div>
@@ -274,6 +268,39 @@
                         <option value="sisir">sisir</option>
                     </select>
                 </label>
+            </div>
+            <div class="form-row details-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:120px;">
+                    <label><span>SKU</span><input type="text" id="edit-sku" placeholder="BYM001" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label><span>Barcode</span><input type="text" id="edit-barcode" placeholder="899xxxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label><span>Merek</span><input type="text" id="edit-brand" placeholder="Merek produk" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+            </div>
+            <div class="form-row details-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:100px;">
+                    <label><span>Berat (gram)</span><input type="number" id="edit-weight" min="0" step="0.01" placeholder="1000" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:80px;">
+                    <label><span>P. (cm)</span><input type="number" id="edit-length" min="0" step="0.1" placeholder="20" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:80px;">
+                    <label><span>L. (cm)</span><input type="number" id="edit-width" min="0" step="0.1" placeholder="15" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:80px;">
+                    <label><span>T. (cm)</span><input type="number" id="edit-height" min="0" step="0.1" placeholder="10" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+            </div>
+            <div class="form-row details-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:140px;">
+                    <label><span>Tgl. Produksi</span><input type="date" id="edit-production-date" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+                <div style="flex:1;min-width:140px;">
+                    <label><span>Tgl. Kedaluwarsa</span><input type="date" id="edit-expired-date" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
             </div>
             <div class="form-row">
                 <label><span>Deskripsi</span><textarea id="edit-description" rows="3" placeholder="Deskripsi produk..."></textarea></label>

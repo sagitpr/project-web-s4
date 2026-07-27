@@ -1,17 +1,22 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Detail Refund - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/refunds/style.css' %}">
+{% endblock %}
 {% block content %}
-<div class="page-wrapper" style="max-width: 800px; margin: 0 auto; padding: 24px 16px;">
-  <a href="{% url 'page-buyer-refunds' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-secondary);text-decoration:none;margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
+<div class="page-wrapper refund-detail-wrapper">
+  <a href="{% url 'page-buyer-refunds' %}" class="refund-back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
 
   <div id="refundDetail">
-    <div style="text-align:center;padding:60px;color:var(--color-text-tertiary);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">Memuat detail refund...</p></div>
+    <div class="refund-loading-state"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p>Memuat detail refund...</p></div>
   </div>
 </div>
 {% endblock %}
 {% block extra_scripts %}
 <script>
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>'"]/g, function(c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+
 document.addEventListener('DOMContentLoaded', async function() {
   if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
     window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
@@ -28,64 +33,64 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     var timelineHtml = '';
     if (r.timeline && r.timeline.length) {
-      timelineHtml = '<div style="position:relative;padding-left:24px;">' +
+      timelineHtml = '<div class="refund-timeline-list">' +
         r.timeline.map(function(t, i) {
           var isLast = i === r.timeline.length - 1;
-          return '<div style="position:relative;padding-bottom:' + (isLast ? '0' : '20') + 'px;">' +
-            '<div style="position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--color-brand);border:2px solid var(--color-surface);"></div>' +
-            (isLast ? '' : '<div style="position:absolute;left:-15px;top:18px;width:2px;height:100%;background:var(--color-gray-200);"></div>') +
-            '<p style="font-size:13px;font-weight:600;margin:0;color:var(--color-text-primary);">' + t.description + '</p>' +
-            '<p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">' + (t.created_by_name || 'Sistem') + ' • ' + (t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}) : '') + '</p>' +
+          return '<div class="refund-timeline-item" style="padding-bottom:' + (isLast ? '0' : '20') + 'px;">' +
+            '<div class="refund-timeline-dot"></div>' +
+            (isLast ? '' : '<div class="refund-timeline-line"></div>') +
+            '<p class="refund-timeline-text">' + escapeHtml(t.description) + '</p>' +
+            '<p class="refund-timeline-meta">' + escapeHtml(t.created_by_name || 'Sistem') + ' • ' + (t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}) : '') + '</p>' +
             '</div>';
         }).join('') + '</div>';
     }
 
     container.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;">
+      <div class="refund-detail-grid">
         <div>
-          <div class="card"><div class="card-body" style="padding:0;">
-            <div style="padding:20px;border-bottom:1px solid var(--color-border-light);">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                <div><h1 style="font-size:18px;font-weight:800;margin:0;color:var(--color-text-primary);">${r.reason_display || 'Refund'}</h1><p style="font-size:12px;color:var(--color-text-tertiary);margin:2px 0 0;">${r.refund_number || ''}</p></div>
-                <span class="badge ${sc}" style="font-size:12px;padding:4px 12px;">${r.status_display || r.refund_status}</span>
+          <div class="card"><div class="card-body refund-card-body">
+            <div class="refund-detail-section">
+              <div class="refund-detail-header">
+                <div><h1 class="refund-detail-title">${r.reason_display || 'Refund'}</h1><p class="refund-detail-number">${r.refund_number || ''}</p></div>
+                <span class="badge ${sc}">${r.status_display || r.refund_status}</span>
               </div>
             </div>
-            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;border-bottom:1px solid var(--color-border-light);">
-              <div><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Toko</p><p style="font-size:13px;font-weight:600;margin:2px 0 0;color:var(--color-text-primary);">${r.store_name || '-'}</p></div>
-              <div><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Pesanan</p><p style="font-size:13px;font-weight:600;margin:2px 0 0;color:var(--color-text-primary);">${r.order_number || '-'}</p></div>
-              <div><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Jumlah Diminta</p><p style="font-size:13px;font-weight:600;margin:2px 0 0;color:var(--color-text-primary);">Rp ${Number(r.amount_requested || 0).toLocaleString('id-ID')}</p></div>
-              <div><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Jumlah Disetujui</p><p style="font-size:13px;font-weight:600;margin:2px 0 0;color:${r.amount_approved ? 'var(--color-brand)' : 'var(--color-text-tertiary)'};">${r.amount_approved ? 'Rp ' + Number(r.amount_approved).toLocaleString('id-ID') : (r.refund_status === 'pending' ? 'Menunggu' : '-')}</p></div>
+            <div class="refund-detail-section refund-info-grid">
+              <div><p class="refund-label">Toko</p><p class="refund-value">${r.store_name || '-'}</p></div>
+              <div><p class="refund-label">Pesanan</p><p class="refund-value">${r.order_number || '-'}</p></div>
+              <div><p class="refund-label">Jumlah Diminta</p><p class="refund-value">Rp ${Number(r.amount_requested || 0).toLocaleString('id-ID')}</p></div>
+              <div><p class="refund-label">Jumlah Disetujui</p><p class="refund-value" style="color:${r.amount_approved ? 'var(--color-brand)' : 'var(--color-text-tertiary)'};">${r.amount_approved ? 'Rp ' + Number(r.amount_approved).toLocaleString('id-ID') : (r.refund_status === 'pending' ? 'Menunggu' : '-')}</p></div>
             </div>
-            ${r.reason_text ? '<div style="padding:20px;border-bottom:1px solid var(--color-border-light);"><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Penjelasan</p><p style="font-size:13px;color:var(--color-text-secondary);margin:4px 0 0;">' + r.reason_text + '</p></div>' : ''}
-            ${r.seller_notes ? '<div style="padding:20px;border-bottom:1px solid var(--color-border-light);"><p style="font-size:11px;color:var(--color-text-tertiary);margin:0;">Catatan Penjual</p><p style="font-size:13px;color:var(--color-text-secondary);margin:4px 0 0;">' + r.seller_notes + '</p></div>' : ''}
+            ${r.reason_text ? '<div class="refund-detail-section"><p class="refund-label">Penjelasan</p><p class="refund-detail-text">' + escapeHtml(r.reason_text) + '</p></div>' : ''}
+            ${r.seller_notes ? '<div class="refund-detail-section"><p class="refund-label">Catatan Penjual</p><p class="refund-detail-text">' + escapeHtml(r.seller_notes) + '</p></div>' : ''}
           </div></div>
 
-          <div class="card" style="margin-top:16px;"><div class="card-header"><h3 style="font-size:14px;font-weight:700;margin:0;">Timeline</h3></div>
-            <div class="card-body" style="padding:20px;">${timelineHtml || '<p style="color:var(--color-text-tertiary);font-size:13px;">Belum ada aktivitas.</p>'}</div>
+          <div class="card refund-card-margin"><div class="card-header"><h3 class="refund-section-title">Timeline</h3></div>
+            <div class="card-body" style="padding:20px;">${timelineHtml || '<p class="refund-empty-text">Belum ada aktivitas.</p>'}</div>
           </div>
 
-          <div class="card" style="margin-top:16px;"><div class="card-header"><h3 style="font-size:14px;font-weight:700;margin:0;">Item Pesanan</h3></div>
-            <div class="card-body" style="padding:0;">
+          <div class="card refund-card-margin"><div class="card-header"><h3 class="refund-section-title">Item Pesanan</h3></div>
+            <div class="card-body refund-card-body">
               <div class="table-wrap"><table class="w-table"><thead><tr><th>Produk</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
-                <tbody>${(r.order_items || []).map(function(i) { return '<tr><td>' + i.product_name + '</td><td>' + i.qty + '</td><td>Rp ' + Number(i.price).toLocaleString('id-ID') + '</td><td>Rp ' + Number(i.subtotal).toLocaleString('id-ID') + '</td></tr>'; }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--color-text-tertiary);">Tidak ada data</td></tr>'}</tbody>
+                <tbody>${(r.order_items || []).map(function(i) { return '<tr><td>' + escapeHtml(i.product_name) + '</td><td>' + i.qty + '</td><td>Rp ' + Number(i.price).toLocaleString('id-ID') + '</td><td>Rp ' + Number(i.subtotal).toLocaleString('id-ID') + '</td></tr>'; }).join('') || '<tr><td colspan="4" class="refund-empty-cell">Tidak ada data</td></tr>'}</tbody>
               </table></div>
             </div>
           </div>
         </div>
 
         <div>
-          <div class="card"><div class="card-body" style="padding:16px;">
-            <p style="font-size:13px;font-weight:600;margin:0 0 8px;color:var(--color-text-primary);">Informasi</p>
-            <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0;">Diajukan: ${r.created_at ? new Date(r.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-'}</p>
-            <p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0;">Selesai: ${r.resolved_at ? new Date(r.resolved_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-'}</p>
-            ${r.refund_status === 'pending' || r.refund_status === 'waiting_buyer' ? '<button id="cancelRefundBtn" class="btn btn-danger btn-sm" style="margin-top:12px;width:100%;"><i class="fa-solid fa-ban"></i> Batalkan Refund</button>' : ''}
+          <div class="card"><div class="refund-sidebar-card">
+            <p class="refund-info-main-label">Informasi</p>
+            <p class="refund-meta-text">Diajukan: ${r.created_at ? new Date(r.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-'}</p>
+            <p class="refund-meta-text">Selesai: ${r.resolved_at ? new Date(r.resolved_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-'}</p>
+            ${r.refund_status === 'pending' || r.refund_status === 'waiting_buyer' ? '<button id="cancelRefundBtn" class="btn btn-danger btn-sm refund-btn-full"><i class="fa-solid fa-ban"></i> Batalkan Refund</button>' : ''}
           </div></div>
 
-          <a href="/buyer/orders/" class="card" style="display:block;text-decoration:none;margin-top:12px;">
-            <div class="card-body" style="padding:16px;display:flex;align-items:center;gap:10px;">
-              <i class="fa-solid fa-receipt" style="color:var(--color-brand);font-size:18px;"></i>
-              <div><p style="font-size:13px;font-weight:600;margin:0;color:var(--color-text-primary);">Lihat Detail Pesanan</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:2px 0 0;">${r.order_number || ''}</p></div>
-              <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--color-text-tertiary);"></i>
+          <a href="/buyer/orders/" class="card refund-info-block-card">
+            <div class="refund-info-block">
+              <i class="fa-solid fa-receipt refund-info-icon"></i>
+              <div><p class="refund-info-title">Lihat Detail Pesanan</p><p class="refund-info-subtitle">${r.order_number || ''}</p></div>
+              <i class="fa-solid fa-chevron-right refund-info-arrow"></i>
             </div>
           </a>
         </div>
@@ -105,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     }
   } catch(e) {
-    container.innerHTML = '<div style="text-align:center;padding:60px;color:#dc2626;"><i class="fa-solid fa-exclamation-triangle fa-2x"></i><p style="margin-top:12px;">Gagal memuat detail refund.</p></div>';
+    container.innerHTML = '<div class="refund-error-state"><i class="fa-solid fa-exclamation-triangle fa-2x"></i><p>Gagal memuat detail refund.</p></div>';
   }
 });
 </script>

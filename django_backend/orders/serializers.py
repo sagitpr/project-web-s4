@@ -3,7 +3,7 @@ Orders serializers for Warungio Marketplace.
 """
 
 from rest_framework import serializers
-from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale
+from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale, MitraDriver, MitraDeliveryTariff
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
 
@@ -119,6 +119,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         try:
             delivery = obj.delivery
             sm = delivery.shipping_method
+            store = obj.store
             return {
                 'shipping_method_id': sm.id if sm else None,
                 'shipping_method_name': sm.name if sm else (delivery.courier_name or ''),
@@ -126,14 +127,23 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                 'courier_phone': delivery.courier_phone,
                 'driver_name': delivery.driver_name,
                 'driver_phone': delivery.driver_phone,
+                'driver_photo_url': delivery.driver_photo_url,
+                'vehicle_type': delivery.vehicle_type,
+                'vehicle_plate': delivery.vehicle_plate,
                 'tracking_number': delivery.tracking_number,
+                'tracking_url': delivery.tracking_url,
                 'pickup_code': delivery.pickup_code,
                 'delivery_status': delivery.delivery_status,
                 'estimated_time': delivery.estimated_time,
+                'estimated_arrival': delivery.estimated_arrival,
                 'estimated_pickup': delivery.estimated_pickup,
                 'distance': float(delivery.distance) if delivery.distance else None,
                 'buyer_latitude': float(delivery.buyer_latitude) if delivery.buyer_latitude else None,
                 'buyer_longitude': float(delivery.buyer_longitude) if delivery.buyer_longitude else None,
+                'store_latitude': float(store.latitude) if store and store.latitude else None,
+                'store_longitude': float(store.longitude) if store and store.longitude else None,
+                'driver_latitude': float(delivery.last_latitude) if delivery.last_latitude else None,
+                'driver_longitude': float(delivery.last_longitude) if delivery.last_longitude else None,
             }
         except Delivery.DoesNotExist:
             return None
@@ -269,3 +279,32 @@ class OfflineSaleListSerializer(serializers.ModelSerializer):
         model = OfflineSale
         fields = ('id', 'product', 'product_name', 'quantity', 'price',
                   'total', 'buyer_name', 'payment_method', 'created_at')
+
+
+class MitraDriverSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Mitra Pengiriman drivers.
+    Explicit fields list to avoid leaking sensitive auth_token/fcm_token.
+    """
+    store_name = serializers.CharField(source='store.store_name', read_only=True)
+
+    class Meta:
+        model = MitraDriver
+        fields = ('id', 'store', 'store_name', 'name', 'phone', 'email', 'photo',
+                  'vehicle_type', 'vehicle_brand', 'vehicle_plate', 'vehicle_color',
+                  'status', 'service_area', 'max_distance_km', 'is_active',
+                  'current_latitude', 'current_longitude',
+                  'total_deliveries', 'rating_avg',
+                  'created_at', 'updated_at')
+        read_only_fields = ('store', 'total_deliveries', 'rating_avg', 'created_at', 'updated_at')
+
+
+class MitraTariffSerializer(serializers.ModelSerializer):
+    """Serializer for Mitra Pengiriman tariffs."""
+    store_name = serializers.CharField(source='store.store_name', read_only=True)
+
+    class Meta:
+        model = MitraDeliveryTariff
+        fields = ('id', 'store', 'store_name', 'name', 'base_fee', 'price_per_km',
+                  'free_km', 'min_fee', 'max_fee', 'max_distance_km', 'is_active', 'created_at')
+        read_only_fields = ('store', 'created_at')

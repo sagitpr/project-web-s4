@@ -17,13 +17,13 @@
     <div class="page-shell">
         {% include 'components/sidebar.html' %}
 
-        <main class="main-content-area" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <main class="main-content-area">
             {% include 'components/topbar.html' %}
 
-            <div style="padding: 24px 0; flex:1;">
+            <div class="buyer-content-wrapper">
                 <div class="page-header-section">
                     <h1>Pesanan Saya</h1>
-                    <p class="page-subtitle">Pantau status pesanan dan lihat riwayat belanja Anda.</p>
+                    <p class="page-subtitle">Cek status dan riwayat pesanan kamu.</p>
                 </div>
 
                 <div class="orders-grid-layout">
@@ -33,7 +33,7 @@
                         <div class="hero-tracking-card">
                             <div class="hero-tracking-content">
                                 <h1 class="hero-title">Pesananmu Sedang<br>Dalam Perjalanan 📦</h1>
-                                <p class="hero-subtitle">Kami sedang mengantarkan pesananmu sampai ke alamat tujuan.</p>
+                                <p class="hero-subtitle">Pesananmu sedang dalam perjalanan.</p>
                             </div>
                             <div class="hero-tracking-illustration">
                                 <img src="{% static 'images/orders/courier-delivery.png' %}" alt="Kurir Delivery" />
@@ -147,11 +147,11 @@
                         <!-- Belanja Aman -->
                         <div class="card">
                             <div class="card-body" style="text-align:center;">
-                                <h3 style="font-size:14px;font-weight:800;margin-bottom:12px;">🛡️ Belanja Aman di Warungio</h3>
+                                <h3 style="font-size:14px;font-weight:800;margin-bottom:12px;">🛡️ Belanja Aman</h3>
                                 <ul style="list-style:none;text-align:left;font-size:12px;color:var(--color-text-secondary);line-height:1.8;">
-                                    <li>✓ Warung Terverifikasi — Kualitas terjamin</li>
-                                    <li>✓ Pembayaran Aman — Transaksi 100% aman</li>
-                                    <li>✓ Pengiriman Cepat — Sampai ke rumahmu</li>
+                                    <li>✓ Warung terverifikasi</li>
+                                    <li>✓ Pembayaran aman</li>
+                                    <li>✓ Pengiriman cepat</li>
                                 </ul>
                             </div>
                         </div>
@@ -159,7 +159,7 @@
                         <div class="card bantuan-card">
                             <div class="card-body" style="text-align:center;">
                                 <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">Butuh Bantuan?</h3>
-                                <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">Hubungi tim support kami</p>
+                                <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">Hubungi tim support</p>
                                 <a href="/bantuan/" class="btn btn-secondary btn-sm">Hubungi Sekarang</a>
                             </div>
                         </div>

@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Review cards
       if (total === 0) {
-        els.reviewList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-text-tertiary);font-size:13px;">Belum ada ulasan untuk produk ini.</div>';
+        els.reviewList.innerHTML = '<div class="pd-review-loading">Belum ada ulasan untuk produk ini.</div>';
         return;
       }
 

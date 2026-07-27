@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/seller/dashboard/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 </head>
 <body>
@@ -65,14 +68,19 @@
                         </div>
                     </div>
                 <div class="header-right">
-                    <div id="notif-container" class="notif-wrap"></div>
-                    <div class="profile-block">
+                    <div class="header-actions">
+                        <a href="{% url 'page-seller-chat' %}" class="chat-icon-wrap" title="Chat" id="chatIconWrap">
+                            <i class="fa-solid fa-comment-dots"></i>
+                            <span class="chat-unread-badge" id="chatUnreadBadge" style="display:none;">0</span>
+                        </a>
+                        <div id="notif-container" class="notif-wrap"></div>
+                    </div>                        <div class="profile-block">
                         <div class="avatar-wrap">
-                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img" id="profileAvatar">
                             <div class="status-online"></div>
                         </div>
                         <div class="profile-info">
-                            <span class="profile-name">Bu Sari</span>
+                            <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                             <span class="profile-role">Seller</span>
                         </div>
                         <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -225,45 +233,46 @@
             </div>
         </div>
 
-        <!-- Voice Notification Settings -->
-        <div class="card voice-settings-card">
+        <!-- POS Scanner / Kasir Offline -->
+        <div class="card action-card">
             <div class="card-header">
-                <h3><i class="fa-solid fa-volume-high"></i> Notifikasi Suara</h3>
-                <div class="card-header-right">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="voiceToggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
+                <h3><i class="fa-solid fa-cash-register"></i> POS Scanner / Kasir Offline</h3>
+            </div>
+            <div class="card-body scan-body">
+                <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+                    Scan produk, buat keranjang, dan proses transaksi offline langsung dari sini.
+                </p>
+                <select id="pos-product-select" class="form-select scan-select">
+                    <option value="">-- Cari & Pilih Produk --</option>
+                </select>
+                <div class="pos-cart" id="posCart" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;min-height:80px;">
+                    <div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">
+                        <i class="fa-solid fa-cart-shopping" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                        Keranjang masih kosong. Pilih produk di atas.
+                    </div>
+                </div>
+                <div class="pos-total" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:2px solid #1e293b;">
+                    <span style="font-size:16px;font-weight:700;color:#1e293b;">Total: <span id="posTotal">Rp 0</span></span>
+                    <button id="posCheckoutBtn" class="btn-primary btn-sm" disabled><i class="fa-solid fa-check"></i> Proses Pembayaran</button>
                 </div>
             </div>
-            <div class="card-body" id="voiceSettingsBody">
-                <div class="voice-settings-grid">
-                    <div class="voice-setting">
-                        <label for="voiceVolume">Volume</label>
-                        <input type="range" id="voiceVolume" min="0" max="1" step="0.05" value="0.7">
-                        <span class="voice-value" id="voiceVolumeValue">70%</span>
+        </div>
+
+        <!-- Produk Hampir Kedaluwarsa -->
+        <div class="card action-card">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-clock"></i> Produk Hampir Kedaluwarsa</h3>
+                <span class="badge badge-red" id="expiringBadge">--</span>
+            </div>
+            <div class="card-body">
+                <p style="font-size:13px;color:#64748b;margin-bottom:12px;">
+                    Produk yang akan kedaluwarsa dalam 7 hari ke depan. Segera berikan diskon atau promosi.
+                </p>
+                <div id="expiringProductList" class="expiring-list">
+                    <div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">
+                        <i class="fa-solid fa-check-circle" style="font-size:24px;display:block;margin-bottom:8px;color:#22c55e;"></i>
+                        Tidak ada produk yang hampir kedaluwarsa.
                     </div>
-                    <div class="voice-setting">
-                        <label for="voiceRate">Kecepatan</label>
-                        <input type="range" id="voiceRate" min="0.1" max="3" step="0.1" value="1.0">
-                        <span class="voice-value" id="voiceRateValue">1.0x</span>
-                    </div>
-                    <div class="voice-setting">
-                        <label for="voicePitch">Nada</label>
-                        <input type="range" id="voicePitch" min="0" max="2" step="0.1" value="1.0">
-                        <span class="voice-value" id="voicePitchValue">1.0</span>
-                    </div>
-                    <div class="voice-setting voice-setting-select">
-                        <label for="voiceSelect">Suara</label>
-                        <select id="voiceSelect">
-                            <option value="">Default (Bahasa Indonesia)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="voice-actions">
-                    <button id="voiceTestBtn" class="btn-primary btn-sm">
-                        <i class="fa-solid fa-play"></i> Uji Suara
-                    </button>
                 </div>
             </div>
         </div>
@@ -326,122 +335,10 @@
 <script src="{% static 'js/utils/format.js' %}"></script>
 <script src="{% static 'js/utils/asset-loader.js' %}"></script>
 <script src="{% static 'js/utils/scan-sound.js' %}"></script>
+<script src="{% static 'js/utils/ai-scan.js' %}"></script>
 <script src="{% static 'js/websocket.js' %}"></script>
 <script src="{% static 'js/utils/notifications.js' %}"></script>
 <script src="{% static 'js/nav.js' %}"></script>
-<script src="{% static 'js/notifications/voice.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    if(window.WarungioNotifications) WarungioNotifications.init('#notif-container');
-
-    // ── Voice Notification Initialization ──
-    if(window.VoiceNotificationManager) {
-        VoiceNotificationManager.init({ ws: window.WarungioWS });
-        VoiceNotificationManager.start();
-
-        // ── Wire up settings UI ──
-        var settings = VoiceNotificationManager.getSettings();
-
-        // Toggle
-        var toggle = document.getElementById('voiceToggle');
-        if (toggle) {
-            toggle.checked = settings.enabled;
-            toggle.addEventListener('change', function() {
-                VoiceNotificationManager.updateSettings({ enabled: this.checked });
-                var body = document.getElementById('voiceSettingsBody');
-                if (body) body.style.opacity = this.checked ? '1' : '0.4';
-            });
-        }
-
-        // Volume slider
-        var volume = document.getElementById('voiceVolume');
-        var volumeVal = document.getElementById('voiceVolumeValue');
-        if (volume) {
-            volume.value = settings.volume;
-            if (volumeVal) volumeVal.textContent = Math.round(settings.volume * 100) + '%';
-            volume.addEventListener('input', function() {
-                var v = parseFloat(this.value);
-                VoiceNotificationManager.updateSettings({ volume: v });
-                if (volumeVal) volumeVal.textContent = Math.round(v * 100) + '%';
-            });
-        }
-
-        // Rate slider
-        var rate = document.getElementById('voiceRate');
-        var rateVal = document.getElementById('voiceRateValue');
-        if (rate) {
-            rate.value = settings.rate;
-            if (rateVal) rateVal.textContent = settings.rate.toFixed(1) + 'x';
-            rate.addEventListener('input', function() {
-                var v = parseFloat(this.value);
-                VoiceNotificationManager.updateSettings({ rate: v });
-                if (rateVal) rateVal.textContent = v.toFixed(1) + 'x';
-            });
-        }
-
-        // Pitch slider
-        var pitch = document.getElementById('voicePitch');
-        var pitchVal = document.getElementById('voicePitchValue');
-        if (pitch) {
-            pitch.value = settings.pitch;
-            if (pitchVal) pitchVal.textContent = settings.pitch.toFixed(1);
-            pitch.addEventListener('input', function() {
-                var v = parseFloat(this.value);
-                VoiceNotificationManager.updateSettings({ pitch: v });
-                if (pitchVal) pitchVal.textContent = v.toFixed(1);
-            });
-        }
-
-        // Voice selection dropdown
-        var voiceSelect = document.getElementById('voiceSelect');
-        function populateVoices() {
-            if (!voiceSelect) return;
-            voiceSelect.innerHTML = '<option value="">Default (Bahasa Indonesia)</option>';
-            var voices = VoiceNotificationManager.getVoices();
-            voices.forEach(function(v) {
-                var opt = document.createElement('option');
-                opt.value = v.voiceURI;
-                opt.textContent = v.name + ' (' + v.lang + ')';
-                if (v.voiceURI === settings.voiceURI) opt.selected = true;
-                voiceSelect.appendChild(opt);
-            });
-        }
-        // Chrome loads voices asynchronously — try now, retry on voiceschanged
-        populateVoices();
-        if (window.speechSynthesis) {
-            window.speechSynthesis.addEventListener('voiceschanged', populateVoices);
-        }
-        if (voiceSelect) {
-            voiceSelect.addEventListener('change', function() {
-                VoiceNotificationManager.updateSettings({ voiceURI: this.value });
-            });
-        }
-
-        // Test button
-        var testBtn = document.getElementById('voiceTestBtn');
-        if (testBtn) {
-            testBtn.addEventListener('click', function() {
-                VoiceNotificationManager.test();
-            });
-        }
-
-        // Sync UI when settings change externally
-        VoiceNotificationManager.onSettingsChange(function(newSettings) {
-            if (toggle) toggle.checked = newSettings.enabled;
-            if (volume) { volume.value = newSettings.volume; if (volumeVal) volumeVal.textContent = Math.round(newSettings.volume * 100) + '%'; }
-            if (rate) { rate.value = newSettings.rate; if (rateVal) rateVal.textContent = newSettings.rate.toFixed(1) + 'x'; }
-            if (pitch) { pitch.value = newSettings.pitch; if (pitchVal) pitchVal.textContent = newSettings.pitch.toFixed(1); }
-            if (voiceSelect) { voiceSelect.value = newSettings.voiceURI || ''; }
-            var body = document.getElementById('voiceSettingsBody');
-            if (body) body.style.opacity = newSettings.enabled ? '1' : '0.4';
-        });
-
-        // Initial opacity based on enabled state
-        var body = document.getElementById('voiceSettingsBody');
-        if (body) body.style.opacity = settings.enabled ? '1' : '0.4';
-    }
-});
-</script>
 <script src="{% static 'js/pages/seller/dashboard/script.js' %}"></script>
 </body>
 </html>

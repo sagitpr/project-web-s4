@@ -17,10 +17,10 @@
     <div class="page-shell">
       {% include 'components/sidebar.html' %}
 
-      <main class="main-content-area" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+      <main class="main-content-area">
         {% include 'components/topbar.html' %}
 
-        <div style="padding: 24px 0; flex:1;">
+        <div class="cart-content-wrapper">
           <div class="page-header-section">
             <h1>Keranjang Belanja</h1>
             <p class="page-subtitle" id="cartStatusText">Memuat keranjang...</p>
@@ -80,72 +80,87 @@
     (function() {
         'use strict';
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
+                var authActions = document.getElementById('authHeaderActions');
+                var guestActions = document.getElementById('guestHeaderActions');
+                if (authActions) authActions.style.display = 'flex';
+                if (guestActions) guestActions.style.display = 'none';
+                var u = window.WarungioAuth.getUser();
                 if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                    var nameEl = document.getElementById('userName');
+                    if (nameEl) nameEl.textContent = 'Hai, ' + u.full_name.split(' ')[0];
                 }
             } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
+                var authActions = document.getElementById('authHeaderActions');
+                var guestActions = document.getElementById('guestHeaderActions');
+                if (authActions) authActions.style.display = 'none';
+                if (guestActions) guestActions.style.display = 'flex';
             }
-            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); }
-            });
+            var logoutBtn = document.getElementById('btnLogout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.WarungioAuth) { WarungioAuth.logout(); }
+                });
+            }
 
             await loadCart();
         });
 
         async function loadCart() {
-            const skeleton = document.getElementById('cartSkeleton');
-            const itemsContainer = document.getElementById('cartItems');
-            const empty = document.getElementById('cartEmpty');
-            const statusText = document.getElementById('cartStatusText');
+            var skeleton = document.getElementById('cartSkeleton');
+            var itemsContainer = document.getElementById('cartItems');
+            var empty = document.getElementById('cartEmpty');
+            var statusText = document.getElementById('cartStatusText');
 
-            skeleton.style.display = 'block';
-            
+            if (skeleton) skeleton.style.display = 'block';
+
             try {
-                const data = await WarungioAPI.getCart();
-                const items = data.results || data.items || data || [];
-                
+                var data = await WarungioAPI.getCart();
+                var items = data.results || data.items || data || [];
+
                 if (window.WarungioAuth && window.WarungioAuth.init) {
                     window.WarungioAuth.init({ syncCart: true });
                 }
-                
-                skeleton.style.display = 'none';
+
+                if (skeleton) skeleton.style.display = 'none';
 
                 if (!items || items.length === 0) {
-                    empty.style.display = 'block';
-                    statusText.textContent = '0 produk di keranjang';
+                    if (empty) empty.style.display = 'block';
+                    if (statusText) statusText.textContent = '0 produk di keranjang';
                     return;
                 }
 
-                statusText.textContent = items.length + ' produk di keranjang';
-                
+                if (statusText) statusText.textContent = items.length + ' produk di keranjang';
+
                 itemsContainer.innerHTML = items.map(function(item) {
-                    const id = item.id || item.product?.id;
-                    const name = item.product_name || item.product?.name || item.product?.product_name || 'Produk';
-                    const price = item.product_price || item.price || item.product?.price || 0;
-                    const qty = item.quantity || item.qty || 1;
-                    const img = item.product_photo_url || item.product?.product_photo_url || item.product?.product_photo || '/static/images/paket-sayur.png';
-                    const store = item.store_name || item.store?.store_name || 'Warung Lokal';
-                    const subtotal = price * qty;
+                    var id = item.id || item.product?.id;
+                    var name = escapeHtml(item.product_name || item.product?.name || item.product?.product_name || 'Produk');
+                    var price = item.product_price || item.price || item.product?.price || 0;
+                    var qty = item.quantity || item.qty || 1;
+                    var img = item.product_photo_url || item.product?.product_photo_url || item.product?.product_photo || '/static/images/paket-sayur.png';
+                    var store = escapeHtml(item.store_name || item.store?.store_name || 'Warung Lokal');
+                    var subtotal = price * qty;
 
                     return '<div class="cart-item" data-id="' + id + '">' +
-                        '<img src="' + img + '" alt="' + name + '" class="cart-item-img" onerror="this.src=\'{% static "images/paket-sayur.png" %}\'">' +
+                        '<img src="' + img + '" alt="' + name + '" class="cart-item-img" onerror="this.onerror=null;this.src=\'/static/images/paket-sayur.png\'">' +
                         '<div class="cart-item-info">' +
                             '<p class="cart-item-store">' + store + '</p>' +
                             '<h4 class="cart-item-name">' + name + '</h4>' +
                             '<p class="cart-item-price">Rp ' + Number(price).toLocaleString('id-ID') + '</p>' +
                             '<div class="cart-item-controls">' +
-                                '<button class="qty-btn" onclick="updateQty(' + id + ', -1)">−</button>' +
+                                '<button class="qty-btn" onclick="window.updateQty(' + id + ', -1)">−</button>' +
                                 '<span class="qty-value">' + qty + '</span>' +
-                                '<button class="qty-btn" onclick="updateQty(' + id + ', 1)">+</button>' +
-                                '<button class="btn-remove" onclick="removeItem(' + id + ')" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>' +
+                                '<button class="qty-btn" onclick="window.updateQty(' + id + ', 1)">+</button>' +
+                                '<button class="btn-remove" onclick="window.removeItem(' + id + ')" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>' +
                             '</div>' +
                         '</div>' +
                         '<div class="cart-item-subtotal">Rp ' + Number(subtotal).toLocaleString('id-ID') + '</div>' +
@@ -153,53 +168,56 @@
                 }).join('');
 
                 updateSummary(items);
-                document.getElementById('btnCheckout').disabled = false;
-                
+                var checkoutBtn = document.getElementById('btnCheckout');
+                if (checkoutBtn) checkoutBtn.disabled = false;
+
             } catch(e) {
                 console.warn('Cart load error:', e);
-                skeleton.style.display = 'none';
-                empty.style.display = 'block';
-                empty.querySelector('h3').textContent = 'Gagal memuat keranjang';
-                empty.querySelector('p').textContent = 'Silakan coba kembali.';
+                if (skeleton) skeleton.style.display = 'none';
+                if (empty) {
+                    empty.style.display = 'block';
+                    var h3 = empty.querySelector('h3');
+                    var p = empty.querySelector('p');
+                    if (h3) h3.textContent = 'Gagal memuat keranjang';
+                    if (p) p.textContent = 'Silakan coba kembali.';
+                }
             }
         }
 
         function updateSummary(items) {
-            let total = 0;
-            let count = 0;
+            var total = 0;
+            var count = 0;
             items.forEach(function(item) {
-                const price = item.product_price || item.price || item.product?.price || 0;
-                const qty = item.quantity || item.qty || 1;
+                var price = item.product_price || item.price || item.product?.price || 0;
+                var qty = item.quantity || item.qty || 1;
                 total += price * qty;
                 count += qty;
             });
-            const shipping = total >= 20000 ? 0 : 8000;
-            const grandTotal = total + shipping;
+            var shipping = total >= 20000 ? 0 : 8000;
+            var grandTotal = total + shipping;
 
-            document.getElementById('summaryTotal').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
-            document.getElementById('summaryShipping').textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
-            document.getElementById('summaryGrandTotal').textContent = 'Rp ' + Number(grandTotal).toLocaleString('id-ID');
-            document.getElementById('summaryNote').textContent = shipping === 0 ? 'Yey! Gratis ongkir 🎉' : 'Belanja minimal Rp20.000 untuk gratis ongkir';
-            document.getElementById('cartStatusText').textContent = count + ' produk di keranjang';
+            var elTotal = document.getElementById('summaryTotal');
+            var elShipping = document.getElementById('summaryShipping');
+            var elGrand = document.getElementById('summaryGrandTotal');
+            var elNote = document.getElementById('summaryNote');
+            var elStatus = document.getElementById('cartStatusText');
+
+            if (elTotal) elTotal.textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+            if (elShipping) elShipping.textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
+            if (elGrand) elGrand.textContent = 'Rp ' + Number(grandTotal).toLocaleString('id-ID');
+            if (elNote) elNote.textContent = shipping === 0 ? 'Yey! Gratis ongkir' : 'Belanja minimal Rp20.000 untuk gratis ongkir';
+            if (elStatus) elStatus.textContent = count + ' produk di keranjang';
         }
 
         window.updateQty = async function(id, delta) {
             try {
-                const data = await WarungioAPI.getCart();
-                const items = data.results || data.items || data || [];
-                const item = items.find(function(i) { 
-                    const iid = i.id || i.product?.id; 
-                    return iid == id; 
-                });
-                if (!item) return;
-                
-                const currentQty = item.quantity || item.qty || 1;
-                const newQty = Math.max(1, currentQty + delta);
-                
+                var el = document.querySelector('.cart-item[data-id="' + id + '"]');
+                var qtySpan = el ? el.querySelector('.qty-value') : null;
+                var currentQty = qtySpan ? parseInt(qtySpan.textContent) : 1;
+                var newQty = Math.max(1, currentQty + delta);
+
                 if (window.WarungioAPI && window.WarungioAPI.updateCartItem) {
                     await WarungioAPI.updateCartItem(id, { qty: newQty });
-                } else if (window.WarungioAPI && window.WarungioAPI.addToCart) {
-                    await WarungioAPI.addToCart({ product: id, qty: delta });
                 }
                 await loadCart();
             } catch(e) { console.warn(e); }
@@ -214,9 +232,12 @@
             } catch(e) { console.warn(e); }
         };
 
-        document.getElementById('btnCheckout')?.addEventListener('click', function() {
-            window.location.href = '{% url "page-buyer-checkout" %}';
-        });
+        var checkoutBtn = document.getElementById('btnCheckout');
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', function() {
+                window.location.href = '/buyer/checkout/';
+            });
+        }
     })();
     </script>
   </body>

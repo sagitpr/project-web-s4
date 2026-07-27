@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Refund Saya - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/refunds/style.css' %}">
+{% endblock %}
 {% block content %}
-<div class="page-wrapper" style="max-width: 1000px; margin: 0 auto; padding: 24px 16px;">
-  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
-    <div><h1 style="font-size:24px;font-weight:800;margin:0;color:var(--color-text-primary);">Pengembalian & Refund</h1><p style="font-size:13px;color:var(--color-text-secondary);margin:4px 0 0;">Ajukan dan lacak permintaan refundmu</p></div>
-    <a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary" style="padding:10px 20px;border-radius:var(--radius-xl);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;"><i class="fa-solid fa-plus"></i> Ajukan Refund</a>
+<div class="page-wrapper refund-page-wrapper">
+  <div class="refund-header-row">
+    <div class="refund-header-text"><h1 class="refund-title">Pengembalian & Refund</h1><p class="refund-subtitle">Ajukan dan lacak permintaan refundmu</p></div>
+    <a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary refund-btn-primary"><i class="fa-solid fa-plus"></i> Ajukan Refund</a>
   </div>
 
   <div class="card">
-    <div class="card-body" style="padding:0;">
+    <div class="card-body refund-card-body">
       <div id="refundList">
-        <div style="text-align:center;padding:40px;color:var(--color-text-tertiary);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">Memuat data refund...</p></div>
+        <div class="refund-loading-state"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p>Memuat data refund...</p></div>
       </div>
     </div>
   </div>

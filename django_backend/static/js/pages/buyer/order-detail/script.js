@@ -47,18 +47,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // ── Tracking Polling ──
+  // ── Tracking Polling (degraded fallback — WebSocket is primary) ──
   var trackingPollTimer = null;
   var trackingAttempts = 0;
-  var MAX_TRACKING_ATTEMPTS = 120; // ~60 menit polling at 30s
+  var MAX_TRACKING_ATTEMPTS = 30; // ~60 min at 120s
+  var WS_CONNECTED = true; // assume connected, switch to fallback on error
 
-  // Clean up tracking polling on navigate away
   function clearTrackingTimer() {
     if (trackingPollTimer) clearInterval(trackingPollTimer);
     trackingPollTimer = null;
   }
-  window.addEventListener('beforeunload', clearTrackingTimer);
-  window.addEventListener('pagehide', clearTrackingTimer);
 
   // Track previous delivery status to detect transitions
   var prevDeliveryStatus = '';
@@ -92,16 +90,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch immediately
     fetchTrackingStatus(orderId, true);
 
-    // Determine poll interval based on status
+    // WebSocket is primary — poll only as fallback at 120s
     var status = (order.order_status || '').toLowerCase();
-    var interval = 30000; // default 30s
+    var interval = 120000; // 120s default (WS is primary)
     if (status === 'completed' || status === 'cancelled') {
-      interval = 120000; // 2 min for completed/cancelled
-      MAX_TRACKING_ATTEMPTS = 10; // stop polling after 20 min for completed
+      interval = 300000; // 5 min for completed/cancelled
+      MAX_TRACKING_ATTEMPTS = 12;
     }
 
     trackingPollTimer = setInterval(function () {
       if (document.hidden) return;
+      if (WS_CONNECTED) return; // Skip poll if WebSocket is connected
       if (trackingAttempts >= MAX_TRACKING_ATTEMPTS) {
         clearInterval(trackingPollTimer);
         trackingPollTimer = null;
@@ -258,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getPollIntervalLabel() {
     if (!trackingPollTimer) return 'Langsung';
-    return '30 detik';
+    return '2 menit';
   }
 
   function getBadgeClassForDelivery(deliveryStatus) {
@@ -327,6 +326,116 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       });
+    }
+  }
+
+  // ── Live Position Polling (Leaflet Map) ──
+  var positionPollTimer = null;
+  var liveMap = null;
+  var driverMarker = null;
+  var originMarker = null;
+  var destMarker = null;
+  var routePolyline = null;
+
+  function startPositionPolling(orderId, order) {
+    var mapEl = document.getElementById('map');
+    if (!mapEl) return;
+
+    var delivery = order.delivery || {};
+    var status = delivery.delivery_status || '';
+    var activeStatuses = ['diproses_penjual', 'menunggu_penjemputan', 'kurir_menjemput', 'dalam_perjalanan'];
+    if (activeStatuses.indexOf(status) === -1) return;
+
+    mapEl.style.display = 'block';
+
+    // Init Leaflet map
+    if (!liveMap) {
+      liveMap = L.map('map').setView([-6.2, 106.8], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18,
+      }).addTo(liveMap);
+    }
+
+    // Origin marker (store) — coordinates from delivery.store_latitude/store_longitude
+    var storeLat = delivery.store_latitude ? parseFloat(delivery.store_latitude) : -6.2;
+    var storeLng = delivery.store_longitude ? parseFloat(delivery.store_longitude) : 106.8;
+    var destLat = delivery.buyer_latitude ? parseFloat(delivery.buyer_latitude) : -6.3;
+    var destLng = delivery.buyer_longitude ? parseFloat(delivery.buyer_longitude) : 106.9;
+
+    if (!originMarker) {
+      originMarker = L.marker([storeLat, storeLng], {
+        icon: L.divIcon({ className: 'map-marker-origin', html: '<i class="fa-solid fa-store" style="color:#16a34a;font-size:18px;"></i>', iconSize: [24, 24], iconAnchor: [12, 12] })
+      }).addTo(liveMap).bindPopup('Toko');
+    }
+    if (!destMarker) {
+      destMarker = L.marker([destLat, destLng], {
+        icon: L.divIcon({ className: 'map-marker-dest', html: '<i class="fa-solid fa-location-dot" style="color:#ef4444;font-size:18px;"></i>', iconSize: [24, 24], iconAnchor: [12, 12] })
+      }).addTo(liveMap).bindPopup('Alamat Kamu');
+    }
+
+    // Fit bounds to show both markers
+    liveMap.fitBounds([[storeLat, storeLng], [destLat, destLng]], { padding: [50, 50] });
+
+    // Poll every 15s
+    positionPollTimer = setInterval(function () {
+      fetchLivePosition(orderId, delivery);
+    }, 15000);
+
+    // Fetch immediately
+    fetchLivePosition(orderId, delivery);
+  }
+
+  async function fetchLivePosition(orderId, delivery) {
+    try {
+      var data = await WarungioAPI.getDeliveryPosition(orderId);
+      if (!data || !data.active || !data.position) return;
+
+      var driverLat = parseFloat(data.position.latitude);
+      var driverLng = parseFloat(data.position.longitude);
+
+      if (isNaN(driverLat) || isNaN(driverLng)) return;
+
+      // Update or create driver marker
+      var driverIcon = L.divIcon({
+        className: 'map-marker-driver',
+        html: '<div style="background:#16a34a;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="fa-solid fa-motorcycle" style="font-size:14px;"></i></div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      if (driverMarker) {
+        driverMarker.setLatLng([driverLat, driverLng]);
+      } else {
+        driverMarker = L.marker([driverLat, driverLng], { icon: driverIcon })
+          .addTo(liveMap)
+          .bindPopup('<b>' + (data.driver?.name || 'Driver') + '</b><br>' + (data.estimated_time || ''));
+      }
+
+      // Update route polyline
+      var originLat = parseFloat(data.origin?.latitude) || 0;
+      var originLng = parseFloat(data.origin?.longitude) || 0;
+      var destLat2 = parseFloat(data.destination?.latitude) || 0;
+      var destLng2 = parseFloat(data.destination?.longitude) || 0;
+
+      if (originLat && originLng && destLat2 && destLng2) {
+        if (routePolyline) {
+          routePolyline.setLatLngs([[originLat, originLng], [driverLat, driverLng], [destLat2, destLng2]]);
+        } else {
+          routePolyline = L.polyline([[originLat, originLng], [driverLat, driverLng], [destLat2, destLng2]], {
+            color: '#16a34a', weight: 3, opacity: 0.6, dashArray: '8, 8'
+          }).addTo(liveMap);
+        }
+      }
+
+      // Update ETA display
+      var etaEl = document.getElementById('trackingEstimatedTime');
+      if (data.estimated_time && etaEl) {
+        etaEl.textContent = 'Estimasi tiba: ' + data.estimated_time;
+      }
+
+    } catch (e) {
+      // Silent — position API is optional
     }
   }
 
@@ -722,15 +831,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (shouldPoll) {
       startTrackingPolling(orderId, order);
+      startPositionPolling(orderId, order);
     }
 
-    // ── Listen for real-time updates via WebSocket ──
-    // Delivery tracking updates — instantly refresh tracking without polling
+    // ── Listen for real-time updates via WebSocket (PRIMARY mechanism) ──
+    // WebSocket delivery_update brings direct data — no API round-trip needed.
+    // Polling (above) only fires when WS is disconnected.
     var _wsRetries = 0;
     var _wsMaxRetries = 10;
 
+    function updateDeliveryUI(data) {
+      // Directly update badge, driver, pickup, QR, timeline from WS data
+      if (data.delivery_status_label) {
+        var badge = document.getElementById('statusBadge');
+        if (badge) {
+          badge.textContent = data.delivery_status_label;
+          badge.className = 'status-badge ' + getBadgeClassForDelivery(data.delivery_status || '');
+        }
+      }
+      if (data.driver_name || data.driver_phone) {
+        renderDriverInfo(data);
+      }
+      if (data.pickup_code) {
+        renderPickupCode(data.pickup_code);
+      }
+      if (data.courier && document.getElementById('trackingCourier')) {
+        document.getElementById('trackingCourier').textContent = data.courier.toUpperCase();
+      }
+      if (data.tracking_number && document.getElementById('trackingResi')) {
+        document.getElementById('trackingResi').textContent = data.tracking_number;
+      }
+      // Update QR display if QR codes are present
+      if (data.qr_pickup_code || data.qr_delivery_code) {
+        if (orderData) {
+          renderDeliveryQR(orderData, data);
+        }
+      }
+      // Update timeline
+      updateMainTimeline(data.delivery_status || '', data);
+      // Toast
+      showToast(data.message || 'Status pengiriman: ' + (data.delivery_status_label || data.delivery_status), '');
+    }
+
     function setupRealtimeDeliveryUpdates() {
-      if (_wsRetries >= _wsMaxRetries) return;
+      if (_wsRetries >= _wsMaxRetries) {
+        WS_CONNECTED = false;
+        return;
+      }
       if (typeof WarungioWS === 'undefined' || typeof WarungioWS.on !== 'function') {
         _wsRetries++;
         setTimeout(setupRealtimeDeliveryUpdates, 1000);
@@ -738,34 +885,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       WarungioWS.on('delivery_update', function (data) {
-        if (data.order_id == orderId) {
-          console.info('[Order Detail] Delivery update: ' + data.delivery_status);
-          var trackingCard = document.getElementById('trackingCard');
-          if (trackingCard && trackingCard.style.display !== 'none') {
-            // Re-fetch tracking silently — no loading spinner
-            fetchTrackingStatus(orderId, false);
-          } else {
-            // Tracking not visible yet — refresh the full page to show it
-            setTimeout(function () { window.location.reload(); }, 1500);
-          }
-        }
+        if (data.order_id != orderId) return;
+        WS_CONNECTED = true;
+        prevDeliveryStatus = data.delivery_status || prevDeliveryStatus;
+        // Instant UI update from WS data for badge/driver/pickup
+        updateDeliveryUI(data);
+        // Silently refresh milestones from API in background
+        fetchTrackingStatus(orderId, false);
       });
 
       WarungioWS.on('order_update', function (data) {
         if (data.order_id == orderId && data.status === 'cancelled') {
-          // Cancellation — reload to show cancelled status
           setTimeout(function () { window.location.reload(); }, 1500);
         }
       });
 
       WarungioWS.on('payment_update', function (data) {
         if (data.order_id == orderId && (data.status === 'paid' || data.status === 'settlement')) {
-          // Payment confirmed — reload to show paid status
           setTimeout(function () { window.location.reload(); }, 1500);
         }
       });
     }
     setupRealtimeDeliveryUpdates();
+
+    // WebSocket close/disconnect → fall back to polling
+    if (typeof WarungioWS !== 'undefined' && typeof WarungioWS.on === 'function') {
+      WarungioWS.on('close', function() { WS_CONNECTED = false; });
+      WarungioWS.on('disconnect', function() { WS_CONNECTED = false; });
+    }
 
   } catch (err) {
     console.error('Failed to load order:', err);
@@ -867,6 +1014,64 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (cancelBtnLoading) cancelBtnLoading.style.display = 'none';
     }
   });
+
+  // ── QR Code Delivery Verification — Display QR for driver scan ──
+  function renderDeliveryQR(order, delivery) {
+    var qrSection = document.getElementById('qrSection');
+    var qrDisplay = document.getElementById('qrDisplay');
+    var qrInstruction = document.getElementById('qrInstruction');
+    var qrTypeLabel = document.getElementById('qrTypeLabel');
+    if (!qrSection || !qrDisplay) return;
+
+    // Determine which QR code to show (pickup or delivery)
+    var qrCode = '';
+    var qrTypeText = '';
+    var qrLabel = '';
+
+    if (delivery.qr_delivery_code && delivery.delivery_status === 'dalam_perjalanan') {
+      qrCode = delivery.qr_delivery_code;
+      qrTypeText = 'QR Delivery — Verifikasi Pesanan';
+      qrLabel = 'QR Pengiriman';
+    } else if (delivery.qr_pickup_code && (delivery.delivery_status === 'menunggu_penjemputan' || delivery.delivery_status === 'kurir_menjemput')) {
+      qrCode = delivery.qr_pickup_code;
+      qrTypeText = 'QR Pickup — Verifikasi Penjemputan';
+      qrLabel = 'QR Pickup';
+    } else if (delivery.qr_delivery_code) {
+      qrCode = delivery.qr_delivery_code;
+      qrTypeText = 'QR Pengiriman';
+      qrLabel = 'QR Pengiriman';
+    } else if (delivery.qr_pickup_code) {
+      qrCode = delivery.qr_pickup_code;
+      qrTypeText = 'QR Pickup';
+      qrLabel = 'QR Pickup';
+    }
+
+    if (qrCode) {
+      qrSection.style.display = 'block';
+      qrDisplay.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrDisplay, {
+          text: qrCode,
+          width: 140,
+          height: 140,
+          colorDark: '#1e293b',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      } else {
+        qrDisplay.textContent = qrCode;
+      }
+      if (qrInstruction) qrInstruction.textContent = qrTypeText + '. Tunjukkan QR ini ke driver.';
+      if (qrTypeLabel) qrTypeLabel.textContent = qrCode;
+    } else {
+      qrSection.style.display = 'none';
+    }
+  }
+
+  // Call QR render after order is loaded
+  if (delivery && (delivery.qr_pickup_code || delivery.qr_delivery_code)) {
+    renderDeliveryQR(order, delivery);
+  }
 
   // ── Polling for Midtrans pending payment ──
   if (orderData && orderData.payment_method === 'midtrans' && orderData.payment_status !== 'paid') {

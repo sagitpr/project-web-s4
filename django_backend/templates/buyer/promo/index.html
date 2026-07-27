@@ -37,11 +37,11 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Promo & Voucher</h1>
-                        <p class="text-sm text-slate-500 mt-1">Temukan promo dan voucher terbaik untuk belanja kebutuhan harian dengan harga lebih hemat.</p>
+                        <p class="text-sm text-slate-500 mt-1">Cari promo dan diskon spesial untuk belanja lebih hemat.</p>
                     </div>
                     <div class="flex items-center gap-1.5 px-4 py-2 bg-[#16A34A]/10 border border-[#16A34A]/20 rounded-full">
                         <span class="material-symbols-outlined text-[#16A34A] text-lg" style="font-variation-settings: 'FILL' 1; vertical-align: middle;">verified</span>
-                        <span class="text-xs font-bold text-[#16A34A]" id="promoCountBadge">24 Promo Aktif</span>
+                        <span class="text-xs font-bold text-[#16A34A]" id="promoCountBadge">Memuat...</span>
                     </div>
                 </div>
 
@@ -81,65 +81,7 @@
                     </div>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="voucherGrid">
-                        <!-- Voucher Card 1 -->
-                        <div class="voucher-card-premium">
-                            <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider mb-4">GRATIS ONGKIR</div>
-                            <h4 class="text-lg font-extrabold text-slate-800 leading-tight mb-1">GRATIS ONGKIR</h4>
-                            <p class="text-[10px] text-slate-400 mb-6">Min. Belanja Rp40.000</p>
-                            <div class="w-full border-2 border-dashed border-slate-200 py-2.5 rounded-xl bg-slate-50 mb-3 text-center">
-                                <span class="font-extrabold text-xs tracking-wider text-slate-800 select-all" id="code-ongkir">WARUNGIOFREE</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400 italic mb-4">Berlaku hingga 31 Des 2026</p>
-                            <div class="w-full flex gap-1.5 mt-auto">
-                                <button class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-bold hover:bg-primary/20 transition-colors" onclick="copyVoucherCode('WARUNGIOFREE')">Salin</button>
-                                <button class="flex-1 bg-primary text-white py-2 rounded-lg text-[10px] font-bold hover:bg-[#15803d] transition-colors" onclick="useVoucherCode('WARUNGIOFREE')">Gunakan</button>
-                            </div>
-                        </div>
-
-                        <!-- Voucher Card 2 -->
-                        <div class="voucher-card-premium">
-                            <div class="bg-green-50 text-primary px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider mb-4">VOUCHER TOKO</div>
-                            <h4 class="text-lg font-extrabold text-slate-800 leading-tight mb-1">15% DISKON</h4>
-                            <p class="text-[10px] text-slate-400 mb-6">Min. Belanja Rp50.000</p>
-                            <div class="w-full border-2 border-dashed border-slate-200 py-2.5 rounded-xl bg-slate-50 mb-3 text-center">
-                                <span class="font-extrabold text-xs tracking-wider text-slate-800 select-all" id="code-tokonov">WARUNGIO15</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400 italic mb-4">Berlaku hingga 31 Des 2026</p>
-                            <div class="w-full flex gap-1.5 mt-auto">
-                                <button class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-bold hover:bg-primary/20 transition-colors" onclick="copyVoucherCode('WARUNGIO15')">Salin</button>
-                                <button class="flex-1 bg-primary text-white py-2 rounded-lg text-[10px] font-bold hover:bg-[#15803d] transition-colors" onclick="useVoucherCode('WARUNGIO15')">Gunakan</button>
-                            </div>
-                        </div>
-
-                        <!-- Voucher Card 3 -->
-                        <div class="voucher-card-premium">
-                            <div class="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider mb-4">CASHBACK</div>
-                            <h4 class="text-lg font-extrabold text-slate-800 leading-tight mb-1">10% CASHBACK</h4>
-                            <p class="text-[10px] text-slate-400 mb-6">Maks. Cashback Rp20.000</p>
-                            <div class="w-full border-2 border-dashed border-slate-200 py-2.5 rounded-xl bg-slate-50 mb-3 text-center">
-                                <span class="font-extrabold text-xs tracking-wider text-slate-800 select-all" id="code-cashback">CASHBACK10</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400 italic mb-4">Berlaku hingga 31 Des 2026</p>
-                            <div class="w-full flex gap-1.5 mt-auto">
-                                <button class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-bold hover:bg-primary/20 transition-colors" onclick="copyVoucherCode('CASHBACK10')">Salin</button>
-                                <button class="flex-1 bg-primary text-white py-2 rounded-lg text-[10px] font-bold hover:bg-[#15803d] transition-colors" onclick="useVoucherCode('CASHBACK10')">Gunakan</button>
-                            </div>
-                        </div>
-
-                        <!-- Voucher Card 4 -->
-                        <div class="voucher-card-premium">
-                            <div class="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider mb-4">DISKON</div>
-                            <h4 class="text-lg font-extrabold text-slate-800 leading-tight mb-1">25% DISKON</h4>
-                            <p class="text-[10px] text-slate-400 mb-6">Min. Belanja Rp100.000</p>
-                            <div class="w-full border-2 border-dashed border-slate-200 py-2.5 rounded-xl bg-slate-50 mb-3 text-center">
-                                <span class="font-extrabold text-xs tracking-wider text-slate-800 select-all" id="code-promo25">WARUNGIO25</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400 italic mb-4">Berlaku hingga 31 Des 2026</p>
-                            <div class="w-full flex gap-1.5 mt-auto">
-                                <button class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-bold hover:bg-primary/20 transition-colors" onclick="copyVoucherCode('WARUNGIO25')">Salin</button>
-                                <button class="flex-1 bg-primary text-white py-2 rounded-lg text-[10px] font-bold hover:bg-[#15803d] transition-colors" onclick="useVoucherCode('WARUNGIO25')">Gunakan</button>
-                            </div>
-                        </div>
+                        <!-- Loaded dynamically from API -->
                     </div>
                 </section>
 
@@ -185,8 +127,8 @@
                         <i class="fa-regular fa-tags text-4xl"></i>
                     </div>
                     <div class="space-y-1">
-                        <h3 class="text-lg font-bold text-slate-800">Belum ada promo yang tersedia saat ini</h3>
-                        <p class="text-sm text-slate-400">Silakan kembali lagi nanti untuk mendapatkan penawaran terbaik.</p>
+                        <h3 class="text-lg font-bold text-slate-800">Belum ada promo saat ini</h3>
+                        <p class="text-sm text-slate-400">Cek kembali nanti untuk penawaran terbaru.</p>
                     </div>
                     <div class="flex justify-center">
                         <a href="{% url 'home' %}" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:scale-105 active:scale-95 transition-all">Kembali Belanja</a>
@@ -197,7 +139,7 @@
     </div>
 
     <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;"></div>
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
@@ -217,29 +159,11 @@
 
         function showToast(msg, type) {
             const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type || 'info'} flex items-center gap-2 p-4 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300`;
-            
-            if (type === 'success') {
-                toast.style.background = '#dcfce7';
-                toast.style.color = '#166534';
-                toast.style.borderColor = '#bbf7d0';
-            } else if (type === 'error') {
-                toast.style.background = '#fee2e2';
-                toast.style.color = '#991b1b';
-                toast.style.borderColor = '#fecaca';
-            } else {
-                toast.style.background = '#dbeafe';
-                toast.style.color = '#1e40af';
-                toast.style.borderColor = '#bfdbfe';
-            }
-
-            toast.innerHTML = `<span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            var t = document.createElement('div');
+            t.className = 'toast toast-' + (type || 'info');
+            t.innerHTML = '<span>' + msg + '</span>';
+            container.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
         }
 
         window.copyVoucherCode = function(code) {
@@ -257,6 +181,50 @@
                 behavior: 'smooth'
             });
         };
+
+        async function loadVouchers() {
+            try {
+                // Try to get vouchers from promotions API
+                var promoCountBadge = document.getElementById('promoCountBadge');
+                var voucherGrid = document.getElementById('voucherGrid');
+                
+                // Attempt to load seller promos as vouchers
+                var vouchers = [];
+                try {
+                    var promoData = await WarungioAPI.getSellerPromos();
+                    vouchers = promoData.results || promoData || [];
+                } catch(e) {}
+
+                if (vouchers.length > 0) {
+                    if (promoCountBadge) promoCountBadge.textContent = vouchers.length + ' Promo Aktif';
+                    if (voucherGrid) {
+                        voucherGrid.innerHTML = vouchers.map(function(v) {
+                            var types = ['bg-blue-50 text-blue-600', 'bg-green-50 text-primary', 'bg-amber-50 text-amber-600', 'bg-purple-50 text-purple-600'];
+                            var labels = ['GRATIS ONGKIR', 'VOUCHER TOKO', 'CASHBACK', 'DISKON'];
+                            var typeClass = types[Math.floor(Math.random() * types.length)];
+                            var label = labels[Math.floor(Math.random() * labels.length)];
+                            return '<div class="voucher-card-premium">' +
+                                '<div class="' + typeClass + ' px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider mb-4">' + label + '</div>' +
+                                '<h4 class="text-lg font-extrabold text-slate-800 leading-tight mb-1">' + (v.title || v.name || 'Promo Spesial') + '</h4>' +
+                                '<p class="text-[10px] text-slate-400 mb-6">' + (v.description || 'Min. Belanja Rp50.000') + '</p>' +
+                                '<div class="w-full border-2 border-dashed border-slate-200 py-2.5 rounded-xl bg-slate-50 mb-3 text-center">' +
+                                    '<span class="font-extrabold text-xs tracking-wider text-slate-800">' + (v.code || 'PROMO') + '</span>' +
+                                '</div>' +
+                                '<p class="text-[9px] text-slate-400 italic mb-4">' + (v.valid_until ? 'Berlaku hingga ' + new Date(v.valid_until).toLocaleDateString('id-ID') : 'Berlaku hingga 31 Des 2026') + '</p>' +
+                                '<div class="w-full flex gap-1.5 mt-auto">' +
+                                    '<button class="flex-1 bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-bold hover:bg-primary/20 transition-colors" onclick="copyVoucherCode(\'' + (v.code || 'PROMO') + '\')">Salin</button>' +
+                                    '<button class="flex-1 bg-primary text-white py-2 rounded-lg text-[10px] font-bold hover:bg-[#15803d] transition-colors" onclick="useVoucherCode(\'' + (v.code || 'PROMO') + '\')">Gunakan</button>' +
+                                '</div>' +
+                            '</div>';
+                        }).join('');
+                    }
+                } else {
+                    if (promoCountBadge) promoCountBadge.textContent = 'Tidak ada promo';
+                }
+            } catch(e) {
+                console.warn('Failed to load vouchers:', e);
+            }
+        }
 
         async function loadFlashSaleData() {
             loadingSkeletons.style.display = 'grid';
@@ -432,17 +400,10 @@
                         showToast('Kode voucher tidak valid', 'error');
                     }
                 } else {
-                    // Mock fallback check
-                    const codeUpper = code.toUpperCase();
-                    if (codeUpper === 'WARUNGIOFREE' || codeUpper === 'WARUNGIO15' || codeUpper === 'CASHBACK10' || codeUpper === 'WARUNGIO25') {
-                        result.className = 'text-xs p-3 rounded-xl border bg-green-50 text-[#16A34A] border-green-200';
-                        result.textContent = `Voucher ${codeUpper} berhasil digunakan!`;
-                        showToast('Voucher berhasil digunakan!', 'success');
-                    } else {
-                        result.className = 'text-xs p-3 rounded-xl border bg-red-50 text-red-700 border-red-200';
-                        result.textContent = 'Kode voucher tidak valid.';
-                        showToast('Kode voucher tidak valid', 'error');
-                    }
+                    // If API not available
+                    result.className = 'text-xs p-3 rounded-xl border bg-red-50 text-red-700 border-red-200';
+                    result.textContent = 'Layanan voucher sedang tidak tersedia. Silakan coba lagi.';
+                    showToast('Layanan voucher tidak tersedia', 'error');
                 }
                 result.style.display = 'block';
             } catch (err) {
@@ -468,73 +429,37 @@
             updateTimer();
         }
 
-        // Initialize DOM events
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Geolocation fallback
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const userLocationEl = document.getElementById('userLocation');
-                    if (userLocationEl) userLocationEl.textContent = 'Samping Anda';
-                });
-            }
-
-            // Bind Top Nav profile dropdown toggles
-            const profileBox = document.getElementById('profileBox');
-            const dropdown = document.getElementById('dropdownMenu');
-            if (profileBox && dropdown) {
-                profileBox.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('show');
-                });
-                document.addEventListener('click', () => dropdown.classList.remove('show'));
-            }
-
-            // Sync user authentication states
+        // Consolidated initialization
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Auth UI
             if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                
-                const u = window.WarungioAuth.getUser();
+                var authEl = document.getElementById('authHeaderActions');
+                var guestEl = document.getElementById('guestHeaderActions');
+                if (authEl) authEl.style.display = 'flex';
+                if (guestEl) guestEl.style.display = 'none';
+                var u = window.WarungioAuth.getUser();
                 if (u && u.full_name) {
-                    document.getElementById('userName').textContent = `Hai, ${u.full_name.split(' ')[0]}`;
+                    var nameEl = document.getElementById('userName');
+                    if (nameEl) nameEl.textContent = 'Hai, ' + u.full_name.split(' ')[0];
                 }
-                
-                try {
-                    const balanceData = await WarungioAPI.getWalletBalance();
-                    if (balanceData && balanceData.balance !== undefined) {
-                        const label = document.getElementById('userBalanceDropdown');
-                        if (label) label.textContent = `Rp ${Number(balanceData.balance).toLocaleString('id-ID')}`;
-                    }
-                } catch(e) {}
             } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
+                var authEl = document.getElementById('authHeaderActions');
+                var guestEl = document.getElementById('guestHeaderActions');
+                if (authEl) authEl.style.display = 'none';
+                if (guestEl) guestEl.style.display = 'flex';
             }
 
-            // Logout click
-            document.getElementById('btnLogout')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (window.WarungioAuth) {
-                    window.WarungioAuth.logout();
-                    window.location.href = '/';
-                }
-            });
+            // Logout
+            var logoutBtn = document.getElementById('btnLogout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.WarungioAuth) { WarungioAuth.logout(); }
+                });
+            }
 
-            // Search input redirects
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const q = e.target.value.trim();
-                    window.location.href = `/buyer/products/?search=${encodeURIComponent(q)}`;
-                }
-            });
-
-            // Load more pagination click
-            document.getElementById('loadMorePromoBtn').addEventListener('click', () => {
-                currentPage += 1;
-                renderGrid();
-            });
-
-            // Run countdown & load data
+            // Load data
+            loadVouchers();
             startCountdown();
             await loadFlashSaleData();
         });

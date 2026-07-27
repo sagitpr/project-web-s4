@@ -19,12 +19,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from django.db.models import Prefetch
 
-from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale, PackingSession, PackedItem
+from .models import Cart, Order, OrderItem, Delivery, ShippingMethod, OfflineSale, PackingSession, PackedItem, MitraDriver, MitraDeliveryTariff
 from .serializers import (
     CartSerializer, OrderListSerializer, OrderDetailSerializer,
     OrderCreateSerializer, OrderStatusSerializer, DeliverySerializer,
     ShippingMethodSerializer, CancelOrderSerializer,
-    OfflineSaleSerializer, OfflineSaleListSerializer
+    OfflineSaleSerializer, OfflineSaleListSerializer,
+    MitraDriverSerializer, MitraTariffSerializer
 )
 from stores.models import Store
 from products.models import Product
@@ -1486,3 +1487,509 @@ class OfflineSaleListView(generics.ListAPIView):
         return OfflineSale.objects.filter(
             store__user=self.request.user
         ).select_related('product').order_by('-created_at')
+
+# =============================================================================
+# GRABEXPRESS / GOSEND WEBHOOK HANDLERS
+# =============================================================================
+
+# =============================================================================
+# BASE DELIVERY WEBHOOK (shared by GrabExpress, GoSend, Mitra)
+# =============================================================================
+
+DELIVERY_WEBHOOK_STATUS_MAP = {
+    'grabexpress': {
+        'delivery.assigned': 'menunggu_penjemputan',
+        'delivery.picked_up': 'kurir_menjemput',
+        'delivery.in_transit': 'dalam_perjalanan',
+        'delivery.arrived': 'dalam_perjalanan',
+        'delivery.delivered': 'pesanan_diterima',
+        'delivery.cancelled': 'dibatalkan',
+    },
+    'gosend': {
+        'order.assigned': 'menunggu_penjemputan',
+        'order.picked_up': 'kurir_menjemput',
+        'order.in_transit': 'dalam_perjalanan',
+        'order.arrived': 'dalam_perjalanan',
+        'order.delivered': 'pesanan_diterima',
+        'order.cancelled': 'dibatalkan',
+    },
+    'mitra_pengiriman': {
+        'driver_assigned': 'menunggu_penjemputan',
+        'picked_up': 'kurir_menjemput',
+        'in_transit': 'dalam_perjalanan',
+        'arrived': 'dalam_perjalanan',
+        'delivered': 'pesanan_diterima',
+        'cancelled': 'dibatalkan',
+    },
+}
+
+DELIVERY_SIGNATURE_HEADERS = {
+    'grabexpress': ['X-Grab-Signature', 'Authorization'],
+    'gosend': ['X-Gojek-Signature', 'X-Signature'],
+    'mitra_pengiriman': ['X-Mitra-Signature', 'X-Signature'],
+}
+
+
+def _process_delivery_webhook(request, provider):
+    from django.db import transaction
+    from django.utils import timezone
+    from .services.delivery_client import get_grab_client, get_gosend_client
+
+    if provider == 'grabexpress':
+        client = get_grab_client()
+    elif provider == 'gosend':
+        client = get_gosend_client()
+    else:
+        client = None
+
+    if client and client.is_available():
+        headers = DELIVERY_SIGNATURE_HEADERS.get(provider, [])
+        signature = ''
+        for h in headers:
+            sig = request.headers.get(h, '')
+            if sig:
+                signature = sig
+                break
+        if not signature:
+            logger.warning(f'{provider} webhook missing signature header')
+            return Response({'status': 'invalid_signature'}, status=status.HTTP_400_BAD_REQUEST)
+        if not client.verify_webhook_signature(request.body, signature):
+            logger.warning(f'{provider} webhook signature verification failed')
+            return Response({'status': 'invalid_signature'}, status=status.HTTP_400_BAD_REQUEST)
+
+    data = request.data
+    event = data.get('event', data.get('type', ''))
+
+    delivery_id = (
+        data.get('deliveryId') or data.get('delivery_id')
+        or data.get('orderId') or data.get('order_id')
+        or data.get('id') or ''
+    )
+    if not delivery_id:
+        return Response({'status': 'missing_delivery_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+    status_map = DELIVERY_WEBHOOK_STATUS_MAP.get(provider, {})
+    internal_status = status_map.get(event, '')
+    if not internal_status:
+        logger.warning(f'{provider} unknown event: {event}')
+        return Response({'status': 'unknown_event'})
+
+    try:
+        if provider == 'grabexpress':
+            delivery = Delivery.objects.select_related('order').get(grab_delivery_id=delivery_id)
+        elif provider == 'gosend':
+            delivery = Delivery.objects.select_related('order').get(gojek_order_id=delivery_id)
+        elif provider == 'mitra_pengiriman':
+            delivery = Delivery.objects.select_related('order').get(mitra_delivery_id=delivery_id)
+        else:
+            delivery = Delivery.objects.select_related('order').get(tracking_number=delivery_id)
+    except (Delivery.DoesNotExist, Delivery.MultipleObjectsReturned):
+        try:
+            delivery = Delivery.objects.select_related('order').get(tracking_number=delivery_id)
+        except Delivery.DoesNotExist:
+            logger.warning(f'{provider} webhook: delivery {delivery_id} not found')
+            return Response({'status': 'delivery_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    with transaction.atomic():
+        delivery.delivery_status = internal_status
+        delivery.courier_provider = provider
+
+        driver_info = data.get('driver', data.get('rider', data.get('driver_info', {})))
+        if driver_info and isinstance(driver_info, dict):
+            delivery.driver_name = driver_info.get('name', driver_info.get('driverName', delivery.driver_name or ''))
+            delivery.driver_phone = driver_info.get('phone', driver_info.get('driverPhone', delivery.driver_phone or ''))
+
+        if internal_status == 'kurir_menjemput':
+            delivery.picked_up_at = timezone.now()
+        elif internal_status == 'pesanan_diterima':
+            delivery.delivered_at = timezone.now()
+            delivery.order.completed_at = timezone.now()
+            delivery.order.order_status = 'completed'
+            delivery.order.save(update_fields=['completed_at', 'order_status'])
+        elif internal_status == 'dibatalkan':
+            delivery.cancelled_at = timezone.now()
+
+        delivery.save()
+
+    if delivery.order.user_id:
+        notify_delivery_update(
+            user_id=delivery.order.user_id,
+            order_id=delivery.order.id,
+            order_number=delivery.order.order_number,
+            delivery_status=internal_status,
+            tracking_number=delivery_id,
+            courier=provider.capitalize(),
+        )
+
+    logger.info(f'{provider} webhook: order #{delivery.order.id} status={internal_status}')
+    return None
+
+
+@extend_schema(exclude=True)
+class DeliveryWebhookView(views.APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, provider=''):
+        provider = provider or request.data.get('provider', '').lower()
+        if not provider:
+            path = request.path.lower()
+            if 'grab' in path:
+                provider = 'grabexpress'
+            elif 'gojek' in path or 'gosend' in path:
+                provider = 'gosend'
+            elif 'mitra' in path:
+                provider = 'mitra_pengiriman'
+        if provider not in DELIVERY_WEBHOOK_STATUS_MAP:
+            return Response({'status': 'unknown_provider'}, status=status.HTTP_400_BAD_REQUEST)
+        result = _process_delivery_webhook(request, provider)
+        if result is not None:
+            return result
+        return Response({'status': 'ok'})
+
+
+# =============================================================================
+# DELIVERY COURIER RATE CALCULATION
+# =============================================================================
+
+@extend_schema(exclude=True)
+class DeliveryRateView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        from .services.delivery_client import get_grab_client, get_gosend_client
+        from .services.distance import calculate_haversine_distance, estimate_shipping_fee
+
+        courier = request.data.get('courier', '').lower()
+        service_type = request.data.get('service_type', 'Instant')
+        origin = {
+            'latitude': request.data.get('origin_lat'),
+            'longitude': request.data.get('origin_lng'),
+            'address': request.data.get('origin_address', ''),
+        }
+        destination = {
+            'latitude': request.data.get('destination_lat'),
+            'longitude': request.data.get('destination_lng'),
+            'address': request.data.get('destination_address', ''),
+        }
+        items = request.data.get('items', [])
+        if not items:
+            items = [{'name': 'Pesanan', 'quantity': 1, 'weight_kg': 0.5}]
+
+        if courier == 'grabexpress':
+            client = get_grab_client()
+            result = client.calculate_rate(origin, destination, items, service_type)
+        elif courier == 'gosend':
+            client = get_gosend_client()
+            result = client.calculate_rate(origin, destination, items, service_type)
+        else:
+            distance = calculate_haversine_distance(
+                origin.get('latitude'), origin.get('longitude'),
+                destination.get('latitude'), destination.get('longitude'),
+            ) or 3.0
+            result = {
+                'total_fee': float(estimate_shipping_fee(5000, distance)),
+                'currency': 'IDR',
+                'estimated_time': 'Estimasi sesuai kurir',
+                'distance_km': round(distance, 2),
+                'provider': 'generic',
+                '_fallback': True,
+            }
+        if not result:
+            return Response({'error': 'Gagal menghitung ongkos kirim.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result)
+
+
+@extend_schema(exclude=True)
+class DeliveryAutoBookView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request):
+        from .services.delivery_client import auto_book_courier
+        order_id = request.data.get('order_id')
+        courier = request.data.get('courier', 'grabexpress').lower()
+        service_type = request.data.get('service_type', 'Instant')
+        if not order_id:
+            return Response({'error': 'order_id wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
+        order = Order.objects.filter(
+            id=order_id, store__user=request.user
+        ).select_related('store').prefetch_related('items').first()
+        if not order:
+            return Response({'error': 'Pesanan tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+        if order.order_status not in ('paid', 'processed'):
+            return Response({'error': 'Pesanan harus berstatus Lunas atau Diproses.'}, status=status.HTTP_400_BAD_REQUEST)
+        result = auto_book_courier(order, courier, service_type)
+        if not result:
+            return Response({'error': f'Gagal membooking {courier}. Silakan coba manual.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'success': True,
+            'message': f'{courier} berhasil dibooking. Kurir akan segera menjemput.',
+            'delivery_id': result.get('delivery_id'),
+            'tracking_url': result.get('tracking_url'),
+            'estimated_time': result.get('estimated_time'),
+            'status': result.get('status'),
+        })
+
+
+@extend_schema(exclude=True)
+class DeliveryLivePositionView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, order_id):
+        from .services.distance import calculate_haversine_distance
+        order = Order.objects.filter(id=order_id, user=request.user).select_related('delivery').first()
+        if not order:
+            return Response({'error': 'Pesanan tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            delivery = order.delivery
+        except Delivery.DoesNotExist:
+            return Response({'error': 'Belum ada informasi pengiriman.'}, status=status.HTTP_404_NOT_FOUND)
+        if delivery.delivery_status in ('pesanan_diterima', 'dibatalkan'):
+            return Response({'active': False, 'message': 'Pengiriman selesai.'})
+
+        store = delivery.order.store
+        delivery_status_val = delivery.delivery_status or 'menunggu_konfirmasi'
+        origin_lat = float(store.latitude) if store and store.latitude else -6.2
+        origin_lng = float(store.longitude) if store and store.longitude else 106.8
+        dest_lat = float(delivery.buyer_latitude) if delivery.buyer_latitude else -6.3
+        dest_lng = float(delivery.buyer_longitude) if delivery.buyer_longitude else 106.9
+
+        progress_map = {
+            'menunggu_konfirmasi': -0.1, 'diproses_penjual': -0.05,
+            'menunggu_penjemputan': 0.0, 'kurir_menjemput': 0.2,
+            'dalam_perjalanan': 0.6, 'pesanan_diterima': 1.0,
+        }
+        progress = progress_map.get(delivery_status_val, 0.0)
+        lat = origin_lat + (dest_lat - origin_lat) * progress
+        lng = origin_lng + (dest_lng - origin_lng) * progress
+        total_dist = calculate_haversine_distance(origin_lat, origin_lng, dest_lat, dest_lng) or 3.0
+        remaining_dist = total_dist * (1 - progress)
+        eta_minutes = max(1, int(remaining_dist * 2))
+
+        return Response({
+            'active': True,
+            'position': {'latitude': round(lat, 7), 'longitude': round(lng, 7)},
+            'origin': {'latitude': origin_lat, 'longitude': origin_lng},
+            'destination': {'latitude': dest_lat, 'longitude': dest_lng},
+            'progress': progress,
+            'eta_minutes': eta_minutes,
+            'estimated_time': f'{eta_minutes} menit lagi' if eta_minutes > 0 else 'Hampir sampai',
+            'source': 'interpolated',
+        })
+
+
+# =============================================================================
+# MITRA PENGIRIMAN — Internal fleet management
+# =============================================================================
+
+@extend_schema(exclude=True)
+class MitraDriverListCreateView(generics.ListCreateAPIView):
+    serializer_class = MitraDriverSerializer
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get_queryset(self):
+        return MitraDriver.objects.filter(store=self.request.user.store).order_by('-total_deliveries')
+
+    def perform_create(self, serializer):
+        serializer.save(store=self.request.user.store)
+
+
+@extend_schema(exclude=True)
+class MitraDriverDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = MitraDriverSerializer
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get_queryset(self):
+        return MitraDriver.objects.filter(store=self.request.user.store)
+
+
+@extend_schema(exclude=True)
+class MitraTariffListCreateView(generics.ListCreateAPIView):
+    serializer_class = MitraTariffSerializer
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get_queryset(self):
+        return MitraDeliveryTariff.objects.filter(store=self.request.user.store, is_active=True)
+
+    def perform_create(self, serializer):
+        serializer.save(store=self.request.user.store)
+
+
+@extend_schema(exclude=True)
+class MitraAssignDriverView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request):
+        delivery_id = request.data.get('delivery_id')
+        driver_id = request.data.get('driver_id')
+        if not delivery_id or not driver_id:
+            return Response({'error': 'delivery_id dan driver_id wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
+        delivery = Delivery.objects.filter(
+            id=delivery_id, order__store__user=request.user
+        ).select_related('order').first()
+        if not delivery:
+            return Response({'error': 'Pengiriman tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+        driver = MitraDriver.objects.filter(
+            id=driver_id, store=request.user.store, is_active=True
+        ).first()
+        if not driver:
+            return Response({'error': 'Driver tidak ditemukan atau tidak aktif.'}, status=status.HTTP_404_NOT_FOUND)
+        delivery.assigned_driver = driver
+        delivery.driver_name = driver.name
+        delivery.driver_phone = driver.phone
+        delivery.delivery_status = 'menunggu_penjemputan'
+        delivery.courier_provider = 'mitra_pengiriman'
+        delivery.save(update_fields=[
+            'assigned_driver', 'driver_name', 'driver_phone',
+            'delivery_status', 'courier_provider'
+        ])
+        driver.total_deliveries += 1
+        driver.save(update_fields=['total_deliveries'])
+        if delivery.order.user_id:
+            notify_delivery_update(
+                user_id=delivery.order.user_id,
+                order_id=delivery.order.id,
+                order_number=delivery.order.order_number,
+                delivery_status='menunggu_penjemputan',
+                courier='Mitra Pengiriman',
+            )
+        return Response({
+            'success': True,
+            'message': f'Driver {driver.name} berhasil ditugaskan.',
+            'driver_name': driver.name,
+            'driver_phone': driver.phone,
+        })
+
+
+# =============================================================================
+# QR CODE GENERATION & VERIFICATION + POD
+# =============================================================================
+
+@extend_schema(exclude=True)
+class GenerateDeliveryQRView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, order_id):
+        delivery = Delivery.objects.filter(order_id=order_id).select_related('order').first()
+        if not delivery:
+            return Response({'error': 'Pengiriman tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+
+        order = delivery.order
+        is_owner = order.user_id == request.user.id
+        is_seller = order.store and order.store.user_id == request.user.id
+        is_admin = request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'
+
+        if not (is_owner or is_seller or is_admin):
+            return Response({'error': 'Tidak memiliki akses.'}, status=status.HTTP_403_FORBIDDEN)
+
+        code_type = request.data.get('code_type', 'pickup')
+        if code_type not in ('pickup', 'delivery'):
+            return Response({'error': 'code_type harus "pickup" atau "delivery".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qr_code = generate_qr_code(delivery, code_type)
+        if code_type == 'delivery':
+            delivery.qr_delivery_code = qr_code
+        else:
+            delivery.qr_pickup_code = qr_code
+        delivery.save(update_fields=['qr_delivery_code', 'qr_pickup_code'])
+
+        return Response({
+            'success': True,
+            'qr_code': qr_code,
+            'code_type': code_type,
+            'message': f'QR {code_type} berhasil dibuat.',
+        })
+
+
+@extend_schema(exclude=True)
+class VerifyDeliveryQRView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, order_id):
+        delivery = Delivery.objects.filter(order_id=order_id).select_related('order').first()
+        if not delivery:
+            return Response({'error': 'Pengiriman tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+
+        order = delivery.order
+        is_seller = order.store and order.store.user_id == request.user.id
+        is_admin = request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'
+        is_driver = delivery.assigned_driver and delivery.assigned_driver.id == request.user.id
+
+        if not (is_seller or is_admin or is_driver):
+            return Response({'error': 'Tidak memiliki akses.'}, status=status.HTTP_403_FORBIDDEN)
+
+        qr_code = request.data.get('qr_code', '')
+        code_type = request.data.get('code_type', 'pickup')
+
+        if not qr_code:
+            return Response({'error': 'qr_code wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
+        if code_type not in ('pickup', 'delivery'):
+            return Response({'error': 'code_type harus "pickup" atau "delivery".'}, status=status.HTTP_400_BAD_REQUEST)
+
+        result = verify_qr_code(delivery, qr_code, code_type)
+        if not result['valid']:
+            return Response({'success': False, 'error': result.get('error', 'QR Code tidak valid.')}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            if code_type == 'pickup':
+                delivery.delivery_status = 'kurir_menjemput' if delivery.courier_provider in ('grabexpress', 'gosend') else 'dalam_perjalanan'
+                delivery.picked_up_at = timezone.now()
+            else:
+                delivery.delivery_status = 'pesanan_diterima'
+                delivery.delivered_at = timezone.now()
+            delivery.save(update_fields=['delivery_status', 'picked_up_at', 'delivered_at'])
+            if code_type == 'delivery':
+                order.order_status = 'completed'
+                order.completed_at = timezone.now()
+                order.save(update_fields=['order_status', 'completed_at'])
+
+        if order.user_id:
+            notify_delivery_update(
+                user_id=order.user_id,
+                order_id=order.id,
+                order_number=order.order_number,
+                delivery_status=delivery.delivery_status,
+                courier=delivery.courier_provider or delivery.courier_name or 'Mitra Pengiriman',
+            )
+
+        return Response({
+            'success': True,
+            'message': f'QR {code_type} berhasil diverifikasi.',
+            'delivery_status': delivery.delivery_status,
+            'delivery_id': delivery.id,
+        })
+
+
+@extend_schema(exclude=True)
+class DeliveryPODUploadView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request, order_id):
+        delivery = Delivery.objects.filter(
+            order_id=order_id, order__store__user=request.user
+        ).first()
+        if not delivery:
+            return Response({'error': 'Pengiriman tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+
+        pod_photo = request.FILES.get('pod_photo')
+        if pod_photo:
+            delivery.pod_photo = pod_photo
+
+        pod_signature = request.data.get('pod_signature', '')
+        if pod_signature:
+            delivery.pod_signature = pod_signature
+
+        pod_notes = request.data.get('pod_notes', '')
+        if pod_notes:
+            delivery.pod_notes = pod_notes
+
+        delivery.pod_signed_at = timezone.now()
+        delivery.save()
+
+        return Response({
+            'success': True,
+            'message': 'Bukti pengiriman (POD) berhasil diupload.',
+            'pod_photo_url': delivery.pod_photo.url if delivery.pod_photo else '',
+            'pod_signed_at': delivery.pod_signed_at.isoformat() if delivery.pod_signed_at else '',
+        })

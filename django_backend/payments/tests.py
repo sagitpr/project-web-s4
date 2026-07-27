@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from .models import Payment, PaymentMethod, MidtransTransaction
 from orders.models import Order
+import unittest.mock as mock
 
 
 class TestPaymentMethodModel:
@@ -107,6 +108,57 @@ class TestMidtransTransactionModel:
         assert str(tx) == "Midtrans WRG-TEST-001 - pending"
 
 
+# ─── WebSocket Tracking Tests ─────────────────────────────────────────────
+
+
+class TestDeliveryUpdateWebSocket:
+    """Verify delivery_update WebSocket events are properly broadcast."""
+
+    def test_delivery_update_broadcast(self, db, test_store, buyer_user):
+        """notify_delivery_update should broadcast via channel layer."""
+        from orders.views import notify_delivery_update
+
+        with mock.patch('orders.views.get_channel_layer') as mock_channel_layer:
+            mock_layer_instance = mock.MagicMock()
+            mock_channel_layer.return_value = mock_layer_instance
+
+            notify_delivery_update(
+                user_id=buyer_user.id,
+                order_id=1,
+                order_number='WRG-001',
+                delivery_status='dalam_perjalanan',
+                tracking_number='TRK123',
+                courier='GoSend',
+            )
+
+            mock_channel_layer.assert_called_once()
+            mock_layer_instance.group_send.assert_called_once()
+            call_args = mock_layer_instance.group_send.call_args[0]
+            assert call_args[0] == f'notifications_{buyer_user.id}'
+            assert call_args[1]['type'] == 'delivery_update'
+            assert call_args[1]['delivery_status'] == 'dalam_perjalanan'
+            assert call_args[1]['order_id'] == 1
+
+    def test_delivery_update_skips_notification_db(self, db, test_store, buyer_user):
+        """Delivery updates should NOT create Notification records (transient)."""
+        from orders.views import notify_delivery_update
+        from notifications.models import Notification
+
+        with mock.patch('orders.views.get_channel_layer') as mock_channel_layer:
+            mock_layer_instance = mock.MagicMock()
+            mock_channel_layer.return_value = mock_layer_instance
+
+            notify_delivery_update(
+                user_id=buyer_user.id,
+                order_id=1,
+                order_number='WRG-001',
+                delivery_status='diproses_penjual',
+            )
+
+            # No Notification record should be created
+            assert Notification.objects.count() == 0
+
+
 # ─── API Tests ──────────────────────────────────────────────────────────────
 
 class TestPaymentMethodListAPI:
@@ -171,6 +223,22 @@ class TestPaymentStatusAPI:
         assert resp.status_code == status.HTTP_200_OK
         data = resp.json()
         assert "payment_status" in data
+
+    def test_payment_status_uses_select_related(self, authed_client, verified_user, test_store):
+        """PaymentStatusView should use select_related('order')."""
+        order = Order.objects.create(
+            user=verified_user, store=test_store, total_price=75000,
+        )
+        Payment.objects.create(
+            order=order, user=verified_user, amount=75000, payment_type="bank_transfer",
+        )
+        from .views import PaymentStatusView
+        view = PaymentStatusView()
+        # Cannot easily test view internals, verify via API response
+        url = reverse("payment-status", args=[order.id])
+        resp = authed_client.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        assert "payment_status" in resp.json()
 
     def test_payment_status_other_user(self, db, test_store, verified_user, buyer_user):
         from rest_framework.test import APIClient

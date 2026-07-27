@@ -1,0 +1,263 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}Delivery Monitoring - Warungio Admin{% endblock %}
+{% block page_title %}Monitoring Pengiriman{% endblock %}
+
+{% block extra_styles %}
+<style>
+.delivery-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
+.delivery-stat {
+    background:var(--admin-card-bg); border-radius:var(--admin-radius-lg);
+    border:1px solid var(--admin-border); padding:18px 20px;
+    box-shadow:var(--admin-shadow); text-align:center;
+}
+.delivery-stat .num { font-size:28px; font-weight:800; line-height:1.2; }
+.delivery-stat .lbl { font-size:12px; color:var(--admin-text-muted); margin-top:6px; }
+
+.filter-bar {
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom:18px;
+}
+.filter-bar select, .filter-bar input {
+    border:1px solid var(--admin-border); border-radius:10px;
+    padding:8px 14px; font-size:13px; background:white; font-family:inherit;
+    color:var(--admin-text);
+}
+.filter-bar select:focus, .filter-bar input:focus {
+    outline:none; border-color:var(--admin-primary);
+    box-shadow:0 0 0 3px rgba(34,197,94,0.12);
+}
+
+.delivery-table-wrap { overflow-x:auto; }
+
+.status-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;
+}
+.sb-green { background:#dcfce7; color:#166534; }
+.sb-blue { background:#dbeafe; color:#1d4ed8; }
+.sb-yellow { background:#fef9c3; color:#854d0e; }
+.sb-red { background:#fee2e2; color:#991b1b; }
+.sb-purple { background:#ede9fe; color:#6d28d9; }
+.sb-gray { background:#f1f5f9; color:#475569; }
+
+.pagination-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:16px; font-size:13px; color:var(--admin-text-muted);
+}
+.pagination-bar .page-btn {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:6px 14px; border-radius:8px; border:1px solid var(--admin-border);
+    background:white; font-size:12px; font-weight:600; cursor:pointer;
+    color:var(--admin-text); transition:all 0.2s; font-family:inherit;
+}
+.pagination-bar .page-btn:hover { border-color:var(--admin-primary); color:var(--admin-primary); }
+.pagination-bar .page-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+.loading-cell { text-align:center; padding:40px !important; color:var(--admin-text-muted); }
+
+@media (max-width:1024px) {
+    .delivery-stats { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:640px) {
+    .delivery-stats { grid-template-columns:repeat(2,1fr); }
+    .delivery-stat .num { font-size:22px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delivery-stats">
+    <div class="delivery-stat">
+        <div class="num" style="color:#22c55e" id="statActive">0</div>
+        <div class="lbl">Sedang Berlangsung</div>
+    </div>
+    <div class="delivery-stat">
+        <div class="num" style="color:#3b82f6" id="statCompleted">0</div>
+        <div class="lbl">Selesai</div>
+    </div>
+    <div class="delivery-stat">
+        <div class="num" style="color:#f59e0b" id="statPending">0</div>
+        <div class="lbl">Menunggu</div>
+    </div>
+    <div class="delivery-stat">
+        <div class="num" style="color:#ef4444" id="statCancelled">0</div>
+        <div class="lbl">Dibatalkan</div>
+    </div>
+    <div class="delivery-stat">
+        <div class="num" style="color:#7c3aed" id="statTotal">0</div>
+        <div class="lbl">Total Pengiriman</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Daftar Pengiriman</h3>
+        <div class="filter-bar">
+            <select id="filterStatus" onchange="loadDeliveries(1)">
+                <option value="">Semua Status</option>
+                <option value="menunggu_konfirmasi">Menunggu Konfirmasi</option>
+                <option value="diproses_penjual">Diproses Penjual</option>
+                <option value="menunggu_penjemputan">Menunggu Penjemputan</option>
+                <option value="kurir_menjemput">Kurir Menjemput</option>
+                <option value="dalam_perjalanan">Dalam Perjalanan</option>
+                <option value="pesanan_diterima">Pesanan Diterima</option>
+                <option value="dibatalkan">Dibatalkan</option>
+            </select>
+            <select id="filterCourier" onchange="loadDeliveries(1)">
+                <option value="">Semua Kurir</option>
+                <option value="grabexpress">GrabExpress</option>
+                <option value="gosend">GoSend</option>
+                <option value="mitra_pengiriman">Mitra Pengiriman</option>
+                <option value="antar_sendiri">Antar Sendiri</option>
+            </select>
+            <input type="text" id="filterSearch" placeholder="Cari pesanan, driver..." style="min-width:200px;">
+            <button class="btn btn-primary btn-sm" onclick="loadDeliveries(1)"><i class="fa-solid fa-magnifying-glass"></i> Cari</button>
+        </div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="delivery-table-wrap">
+            <table class="w-table" id="deliveryTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Order #</th>
+                        <th>Status</th>
+                        <th>Kurir</th>
+                        <th>Driver</th>
+                        <th>Kendaraan</th>
+                        <th>Lokasi Terakhir</th>
+                        <th>Dibuat</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="deliveryBody">
+                    <tr><td colspan="9" class="loading-cell">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body" style="border-top:1px solid var(--admin-border);">
+            <div class="pagination-bar">
+                <span id="paginationInfo">Menampilkan 0-0 dari 0</span>
+                <div style="display:flex;gap:8px;">
+                    <button class="page-btn" id="prevPage" onclick="loadDeliveries(currentPage - 1)"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button>
+                    <button class="page-btn" id="nextPage" onclick="loadDeliveries(currentPage + 1)">Selanjutnya <i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+const STATUS_MAP = {
+    'menunggu_konfirmasi': {label:'Menunggu Konfirmasi', cls:'sb-yellow'},
+    'diproses_penjual': {label:'Diproses Penjual', cls:'sb-blue'},
+    'menunggu_penjemputan': {label:'Menunggu Penjemputan', cls:'sb-yellow'},
+    'kurir_menjemput': {label:'Kurir Menjemput', cls:'sb-blue'},
+    'dalam_perjalanan': {label:'Dalam Perjalanan', cls:'sb-purple'},
+    'pesanan_diterima': {label:'Pesanan Diterima', cls:'sb-green'},
+    'dibatalkan': {label:'Dibatalkan', cls:'sb-red'},
+};
+
+const PROVIDER_LABELS = {
+    'grabexpress': 'GrabExpress', 'gosend': 'GoSend',
+    'mitra_pengiriman': 'Mitra Kirim', 'antar_sendiri': 'Antar Sendiri',
+    'maxim': 'Maxim',
+};
+
+let currentPage = 1;
+
+async function loadDeliveries(page) {
+    currentPage = page || 1;
+    const status = document.getElementById('filterStatus').value;
+    const courier = document.getElementById('filterCourier').value;
+    const search = document.getElementById('filterSearch').value;
+
+    try {
+        const token = localStorage.getItem('warungio_access_token');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        let url = '/api/monitoring/admin-deliveries/?page=' + currentPage;
+        if (status) url += '&status=' + encodeURIComponent(status);
+        if (courier) url += '&courier=' + encodeURIComponent(courier);
+        if (search) url += '&search=' + encodeURIComponent(search);
+
+        const resp = await fetch(url, { headers, credentials: 'include' });
+        if (!resp.ok) throw new Error('Failed to load deliveries');
+        const data = await resp.json();
+
+        // Update stats
+        document.getElementById('statActive').textContent = (data.stats?.active || 0).toLocaleString('id-ID');
+        document.getElementById('statCompleted').textContent = (data.stats?.completed || 0).toLocaleString('id-ID');
+        document.getElementById('statPending').textContent = (data.stats?.pending || 0).toLocaleString('id-ID');
+        document.getElementById('statCancelled').textContent = (data.stats?.cancelled || 0).toLocaleString('id-ID');
+        document.getElementById('statTotal').textContent = (data.stats?.total || 0).toLocaleString('id-ID');
+
+        // Render table
+        const tbody = document.getElementById('deliveryBody');
+        tbody.innerHTML = '';
+        if (!data.results || data.results.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">Tidak ada data pengiriman.</td></tr>';
+            document.getElementById('paginationInfo').textContent = '0 hasil';
+            return;
+        }
+
+        data.results.forEach(function(d) {
+            const st = STATUS_MAP[d.delivery_status] || {label:d.delivery_status, cls:'sb-gray'};
+            const prov = PROVIDER_LABELS[d.courier_provider] || d.courier_provider || '-';
+            const driverInfo = d.driver_name || d.courier_name || '-';
+            const vehicleInfo = [d.vehicle_type, d.vehicle_plate].filter(Boolean).join(' ') || '-';
+            const posInfo = (d.last_latitude && d.last_longitude)
+                ? parseFloat(d.last_latitude).toFixed(4) + ', ' + parseFloat(d.last_longitude).toFixed(4)
+                : '-';
+            const created = d.created_at ? new Date(d.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
+            const orderNum = d.order_number || '-';
+            const detailUrl = '/admin-panel/orders/';
+
+            tbody.innerHTML += '<tr>' +
+                '<td><span style="font-size:12px;color:var(--admin-text-muted)">#' + (d.id || '-') + '</span></td>' +
+                '<td><strong>' + orderNum + '</strong></td>' +
+                '<td><span class="status-badge ' + st.cls + '">' + st.label + '</span></td>' +
+                '<td>' + prov + '</td>' +
+                '<td>' + escapeHtml(driverInfo) + '</td>' +
+                '<td>' + escapeHtml(vehicleInfo) + '</td>' +
+                '<td style="font-size:11px;color:var(--admin-text-muted)">' + posInfo + '</td>' +
+                '<td style="font-size:11px;color:var(--admin-text-muted)">' + created + '</td>' +
+                '<td><a href="' + detailUrl + '" class="btn btn-sm btn-outline"><i class="fa-solid fa-eye"></i></a></td>' +
+                '</tr>';
+        });
+
+        // Pagination
+        const total = data.count || 0;
+        const pageSize = data.page_size || 20;
+        const totalPages = Math.ceil(total / pageSize) || 1;
+        const start = (currentPage - 1) * pageSize + 1;
+        const end = Math.min(start + pageSize - 1, total);
+        document.getElementById('paginationInfo').textContent = 'Menampilkan ' + start + '-' + end + ' dari ' + total;
+        document.getElementById('prevPage').disabled = currentPage <= 1;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+    } catch (err) {
+        console.warn('Admin delivery load error:', err);
+        document.getElementById('deliveryBody').innerHTML = '<tr><td colspan="9" class="loading-cell" style="color:#ef4444;">Gagal memuat data pengiriman. <button class="btn btn-sm btn-outline" onclick="loadDeliveries(1)">Coba Lagi</button></td></tr>';
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDeliveries(1);
+    if (window._deliveryRefresh) clearInterval(window._deliveryRefresh);
+    window._deliveryRefresh = setInterval(function() { loadDeliveries(currentPage); }, 30000);
+});
+</script>
+{% endblock %}

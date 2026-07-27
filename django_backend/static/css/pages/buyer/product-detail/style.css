@@ -411,6 +411,51 @@
   background: var(--color-surface);
 }
 
+/* ── Page Wrapper ── */
+.pd-page-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ── Reusable Section Card ── */
+.pd-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: 28px;
+  margin-top: 24px;
+}
+
+.pd-section-icon {
+  color: var(--color-brand);
+  font-size: 16px;
+}
+
+.pd-star-icon {
+  color: #f59e0b;
+  font-size: 16px;
+}
+
+/* ── Payment Methods Label ── */
+.pd-payment-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* ── Review Loading State ── */
+.pd-review-loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
 /* ── Section Headers ── */
 .pd-section-title {
   font-size: 18px;

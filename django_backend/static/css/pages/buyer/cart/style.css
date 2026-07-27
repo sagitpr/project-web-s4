@@ -1,6 +1,11 @@
 /* Warungio Buyer — Cart Page */
 /* Premium design system using tokens.css + shared.css */
 
+.cart-content-wrapper {
+  padding: 24px 0;
+  flex: 1;
+}
+
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 340px;

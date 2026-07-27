@@ -25,7 +25,7 @@ class StoreCategoryListView(generics.ListAPIView):
 
 class StoreListView(generics.ListAPIView):
     """List all active stores with search and filter."""
-    queryset = Store.objects.filter(status='active')
+    queryset = Store.objects.filter(status='active').select_related('user')
     serializer_class = StoreListSerializer
     permission_classes = (permissions.AllowAny,)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -36,7 +36,7 @@ class StoreListView(generics.ListAPIView):
 
 class StoreDetailView(generics.RetrieveAPIView):
     """Get store detail by ID or slug."""
-    queryset = Store.objects.all()
+    queryset = Store.objects.all().select_related('user')
     serializer_class = StoreDetailSerializer
     permission_classes = (permissions.AllowAny,)
     lookup_field = 'pk'
@@ -131,7 +131,7 @@ class StoreFollowersView(generics.ListAPIView):
         if getattr(self, "swagger_fake_view", False):
             return StoreFollower.objects.none()
 
-        return StoreFollower.objects.filter(store_id=self.kwargs['store_id'])
+        return StoreFollower.objects.filter(store_id=self.kwargs['store_id']).select_related('user')
 
 
 @extend_schema(exclude=True)

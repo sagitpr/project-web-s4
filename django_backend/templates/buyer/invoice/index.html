@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/invoice/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body>
+    <div class="page-shell">
+        {% include 'components/sidebar.html' %}
+
+        <main class="main-content-area">
+            {% include 'components/topbar.html' %}
+
+            <div class="buyer-content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header-section">
+                    <h1>Invoice</h1>
+                    <p class="page-subtitle">Detail transaksi dan bukti pembayaran pesanan kamu.</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="invoiceContainer">
+                    <div class="inv-loading-state" id="invLoading">
+                        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                        <p>Memuat invoice...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    WarungioAuthUI?.init({ syncBalance: false, syncCart: false });
+    </script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script>
+    (function () {
+      'use strict';
+
+      if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+        window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
+      var container = document.getElementById('invoiceContainer');
+      var loadingEl = document.getElementById('invLoading');
+
+      function formatIDR(amount) {
+        return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('id-ID', {
+          day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      }
+
+      function statusLabel(status) {
+        var map = {
+          pending: 'Menunggu',
+          paid: 'Lunas',
+          processed: 'Diproses',
+          shipped: 'Dikirim',
+          on_delivery: 'Dikirim',
+          completed: 'Selesai',
+          delivered: 'Selesai',
+          cancelled: 'Dibatalkan'
+        };
+        return map[status] || status;
+      }
+
+      async function loadInvoice() {
+        // Extract order ID from URL: /buyer/invoice/<pk>/
+        var pk = window.location.pathname.split('/').filter(Boolean).pop();
+        if (!pk || isNaN(pk)) {
+          if (loadingEl) loadingEl.style.display = 'none';
+          container.innerHTML = '<div class="inv-error-state"><i class="fa-solid fa-exclamation-triangle"></i><h3>Invoice Tidak Ditemukan</h3><p>ID pesanan tidak valid.</p></div>';
+          return;
+        }
+
+        try {
+          var order = await WarungioAPI.getOrder(parseInt(pk));
+          if (loadingEl) loadingEl.style.display = 'none';
+
+          if (!order) {
+            container.innerHTML = '<div class="inv-error-state"><i class="fa-solid fa-exclamation-triangle"></i><h3>Invoice Tidak Ditemukan</h3><p>Pesanan tidak ditemukan.</p></div>';
+            return;
+          }
+
+          renderInvoice(order);
+        } catch (err) {
+          console.warn('Failed to load invoice:', err);
+          if (loadingEl) loadingEl.style.display = 'none';
+          container.innerHTML = '<div class="inv-error-state"><i class="fa-solid fa-exclamation-triangle"></i><h3>Gagal Memuat Invoice</h3><p>Terjadi kesalahan. Silakan coba lagi.</p></div>';
+        }
+      }
+
+      function renderInvoice(order) {
+        var statusKey = (order.order_status || 'pending').toLowerCase();
+        var items = order.items || [];
+        var subtotal = 0;
+        items.forEach(function (item) {
+          subtotal += (item.price || 0) * (item.qty || 1);
+        });
+        var shippingCost = order.shipping_cost || 0;
+        var adminFee = order.admin_fee || 0;
+        var discount = order.discount || 0;
+        var total = order.total_price || (subtotal + shippingCost + adminFee - discount);
+
+        container.innerHTML = '' +
+          '<div class="invoice-paper" id="invoicePaper">' +
+            '<div class="inv-header">' +
+              '<div class="inv-header-left">' +
+                '<img src="{% static "images/Warungio L.png" %}" alt="Warungio" class="inv-logo" onerror="this.style.display=\'none\'">' +
+                '<div>' +
+                  '<h2 class="inv-brand">Warungio</h2>' +
+                  '<p class="inv-sub">Marketplace UMKM Indonesia</p>' +
+                '</div>' +
+              '</div>' +
+              '<div class="inv-header-right">' +
+                '<h1 class="inv-title">INVOICE</h1>' +
+                '<p class="inv-number">' + (order.order_number || 'INV/---') + '</p>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="inv-divider"></div>' +
+
+            '<div class="inv-status-row">' +
+              '<span class="inv-badge inv-badge-' + statusKey + '">' + statusLabel(statusKey) + '</span>' +
+              '<span class="inv-date">' + formatDate(order.created_at) + '</span>' +
+            '</div>' +
+
+            '<div class="inv-info-grid">' +
+              '<div class="inv-info-block">' +
+                '<h4>Toko</h4>' +
+                '<p class="inv-info-value">' + (order.store_name || '-') + '</p>' +
+              '</div>' +
+              '<div class="inv-info-block">' +
+                '<h4>Metode Pembayaran</h4>' +
+                '<p class="inv-info-value">' + (order.payment_method || 'Midtrans').toUpperCase() + '</p>' +
+              '</div>' +
+              '<div class="inv-info-block">' +
+                '<h4>Alamat Pengiriman</h4>' +
+                '<p class="inv-info-value">' + (order.delivery_address || '-') + '</p>' +
+              '</div>' +
+              '<div class="inv-info-block">' +
+                '<h4>Kurir</h4>' +
+                '<p class="inv-info-value">' + (order.courier_name || '-') + '</p>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="inv-divider"></div>' +
+
+            '<div class="inv-table-wrap">' +
+              '<table class="inv-table">' +
+                '<thead><tr><th>Produk</th><th>Harga</th><th>Jumlah</th><th>Subtotal</th></tr></thead>' +
+                '<tbody>' +
+                  (items.length ? items.map(function (item) {
+                    var itemSubtotal = (item.price || 0) * (item.qty || 1);
+                    return '<tr><td><span class="inv-product-name">' + (item.product_name || 'Produk') + '</span></td><td>' + formatIDR(item.price) + '</td><td>' + (item.qty || 0) + '</td><td><strong>' + formatIDR(itemSubtotal) + '</strong></td></tr>';
+                  }).join('') : '<tr><td colspan="4" class="inv-empty-cell">Tidak ada data produk</td></tr>') +
+                '</tbody>' +
+              '</table>' +
+            '</div>' +
+
+            '<div class="inv-divider"></div>' +
+
+            '<div class="inv-summary">' +
+              '<div class="inv-summary-row"><span>Subtotal</span><span>' + formatIDR(subtotal) + '</span></div>' +
+              '<div class="inv-summary-row"><span>Ongkos Kirim</span><span>' + formatIDR(shippingCost) + '</span></div>' +
+              (adminFee > 0 ? '<div class="inv-summary-row"><span>Biaya Admin</span><span>' + formatIDR(adminFee) + '</span></div>' : '') +
+              (discount > 0 ? '<div class="inv-summary-row inv-discount"><span>Diskon</span><span>-' + formatIDR(discount) + '</span></div>' : '') +
+              '<div class="inv-divider"></div>' +
+              '<div class="inv-summary-row inv-total"><span>Total</span><span>' + formatIDR(total) + '</span></div>' +
+            '</div>' +
+
+            '<div class="inv-divider"></div>' +
+
+            '<div class="inv-footer">' +
+              '<p class="inv-footer-text">Terima kasih telah berbelanja di Warungio.</p>' +
+              '<p class="inv-footer-sub">Invoice ini adalah bukti transaksi resmi.</p>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="inv-actions" style="margin-top:24px;text-align:center;">' +
+            '<button class="btn btn-primary" onclick="printInvoice()"><i class="fa-solid fa-print"></i> Cetak Invoice</button>' +
+            '<a href="/buyer/orders/" class="btn btn-secondary" style="margin-left:8px;"><i class="fa-solid fa-arrow-left"></i> Kembali ke Pesanan</a>' +
+          '</div>';
+      }
+
+      // ── Print ──
+      window.printInvoice = function () {
+        window.print();
+      };
+
+      // ── Init ──
+      document.addEventListener('DOMContentLoaded', loadInvoice);
+    })();
+    </script>
+</body>
+</html>

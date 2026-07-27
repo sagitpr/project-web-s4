@@ -604,4 +604,84 @@ class AdminDashboardStatsView(views.APIView):
         return Response(data)
 
 
+@extend_schema(exclude=True)
+class AdminDeliveryMonitorView(views.APIView):
+    """
+    Admin delivery monitoring — all deliveries across the marketplace.
+    Returns paginated deliveries with stats for the admin monitoring panel.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsAdmin)
+
+    def get(self, request):
+        from orders.models import Delivery, Order
+
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        page = max(1, page)
+        page_size = min(100, max(10, page_size))
+
+        qs = Delivery.objects.select_related(
+            'order', 'order__store', 'assigned_driver', 'shipping_method'
+        ).all()
+
+        # Filters
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(delivery_status=status_filter)
+
+        courier_filter = request.query_params.get('courier')
+        if courier_filter:
+            qs = qs.filter(courier_provider=courier_filter)
+
+        search = request.query_params.get('search', '')
+        if search:
+            qs = qs.filter(
+                Q(order__order_number__icontains=search) |
+                Q(driver_name__icontains=search) |
+                Q(courier_name__icontains=search)
+            )
+
+        # Stats
+        stats = {
+            'active': qs.filter(delivery_status__in=[
+                'menunggu_konfirmasi', 'diproses_penjual', 'menunggu_penjemputan',
+                'kurir_menjemput', 'dalam_perjalanan',
+            ]).count(),
+            'completed': qs.filter(delivery_status='pesanan_diterima').count(),
+            'pending': qs.filter(delivery_status='menunggu_konfirmasi').count(),
+            'cancelled': qs.filter(delivery_status='dibatalkan').count(),
+            'total': qs.count(),
+        }
+
+        # Paginate
+        total = qs.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        deliveries = qs.order_by('-created_at')[start:end]
+
+        return Response({
+            'count': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total + page_size - 1) // page_size if total > 0 else 1,
+            'stats': stats,
+            'results': [{
+                'id': d.id,
+                'order_number': d.order.order_number if d.order else '-',
+                'delivery_status': d.delivery_status,
+                'courier_provider': d.courier_provider,
+                'courier_name': d.courier_name,
+                'driver_name': d.driver_name,
+                'vehicle_type': d.vehicle_type,
+                'vehicle_plate': d.vehicle_plate,
+                'vehicle_brand': d.vehicle_brand,
+                'vehicle_color': d.vehicle_color,
+                'last_latitude': float(d.last_latitude) if d.last_latitude else None,
+                'last_longitude': float(d.last_longitude) if d.last_longitude else None,
+                'tracking_number': d.tracking_number,
+                'estimated_arrival': d.estimated_arrival.isoformat() if d.estimated_arrival else None,
+                'delivered_at': d.delivered_at.isoformat() if d.delivered_at else None,
+                'created_at': d.created_at.isoformat(),
+            } for d in deliveries]
+        })
 

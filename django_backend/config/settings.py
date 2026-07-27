@@ -681,9 +681,36 @@ GOOGLE_SITE_VERIFICATION = os.environ.get(
 BINDERBYTE_API_KEY = os.environ.get('BINDERBYTE_API_KEY', '')
 BINDERBYTE_BASE_URL = 'https://api.binderbyte.com/v1'
 
-# Set BINDERBYTE_API_KEY in your .env file to enable real tracking.
-# Get your API key at: https://binderbyte.com
-# When not set, the system falls back to mock tracking data for development.
+# =============================================================================
+# GRABEXPRESS — Delivery API Integration
+# =============================================================================
+GRAB_CLIENT_ID = os.environ.get('GRAB_CLIENT_ID', '')
+GRAB_CLIENT_SECRET = os.environ.get('GRAB_CLIENT_SECRET', '')
+GRAB_API_URL = os.environ.get('GRAB_API_URL', 'https://api.grab.com/v1')
+GRAB_SANDBOX_URL = os.environ.get('GRAB_SANDBOX_URL', 'https://partner-api.stg-myteksi.com/v1')
+GRAB_IS_SANDBOX = os.environ.get('GRAB_IS_SANDBOX', 'True').lower() == 'true'
+
+# GrabExpress service types (Instant, SameDay, etc.)
+# These are enabled/disabled based on Grab API availability
+GRAB_SERVICE_TYPES = os.environ.get('GRAB_SERVICE_TYPES', 'Instant,SameDay,Regular').split(',')
+
+# Grab webhook secret for payload signature verification
+GRAB_WEBHOOK_SECRET = os.environ.get('GRAB_WEBHOOK_SECRET', '')
+
+# =============================================================================
+# GOJEK (GOSEND) — Delivery API Integration
+# =============================================================================
+GOJEK_CLIENT_ID = os.environ.get('GOJEK_CLIENT_ID', '')
+GOJEK_CLIENT_SECRET = os.environ.get('GOJEK_CLIENT_SECRET', '')
+GOJEK_API_URL = os.environ.get('GOJEK_API_URL', 'https://api.gojek.com/v1')
+GOJEK_SANDBOX_URL = os.environ.get('GOJEK_SANDBOX_URL', 'https://api.gojek.com/sandbox/v1')
+GOJEK_IS_SANDBOX = os.environ.get('GOJEK_IS_SANDBOX', 'True').lower() == 'true'
+
+# GoSend service types
+GOJEK_SERVICE_TYPES = os.environ.get('GOJEK_SERVICE_TYPES', 'Instant,SameDay').split(',')
+
+# Gojek webhook secret for payload signature verification
+GOJEK_WEBHOOK_SECRET = os.environ.get('GOJEK_WEBHOOK_SECRET', '')
 
 # =============================================================================
 # OTP CONFIGURATION

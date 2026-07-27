@@ -57,6 +57,22 @@ class Product(models.Model):
     slug = models.SlugField(max_length=170, blank=True)
     description = models.TextField(blank=True, null=True, verbose_name='Deskripsi')
     
+    # SKU & Barcode
+    sku = models.CharField(max_length=100, blank=True, null=True, verbose_name='SKU')
+    barcode = models.CharField(max_length=100, blank=True, null=True, verbose_name='Barcode')
+    brand = models.CharField(max_length=100, blank=True, null=True, verbose_name='Merek')
+    
+    # Physical attributes
+    weight = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, verbose_name='Berat (gram)')
+    length = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, verbose_name='Panjang (cm)')
+    width = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, verbose_name='Lebar (cm)')
+    height = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, verbose_name='Tinggi (cm)')
+    volume = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Volume (liter)')
+    
+    # Expiry tracking
+    production_date = models.DateField(blank=True, null=True, verbose_name='Tanggal Produksi')
+    expired_date = models.DateField(blank=True, null=True, verbose_name='Tanggal Kedaluwarsa')
+    
     # Media
     product_photo = models.ImageField(
         upload_to='products/', blank=True, null=True,

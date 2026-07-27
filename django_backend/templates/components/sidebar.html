@@ -27,7 +27,7 @@
         <a href="{% url 'page-buyer-orders' %}" class="nav-link {% if '/orders/' in request.path %}active{% endif %}">
             <i class="fa-regular fa-receipt"></i>
             <span>Pesanan Saya</span>
-            <span class="nav-badge">2</span>
+            <span class="nav-badge" id="sidebarOrderBadge">1</span>
         </a>
         <div class="px-4 py-2 mt-4 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">Layanan</div>
         <a href="{% url 'page-buyer-dashboard' %}" class="nav-link {% if '/dashboard/' in request.path %}active{% endif %}">
@@ -63,7 +63,7 @@
             <i class="fa-solid fa-award points-icon"></i>
             <span>Warungio Points</span>
         </div>
-        <div class="points-value">1.250 Poin</div>
+        <div class="points-value" id="sidebarPointsValue">1.250 Poin</div>
         <a href="{% url 'page-buyer-dashboard' %}" class="points-link">Lihat Detail <i class="fa-solid fa-chevron-right"></i></a>
     </div>
 </aside>

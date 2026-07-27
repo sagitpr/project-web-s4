@@ -226,6 +226,8 @@ class OrderItem(models.Model):
 class Delivery(models.Model):
     """
     Delivery/tracking information for hyperlocal marketplace.
+    Supports: GrabExpress, GoSend, Mitra Pengiriman (internal), Antar Sendiri.
+
     Status flow:
     menunggu_konfirmasi -> diproses_penjual -> menunggu_penjemputan -> kurir_menjemput -> dalam_perjalanan -> pesanan_diterima
     OR menunggu_konfirmasi -> dibatalkan
@@ -240,6 +242,15 @@ class Delivery(models.Model):
         ('dibatalkan', 'Dibatalkan'),
     ]
 
+    # Provider type: grabexpress, gosend, mitra_pengiriman, antar_sendiri
+    PROVIDER_CHOICES = [
+        ('grabexpress', 'GrabExpress'),
+        ('gosend', 'GoSend'),
+        ('mitra_pengiriman', 'Mitra Pengiriman'),
+        ('antar_sendiri', 'Antar Sendiri'),
+        ('maxim', 'Maxim Delivery'),
+    ]
+
     order = models.OneToOneField(
         Order, on_delete=models.CASCADE, related_name='delivery'
     )
@@ -249,18 +260,43 @@ class Delivery(models.Model):
         verbose_name='Metode Pengiriman'
     )
 
+    # Provider
+    courier_provider = models.CharField(
+        max_length=30, choices=PROVIDER_CHOICES,
+        blank=True, null=True, verbose_name='Provider Kurir'
+    )
+
+    # Grab/Gojek delivery IDs
+    grab_delivery_id = models.CharField(max_length=100, blank=True, null=True, verbose_name='Grab Delivery ID')
+    gojek_order_id = models.CharField(max_length=100, blank=True, null=True, verbose_name='Gojek Order ID')
+    mitra_delivery_id = models.CharField(max_length=100, blank=True, null=True, verbose_name='Mitra Delivery ID')
+
     # Courier / Driver info
     courier_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nama Kurir')
     courier_phone = models.CharField(max_length=30, blank=True, null=True, verbose_name='Nomor Kurir')
     driver_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nama Driver')
     driver_phone = models.CharField(max_length=30, blank=True, null=True, verbose_name='Nomor Driver')
+    driver_photo_url = models.URLField(max_length=500, blank=True, null=True, verbose_name='Foto Driver')
+    driver_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True, verbose_name='Rating Driver')
     tracking_number = models.CharField(max_length=100, blank=True, null=True, verbose_name='Kode Tracking')
+    tracking_url = models.URLField(max_length=500, blank=True, null=True, verbose_name='URL Tracking')
     pickup_code = models.CharField(max_length=20, blank=True, null=True, verbose_name='Kode Penjemputan')
+
+    # Vehicle info
+    vehicle_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='Tipe Kendaraan')
+    vehicle_brand = models.CharField(max_length=50, blank=True, null=True, verbose_name='Merk Kendaraan')
+    vehicle_plate = models.CharField(max_length=20, blank=True, null=True, verbose_name='Nomor Polisi')
+    vehicle_color = models.CharField(max_length=30, blank=True, null=True, verbose_name='Warna Kendaraan')
 
     # Distance and Coordinates
     distance = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Jarak (km)')
     buyer_latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Latitude Pembeli')
     buyer_longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Longitude Pembeli')
+
+    # Live position (updated via API polling)
+    last_latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Latitude Terakhir')
+    last_longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Longitude Terakhir')
+    position_updated_at = models.DateTimeField(null=True, blank=True, verbose_name='Update Posisi')
 
     # Status
     delivery_status = models.CharField(
@@ -269,13 +305,33 @@ class Delivery(models.Model):
     )
     estimated_time = models.CharField(max_length=100, blank=True, null=True, verbose_name='Estimasi Tiba')
     estimated_pickup = models.CharField(max_length=100, blank=True, null=True, verbose_name='Estimasi Penjemputan')
+    estimated_arrival = models.DateTimeField(null=True, blank=True, verbose_name='Estimasi Sampai')
 
-    # Timestamps
-    driver_assigned_at = models.DateTimeField(null=True, blank=True)
-    picked_up_at = models.DateTimeField(null=True, blank=True)
-    delivered_at = models.DateTimeField(null=True, blank=True)
-    cancelled_at = models.DateTimeField(null=True, blank=True)
+    # Pickup & Delivery timestamps
+    driver_assigned_at = models.DateTimeField(null=True, blank=True, verbose_name='Driver Ditugaskan')
+    picked_up_at = models.DateTimeField(null=True, blank=True, verbose_name='Pickup')
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name='Terkirim')
+    cancelled_at = models.DateTimeField(null=True, blank=True, verbose_name='Dibatalkan')
 
+    # Proof of Delivery (POD)
+    pod_photo = models.ImageField(upload_to='pod/', blank=True, null=True, verbose_name='Foto POD')
+    pod_signature = models.TextField(blank=True, null=True, verbose_name='Tanda Tangan POD')
+    pod_signed_at = models.DateTimeField(null=True, blank=True, verbose_name='POD Ditandatangani')
+    pod_notes = models.TextField(blank=True, null=True, verbose_name='Catatan POD')
+
+    # QR code for pickup/delivery verification
+    qr_pickup_code = models.CharField(max_length=64, blank=True, null=True, verbose_name='QR Pickup')
+    qr_delivery_code = models.CharField(max_length=64, blank=True, null=True, verbose_name='QR Delivery')
+
+    # Internal driver assignment
+    assigned_driver = models.ForeignKey(
+        'MitraDriver', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='deliveries',
+        verbose_name='Driver Ditugaskan'
+    )
+
+    # Notes
+    delivery_notes = models.TextField(blank=True, null=True, verbose_name='Catatan Pengiriman')
     notes = models.TextField(blank=True, null=True, verbose_name='Catatan')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -397,6 +453,125 @@ class PackingSession(models.Model):
 
     def __str__(self):
         return f'Packing #{self.id} - Order #{self.order.order_number} ({self.get_status_display()})'
+
+
+# =============================================================================
+# MITRA PENGIRIMAN (Internal Delivery Fleet)
+# =============================================================================
+
+class MitraDriver(models.Model):
+    """
+    Driver internal untuk Mitra Pengiriman Warungio.
+    Seller dapat mengelola driver sendiri untuk pengiriman internal.
+    """
+    DRIVER_STATUS = [
+        ('available', 'Tersedia'),
+        ('on_delivery', 'Sedang Mengantar'),
+        ('offline', 'Offline'),
+        ('inactive', 'Nonaktif'),
+    ]
+
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.CASCADE,
+        related_name='mitra_drivers', verbose_name='Toko'
+    )
+    name = models.CharField(max_length=100, verbose_name='Nama Driver')
+    phone = models.CharField(max_length=20, verbose_name='Nomor HP')
+    email = models.EmailField(blank=True, null=True, verbose_name='Email')
+    photo = models.ImageField(upload_to='drivers/', blank=True, null=True, verbose_name='Foto Driver')
+
+    # Vehicle
+    vehicle_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='Tipe Kendaraan',
+                                     help_text='Motor, Mobil, Pickup, dll')
+    vehicle_brand = models.CharField(max_length=50, blank=True, null=True, verbose_name='Merk')
+    vehicle_plate = models.CharField(max_length=20, blank=True, null=True, verbose_name='Nomor Polisi')
+    vehicle_color = models.CharField(max_length=30, blank=True, null=True, verbose_name='Warna')
+
+    # Status & area
+    status = models.CharField(max_length=20, choices=DRIVER_STATUS, default='available', verbose_name='Status')
+    service_area = models.CharField(max_length=255, blank=True, null=True, verbose_name='Area Layanan',
+                                     help_text='Kecamatan atau radius yang dilayani')
+    max_distance_km = models.DecimalField(max_digits=5, decimal_places=1, default=10.0, verbose_name='Max Jarak (km)')
+    is_active = models.BooleanField(default=True, verbose_name='Aktif')
+
+    # Live position (updated by driver app or WebSocket)
+    current_latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    current_longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    position_updated_at = models.DateTimeField(null=True, blank=True)
+
+    # Stats
+    total_deliveries = models.IntegerField(default=0, verbose_name='Total Pengiriman')
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=5.0, verbose_name='Rating Rata-rata')
+
+    # Auth
+    auth_token = models.CharField(max_length=255, blank=True, null=True, verbose_name='Token Autentikasi')
+    fcm_token = models.CharField(max_length=500, blank=True, null=True, verbose_name='FCM Token')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'mitra_drivers'
+        verbose_name = 'Driver Mitra'
+        verbose_name_plural = 'Driver Mitra'
+        ordering = ['-total_deliveries']
+        indexes = [
+            models.Index(fields=['store', 'status']),
+            models.Index(fields=['store', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f'{self.name} - {self.store.store_name}'
+
+
+class MitraDeliveryTariff(models.Model):
+    """
+    Tarif pengiriman untuk Mitra Pengiriman.
+    Seller dapat mengatur tarif sendiri berdasarkan jarak.
+    """
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.CASCADE,
+        related_name='mitra_tariffs', verbose_name='Toko'
+    )
+    name = models.CharField(max_length=100, verbose_name='Nama Tarif', default='Standar')
+    base_fee = models.DecimalField(max_digits=10, decimal_places=2, default=5000, verbose_name='Biaya Dasar')
+    price_per_km = models.DecimalField(max_digits=10, decimal_places=2, default=2000, verbose_name='Biaya per Km')
+    free_km = models.DecimalField(max_digits=5, decimal_places=1, default=2.0, verbose_name='Km Gratis')
+    min_fee = models.DecimalField(max_digits=10, decimal_places=2, default=5000, verbose_name='Minimal Biaya')
+    max_fee = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name='Maksimal Biaya')
+    max_distance_km = models.DecimalField(max_digits=5, decimal_places=1, default=20.0, verbose_name='Max Jarak (km)')
+    is_active = models.BooleanField(default=True, verbose_name='Aktif')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'mitra_delivery_tariffs'
+        verbose_name = 'Tarif Mitra'
+        verbose_name_plural = 'Tarif Mitra'
+
+    def __str__(self):
+        return f'{self.name} - {self.store.store_name}'
+
+    def calculate_fee(self, distance_km: float) -> Decimal:
+        """Calculate delivery fee based on distance."""
+        from decimal import Decimal
+        dist = Decimal(str(max(distance_km, 0)))
+        free = Decimal(str(self.free_km))
+        per_km = Decimal(str(self.price_per_km))
+        base = Decimal(str(self.base_fee))
+
+        if dist <= free:
+            fee = base
+        else:
+            extra = dist - free
+            fee = base + (extra * per_km)
+
+        if fee < Decimal(str(self.min_fee)):
+            fee = Decimal(str(self.min_fee))
+
+        if self.max_fee and fee > Decimal(str(self.max_fee)):
+            fee = Decimal(str(self.max_fee))
+
+        return fee
 
     @property
     def progress_pct(self):

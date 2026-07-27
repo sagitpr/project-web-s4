@@ -40,7 +40,7 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Seluruh Produk</h1>
-                        <p class="text-sm text-slate-500 mt-1">Temukan berbagai kebutuhan harian terbaik dari warung terdekat.</p>
+                        <p class="text-sm text-slate-500 mt-1">Cari kebutuhan harian dari warung terdekat.</p>
                     </div>
                     <div class="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm">
                         <span class="font-extrabold text-primary text-lg" id="resultCountBadge">0</span>
@@ -107,13 +107,13 @@
                     <!-- Loaded dynamically via script -->
                 </div>
 
-                <!-- Loading skeleton placeholders -->
+                            <!-- Loading skeleton placeholders -->
                 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6" id="loadingSkeleton" style="display: none;">
-                    <div class="skeleton-product-card shimmer"></div>
-                    <div class="skeleton-product-card shimmer"></div>
-                    <div class="skeleton-product-card shimmer"></div>
-                    <div class="skeleton-product-card shimmer"></div>
-                    <div class="skeleton-product-card shimmer"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
                 </div>
 
                 <!-- Load More / Bottom Section -->
@@ -140,7 +140,7 @@
                     </div>
                     <div class="space-y-1">
                         <h3 class="text-lg font-bold text-slate-800">Belum ada produk</h3>
-                        <p class="text-sm text-slate-400">Coba ubah kata kunci atau filter pencarian Anda.</p>
+                        <p class="text-sm text-slate-400">Coba ubah kata kunci atau filter.</p>
                     </div>
                     <div class="flex justify-center gap-3">
                         <button class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-xs hover:scale-105 active:scale-95 transition-all" id="btnResetFilters">Reset Filter</button>
@@ -158,7 +158,7 @@
                             <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo">
                             <span class="logo-text">Warung<span class="logo-green">io</span></span>
                         </div>
-                        <p class="footer-tagline">Solusi belanja kebutuhan dapur harian segar dan sembako terlengkap langsung dari warung pilihan di sekitar Anda.</p>
+                        <p class="footer-tagline">Belanja kebutuhan harian langsung dari warung pilihan di sekitar Anda.</p>
                         <div class="footer-socials">
                             <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
                             <a href="#" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
@@ -211,347 +211,6 @@
         <!-- Loaded dynamically by main script or detail script if active -->
     </div>
 
-    <!-- Controller Script -->
-    <script>
-    (function() {
-        'use strict';
-        var currentPage = 1;
-        var currentCategory = 'all';
-        var currentSearch = '';
-        var currentSort = '';
-        var appendedMode = false;
-        var cache = { products: [], categories: [] };
-
-        function showToast(msg, type) {
-            var c = document.getElementById('toastContainer');
-            if (!c) { c = document.createElement('div'); c.id = 'toastContainer'; c.className = 'toast-container'; document.body.appendChild(c); }
-            var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
-            t.style.cssText = 'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);animation:slideIn .3s ease;';
-            if (type === 'success') t.style.background = '#dcfce7'; t.style.color = '#166534'; t.style.border = '1px solid #bbf7d0';
-            if (type === 'error') { t.style.background = '#fee2e2'; t.style.color = '#991b1b'; t.style.border = '1px solid #fecaca'; }
-            if (type === 'info' || !type) { t.style.background = '#dbeafe'; t.style.color = '#1e40af'; t.style.border = '1px solid #bfdbfe'; }
-            t.innerHTML = '<span>' + msg + '</span>'; c.appendChild(t);
-            setTimeout(function() { if (t.parentNode) t.remove(); }, 4000);
-        }
-
-        async function loadCategories() {
-            try {
-                if (window.WarungioAPI && window.WarungioAPI.getCategories) {
-                    var data = await WarungioAPI.getCategories();
-                    cache.categories = data.results || data || [];
-                }
-            } catch(e) { console.warn('Categories load error:', e); }
-            
-            var filterBar = document.getElementById('categoryFilter');
-            cache.categories.forEach(function(cat) {
-                var btn = document.createElement('button');
-                btn.className = 'px-5 py-2 bg-white border border-slate-200 text-slate-500 rounded-full font-bold text-xs whitespace-nowrap hover:border-primary hover:text-primary transition-all filter-btn';
-                btn.dataset.category = cat.id || cat.slug || cat.category_name;
-                btn.textContent = cat.name || cat.category_name;
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('#categoryFilter .filter-btn').forEach(function(b) {
-                        b.classList.remove('active', 'bg-primary', 'text-white');
-                        b.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
-                    });
-                    this.classList.add('active', 'bg-primary', 'text-white');
-                    this.classList.remove('bg-white', 'text-slate-500', 'border-slate-200');
-                    currentCategory = this.dataset.category;
-                    currentPage = 1;
-                    appendedMode = false;
-                    loadProducts();
-                });
-                filterBar.appendChild(btn);
-            });
-        }
-
-        // Additional trait filters checkboxes
-        const checkFreeShipping = document.getElementById('checkFreeShipping');
-        const checkCod = document.getElementById('checkCod');
-        const checkNear = document.getElementById('checkNear');
-        const checkFresh = document.getElementById('checkFresh');
-        const checkDiscount = document.getElementById('checkDiscount');
-        const checkVerified = document.getElementById('checkVerified');
-
-        function getCheckboxFilters() {
-            return {
-                is_free_shipping: checkFreeShipping ? checkFreeShipping.checked : false,
-                is_cod: checkCod ? checkCod.checked : false,
-                is_near: checkNear ? checkNear.checked : false,
-                is_fresh: checkFresh ? checkFresh.checked : false,
-                is_discount: checkDiscount ? checkDiscount.checked : false,
-                is_verified: checkVerified ? checkVerified.checked : false
-            };
-        }
-
-        // Register filter listeners
-        [checkFreeShipping, checkCod, checkNear, checkFresh, checkDiscount, checkVerified].forEach(el => {
-            if (el) {
-                el.addEventListener('change', () => {
-                    currentPage = 1;
-                    appendedMode = false;
-                    loadProducts();
-                });
-            }
-        });
-
-        async function loadProducts() {
-            var grid = document.getElementById('productGrid');
-            var skeleton = document.getElementById('loadingSkeleton');
-            var empty = document.getElementById('emptyState');
-            var loadMoreBtn = document.getElementById('loadMoreBtn');
-            var loader = document.getElementById('loader');
-            var resultCount = document.getElementById('resultCount');
-            var resultCountBadge = document.getElementById('resultCountBadge');
-
-            if (skeleton) skeleton.style.display = 'grid';
-            if (loader) loader.style.display = 'block';
-            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-            if (!appendedMode && grid) grid.innerHTML = '';
-            if (empty) empty.style.display = 'none';
-
-            try {
-                var params = { page: currentPage, page_size: 20 };
-                if (currentCategory !== 'all') params.category = currentCategory;
-                if (currentSearch) params.search = currentSearch;
-                if (currentSort) params.ordering = currentSort;
-
-                // Merge trait checkboxes into params
-                var extraFilters = getCheckboxFilters();
-                Object.assign(params, extraFilters);
-
-                var data = {};
-                if (window.WarungioAPI && window.WarungioAPI.getProducts) {
-                    data = await WarungioAPI.getProducts(params);
-                }
-                var products = data.results || data || [];
-                var count = data.count || products.length;
-
-                if (skeleton) skeleton.style.display = 'none';
-                if (loader) loader.style.display = 'none';
-
-                if (products.length === 0 && !appendedMode) {
-                    if (grid) grid.innerHTML = '';
-                    if (empty) empty.style.display = 'block';
-                    if (resultCount) resultCount.textContent = 'Menampilkan 0 produk';
-                    if (resultCountBadge) resultCountBadge.textContent = '0';
-                    return;
-                }
-
-                if (resultCount) resultCount.textContent = 'Menampilkan ' + (appendedMode ? grid.children.length + products.length : products.length) + ' dari ' + count + ' produk';
-                if (resultCountBadge) resultCountBadge.textContent = count.toLocaleString('id-ID');
-
-                var productsHtml = products.map(function(p) {
-                    var imgSrc = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
-                    var price = 'Rp ' + Number(p.price || 0).toLocaleString('id-ID');
-                    var oldPriceVal = p.old_price || (p.id % 2 === 1 ? Math.floor(p.price * 1.15) : null);
-                    var oldPriceStr = oldPriceVal ? 'Rp ' + oldPriceVal.toLocaleString('id-ID') : '';
-                    var discountPct = p.discount_pct || (p.id % 2 === 1 ? 15 : null);
-                    var discountBadge = discountPct ? '<span class="card-badge-discount">-' + discountPct + '%</span>' : '';
-                    var freshBadge = (p.is_fresh || p.category === 1 || p.category === 2 || p.category_name === 'Sayuran' || p.category_name === 'Buah-buahan') ? '<span class="card-badge-fresh">Segar</span>' : '';
-                    var rating = Number(p.rating_avg || 4.7).toFixed(1);
-                    var favClass = p.is_favorite ? 'is-fav' : '';
-                    var storeName = p.store_name || 'Warung Lokal';
-                    var productUrl = '/products/' + p.id + '/';
-
-                    return '<div class="produk-card" onclick="window.location.href=\'' + productUrl + '\'">' +
-                        '<div class="produk-image-wrapper">' +
-                            '<img src="' + imgSrc + '" alt="' + p.product_name + '" class="produk-img" loading="lazy" onerror="this.src=\'/static/images/paket-sayur.png\'">' +
-                            freshBadge + discountBadge +
-                            '<button class="btn-wishlist-product ' + favClass + '" onclick="event.stopPropagation();toggleFav(' + p.id + ', this)" title="Favorit">' +
-                                '<i class="fa-' + (favClass ? 'solid' : 'regular') + ' fa-heart"></i>' +
-                            '</button>' +
-                        '</div>' +
-                        '<div class="produk-info">' +
-                            '<span class="produk-category">' + (p.category_name || 'Kategori') + '</span>' +
-                            '<h4 class="produk-name">' + p.product_name + '</h4>' +
-                            '<span class="produk-store-name">' + storeName + '</span>' +
-                            '<div class="produk-rating-sold">' +
-                                '<i class="fa-solid fa-star"></i>' +
-                                '<span>' + rating + '</span>' +
-                                '<span class="meta-divider">•</span>' +
-                                '<span>Terjual ' + (p.sold_count || 10) + '+</span>' +
-                            '</div>' +
-                            '<div class="produk-price-row">' +
-                                '<div class="produk-price-box">' +
-                                    (oldPriceStr ? '<span class="price-old-strikethrough">' + oldPriceStr + '</span>' : '') +
-                                    '<span class="price-actual">' + price + ' <span class="price-unit">/ ' + (p.unit || 'pcs') + '</span></span>' +
-                                '</div>' +
-                                '<button class="btn-add-cart" onclick="event.stopPropagation();addToCart(' + p.id + ')"><i class="fa-solid fa-plus"></i></button>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
-                }).join('');
-
-                if (grid) {
-                    if (appendedMode) {
-                        grid.insertAdjacentHTML('beforeend', productsHtml);
-                    } else {
-                        grid.innerHTML = productsHtml;
-                    }
-                }
-
-                // Show load more if products match the threshold
-                var totalPages = Math.ceil(count / 20);
-                if (currentPage < totalPages && loadMoreBtn) {
-                    loadMoreBtn.style.display = 'block';
-                } else if (loadMoreBtn) {
-                    loadMoreBtn.style.display = 'none';
-                }
-
-            } catch(e) {
-                console.warn('Products load error:', e);
-                if (skeleton) skeleton.style.display = 'none';
-                if (loader) loader.style.display = 'none';
-                if (grid && !appendedMode) grid.innerHTML = '<div class="text-center py-12 text-slate-400 font-semibold flex flex-col items-center gap-4"><i class="fa-solid fa-circle-exclamation text-3xl"></i><span>Gagal memuat produk. Silakan coba kembali.</span><button class="px-6 py-2 bg-primary text-white font-bold rounded-xl text-xs" onclick="window.location.reload();">Retry</button></div>';
-            }
-        }
-
-        // Load More Event
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', () => {
-                currentPage++;
-                appendedMode = true;
-                loadProducts();
-            });
-        }
-
-        // Reset Filter Event
-        const btnResetFilters = document.getElementById('btnResetFilters');
-        if (btnResetFilters) {
-            btnResetFilters.addEventListener('click', () => {
-                document.getElementById('searchInput').value = '';
-                currentSearch = '';
-                document.getElementById('sortSelect').value = '';
-                currentSort = '';
-                
-                // Clear category active
-                document.querySelectorAll('#categoryFilter .filter-btn').forEach(function(b) {
-                    b.classList.remove('active', 'bg-primary', 'text-white');
-                    b.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
-                });
-                var allBtn = document.querySelector('#categoryFilter [data-category="all"]');
-                if (allBtn) {
-                    allBtn.classList.add('active', 'bg-primary', 'text-white');
-                    allBtn.classList.remove('bg-white', 'text-slate-500', 'border-slate-200');
-                }
-                currentCategory = 'all';
-
-                // Clear checkboxes
-                [checkFreeShipping, checkCod, checkNear, checkFresh, checkDiscount, checkVerified].forEach(el => {
-                    if (el) el.checked = false;
-                });
-
-                currentPage = 1;
-                appendedMode = false;
-                loadProducts();
-            });
-        }
-
-        window.toggleFav = async function(productId, btn) {
-            try {
-                if (window.WarungioAPI && window.WarungioAPI.toggleFavorite) {
-                    var result = await WarungioAPI.toggleFavorite(productId);
-                    if (result.is_favorite) {
-                        btn.classList.add('active');
-                        btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
-                        showToast('Ditambahkan ke favorit', 'success');
-                    } else {
-                        btn.classList.remove('active');
-                        btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
-                        showToast('Dihapus dari favorit', 'info');
-                    }
-                }
-            } catch(e) { showToast('Gagal mengubah favorit', 'error'); }
-        };
-
-        window.addToCart = async function(productId) {
-            try {
-                if (window.WarungioAPI && window.WarungioAPI.addToCart) {
-                    await WarungioAPI.addToCart({ product: productId, qty: 1 });
-                    showToast('Produk ditambahkan ke keranjang!', 'success');
-                    if (window.WarungioAPI && window.WarungioAPI.getCartCount) {
-                        var countData = await WarungioAPI.getCartCount();
-                        var badges = document.querySelectorAll('#cartBadgeHeader, .cart-badge');
-                        badges.forEach(function(b) { b.textContent = countData.count || 0; });
-                    }
-                }
-            } catch(e) { showToast('Gagal menambahkan ke keranjang', 'error'); }
-        };
-
-        // Debounced search input
-        var searchTimeout;
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(function() {
-                    currentSearch = searchInput.value;
-                    currentPage = 1;
-                    appendedMode = false;
-                    loadProducts();
-                }, 300);
-            });
-        }
-
-        // Sorting dropdown changes
-        const sortSelect = document.getElementById('sortSelect');
-        if (sortSelect) {
-            sortSelect.addEventListener('change', function() {
-                currentSort = this.value;
-                currentPage = 1;
-                appendedMode = false;
-                loadProducts();
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                var authActions = document.getElementById('authHeaderActions');
-                var guestActions = document.getElementById('guestHeaderActions');
-                if (authActions) authActions.style.display = 'flex';
-                if (guestActions) guestActions.style.display = 'none';
-                
-                // Fetch dynamic cart count
-                if (window.WarungioAPI && window.WarungioAPI.getCartCount) {
-                    WarungioAPI.getCartCount().then(function(res) {
-                        var badges = document.querySelectorAll('#cartBadgeHeader, .cart-badge');
-                        badges.forEach(function(b) { b.textContent = res.count || 0; });
-                    }).catch(function() {});
-                }
-            }
-
-            var profileBox = document.getElementById('profileBox');
-            var dropdown = document.getElementById('dropdownMenu');
-            if (profileBox && dropdown) {
-                profileBox.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
-                document.addEventListener('click', function() { dropdown.classList.remove('show'); });
-            }
-
-            var logoutBtn = document.getElementById('btnLogout');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) { e.preventDefault(); if (window.WarungioAuth) { WarungioAuth.logout(); } });
-            }
-
-            // Load categories and initial products
-            loadCategories().then(function() {
-                loadProducts();
-            });
-
-            // Update user details
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated() && window.WarungioAPI) {
-                WarungioAPI.checkAuth().then(function(u) {
-                    if (u && u.user) {
-                        var nameEl = document.getElementById('userName');
-                        if (nameEl) nameEl.textContent = 'Hai, ' + (u.user.full_name ? u.user.full_name.split(' ')[0] : 'User');
-                    }
-                }).catch(function() {});
-            }
-        });
-    })();
-    </script>
-
     <!-- Global Layout scripts -->
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
@@ -559,5 +218,8 @@
     <script src="{% static 'js/utils/toast.js' %}"></script>
     <script src="{% static 'js/utils/websocket.js' %}"></script>
     <script src="{% static 'js/script.js' %}"></script>
+
+    <!-- Products Catalog Script (consolidated) -->
+    <script src="{% static 'js/pages/buyer/products/script.js' %}"></script>
 </body>
 </html>

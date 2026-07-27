@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Pengiriman - Warungio Seller</title>
-<meta name="description" content="Pantau status pengiriman pesanan Anda secara real-time di Warungio Seller Dashboard.">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
 <link rel="stylesheet" href="{% static 'css/components.css' %}">
@@ -40,39 +39,36 @@
         <div class="sidebar-ads">
             <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
             <p><b>Kelola pengiriman lebih mudah!</b></p>
-            <p class="desc">Pantau status pengiriman pesanan dan kurir secara real-time.</p>
+            <p class="desc">Atur driver, tarif, dan pantau pengiriman secara real-time.</p>
             <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
             <button class="btn-learn">Pelajari Selengkapnya</button>
         </div>
     </aside>
 
-    <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <!-- Header -->
         <header class="dashboard-header">
             <div class="top-header">
                 <div class="header-left">
                     <button class="hamburger-btn" id="mobileToggle"><i class="fa-solid fa-bars"></i></button>
                     <div class="shop-status-block">
                         <div class="shop-name-row">
-                            <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                            <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
                             <span class="badge-active">Aktif</span>
                         </div>
-                        <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                     </div>
                 </div>
                 <div class="header-right">
                     <div id="notif-container" class="notif-wrap"></div>
                     <div class="profile-block">
                         <div class="avatar-wrap">
-                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img" id="profileAvatar">
                             <div class="status-online"></div>
                         </div>
                         <div class="profile-info">
-                            <span class="profile-name">Bu Sari</span>
+                            <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                             <span class="profile-role">Seller</span>
                         </div>
                         <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -81,130 +77,203 @@
             </div>
         </header>
 
-        <!-- Page Title -->
         <section class="page-title-section">
             <div class="page-title-left">
                 <h1>Pengiriman</h1>
-                <p class="page-subtitle">Pantau status pengiriman pesanan Anda secara real-time.</p>
+                <p class="page-subtitle">Pantau pengiriman, kelola driver mitra, dan atur tarif pengiriman internal.</p>
             </div>
         </section>
 
-        <!-- Stats Cards -->
-        <section class="stats-row" id="statsRow">
-            <div class="stat-card">
-                <div class="icon-box green"><i class="fa-solid fa-truck"></i></div>
-                <div class="stat-info">
-                    <span class="stat-label">Dalam Perjalanan</span>
-                    <h3 class="stat-value" id="countOnDelivery">0</h3>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="icon-box purple"><i class="fa-solid fa-clock"></i></div>
-                <div class="stat-info">
-                    <span class="stat-label">Menunggu Penjemputan</span>
-                    <h3 class="stat-value" id="countPickup">0</h3>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="icon-box blue"><i class="fa-solid fa-box-open"></i></div>
-                <div class="stat-info">
-                    <span class="stat-label">Siap Dikirim</span>
-                    <h3 class="stat-value" id="countReady">0</h3>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="icon-box orange"><i class="fa-solid fa-circle-check"></i></div>
-                <div class="stat-info">
-                    <span class="stat-label">Telah Sampai</span>
-                    <h3 class="stat-value" id="countCompleted">0</h3>
-                </div>
-            </div>
-        </section>
+        <!-- Tab Navigation -->
+        <div class="tab-bar" id="mitraTabBar">
+            <button class="tab-btn active" data-tab="deliveries"><i class="fa-solid fa-truck"></i> Pengiriman</button>
+            <button class="tab-btn" data-tab="drivers"><i class="fa-solid fa-users"></i> Driver Mitra</button>
+            <button class="tab-btn" data-tab="tariffs"><i class="fa-solid fa-money-bill-wave"></i> Tarif</button>
+        </div>
 
-        <!-- Filter Bar -->
-        <div class="card filter-card" style="padding:12px 16px;margin-bottom:16px;">
-            <div class="filter-bar" id="filterBar">
-                <button class="filter-btn active" data-filter="all">Semua</button>
-                <button class="filter-btn" data-filter="menunggu_konfirmasi">Menunggu</button>
-                <button class="filter-btn" data-filter="diproses_penjual">Diproses</button>
-                <button class="filter-btn" data-filter="menunggu_penjemputan">Jemput</button>
-                <button class="filter-btn" data-filter="kurir_menjemput">Kurir Jemput</button>
-                <button class="filter-btn" data-filter="dalam_perjalanan">Dikirim</button>
-                <button class="filter-btn" data-filter="pesanan_diterima">Sampai</button>
-                <button class="filter-btn" data-filter="dibatalkan">Batal</button>
+        <!-- ============ TAB 1: DELIVERY TRACKING ============ -->
+        <div class="tab-content active" id="tabDeliveries">
+            <section class="stats-row" id="statsRow">
+                <div class="stat-card"><div class="icon-box green"><i class="fa-solid fa-truck"></i></div><div class="stat-info"><span class="stat-label">Dalam Perjalanan</span><h3 class="stat-value" id="countOnDelivery">0</h3></div></div>
+                <div class="stat-card"><div class="icon-box purple"><i class="fa-solid fa-clock"></i></div><div class="stat-info"><span class="stat-label">Menunggu Jemput</span><h3 class="stat-value" id="countPickup">0</h3></div></div>
+                <div class="stat-card"><div class="icon-box blue"><i class="fa-solid fa-box-open"></i></div><div class="stat-info"><span class="stat-label">Siap Dikirim</span><h3 class="stat-value" id="countReady">0</h3></div></div>
+                <div class="stat-card"><div class="icon-box orange"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><span class="stat-label">Telah Sampai</span><h3 class="stat-value" id="countCompleted">0</h3></div></div>
+            </section>
+            <div class="card filter-card" style="padding:12px 16px;margin-bottom:16px;">
+                <div class="filter-bar" id="filterBar">
+                    <button class="filter-btn active" data-filter="all">Semua</button>
+                    <button class="filter-btn" data-filter="menunggu_konfirmasi">Menunggu</button>
+                    <button class="filter-btn" data-filter="diproses_penjual">Diproses</button>
+                    <button class="filter-btn" data-filter="menunggu_penjemputan">Jemput</button>
+                    <button class="filter-btn" data-filter="kurir_menjemput">Kurir Jemput</button>
+                    <button class="filter-btn" data-filter="dalam_perjalanan">Dikirim</button>
+                    <button class="filter-btn" data-filter="pesanan_diterima">Sampai</button>
+                    <button class="filter-btn" data-filter="dibatalkan">Batal</button>
+                </div>
+            </div>
+            <div class="card table-card">
+                <div class="table-responsive">
+                    <table class="w-table">
+                        <thead><tr><th>No. Pesanan</th><th>Pembeli</th><th>Kurir</th><th>Status</th><th>Driver</th><th>Estimasi</th><th style="text-align:right;">Aksi</th></tr></thead>
+                        <tbody id="deliveryTableBody"><tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-truck"></i><p>Memuat data pengiriman...</p></div></td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Delivery Table -->
-        <div class="card table-card">
-            <div class="table-responsive">
-                <table class="w-table">
-                    <thead>
-                        <tr>
-                            <th>No. Pesanan</th>
-                            <th>Pembeli</th>
-                            <th>Kurir</th>
-                            <th>Status</th>
-                            <th>Driver</th>
-                            <th>Estimasi</th>
-                            <th style="text-align:right;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="deliveryTableBody">
-                        <tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-truck"></i><p>Memuat data pengiriman...</p></div></td></tr>
-                    </tbody>
-                </table>
+        <!-- ============ TAB 2: DRIVER MANAGEMENT ============ -->
+        <div class="tab-content" id="tabDrivers">
+            <div class="section-actions">
+                <h2>Driver Mitra Pengiriman</h2>
+                <button class="btn btn-primary" id="addDriverBtn"><i class="fa-solid fa-plus"></i> Tambah Driver</button>
+            </div>
+            <div class="card table-card">
+                <div class="table-responsive">
+                    <table class="w-table">
+                        <thead><tr><th>Nama</th><th>No. HP</th><th>Kendaraan</th><th>Nopol</th><th>Area Layanan</th><th>Status</th><th>Pengiriman</th><th style="text-align:right;">Aksi</th></tr></thead>
+                        <tbody id="driverTableBody"><tr><td colspan="8" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-users"></i><p>Belum ada driver. Klik "Tambah Driver" untuk menambahkan.</p></div></td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Footer -->
+        <!-- ============ TAB 3: TARIFF MANAGEMENT ============ -->
+        <div class="tab-content" id="tabTariffs">
+            <div class="section-actions">
+                <h2>Tarif Pengiriman Mitra</h2>
+                <button class="btn btn-primary" id="addTariffBtn"><i class="fa-solid fa-plus"></i> Tambah Tarif</button>
+            </div>
+            <div class="card table-card">
+                <div class="table-responsive">
+                    <table class="w-table">
+                        <thead><tr><th>Nama Tarif</th><th>Biaya Dasar</th><th>Per Km</th><th>Km Gratis</th><th>Min Fee</th><th>Max Fee</th><th>Max Jarak</th><th>Status</th><th style="text-align:right;">Aksi</th></tr></thead>
+                        <tbody id="tariffTableBody"><tr><td colspan="9" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-money-bill-wave"></i><p>Belum ada tarif. Klik "Tambah Tarif" untuk membuat tarif baru.</p></div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MODAL: Add/Edit Driver ============ -->
+        <div class="modal-overlay" id="driverModal" style="display:none;">
+            <div class="modal-dialog" style="max-width:500px;">
+                <div class="modal-header">
+                    <h3 id="driverModalTitle">Tambah Driver</h3>
+                    <button class="modal-close" id="driverModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="driverForm">
+                        <input type="hidden" id="driverId" value="">
+                        <div class="form-group"><label>Nama Driver</label><input type="text" id="driverName" class="form-control" required placeholder="Nama lengkap driver"></div>
+                        <div class="form-group"><label>No. HP</label><input type="text" id="driverPhone" class="form-control" required placeholder="08123456789"></div>
+                        <div class="form-group"><label>Email (opsional)</label><input type="email" id="driverEmail" class="form-control" placeholder="driver@email.com"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Tipe Kendaraan</label><select id="driverVehicleType" class="form-control"><option value="Motor">Motor</option><option value="Mobil">Mobil</option><option value="Pickup">Pickup</option><option value="Truck">Truck</option></select></div>
+                            <div class="form-group"><label>Merk</label><input type="text" id="driverVehicleBrand" class="form-control" placeholder="Honda, Toyota, dll"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Nomor Polisi</label><input type="text" id="driverVehiclePlate" class="form-control" placeholder="B 1234 ABC"></div>
+                            <div class="form-group"><label>Warna</label><input type="text" id="driverVehicleColor" class="form-control" placeholder="Hitam"></div>
+                        </div>
+                        <div class="form-group"><label>Area Layanan</label><input type="text" id="driverServiceArea" class="form-control" placeholder="Kecamatan yang dilayani"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Max Jarak (km)</label><input type="number" id="driverMaxDistance" class="form-control" value="10" min="1" step="0.5"></div>
+                            <div class="form-group"><label>Status</label><select id="driverStatus" class="form-control"><option value="available">Tersedia</option><option value="offline">Offline</option><option value="inactive">Nonaktif</option></select></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost modal-btn" id="driverModalCancel">Batal</button>
+                    <button class="btn btn-primary modal-btn" id="driverModalSave">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MODAL: Add/Edit Tariff ============ -->
+        <div class="modal-overlay" id="tariffModal" style="display:none;">
+            <div class="modal-dialog" style="max-width:500px;">
+                <div class="modal-header">
+                    <h3 id="tariffModalTitle">Tambah Tarif</h3>
+                    <button class="modal-close" id="tariffModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="tariffForm">
+                        <input type="hidden" id="tariffId" value="">
+                        <div class="form-group"><label>Nama Tarif</label><input type="text" id="tariffName" class="form-control" required placeholder="Contoh: Standar, Ekonomi"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Biaya Dasar (Rp)</label><input type="number" id="tariffBaseFee" class="form-control" value="5000" min="0"></div>
+                            <div class="form-group"><label>Per Km (Rp)</label><input type="number" id="tariffPerKm" class="form-control" value="2000" min="0"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Km Gratis</label><input type="number" id="tariffFreeKm" class="form-control" value="2" min="0" step="0.5"></div>
+                            <div class="form-group"><label>Min Fee (Rp)</label><input type="number" id="tariffMinFee" class="form-control" value="5000" min="0"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Max Fee (Rp, opsional)</label><input type="number" id="tariffMaxFee" class="form-control" placeholder="Kosongkan jika tidak ada"></div>
+                            <div class="form-group"><label>Max Jarak (km)</label><input type="number" id="tariffMaxDistance" class="form-control" value="20" min="1" step="0.5"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="tariffIsActive" checked>
+                                <span>Aktif</span>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost modal-btn" id="tariffModalCancel">Batal</button>
+                    <button class="btn btn-primary modal-btn" id="tariffModalSave">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MODAL: Assign Driver ============ -->
+        <div class="modal-overlay" id="assignDriverModal" style="display:none;">
+            <div class="modal-dialog" style="max-width:420px;">
+                <div class="modal-header">
+                    <h3>Tugaskan Driver</h3>
+                    <button class="modal-close" id="assignModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="color:var(--color-text-secondary);margin-bottom:12px;font-size:14px;">Tugaskan driver untuk pengiriman <strong id="assignOrderNumber">#</strong></p>
+                    <input type="hidden" id="assignDeliveryId" value="">
+                    <div class="form-group">
+                        <label>Pilih Driver</label>
+                        <select id="assignDriverSelect" class="form-control">
+                            <option value="">-- Pilih Driver --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost modal-btn" id="assignModalCancel">Batal</button>
+                    <button class="btn btn-primary modal-btn" id="assignModalConfirm">Tugaskan</button>
+                </div>
+            </div>
+        </div>
+
         <footer class="seller-footer">
             <div class="footer-top">
                 <div class="footer-brand">
-                    <div class="footer-logo">
-                        <img src="{% static 'images/Warungio L.png' %}" alt="Warungio">
-                        <span>Warungio</span>
-                    </div>
-                    <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.<br>Belanja mudah, harga bersahabat!</p>
+                    <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                    <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
                     <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Layanan</h4>
-                    <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a>
-                    <a href="{% url 'page-metode-pembayaran' %}">Metode Pembayaran</a>
-                    <a href="{% url 'home' %}">Pengiriman</a>
-                    <a href="{% url 'home' %}">Promo & Diskon</a>
-                    <a href="{% url 'page-bantuan' %}">Pusat Bantuan</a>
+                    <a href="{% url 'page-cara-belanja' %}">Cara Belanja</a><a href="{% url 'page-metode-pembayaran' %}">Metode Pembayaran</a><a href="{% url 'home' %}">Pengiriman</a><a href="{% url 'home' %}">Promo & Diskon</a><a href="{% url 'page-bantuan' %}">Pusat Bantuan</a>
                 </div>
                 <div class="footer-links">
                     <h4>Tentang Warungio</h4>
-                    <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a>
-                    <a href="#">Karir</a>
-                    <a href="{% url 'page-blog' %}">Blog</a>
-                    <a href="{% url 'home' %}">Mitra Warung</a>
-                    <a href="{% url 'page-kontak-kami' %}">Kontak Kami</a>
+                    <a href="{% url 'page-tentang-kami' %}">Tentang Kami</a><a href="#">Karir</a><a href="{% url 'page-blog' %}">Blog</a><a href="{% url 'home' %}">Mitra Warung</a><a href="{% url 'page-kontak-kami' %}">Kontak Kami</a>
                 </div>
                 <div class="footer-links">
                     <h4>Untuk Seller</h4>
-                    <a href="{% url 'page-panduan-seller' %}">Panduan Seller</a>
-                    <a href="{% url 'page-tips-sukses' %}">Tips Sukses</a>
-                    <a href="{% url 'page-komunitas' %}">Komunitas Seller</a>
-                    <a href="{% url 'page-kebijakan' %}">Kebijakan & Ketentuan</a>
+                    <a href="{% url 'page-panduan-seller' %}">Panduan Seller</a><a href="{% url 'page-tips-sukses' %}">Tips Sukses</a><a href="{% url 'page-komunitas' %}">Komunitas Seller</a><a href="{% url 'page-kebijakan' %}">Kebijakan & Ketentuan</a>
                 </div>
                 <div class="footer-download">
                     <h4>Download Aplikasi Warungio</h4>
                     <p>Belanja lebih mudah melalui aplikasi</p>
-                    <div class="store-badges">
-                        <img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'">
-                        <img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'">
-                    </div>
-                    <div class="social-links">
-                        <span>Ikuti kami di</span>
-                        <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
-                        <a href="#"><i class="fa-brands fa-tiktok"></i></a>
-                    </div>
+                    <div class="store-badges"><img src="{% static 'images/google-play-badge.png' %}" alt="Google Play" onerror="this.style.display='none'"><img src="{% static 'images/app-store-badge.png' %}" alt="App Store" onerror="this.style.display='none'"></div>
+                    <div class="social-links"><span>Ikuti kami di</span><a href="#"><i class="fa-brands fa-facebook-f"></i></a><a href="#"><i class="fa-brands fa-instagram"></i></a><a href="#"><i class="fa-brands fa-youtube"></i></a><a href="#"><i class="fa-brands fa-tiktok"></i></a></div>
                 </div>
             </div>
         </footer>
@@ -218,63 +287,7 @@
 <script src="{% static 'js/utils/notifications.js' %}"></script>
 <script src="{% static 'js/nav.js' %}"></script>
 <script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
-<script>
-/* ── Pengiriman (Shipping) Page Logic ── */
-const LABELS={
-    menunggu_konfirmasi:'Menunggu Konfirmasi',diproses_penjual:'Diproses Penjual',
-    menunggu_penjemputan:'Menunggu Jemput',kurir_menjemput:'Kurir Menjemput',
-    dalam_perjalanan:'Dalam Perjalanan',pesanan_diterima:'Pesanan Diterima',dibatalkan:'Dibatalkan'
-};
-const BADGES={
-    menunggu_konfirmasi:'badge-waiting',diproses_penjual:'badge-processing',
-    menunggu_penjemputan:'badge-pickup',kurir_menjemput:'badge-pickup',
-    dalam_perjalanan:'badge-delivery',pesanan_diterima:'badge-completed',dibatalkan:'badge-cancelled'
-};
-let currentFilter='all';let allDeliveries=[];
-async function loadDeliveries(){
-    try{
-        const orders=await WarungioAPI.getSellerOrders();
-        allDeliveries=orders.results||orders||[];
-        renderDeliveries();
-    }catch(e){
-        document.getElementById('deliveryTableBody').innerHTML='<tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-truck"></i><p>Gagal memuat data. Pastikan Anda sudah login.</p></div></td></tr>';
-    }
-}
-function renderDeliveries(){
-    const filtered=currentFilter==='all'?allDeliveries:allDeliveries.filter(o=>o.order_status===currentFilter);
-    const stats={menunggu_konfirmasi:0,diproses_penjual:0,menunggu_penjemputan:0,kurir_menjemput:0,dalam_perjalanan:0,pesanan_diterima:0,dibatalkan:0};
-    allDeliveries.forEach(o=>{if(stats[o.order_status]!==undefined)stats[o.order_status]++});
-    document.getElementById('countOnDelivery').textContent=stats.dalam_perjalanan||0;
-    document.getElementById('countPickup').textContent=stats.menunggu_penjemputan||0;
-    document.getElementById('countReady').textContent=(stats.diproses_penjual||0)+(stats.kurir_menjemput||0);
-    document.getElementById('countCompleted').textContent=stats.pesanan_diterima||0;
-    if(!filtered.length){
-        document.getElementById('deliveryTableBody').innerHTML='<tr><td colspan="7" class="empty-cell"><div class="empty-state"><i class="fa-solid fa-box-open"></i><p>Tidak ada data pengiriman.</p></div></td></tr>';
-        return;
-    }
-    document.getElementById('deliveryTableBody').innerHTML=filtered.map(o=>{
-        const status=o.order_status||'menunggu_konfirmasi';
-        var detailUrl = "{% url 'page-seller-order-detail' %}?id=" + o.id;
-        return '<tr><td><strong>'+o.order_number+'</strong></td>' +
-            '<td>'+(o.recipient_name||'-')+'</td>' +
-            '<td>'+(o.courier||'GoSend')+'</td>' +
-            '<td><span class="badge '+(BADGES[status]||'badge-waiting')+'">'+(LABELS[status]||status)+'</span></td>' +
-            '<td>'+(o.delivery?.driver_name||'-')+'</td>' +
-            '<td>'+(o.delivery?.estimated_time||'-')+'</td>' +
-            '<td style="text-align:right"><a href="'+detailUrl+'" class="btn btn-sm btn-ghost">Detail</a></td></tr>';
-    }).join('');
-}
-/* ── Filter Buttons ── */
-document.querySelectorAll('.filter-btn').forEach(btn=>{
-    btn.addEventListener('click',function(){
-        document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-        this.classList.add('active');
-        currentFilter=this.dataset.filter;
-        renderDeliveries();
-    });
-});
-document.addEventListener('DOMContentLoaded',loadDeliveries);
-document.addEventListener('warungio:auth_ready',loadDeliveries);
-</script>
+<script>window.WarungioOrderDetailURL = '{% url "page-seller-order-detail" %}';</script>
+<script src="{% static 'js/pages/seller/pengiriman/script.js' %}"></script>
 </body>
 </html>

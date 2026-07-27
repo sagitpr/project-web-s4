@@ -17,13 +17,12 @@
     <div class="page-shell">
       {% include 'components/sidebar.html' %}
 
-      <main class="main-content-area" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+      <main class="main-content-area">
         {% include 'components/topbar.html' %}
 
-        <div style="padding: 24px 0; flex:1;">
+        <div class="checkout-content-wrapper">
           <div class="page-header-section">
-            <h1>Checkout</h1>
-            <p class="page-subtitle">Konfirmasi alamat, pesanan, dan pilih metode pembayaran.</p>
+            <h1>Checkout</h1>                            <p class="page-subtitle">Periksa alamat, pesanan, dan pilih metode bayar.</p>
           </div>
 
           <div class="checkout-layout">
@@ -124,64 +123,87 @@
     (function() {
         'use strict';
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
+                var authActions = document.getElementById('authHeaderActions');
+                var guestActions = document.getElementById('guestHeaderActions');
+                if (authActions) authActions.style.display = 'flex';
+                if (guestActions) guestActions.style.display = 'none';
+                var u = window.WarungioAuth.getUser();
                 if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
+                    var nameEl = document.getElementById('userName');
+                    if (nameEl) nameEl.textContent = 'Hai, ' + u.full_name.split(' ')[0];
                 }
             } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
+                var authActions = document.getElementById('authHeaderActions');
+                var guestActions = document.getElementById('guestHeaderActions');
+                if (authActions) authActions.style.display = 'none';
+                if (guestActions) guestActions.style.display = 'flex';
             }
-            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); }
-            });
+            var logoutBtn = document.getElementById('btnLogout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.WarungioAuth) { WarungioAuth.logout(); }
+                });
+            }
 
             await loadCheckoutData();
         });
 
         async function loadCheckoutData() {
             try {
-                const cartData = await WarungioAPI.getCart();
-                const items = cartData.results || cartData.items || cartData || [];
-                
-                const checkoutItems = document.getElementById('checkoutItems');
-                const summaryItems = document.getElementById('checkoutSummaryItems');
-                let total = 0;
+                var cartData = await WarungioAPI.getCart();
+                var items = cartData.results || cartData.items || cartData || [];
+
+                var checkoutItems = document.getElementById('checkoutItems');
+                var summaryItems = document.getElementById('checkoutSummaryItems');
+                var total = 0;
 
                 if (!items || items.length === 0) {
-                    window.location.href = '{% url "page-buyer-cart" %}';
+                    window.location.href = '/buyer/cart/';
                     return;
                 }
 
-                checkoutItems.innerHTML = items.map(function(item) {
-                    const name = item.product_name || item.product?.name || 'Produk';
-                    const price = item.product_price || item.price || item.product?.price || 0;
-                    const qty = item.quantity || item.qty || 1;
-                    const img = item.product_photo_url || item.product?.product_photo_url || '/static/images/paket-sayur.png';
-                    const subtotal = price * qty;
-                    total += subtotal;
-                    return '<div class="co-item">' +
-                        '<img src="' + img + '" alt="' + name + '" class="co-item-img" onerror="this.src=\'{% static "images/paket-sayur.png" %}\'">' +
-                        '<div class="co-item-info"><h4>' + name + '</h4><p>' + qty + ' x Rp ' + Number(price).toLocaleString('id-ID') + '</p></div>' +
-                        '<strong class="co-item-total">Rp ' + Number(subtotal).toLocaleString('id-ID') + '</strong>' +
-                    '</div>';
-                }).join('');
+                if (checkoutItems) {
+                    checkoutItems.innerHTML = items.map(function(item) {
+                        var name = item.product_name || item.product?.name || 'Produk';
+                        var price = item.product_price || item.price || item.product?.price || 0;
+                        var qty = item.quantity || item.qty || 1;
+                        var img = item.product_photo_url || item.product?.product_photo_url || '/static/images/paket-sayur.png';
+                        var subtotal = price * qty;
+                        total += subtotal;
+                        return '<div class="co-item">' +
+                            '<img src="' + img + '" alt="' + name + '" class="co-item-img" onerror="this.onerror=null;this.src=\'/static/images/paket-sayur.png\'">' +
+                            '<div class="co-item-info"><h4>' + name + '</h4><p>' + qty + ' x Rp ' + Number(price).toLocaleString('id-ID') + '</p></div>' +
+                            '<strong class="co-item-total">Rp ' + Number(subtotal).toLocaleString('id-ID') + '</strong>' +
+                        '</div>';
+                    }).join('');
+                }
 
-                summaryItems.innerHTML = items.map(function(item) {
-                    const name = item.product_name || item.product?.name || 'Produk';
-                    const qty = item.quantity || item.qty || 1;
-                    return '<div class="summary-item-row"><span>' + name + ' × ' + qty + '</span></div>';
-                }).join('');
+                if (summaryItems) {
+                    summaryItems.innerHTML = items.map(function(item) {
+                        var name = item.product_name || item.product?.name || 'Produk';
+                        var qty = item.quantity || item.qty || 1;
+                        return '<div class="summary-item-row"><span>' + name + ' ' + qty + 'pcs</span></div>';
+                    }).join('');
+                }
 
-                const shipping = total >= 20000 ? 0 : 8000;
-                document.getElementById('coSubtotal').textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
-                document.getElementById('coShipping').textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
-                document.getElementById('coTotal').textContent = 'Rp ' + Number(total + shipping).toLocaleString('id-ID');
+                var shipping = total >= 20000 ? 0 : 8000;
+                var elSubtotal = document.getElementById('coSubtotal');
+                var elShipping = document.getElementById('coShipping');
+                var elTotal = document.getElementById('coTotal');
+
+                if (elSubtotal) elSubtotal.textContent = 'Rp ' + Number(total).toLocaleString('id-ID');
+                if (elShipping) elShipping.textContent = shipping === 0 ? 'Gratis' : 'Rp ' + shipping.toLocaleString('id-ID');
+                if (elTotal) elTotal.textContent = 'Rp ' + Number(total + shipping).toLocaleString('id-ID');
 
             } catch(e) {
                 console.warn('Checkout load error:', e);
@@ -189,19 +211,21 @@
         }
 
         window.placeOrder = async function() {
-            const btn = document.getElementById('btnPlaceOrder');
+            var btn = document.getElementById('btnPlaceOrder');
+            if (!btn) return;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Memproses...';
 
             try {
-                const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'cod';
-                const result = await WarungioAPI.checkout({ payment_method: paymentMethod });
+                var paymentRadio = document.querySelector('input[name="payment"]:checked');
+                var paymentMethod = paymentRadio ? paymentRadio.value : 'cod';
+                var result = await WarungioAPI.checkout({ payment_method: paymentMethod });
                 if (result && result.order_id) {
                     window.location.href = '/buyer/order-success/?id=' + result.order_id;
                 } else if (result && result.url) {
                     window.location.href = result.url;
                 } else {
-                    window.location.href = '{% url "page-buyer-orders" %}';
+                    window.location.href = '/buyer/orders/';
                 }
             } catch(e) {
                 alert('Gagal membuat pesanan: ' + (e.message || 'Terjadi kesalahan'));
@@ -214,7 +238,8 @@
             opt.addEventListener('click', function() {
                 document.querySelectorAll('.payment-option').forEach(function(o) { o.classList.remove('active'); });
                 this.classList.add('active');
-                this.querySelector('input[type="radio"]').checked = true;
+                var radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
             });
         });
     })();

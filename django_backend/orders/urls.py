@@ -43,4 +43,28 @@ urlpatterns = [
 
     # POS Offline (Multi-item Scan & Pay)
     path('pos/checkout/', views.POSOfflineCreateView.as_view(), name='pos-checkout'),
+
+    # Delivery Webhook (unified: GrabExpress, GoSend, Mitra)
+    path('webhooks/<str:provider>/', views.DeliveryWebhookView.as_view(), name='delivery-webhook'),
+    path('webhooks/grabexpress/', views.DeliveryWebhookView.as_view(), {'provider': 'grabexpress'}, name='webhook-grabexpress'),
+    path('webhooks/gosend/', views.DeliveryWebhookView.as_view(), {'provider': 'gosend'}, name='webhook-gosend'),
+    path('webhooks/mitra/', views.DeliveryWebhookView.as_view(), {'provider': 'mitra_pengiriman'}, name='webhook-mitra'),
+    path('webhooks/delivery/', views.DeliveryWebhookView.as_view(), name='delivery-webhook-infer'),
+
+    path('delivery/rate/', views.DeliveryRateView.as_view(), name='delivery-rate'),
+    path('delivery/auto-book/', views.DeliveryAutoBookView.as_view(), name='delivery-auto-book'),
+    path('<int:order_id>/delivery/position/', views.DeliveryLivePositionView.as_view(), name='delivery-position'),
+
+    # Mitra Pengiriman (Internal Fleet)
+    path('mitra/drivers/', views.MitraDriverListCreateView.as_view(), name='mitra-drivers'),
+    path('mitra/drivers/<int:pk>/', views.MitraDriverDetailView.as_view(), name='mitra-driver-detail'),
+    path('mitra/tariffs/', views.MitraTariffListCreateView.as_view(), name='mitra-tariffs'),
+    path('mitra/assign/', views.MitraAssignDriverView.as_view(), name='mitra-assign'),
+
+    # QR Code generation & verification (Pickup & Delivery)
+    path('<int:order_id>/delivery/qr/generate/', views.GenerateDeliveryQRView.as_view(), name='delivery-qr-generate'),
+    path('<int:order_id>/delivery/qr/verify/', views.VerifyDeliveryQRView.as_view(), name='delivery-qr-verify'),
+
+    # Proof of Delivery (POD) Upload
+    path('<int:order_id>/delivery/pod/', views.DeliveryPODUploadView.as_view(), name='delivery-pod-upload'),
 ]

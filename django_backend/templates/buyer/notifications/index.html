@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifikasi - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/notifications/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body>
+    <div class="page-shell">
+        {% include 'components/sidebar.html' %}
+
+        <main class="main-content-area">
+            {% include 'components/topbar.html' %}
+
+            <div class="buyer-content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header-section">
+                    <h1>Notifikasi</h1>
+                    <p class="page-subtitle">Pemberitahuan terbaru seputar pesanan, promo, dan aktivitas akun kamu.</p>
+                </div>
+
+                <!-- Filter Tabs + Mark All Read -->
+                <div class="notif-header-row">
+                    <div class="notif-tabs" id="notifTabs">
+                        <button class="notif-tab active" data-type="all">Semua</button>
+                        <button class="notif-tab" data-type="order">Pesanan</button>
+                        <button class="notif-tab" data-type="payment">Pembayaran</button>
+                        <button class="notif-tab" data-type="chat">Chat</button>
+                        <button class="notif-tab" data-type="promo">Promo</button>
+                        <button class="notif-tab" data-type="system">Sistem</button>
+                    </div>
+                    <div class="notif-actions">
+                        <span class="notif-unread-badge" id="unreadCountBadge">0</span>
+                        <button class="btn-mark-read" id="btnMarkAllRead">
+                            <i class="fa-regular fa-check-double"></i> Tandai Dibaca
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notification List -->
+                <div id="notificationList">
+                    <div class="notif-loading-state" id="loadingState">
+                        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                        <p>Memuat notifikasi...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    WarungioAuthUI?.init({ syncBalance: false, syncCart: false });
+    </script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/pages/buyer/notifications/script.js' %}"></script>
+</body>
+</html>

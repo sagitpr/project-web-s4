@@ -324,6 +324,75 @@
     return auth.api('/payments/wallet/transactions/' + (qs ? '?' + qs : ''));
   };
 
+  // ---- Delivery (Grab/Gojek/Mitra Courier) ----
+  RealAPI.getDeliveryRate = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/delivery/rate/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getDeliveryPosition = function (orderId) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/position/');
+  };
+  RealAPI.autoBookCourier = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/delivery/auto-book/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getMitraDrivers = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/orders/mitra/drivers/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.createMitraDriver = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateMitraDriver = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.deleteMitraDriver = function (id) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/' + id + '/', { method: 'DELETE' });
+  };
+  RealAPI.getMitraTariffs = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/');
+  };
+  RealAPI.createMitraTariff = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateMitraTariff = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.assignMitraDriver = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/assign/', { method: 'POST', body: JSON.stringify(data) });
+  };
+
+  // ---- Proof of Delivery (POD) ----
+  RealAPI.uploadPOD = function (orderId, formData) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.apiUpload('/orders/' + orderId + '/delivery/pod/', formData, 'POST');
+  };
+
+  // ---- QR Delivery Codes ----
+  RealAPI.generateDeliveryQR = function (orderId, codeType) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/qr/generate/', {
+      method: 'POST',
+      body: JSON.stringify({ code_type: codeType || 'delivery' }),
+    });
+  };
+  RealAPI.verifyDeliveryQR = function (orderId, qrCode, codeType) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/qr/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ qr_code: qrCode, code_type: codeType || 'delivery' }),
+    });
+  };
+
   // ---- Finance (withdrawal, bank accounts) ----
   RealAPI.getFinanceSummary = function (days) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });

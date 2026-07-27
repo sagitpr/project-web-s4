@@ -287,6 +287,18 @@
 .chat-action-btn.send { background: #16a34a; color: white; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15); }
 .chat-action-btn.send:hover { background: #15803d; }
 
+/* ── Auth Actions ── */
+.auth-actions-flex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.guest-actions-flex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* ── Empty States ── */
 .empty-chat-state {
   display: flex;

@@ -39,7 +39,7 @@
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Dompet Saya</h1>
-                        <p class="text-sm text-slate-500 mt-1">Kelola saldo dan riwayat transaksi dompet digital Anda dengan mudah.</p>
+                        <p class="text-sm text-slate-500 mt-1">Cek saldo dan riwayat transaksi dompet Anda.</p>
                     </div>
                     <div class="flex items-center gap-1.5 px-4 py-2 bg-[#16A34A]/10 border border-[#16A34A]/20 rounded-full">
                         <span class="w-1.5 h-1.5 bg-[#16A34A] rounded-full animate-pulse"></span>
@@ -182,7 +182,7 @@
     </div>
 
     <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;"></div>
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
@@ -202,29 +202,11 @@
 
         function showToast(msg, type) {
             const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type || 'info'} flex items-center gap-2 p-4 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300`;
-            
-            if (type === 'success') {
-                toast.style.background = '#dcfce7';
-                toast.style.color = '#166534';
-                toast.style.borderColor = '#bbf7d0';
-            } else if (type === 'error') {
-                toast.style.background = '#fee2e2';
-                toast.style.color = '#991b1b';
-                toast.style.borderColor = '#fecaca';
-            } else {
-                toast.style.background = '#dbeafe';
-                toast.style.color = '#1e40af';
-                toast.style.borderColor = '#bfdbfe';
-            }
-
-            toast.innerHTML = `<span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            var t = document.createElement('div');
+            t.className = 'toast toast-' + (type || 'info');
+            t.innerHTML = '<span>' + msg + '</span>';
+            container.appendChild(t);
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 4000);
         }
 
         window.toggleDrawer = function(isOpen) {

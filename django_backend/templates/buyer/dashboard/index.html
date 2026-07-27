@@ -22,7 +22,6 @@
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
     <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}">
 </head>
   <body>
     <header class="header">
@@ -38,16 +37,15 @@
           <a href="/buyer/orders/">Pesanan</a>
           <a href="/bantuan/">Bantuan</a>
         </nav>
-        <div class="auth-buttons" id="authButtons" style="display: flex; align-items: center; gap: 12px;">
-          <!-- Dropdown menu wrapper (authHeaderActions for auth-ui.js) -->
-          <div class="profile-dropdown-wrapper" id="authHeaderActions" style="display: none; align-items: center; gap: 12px;">
-            <div class="profile-box" id="profileBox" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <div class="profile-info" style="text-align: right;">
-                <p id="userName" style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text);">Hai, User</p>
-                <span class="member-badge" id="userRoleBadge" style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--primary-soft); color: var(--primary-dark);">Member</span>
+        <div class="header-actions" id="authButtons">
+          <div class="header-profile-wrap" id="authHeaderActions">
+            <div class="profile-box" id="profileBox">
+              <div class="profile-info">
+                <p id="userName">Hai, User</p>
+                <span class="member-badge" id="userRoleBadge">Member</span>
               </div>
-              <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
-              <svg viewBox="0 0 24 24" width="16" height="16" style="margin-left: 4px;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="dropdown-menu-custom" id="dropdownMenu">
               <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
@@ -56,7 +54,7 @@
               <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
             </div>
           </div>
-          <div id="guestHeaderActions" style="display: flex; gap: 8px; align-items: center;">
+          <div id="guestHeaderActions">
             <a href="/auth/login/" class="btn-masuk" id="loginBtnNav">Masuk</a>
             <a href="/auth/register/" class="btn-daftar" id="registerBtnNav">Daftar</a>
           </div>
@@ -74,7 +72,7 @@
           <img src="{% static 'images/av-siti.png' %}" alt="Avatar" class="greeting-avatar" id="dashAvatar" />
           <div class="greeting-text">
             <h1 id="dashGreeting">Selamat datang!</h1>
-            <p>Kelola aktivitas belanja kamu dari sini.</p>
+            <p>Pantau belanja dan pesanan kamu.</p>
             <span class="greeting-badge" id="dashMemberBadge">Member</span>
           </div>
         </div>
@@ -128,18 +126,18 @@
       <div class="orders-grid" id="recentOrdersGrid">
         <div class="empty-state-dash">
           <img src="{% static 'images/list.png' %}" alt="No orders" />
-          <p>Belum ada pesanan. <a href="/home/" style="color:var(--primary);font-weight:600;">Mulai belanja →</a></p>
+          <p>Belum ada pesanan. <a href="/home/" class="dash-link-primary">Mulai belanja →</a></p>
         </div>
       </div>
 
       <!-- Active Promos -->
       <div class="section-row"><h2>Promo Aktif</h2><a href="/home/">Lihat Semua →</a></div>
       <div class="promo-grid-dash" id="promoDashGrid">
-        <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;" id="promoDashLoading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat promo...</div>
+        <div class="promo-loading-state" id="promoDashLoading"><i class="fa-solid fa-spinner fa-spin"></i> Memuat promo...</div>
       </div>
     </div>
 
-    <footer class="footer" style="background: var(--surface); border-top: 1px solid var(--border); padding: 24px 20px; text-align: center; font-size: 12px; color: var(--muted);">
+    <footer class="dashboard-footer">
       <p>© 2026 Warungio. Hak Cipta Dilindungi.</p>
     </footer>
 
@@ -148,117 +146,6 @@
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-      'use strict';
-
-      // ── Initialize shared Auth UI (handles profile dropdown, logout, auth/guest toggle, user name) ──
-      WarungioAuthUI.init({ syncBalance: false, syncCart: false });
-
-      document.addEventListener('DOMContentLoaded', async function() {
-        // Auth guard — redirect unauthenticated or unverified users
-        if (window.WarungioAuth && window.WarungioAuth.requireVerified && window.WarungioAuth.requireVerified()) {
-          return;
-        }
-
-        // Load user profile data for Dashboard-specific elements
-        try {
-          var u = await WarungioAPI.checkAuth();
-          if (u && u.user) {
-            var greetEl = document.getElementById('dashGreeting');
-            var avatarEl = document.getElementById('dashAvatar');
-            var balanceEl = document.getElementById('dashWalletBalance');
-            var badgeEl = document.getElementById('dashMemberBadge');
-            
-            // Topbar elements handled by WarungioAuthUI.init() — only set Dashboard-specific elements
-            var displayName = u.user.full_name || u.user.email;
-            if (greetEl) greetEl.textContent = 'Halo, ' + displayName + '!';
-            if (balanceEl) balanceEl.textContent = 'Rp ' + Number(u.user.wallet_balance ?? 0).toLocaleString('id-ID');
-            if (u.user.profile_photo && avatarEl) avatarEl.src = u.user.profile_photo;
-            if (badgeEl) {
-              var role = u.user.role || 'buyer';
-              badgeEl.textContent = role === 'seller' ? 'Penjual' : 'Member';
-            }
-          }
-        } catch (err) { console.warn('Profile load error:', err); }
-
-        // Load order status counts
-        try {
-          var allOrders = await WarungioAPI.getOrders({ page: 1, pageSize: 100 });
-          var orders = allOrders.results || [];
-          var counts = { pending: 0, processed: 0, shipped: 0, completed: 0 };
-          orders.forEach(function(o) {
-            var s = (o.order_status || '').toLowerCase();
-            if (s === 'pending') counts.pending++;
-            else if (s === 'paid' || s === 'processed') counts.processed++;
-            else if (s === 'shipped' || s === 'on_delivery') counts.shipped++;
-            else if (s === 'completed' || s === 'delivered') counts.completed++;
-          });
-          document.getElementById('statPending').textContent = counts.pending;
-          document.getElementById('statProcessed').textContent = counts.processed;
-          document.getElementById('statShipped').textContent = counts.shipped;
-          document.getElementById('statCompleted').textContent = counts.completed;
-
-          // Render recent orders (last 6)
-          var recentGrid = document.getElementById('recentOrdersGrid');
-          if (recentGrid && orders.length > 0) {
-            var STATUS_LABELS = { pending: 'Menunggu', paid: 'Dibayar', processed: 'Diproses', shipped: 'Dikirim', on_delivery: 'Dikirim', completed: 'Selesai', delivered: 'Selesai', cancelled: 'Dibatalkan', refunded: 'Dikembalikan' };
-            recentGrid.innerHTML = '';
-            orders.slice(0, 6).forEach(function(o) {
-              var statusKey = (o.order_status || 'pending').toLowerCase();
-              var statusLabel = STATUS_LABELS[statusKey] || statusKey;
-              var badgeClass = statusKey === 'on_delivery' ? 'shipped' : statusKey;
-              var itemNames = o.items ? o.items.map(function(i) { return i.product_name || 'Produk'; }).join(', ') : '-';
-              if (itemNames.length > 55) itemNames = itemNames.substring(0, 52) + '...';
-
-              var card = document.createElement('div');
-              card.className = 'order-card-dash';
-              card.innerHTML =
-                '<div class="order-card-top">' +
-                  '<div>' +
-                    '<div class="order-card-number">' + (o.order_number || '#' + o.id) + '</div>' +
-                    (o.store_name ? '<div class="order-card-store">' + o.store_name + '</div>' : '') +
-                  '</div>' +
-                  '<span class="order-card-badge ' + badgeClass + '">' + statusLabel + '</span>' +
-                '</div>' +
-                '<div class="order-card-body">' + itemNames + '</div>' +
-                '<div class="order-card-footer">' +
-                  '<span class="order-card-total">Rp ' + Number(o.total_price || 0).toLocaleString('id-ID') + '</span>' +
-                  '<a href="/buyer/order-detail/?id=' + o.id + '" class="order-card-link">Lihat Detail →</a>' +
-                '</div>';
-              recentGrid.appendChild(card);
-            });
-          }
-        } catch (err) { console.warn('Orders load error:', err); }
-
-        // ── Load active promos ──
-        try {
-          var promoData = await WarungioAPI.getPromos();
-          var promos = promoData.results || promoData || [];
-          var promoGrid = document.getElementById('promoDashGrid');
-          var promoLoading = document.getElementById('promoDashLoading');
-          if (promoGrid) {
-            if (promoLoading) promoLoading.style.display = 'none';
-            if (promos.length > 0) {
-              promoGrid.innerHTML = '';
-              promos.slice(0, 4).forEach(function(promo) {
-                var card = document.createElement('div');
-                card.className = 'promo-card-dash';
-                var discDesc = promo.discount_percent ? 'Diskon ' + promo.discount_percent + '%' : (promo.discount_amount ? 'Diskon Rp ' + Number(promo.discount_amount).toLocaleString('id-ID') : promo.promo_name);
-                card.innerHTML = '<img src="{% static 'images/discount.png' %}" alt="Promo" /><div><h4>' + promo.promo_name + '</h4><p>' + discDesc + '</p></div>';
-                promoGrid.appendChild(card);
-              });
-            } else {
-              promoGrid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada promo aktif</div>';
-            }
-          }
-        } catch (err) {
-          console.warn('Promos load error:', err);
-          var promoGrid = document.getElementById('promoDashGrid');
-          if (promoGrid) promoGrid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada promo aktif</div>';
-        }
-      });
-    })();
-    </script>
+    <script src="{% static 'js/pages/buyer/dashboard/script.js' %}"></script>
   </body>
 </html>

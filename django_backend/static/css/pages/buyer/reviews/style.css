@@ -1,58 +1,42 @@
 /* Warungio Buyer — Reviews Page */
-/* Premium design system matching home/style.css */
-
-/* ── Base Layout (from removed inline styles) ── */
-.app-shell{display:flex;min-height:100vh}
-.sidebar{width:var(--sidebar-width);background:var(--color-surface);border-right:1px solid var(--color-border);position:fixed;top:0;left:0;bottom:0;z-index:90;display:flex;flex-direction:column;overflow-y:auto}
-.brand-panel{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--color-border)}
-.brand-logo{height:28px}
-.brand-panel h1{font-size:16px;font-weight:800;margin:0}
-.brand-panel p{font-size:10px;color:var(--color-text-tertiary);margin:0;text-transform:uppercase}
-.nav-menu{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}
-.nav-menu a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:600;color:var(--color-text-secondary);text-decoration:none}
-.nav-menu a:hover{background:var(--color-gray-100)}
-.nav-menu a.active{background:var(--color-brand);color:white}
-.content-area{flex:1;margin-left:var(--sidebar-width);padding:24px}
+/* Page uses shared.css + components.css. Only page-specific styles below. */
 
 /* ── Page Header ── */
-.page-header h1{font-size:24px;font-weight:800;margin:0}
-.page-subtitle{font-size:14px;color:var(--color-text-tertiary);margin:4px 0 24px}
+.page-header-section h1 { font-size: 24px; font-weight: 800; margin: 0; }
+.page-subtitle { font-size: 14px; color: var(--color-text-tertiary); margin: 4px 0 24px; }
 
 /* ── Stats Row ── */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:20px;border:1px solid var(--color-border);text-align:center}
-.stat-card .num{font-size:28px;font-weight:800}
-.stat-card .lbl{font-size:12px;color:var(--color-text-tertiary);margin-top:4px}
-.stars{color:#f59e0b;font-size:14px}
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--color-surface); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--color-border); text-align: center; }
+.stat-card .num { font-size: 28px; font-weight: 800; }
+.stat-card .lbl { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
+.stars { color: #f59e0b; font-size: 14px; }
 
 /* ── Filter Bar ── */
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
-.filter-btn.active{background:var(--color-brand);color:white;border-color:var(--color-brand)}
-.filter-btn:hover{border-color:var(--color-brand);color:var(--color-brand)}
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
+.filter-btn.active { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+.filter-btn:hover { border-color: var(--color-brand); color: var(--color-brand); }
 
 /* ── Review Card ── */
-.review-card{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);padding:16px 20px;margin-bottom:12px;display:flex;gap:16px;align-items:flex-start}
-.review-card .product-img{width:56px;height:56px;border-radius:var(--radius-md);background:var(--color-gray-100);object-fit:cover;flex-shrink:0}
-.review-card .review-body{flex:1;min-width:0}
-.review-card .product-name{font-weight:700;font-size:14px;margin:0 0 4px}
-.review-card .review-date{font-size:11px;color:var(--color-text-tertiary);margin:0 0 6px}
-.review-card .review-text{font-size:13px;color:var(--color-text-secondary);margin:6px 0 0;line-height:1.5}
-.review-card .review-actions{display:flex;gap:8px;margin-top:8px}
-.review-card .review-actions a{font-size:12px;color:var(--color-brand);text-decoration:none;font-weight:600}
-.review-card .review-actions a:hover{text-decoration:underline}
+.review-card { background: var(--color-surface); border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+.review-card .product-img { width: 56px; height: 56px; border-radius: var(--radius-md); background: var(--color-gray-100); object-fit: cover; flex-shrink: 0; }
+.review-card .review-body { flex: 1; min-width: 0; }
+.review-card .product-name { font-weight: 700; font-size: 14px; margin: 0 0 4px; }
+.review-card .review-date { font-size: 11px; color: var(--color-text-tertiary); margin: 0 0 6px; }
+.review-card .review-text { font-size: 13px; color: var(--color-text-secondary); margin: 6px 0 0; line-height: 1.5; }
+.review-card .review-actions { display: flex; gap: 8px; margin-top: 8px; }
+.review-card .review-actions a { font-size: 12px; color: var(--color-brand); text-decoration: none; font-weight: 600; }
+.review-card .review-actions a:hover { text-decoration: underline; }
 
 /* ── Empty State ── */
-.empty-state{text-align:center;padding:60px 24px}
-.empty-state i{font-size:48px;color:var(--color-gray-300);margin-bottom:16px}
-.empty-state p{font-size:15px;color:var(--color-text-tertiary)}
+.empty-state { text-align: center; padding: 60px 24px; }
+.empty-state i { font-size: 48px; color: var(--color-gray-300); margin-bottom: 16px; }
+.empty-state p { font-size: 15px; color: var(--color-text-tertiary); }
 
 /* ── Responsive ── */
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .content-area{margin-left:0;padding:16px}
-  .stats-row{grid-template-columns:1fr;gap:12px}
-  .review-card{flex-direction:column;align-items:center;text-align:center}
-  .review-card .product-img{width:80px;height:80px}
+@media(max-width:768px) {
+  .stats-row { grid-template-columns: 1fr; gap: 12px; }
+  .review-card { flex-direction: column; align-items: center; text-align: center; }
+  .review-card .product-img { width: 80px; height: 80px; }
 }

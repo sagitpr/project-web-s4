@@ -34,7 +34,9 @@ class ProductListSerializer(serializers.ModelSerializer):
                   'unit', 'product_photo_url', 'product_status', 'quality_score',
                   'sold_count', 'rating_avg', 'review_count', 'store_name',
                   'store_slug', 'category_name', 'is_featured', 'is_active',
-                  'created_at')
+                  'created_at', 'sku', 'barcode', 'brand', 'weight',
+                  'length', 'width', 'height', 'volume', 'production_date',
+                  'expired_date')
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_product_photo_url(self, obj):
@@ -78,11 +80,13 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
-    """Product creation serializer."""
+    """Product creation serializer with SKU, barcode, brand, weight, dimensions, expiry."""
     class Meta:
         model = Product
         fields = ('id', 'category', 'product_name', 'description', 'product_photo',
-                  'price', 'stock', 'unit', 'product_status', 'is_featured')
+                  'price', 'stock', 'unit', 'product_status', 'is_featured',
+                  'sku', 'barcode', 'brand', 'weight', 'length', 'width', 'height',
+                  'volume', 'production_date', 'expired_date')
         extra_kwargs = {
             'price': {'required': True},
             'stock': {'required': True},
@@ -104,12 +108,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
-    """Product update serializer."""
+    """Product update serializer with enhanced fields."""
     class Meta:
         model = Product
         fields = ('category', 'product_name', 'description', 'product_photo',
                   'price', 'stock', 'unit', 'product_status', 'is_active',
-                  'is_featured')
+                  'is_featured', 'sku', 'barcode', 'brand', 'weight',
+                  'length', 'width', 'height', 'volume', 'production_date',
+                  'expired_date')
 
     def validate_product_photo(self, value):
         from .validators import validate_image_file

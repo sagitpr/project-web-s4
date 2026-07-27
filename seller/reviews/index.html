@@ -43,13 +43,13 @@
       <header class="header-main">
         <button class="menu-btn" type="button" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
         <div class="store-head">
-          <h2>Warung Bu Sari <span>Aktif</span></h2>
-          <p>ID Warung: WRG12345</p>
+          <h2>Warung Saya <span>Aktif</span></h2>
+          <p>ID Warung: <span id="storeIdDisplay">Memuat...</span></p>
         </div>
         <div class="user-info">
-          <div class="bell"><i class="fa-regular fa-bell"></i><b>3</b></div>
-          <img src="/static/images/av-siti.png" alt="Bu Sari" />
-          <div><strong>Bu Sari</strong><small>Seller</small></div>
+          <div class="bell" id="notifBell"><i class="fa-regular fa-bell"></i><b id="notifCount">0</b></div>
+          <img src="/static/images/store-icon-T.png" alt="Profil" id="userAvatar" />
+          <div id="userInfo"><strong id="userDisplayName">Seller</strong><small>Seller</small></div>
           <i class="fa-solid fa-chevron-down"></i>
         </div>
       </header>
@@ -146,6 +146,7 @@
     </section>
   </div>
 
+  <script src="../shared-sidebar.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

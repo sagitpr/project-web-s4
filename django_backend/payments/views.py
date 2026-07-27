@@ -198,7 +198,7 @@ class PaymentStatusView(views.APIView):
         payment = Payment.objects.filter(
             order_id=order_id,
             order__user=request.user
-        ).first()
+        ).select_related('order').first()
 
         if not payment:
             return Response({'status': 'no_payment'})
@@ -349,7 +349,7 @@ class BankAccountListView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get_queryset(self):
-        return BankAccount.objects.filter(store=self.request.user.store)
+        return BankAccount.objects.filter(store=self.request.user.store).select_related('store')
 
     def perform_create(self, serializer):
         # Auto-associate with the user's store
@@ -365,7 +365,7 @@ class BankAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def get_queryset(self):
-        return BankAccount.objects.filter(store=self.request.user.store)
+        return BankAccount.objects.filter(store=self.request.user.store).select_related('store')
 
 
 @extend_schema(exclude=True)

@@ -17,7 +17,7 @@
     <div class="page-shell">
       {% include 'components/sidebar.html' %}
 
-      <main style="flex:1; display:flex; flex-direction:column; min-width:0; align-items:center; justify-content:center;padding:24px;">
+      <main class="main-content-area" style="align-items:center; justify-content:center;padding:24px;">
         <div class="success-card">
           <div class="success-icon-wrap">
             <div class="success-icon-circle">
@@ -25,7 +25,7 @@
             </div>
           </div>
           <h1>Pesanan Berhasil!</h1>
-          <p class="success-subtitle">Pesanan kamu telah dikonfirmasi dan sedang diproses oleh penjual.</p>
+          <p class="success-subtitle">Pesanan berhasil dibuat dan sedang diproses.</p>
 
           <div class="order-number-box">
             <span class="label">Nomor Pesanan</span>
@@ -35,11 +35,11 @@
           <div class="status-timeline">
             <div class="status-step active">
               <div class="step-dot"></div>
-              <div><strong>Pesanan Dibuat</strong><p>Pesanan berhasil dikonfirmasi</p></div>
+              <div><strong>Pesanan Dibuat</strong><p>Pesanan telah dikonfirmasi</p></div>
             </div>
             <div class="status-step">
               <div class="step-dot"></div>
-              <div><strong>Diproses Penjual</strong><p>Penjual sedang menyiapkan pesanan</p></div>
+              <div><strong>Diproses Penjual</strong><p>Penjual menyiapkan pesanan</p></div>
             </div>
             <div class="status-step">
               <div class="step-dot"></div>
@@ -47,7 +47,7 @@
             </div>
             <div class="status-step">
               <div class="step-dot"></div>
-              <div><strong>Pesanan Diterima</strong><p>Pesanan sampai di tujuan</p></div>
+              <div><strong>Pesanan Diterima</strong><p>Pesanan sudah sampai</p></div>
             </div>
           </div>
 

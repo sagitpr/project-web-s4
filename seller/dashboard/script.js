@@ -96,15 +96,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+    // ── Load categories & populate dropdown ──
+  async function loadCategories() {
+    try {
+      var data = await WarungioAPI.getCategories();
+      var cats = Array.isArray(data) ? data : (data.results || []);
+      var catSelect = addProductForm ? addProductForm.querySelector('[name="category"]') : null;
+      if (catSelect && catSelect.tagName === 'SELECT') {
+        catSelect.innerHTML = '<option value="">Pilih kategori</option>';
+        cats.forEach(function(c) {
+          catSelect.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+    } catch (err) {
+      console.warn('Load categories fallback:', err);
+    }
+  }
+
   addProductForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(addProductForm);
-    const data = Object.fromEntries(formData.entries());
     const btn = addProductForm.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Menyimpan...';
 
     try {
+      var catId = parseInt(addProductForm.querySelector('[name="category"]')?.value) || null;
+      var data = {
+        product_name: addProductForm.querySelector('[name="product_name"]')?.value || '',
+        description: addProductForm.querySelector('[name="description"]')?.value || '',
+        price: parseFloat(addProductForm.querySelector('[name="price"]')?.value || 0),
+        stock: parseInt(addProductForm.querySelector('[name="stock"]')?.value) || 0,
+        category: catId,
+        unit: addProductForm.querySelector('[name="unit"]')?.value || 'kg',
+        is_active: true,
+      };
       await WarungioAPI.createProduct(data);
       showAddMsg('Produk berhasil ditambahkan!', 'success');
       addProductForm.reset();
@@ -117,5 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  loadCategories();
   loadDashboardData();
 });

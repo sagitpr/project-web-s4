@@ -210,15 +210,40 @@ document.addEventListener('DOMContentLoaded', () => {
     el.className = 'stat-trend ' + (isUp ? 'up' : 'down');
   }
 
+  // ── Load categories & populate dropdown ──
+  async function loadCategories() {
+    try {
+      var data = await WarungioAPI.getCategories();
+      var cats = Array.isArray(data) ? data : (data.results || []);
+      var catSelect = addProductForm ? addProductForm.querySelector('[name="category"]') : null;
+      if (catSelect && catSelect.tagName === 'SELECT') {
+        catSelect.innerHTML = '<option value="">Pilih kategori</option>';
+        cats.forEach(function(c) {
+          catSelect.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+    } catch (err) {
+      console.warn('Load categories fallback:', err);
+    }
+  }
+
   addProductForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(addProductForm);
-    const data = Object.fromEntries(formData.entries());
     const btn = addProductForm.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Menyimpan...';
 
     try {
+      var catId = parseInt(addProductForm.querySelector('[name="category"]')?.value) || null;
+      var data = {
+        product_name: addProductForm.querySelector('[name="product_name"]')?.value || '',
+        description: addProductForm.querySelector('[name="description"]')?.value || '',
+        price: parseFloat(addProductForm.querySelector('[name="price"]')?.value || 0),
+        stock: parseInt(addProductForm.querySelector('[name="stock"]')?.value) || 0,
+        category: catId,
+        unit: addProductForm.querySelector('[name="unit"]')?.value || 'kg',
+        is_active: true,
+      };
       await WarungioAPI.createProduct(data);
       showAddMsg('Produk berhasil ditambahkan!', 'success');
       addProductForm.reset();
@@ -275,6 +300,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   populateScanProducts();
+
+  // Initialize real AI scan engines on page load (no blocking)
+  if (window.WarungioAIScan) {
+    setTimeout(function() {
+      WarungioAIScan.initTF().then(function(ready) {
+        if (ready) console.info('AI Scan: MobileNet ready');
+      });
+      WarungioAIScan.initTesseract().then(function(ready) {
+        if (ready) console.info('AI Scan: Tesseract.js ready');
+      });
+    }, 2000); // Defer init to avoid blocking page render
+  }
 
   // Start/Stop Camera Stream
   btnStartCamera?.addEventListener('click', async () => {
@@ -357,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       updateScanHistory(finalRes, selectedProductId);
-      refreshQualityChart();
       if (window.WarungioToast) window.WarungioToast.show('Metadata produk kemasan disimpan.', 'success');
     } catch (err) {
       console.error('Manual confirmation failed:', err);
@@ -384,40 +420,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(async () => {
       try {
-        // Options setup for custom testing values
         let options = {};
-        if (activeScanMode === 'computer_vision') {
-          const prod = sellerProducts.find(p => p.id === Number(selectedProductId)) || {};
-          const prodName = (prod.product_name || '').toLowerCase();
-          
-          if (prodName.indexOf('bayam') !== -1 || prodName.indexOf('selada') !== -1) {
-            options.quality_status = 'warning';
-            options.freshness_score = 68;
-            options.confidence = 0.88;
-          } else if (prodName.indexOf('cabai') !== -1 || prodName.indexOf('chili') !== -1) {
-            options.quality_status = 'rejected';
-            options.freshness_score = 45;
-            options.confidence = 0.72;
+        
+        // ── Real AI Scan: Use Tesseract.js OCR or MobileNet ──
+        if (activeScanMode === 'computer_vision' && window.WarungioAIScan && videoFeed) {
+          // Run real MobileNet classification on video frame
+          var aiResult = await WarungioAIScan.classifyImage(videoFeed);
+          if (aiResult) {
+            options.quality_status = aiResult.quality_status;
+            options.freshness_score = aiResult.freshness_score;
+            options.confidence = aiResult.confidence;
+            options.ai_result = 'MobileNet: ' + aiResult.label + ' (confidence: ' + Math.round(aiResult.confidence * 100) + '%)';
           } else {
+            // Fallback if AI fails
             options.quality_status = 'fresh';
-            options.freshness_score = 95;
-            options.confidence = 0.94;
+            options.freshness_score = 85;
+            options.confidence = 0.5;
+            options.ai_result = 'AI scan unavailable — using estimated quality';
           }
+        } else if (activeScanMode === 'ocr' && window.WarungioAIScan && videoFeed) {
+          // Run real Tesseract.js OCR on video frame
+          var ocrResult = await WarungioAIScan.runOCR(videoFeed);
+          if (ocrResult) {
+            options.quality_status = ocrResult.confidence > 60 ? 'fresh' : 'warning';
+            options.freshness_score = Math.round(ocrResult.confidence);
+            options.confidence = ocrResult.confidence / 100;
+            options.barcode = ocrResult.barcode;
+            options.expiration_date = ocrResult.expiration_date;
+            options.bpom_number = ocrResult.bpom_number;
+            options.ai_result = 'OCR Text: ' + (ocrResult.text || '').substring(0, 200);
+            
+            if (ocrResult.confidence_uncertain) {
+              // Force manual confirmation when OCR results have uncertain confidence
+              if (scannerLaser) scannerLaser.style.display = 'none';
+              if (scanResultsOverlay) scanResultsOverlay.style.display = 'none';
+              
+              if (confirmBarcodeInp) confirmBarcodeInp.value = ocrResult.barcode || '8991234567890';
+              if (confirmExpDateInp) confirmExpDateInp.value = ocrResult.expiration_date || '2027-12-31';
+              if (confirmBpomInp) confirmBpomInp.value = ocrResult.bpom_number || 'MD 231456789012';
+              
+              if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'flex';
+              return;
+            }
+          } else {
+            options.quality_status = 'warning';
+            options.freshness_score = 50;
+            options.confidence = 0.3;
+            options.ai_result = 'OCR tidak dapat membaca teks — coba mode lain';
+          }
+        } else {
+          // Barcode / Manual mode — use API
         }
 
         const res = await WarungioAPI.processSmartScan(null, selectedProductId, activeScanMode, options);
+        // If AI result was set, override the API response
+        if (options.ai_result && res) res.ai_result = options.ai_result;
         
-        if (activeScanMode === 'ocr' && res.confidence_uncertain) {
-          // Force manual confirmation when OCR results have uncertain confidence
-          if (scannerLaser) scannerLaser.style.display = 'none';
-          if (scanResultsOverlay) scanResultsOverlay.style.display = 'none';
-          
-          if (confirmBarcodeInp) confirmBarcodeInp.value = res.barcode || '8991234567890';
-          if (confirmExpDateInp) confirmExpDateInp.value = res.expiration_date || '2027-12-31';
-          if (confirmBpomInp) confirmBpomInp.value = res.bpom_number || 'MD 231456789012';
-          
-          if (manualConfirmOverlay) manualConfirmOverlay.style.display = 'flex';
-          return;
+        if (activeScanMode === 'ocr' && (options.confidence || 0) < 0.6 && options.barcode) {
+          // Fallback existing OCR low confidence handling
         }
 
         playScanSound(); // 🔊 Tit_kasir! Scan success sound
@@ -586,6 +646,286 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ── POS Scanner / Kasir Offline ──
+  const posProductSelect = document.getElementById('pos-product-select');
+  const posCart = document.getElementById('posCart');
+  const posTotal = document.getElementById('posTotal');
+  const posCheckoutBtn = document.getElementById('posCheckoutBtn');
+  let posCartItems = [];
+
+  async function loadPosProducts() {
+    if (!posProductSelect) return;
+    try {
+      const res = await WarungioAPI.getMyProducts();
+      const products = Array.isArray(res) ? res : (res.results || []);
+      posProductSelect.innerHTML = '<option value="">-- Cari & Pilih Produk --</option>';
+      products.forEach(function(p) {
+        if (!p) return;
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        var name = p.product_name || 'Produk';
+        var price = Number(p.price || 0);
+        opt.setAttribute('data-price', price);
+        opt.setAttribute('data-stock', Number(p.stock || 0));
+        opt.textContent = name + ' - Rp ' + price.toLocaleString('id-ID');
+        posProductSelect.appendChild(opt);
+      });
+    } catch (err) {
+      console.warn('Failed to load products for POS:', err);
+    }
+  }
+  loadPosProducts();
+
+  posProductSelect?.addEventListener('change', function() {
+    var selectedId = this.value;
+    if (!selectedId) return;
+    var selectedOpt = this.options[this.selectedIndex];
+    var price = parseFloat(selectedOpt.getAttribute('data-price') || 0);
+    var stock = parseInt(selectedOpt.getAttribute('data-stock') || 0);
+    var name = selectedOpt.textContent.split(' - ')[0];
+
+    // Check if already in cart
+    var existing = posCartItems.find(function(i) { return i.id === parseInt(selectedId); });
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      posCartItems.push({ id: parseInt(selectedId), name: name, price: price, qty: 1, stock: stock });
+    }
+    renderPosCart();
+    this.value = '';
+  });
+
+  function renderPosCart() {
+    if (!posCart) return;
+    if (posCartItems.length === 0) {
+      posCart.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;"><i class="fa-solid fa-cart-shopping" style="font-size:24px;display:block;margin-bottom:8px;"></i> Keranjang masih kosong. Pilih produk di atas.</div>';
+      if (posCheckoutBtn) posCheckoutBtn.disabled = true;
+      if (posTotal) posTotal.textContent = 'Rp 0';
+      return;
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+    var total = 0;
+    posCartItems.forEach(function(item, idx) {
+      var subtotal = item.price * item.qty;
+      total += subtotal;
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:#f8fafc;border-radius:8px;">';
+      html += '<div style="flex:1;"><b>' + item.name + '</b><br><small style="color:#64748b;">Rp ' + item.price.toLocaleString('id-ID') + ' x ' + item.qty + '</small></div>';
+      html += '<div style="display:flex;align-items:center;gap:6px;">';
+      html += '<button onclick="window.posDecreaseQty(' + idx + ')" style="width:28px;height:28px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;line-height:1;">&minus;</button>';
+      html += '<span style="font-weight:600;min-width:24px;text-align:center;">' + item.qty + '</span>';
+      html += '<button onclick="window.posIncreaseQty(' + idx + ')" style="width:28px;height:28px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;line-height:1;">+</button>';
+      html += '<span style="font-weight:700;color:#16a34a;min-width:80px;text-align:right;">Rp ' + subtotal.toLocaleString('id-ID') + '</span>';
+      html += '<button onclick="window.posRemoveItem(' + idx + ')" style="width:28px;height:28px;border:none;border-radius:6px;background:#fee2e2;color:#dc2626;cursor:pointer;font-size:14px;line-height:1;">&times;</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+    posCart.innerHTML = html;
+
+    if (posTotal) posTotal.textContent = 'Rp ' + total.toLocaleString('id-ID');
+    window.posCartTotal = total;
+    if (posCheckoutBtn) posCheckoutBtn.disabled = false;
+  }
+
+  window.posDecreaseQty = function(idx) {
+    if (idx < 0 || idx >= posCartItems.length) return;
+    if (posCartItems[idx].qty > 1) {
+      posCartItems[idx].qty -= 1;
+    } else {
+      posCartItems.splice(idx, 1);
+    }
+    renderPosCart();
+  };
+
+  window.posIncreaseQty = function(idx) {
+    if (idx < 0 || idx >= posCartItems.length) return;
+    var maxStock = posCartItems[idx].stock;
+    if (posCartItems[idx].qty < maxStock) {
+      posCartItems[idx].qty += 1;
+    } else {
+      if (window.WarungioToast) {
+        window.WarungioToast.show('Stok tidak mencukupi (' + maxStock + ')', 'warning');
+      }
+    }
+    renderPosCart();
+  };
+
+  window.posRemoveItem = function(idx) {
+    if (idx < 0 || idx >= posCartItems.length) return;
+    posCartItems.splice(idx, 1);
+    renderPosCart();
+  };
+
+  posCheckoutBtn?.addEventListener('click', async function() {
+    if (posCartItems.length === 0) return;
+    var total = window.posCartTotal || 0;
+    var confirmed = confirm('Proses transaksi POS offline sebesar Rp ' + total.toLocaleString('id-ID') + '?');
+    if (!confirmed) return;
+
+    this.disabled = true;
+    this.innerHTML = 'Memproses...';
+
+    try {
+      // Create offline order
+      var orderItems = posCartItems.map(function(item) {
+        return { product: item.id, quantity: item.qty };
+      });
+      var orderData = {
+        items: orderItems,
+        payment_method: 'cash',
+        notes: 'POS Offline - Kasir'
+      };
+      var result = await WarungioAPI.createOrder(orderData);
+      
+      if (window.WarungioToast) {
+        window.WarungioToast.show('Transaksi berhasil! Total: Rp ' + total.toLocaleString('id-ID'), 'success');
+      }
+
+      // Clear cart
+      posCartItems = [];
+      renderPosCart();
+      loadDashboardData(); // Refresh stats
+      loadPosProducts(); // Refresh stock
+    } catch (err) {
+      console.error('POS checkout failed:', err);
+      if (window.WarungioToast) {
+        window.WarungioToast.show('Gagal memproses transaksi: ' + (err.message || 'Coba lagi'), 'error');
+      }
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fa-solid fa-check"></i> Proses Pembayaran';
+    }
+  });
+
+  // ── Expired Date Monitoring ──
+  async function loadExpiringProducts() {
+    var listEl = document.getElementById('expiringProductList');
+    var badgeEl = document.getElementById('expiringBadge');
+    if (!listEl) return;
+
+    try {
+      var res = await WarungioAPI.getMyProducts();
+      var products = Array.isArray(res) ? res : (res.results || []);
+      var now = new Date();
+      var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      var expiringProducts = products.filter(function(p) {
+        if (!p.expired_date) return false;
+        var expDate = new Date(p.expired_date);
+        return expDate >= now && expDate <= sevenDaysLater;
+      });
+
+      if (badgeEl) {
+        badgeEl.textContent = expiringProducts.length;
+        badgeEl.style.display = expiringProducts.length > 0 ? 'inline-flex' : 'none';
+      }
+
+      if (expiringProducts.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;"><i class="fa-solid fa-check-circle" style="font-size:24px;display:block;margin-bottom:8px;color:#22c55e;"></i> Tidak ada produk yang hampir kedaluwarsa.</div>';
+        return;
+      }
+
+      listEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">';
+      expiringProducts.forEach(function(p) {
+        var expDate = new Date(p.expired_date);
+        var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+        var statusColor = daysLeft <= 2 ? '#ef4444' : '#f59e0b';
+        var recommend = daysLeft <= 2 ? 'Diskon besar!' : 'Beri promosi';
+        listEl.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:8px;">';
+        listEl.innerHTML += '<div><b>' + (p.product_name || 'Produk') + '</b><br><small style="color:#64748b;">Kedaluwarsa: ' + expDate.toLocaleDateString('id-ID') + ' (' + daysLeft + ' hari lagi)</small></div>';
+        listEl.innerHTML += '<span style="background:' + statusColor + '15;color:' + statusColor + ';padding:4px 10px;border-radius:6px;font-weight:600;font-size:12px;">' + recommend + '</span>';
+        listEl.innerHTML += '</div>';
+      });
+      listEl.innerHTML += '</div>';
+    } catch (err) {
+      console.warn('Failed to load expiring products:', err);
+    }
+  }
+
+  // ── Chat Unread Badge ──
+  async function updateChatUnreadBadge() {
+    try {
+      var res = await WarungioAPI.getChatUnreadCount();
+      var count = res?.unread_count || res?.count || 0;
+    } catch (e) {
+      // Fallback: count from conversations
+      try {
+        var conv = await WarungioAPI.getConversations();
+        var list = Array.isArray(conv) ? conv : (conv.results || []);
+        var count = 0;
+        list.forEach(function(c) { count += (c.unread_count || 0); });
+      } catch (e2) { return; }
+    }
+    var badge = document.getElementById('chatUnreadBadge');
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+  }
+
+  // ── WebSocket Real-time Listeners ──
+  function initRealtimeSellerListeners() {
+    var _wsRetries = 0;
+    var _wsMaxRetries = 10;
+
+    function trySetup() {
+      if (_wsRetries >= _wsMaxRetries) return;
+      if (typeof WarungioWS === 'undefined' || typeof WarungioWS.on !== 'function') {
+        _wsRetries++;
+        setTimeout(trySetup, 1000);
+        return;
+      }
+
+      // New order notification (payment confirmed)
+      WarungioWS.on('delivery_update', function (data) {
+        if (!data.order_id) return;
+        // Refresh dashboard stats to reflect new order
+        loadDashboardData();
+        updateChatUnreadBadge();
+        // Show toast notification
+        var msg = data.message || 'Ada update pesanan baru!';
+        if (window.WarungioToast) {
+          window.WarungioToast.show(msg, 'success');
+        }
+        // Play voice notification if available
+        if (window.WarungioVoiceNotification && data.delivery_status) {
+          window.WarungioVoiceNotification.notifyNewOrder(data);
+        }
+      });
+
+      // Order/payment update — refresh dashboard
+      WarungioWS.on('order_update', function (data) {
+        if (data.status === 'paid' || data.status === 'cancelled') {
+          loadDashboardData();
+          loadExpiringProducts();
+        }
+      });
+
+      // Payment update — refresh balance
+      WarungioWS.on('payment_update', function (data) {
+        if (data.status === 'settlement' || data.status === 'paid') {
+          loadDashboardData();
+        }
+      });
+
+      // New notification — refresh badge
+      WarungioWS.on('notification', function () {
+        updateChatUnreadBadge();
+      });
+    }
+    trySetup();
+  }
+
+  // ── Init everything ──
   loadStoreProfile();
   loadDashboardData();
+  loadExpiringProducts();
+  updateChatUnreadBadge();
+  initRealtimeSellerListeners();
+
+  // Periodic refresh for live data (degraded fallback when WS disconnected)
+  setInterval(function() {
+    updateChatUnreadBadge();
+    loadExpiringProducts();
+  }, 60000); // every 60 seconds (was 30s, reduced since WS is primary)
 });

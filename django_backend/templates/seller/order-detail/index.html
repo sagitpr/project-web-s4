@@ -12,6 +12,41 @@
     <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/seller/order-detail/style.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <style>
+    /* ── QR Section Styles ── */
+    .qr-section { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:24px; margin-bottom:20px; }
+    .qr-section h3 { font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .qr-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .qr-actions .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+    .qr-actions .btn-primary { background:#22c55e; color:#fff; }
+    .qr-actions .btn-primary:hover { background:#16a34a; }
+    .qr-actions .btn-outline { background:transparent; border:1px solid #e2e8f0; color:#1e293b; }
+    .qr-actions .btn-outline:hover { border-color:#22c55e; color:#22c55e; }
+    .qr-actions .btn-danger { background:#ef4444; color:#fff; }
+    .qr-display { display:flex; align-items:center; gap:20px; padding:16px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; }
+    .qr-display .qr-img { background:#fff; padding:10px; border-radius:10px; border:1px solid #e2e8f0; flex-shrink:0; }
+    .qr-display .qr-info { flex:1; }
+    .qr-display .qr-info .qr-label { font-weight:700; font-size:14px; color:#1e293b; }
+    .qr-display .qr-info .qr-code-text { font-size:11px; color:#64748b; word-break:break-all; margin-top:4px; font-family:monospace; }
+    .qr-display .qr-info .qr-status { display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:600; margin-top:6px; }
+    .qr-status.active { background:#dcfce7; color:#166534; }
+    .qr-status.inactive { background:#f1f5f9; color:#475569; }
+    .qr-status.used { background:#fee2e2; color:#991b1b; }
+    .verify-qr-row { display:flex; gap:10px; margin-top:12px; align-items:center; }
+    .verify-qr-row input { flex:1; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; font-size:13px; font-family:inherit; }
+    .verify-qr-row input:focus { outline:none; border-color:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,0.12); }
+    /* ── POD Section ── */
+    .pod-display { display:flex; flex-direction:column; gap:8px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; }
+    .pod-upload-form input[type="file"] { font-family:inherit; }
+    .pod-upload-form input[type="text"] { font-family:inherit; box-sizing:border-box; }
+    .pickup-code-display { display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; margin-top:12px; }
+    .pickup-code-display .code { font-size:28px; font-weight:800; letter-spacing:4px; color:#16a34a; font-family:monospace; }
+    .otp-section { margin-top:16px; padding:16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; }
+    .otp-section .otp-label { font-size:12px; color:#9a3412; font-weight:600; }
+    .otp-section .otp-value { font-size:24px; font-weight:800; letter-spacing:6px; color:#c2410c; font-family:monospace; margin:4px 0; }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -56,20 +91,20 @@
                     <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
                     <div class="shop-status-block">
                         <div class="shop-name-row">
-                            <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                            <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
                             <span class="badge-active">Aktif</span>
                         </div>
-                        <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                        <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                     </div>
                 </div>
-                <div class="header-right">                        <div id="notif-container" class="notif-wrap"></div>
-                    <div class="profile-block">
-                        <div class="avatar-wrap">
-                            <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
-                            <div class="status-online"></div>
+                <div class="header-right">                        <div id="notif-container" class="notif-wrap">                        </div>
+                        <div class="profile-block">
+                            <div class="avatar-wrap">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img" id="profileAvatar">
+                                <div class="status-online"></div>
                         </div>
                         <div class="profile-info">
-                            <span class="profile-name">Bu Sari</span>
+                            <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                             <span class="profile-role">Seller</span>
                         </div>
                         <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -87,14 +122,8 @@
                 </div>
                 <p class="page-subtitle">Informasi lengkap pesanan dari pembeli.</p>
             </div>
-        </section>
-
-        <div class="card detail-placeholder">
-            <div class="placeholder-content">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>Halaman detail pesanan akan tersedia segera.</span>
-            </div>
-        </div>
+        </section>                        <!-- Order detail content loaded via JS API calls -->
+                        <div id="order-detail-content"></div>
 
         <!-- Footer -->
         <footer class="seller-footer">
@@ -142,6 +171,7 @@
 <script src="{% static 'js/websocket.js' %}"></script>
 <script src="{% static 'js/utils/notifications.js' %}"></script>
 <script src="{% static 'js/nav.js' %}"></script>
+<script src="{% static 'js/pages/seller/order-detail/script.js' %}"></script>
 <script>document.addEventListener('DOMContentLoaded', function(){ if(window.WarungioNotifications) WarungioNotifications.init('#notif-container'); });</script>
 </body>
 </html>

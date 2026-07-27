@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="topbar-actions">
-                <div id="authHeaderActions" style="display: flex; align-items: center; gap: 12px;">
+                <div id="authHeaderActions" class="auth-actions-flex">
                     <button class="icon-btn" aria-label="Notifikasi"><img src="{% static 'images/notifikasi.png' %}" alt="Notifikasi"><span class="icon-badge">3</span></button>
                     <button class="icon-btn" aria-label="Chat" onclick="window.location.href='/buyer/chat/'"><img src="{% static 'images/chat.png' %}" alt="Chat"></button>
                     <button class="icon-btn" aria-label="Cart" onclick="window.location.href='/buyer/cart/'"><img src="{% static 'images/keranjang.png' %}" alt="Cart"><span class="icon-badge" id="cartBadgeHeader">0</span></button>
@@ -53,7 +53,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="guestHeaderActions" style="display: none; align-items: center; gap: 8px;">
+                <div id="guestHeaderActions" class="guest-actions-flex" style="display: none;">
                     <a href="/auth/login/" class="btn-login-premium">Masuk</a>
                     <a href="/auth/register/" class="btn-register-premium">Daftar</a>
                 </div>
@@ -81,8 +81,8 @@
         <main class="chat-main" id="chatMain">
             <div class="empty-chat-state" id="chatEmptyState">
                 <img src="{% static 'images/chat.png' %}" alt="Pesan">
-                <h3>Silakan Pilih Percakapan</h3>
-                <p>Klik salah satu kontak di sebelah kiri untuk mulai berkirim pesan.</p>
+                <h3>Pilih Percakapan</h3>
+                <p>Klik kontak di samping untuk mulai chat.</p>
             </div>
 
             <div style="display: none; flex-direction: column; height: 100%;" id="chatContentArea">

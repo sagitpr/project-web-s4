@@ -23,44 +23,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
   }
 
+  // ── Category cache (loaded from API) ──
+  let categoriesCache = [];
+
+  async function loadCategories() {
+    try {
+      const data = await WarungioAPI.getCategories();
+      categoriesCache = Array.isArray(data) ? data : (data.results || []);
+      // Populate category filter dropdown
+      const filterEl = document.getElementById('category-filter');
+      if (filterEl) {
+        filterEl.innerHTML = '<option value="">Semua Kategori</option>';
+        categoriesCache.forEach(function(c) {
+          filterEl.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+      // Populate form category select
+      const catSelect = document.getElementById('productCategory');
+      if (catSelect) {
+        catSelect.innerHTML = '<option value="">Pilih kategori</option>';
+        categoriesCache.forEach(function(c) {
+          catSelect.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+    } catch (err) {
+      console.warn('Load categories fallback:', err);
+    }
+  }
+
   // ── Load products ──
   async function loadProducts(search = '', category = '') {
     if (!productTable) return;
     try {
-      const params = { page: 1, pageSize: 50 };
+      var params = { page: 1, pageSize: 50 };
       if (search) params.search = search;
       if (category) params.category = category;
 
-      const data = await WarungioAPI.getProducts(params);
+      var data = await WarungioAPI.getMyProducts(params);
       productTable.innerHTML = '';
 
-      if (data.results && data.results.length > 0) {
-        data.results.forEach(p => {
+      const results = Array.isArray(data) ? data : (data.results || []);
+      if (results.length > 0) {
+        results.forEach(function(p) {
           const status = p.stock > 0 ? '<span class="status-green">Tersedia</span>' : '<span class="status-red">Habis</span>';
           const tr = document.createElement('tr');
           const isActiveDisplay = p.is_active !== false;
-          const activeBtnClass = isActiveDisplay ? 'btn-toggle' : 'btn-toggle inactive';
-          const activeBtnIcon = isActiveDisplay ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
-          const activeBtnText = isActiveDisplay ? 'Aktif' : 'Nonaktif';
-          tr.innerHTML = `
-            <td><img src="${p.image || WarungioAssets.img('vega-fresh.png')}" width="50" height="50" style="object-fit:cover;border-radius:8px;" /></td>
-            <td><b>${p.name}</b></td>
-            <td>${p.category_name || p.category || '-'}</td>
-            <td>Rp ${Number(p.price).toLocaleString('id-ID')}</td>
-            <td>${p.stock || 0}</td>
-            <td>${status}</td>
-            <td>${p.average_rating ? '★' + Number(p.average_rating).toFixed(1) : '-'}</td>
-            <td>
-              <button class="${activeBtnClass}" data-id="${p.id}" data-active="${isActiveDisplay}" title="${isActiveDisplay ? 'Nonaktifkan' : 'Aktifkan'} produk">${activeBtnIcon} ${activeBtnText}</button>
-              <button class="btn-edit" data-id="${p.id}"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn-delete" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
-            </td>`;
-          // Toggle active status
-          tr.querySelector('.btn-toggle')?.addEventListener('click', () => toggleProductActive(p.id, p.name, isActiveDisplay));
+          var activeBtnClass = isActiveDisplay ? 'btn-toggle' : 'btn-toggle inactive';
+          var activeBtnIcon = isActiveDisplay ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+          var activeBtnText = isActiveDisplay ? 'Aktif' : 'Nonaktif';
+          tr.innerHTML = '\
+            <td><img src="' + (p.product_photo_url || p.image || '/static/images/vega-fresh.png') + '" width="50" height="50" style="object-fit:cover;border-radius:8px;" /></td>\
+            <td><b>' + (p.product_name || p.name) + '</b></td>\
+            <td>' + (p.category_name || p.category || '-') + '</td>\
+            <td>Rp ' + Number(p.price).toLocaleString('id-ID') + '</td>\
+            <td>' + (p.stock || 0) + '</td>\
+            <td>' + status + '</td>\
+            <td>' + (p.average_rating ? '\u2605' + Number(p.average_rating).toFixed(1) : '-') + '</td>\
+            <td>\
+              <button class="' + activeBtnClass + '" data-id="' + p.id + '" data-active="' + isActiveDisplay + '" title="' + (isActiveDisplay ? 'Nonaktifkan' : 'Aktifkan') + ' produk">' + activeBtnIcon + ' ' + activeBtnText + '</button>\
+              <button class="btn-edit" data-id="' + p.id + '"><i class="fa-solid fa-pen"></i></button>\
+              <button class="btn-delete" data-id="' + p.id + '"><i class="fa-solid fa-trash"></i></button>\
+            </td>';
+          tr.querySelector('.btn-toggle')?.addEventListener('click', function() { toggleProductActive(p.id, p.product_name || p.name, isActiveDisplay); });
           productTable.appendChild(tr);
-
-          tr.querySelector('.btn-edit')?.addEventListener('click', () => openEditModal(p));
-          tr.querySelector('.btn-delete')?.addEventListener('click', () => deleteProduct(p.id, p.name));
+          tr.querySelector('.btn-edit')?.addEventListener('click', function() { openEditModal(p); });
+          tr.querySelector('.btn-delete')?.addEventListener('click', function() { deleteProduct(p.id, p.product_name || p.name); });
         });
       } else {
         productTable.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;">Belum ada produk. Tambahkan produk baru!</td></tr>';
@@ -71,21 +98,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // ── Add product ──
+  // ── Add product — kirim category_id (integer PK) ──
   addForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fd = new FormData(addForm);
     const btn = addForm.querySelector('button[type="submit"]');
     btn.disabled = true; btn.textContent = 'Menyimpan...';
 
     try {
+      const catId = parseInt(document.getElementById('productCategory')?.value) || null;
       const data = {
-        name: fd.get('name'),
-        description: fd.get('description'),
-        price: parseFloat(fd.get('price')),
-        stock: parseInt(fd.get('stock')) || 0,
-        category: fd.get('category'),
-        unit: fd.get('unit') || 'kg',
+        product_name: document.getElementById('productName')?.value || addForm.querySelector('[name="product_name"]')?.value || '',
+        description: addForm.querySelector('[name="description"]')?.value || '',
+        price: parseFloat(addForm.querySelector('[name="price"]')?.value || 0),
+        stock: parseInt(addForm.querySelector('[name="stock"]')?.value) || 0,
+        category: catId,
+        unit: addForm.querySelector('[name="unit"]')?.value || 'kg',
         is_active: true,
       };
       await WarungioAPI.createProduct(data);
@@ -182,6 +209,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   searchInput?.addEventListener('input', () => loadProducts(searchInput.value, categoryFilter?.value));
   categoryFilter?.addEventListener('change', () => loadProducts(searchInput?.value, categoryFilter.value));
 
+  // ── Load store profile ──
+  async function loadStoreProfile() {
+    if (!window.WarungioAPI) return;
+    try {
+      var store = await WarungioAPI.getMyStore();
+      if (!store) return;
+      var nameEl = document.getElementById('shopName');
+      if (nameEl) nameEl.textContent = store.store_name || 'Warung Saya';
+      var userEl = document.getElementById('userName');
+      if (userEl) userEl.textContent = store.store_name || 'Seller';
+      var avatarEl = document.getElementById('userAvatar');
+      if (avatarEl && store.store_logo) avatarEl.src = store.store_logo;
+    } catch (e) { /* keep defaults */ }
+  }
+
   // ── Init ──
+  loadCategories();
   loadProducts();
+  loadStoreProfile();
 });

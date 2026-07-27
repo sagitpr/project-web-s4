@@ -206,6 +206,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ── Category cache ──
+  var categoriesCache = [];
+
+  async function loadCategories() {
+    try {
+      var data = await WarungioAPI.getCategories();
+      categoriesCache = Array.isArray(data) ? data : (data.results || []);
+      // Populate filter dropdown
+      var filterEl = document.getElementById('category-filter');
+      if (filterEl) {
+        filterEl.innerHTML = '<option value="">Semua Kategori</option>';
+        categoriesCache.forEach(function(c) {
+          filterEl.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+      // Populate edit modal category select
+      var catSelect = document.getElementById('edit-category');
+      if (catSelect) {
+        catSelect.innerHTML = '<option value="">Pilih kategori</option>';
+        categoriesCache.forEach(function(c) {
+          catSelect.innerHTML += '<option value="' + c.id + '">' + (c.category_name || c.name) + '</option>';
+        });
+      }
+    } catch (err) {
+      console.warn('Load categories fallback:', err);
+    }
+  }
+
   // Open edit product details modal
   function openEditModal(product = null) {
     if (!editModal) return;
@@ -215,11 +243,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       modalTitle.textContent = 'Edit Informasi Produk';
       document.getElementById('edit-id').value = product.id;
       document.getElementById('edit-name').value = product.product_name || product.name;
-      document.getElementById('edit-category').value = product.category_name || product.category || '';
+      // Set category select to the correct option
+      var catSelect = document.getElementById('edit-category');
+      if (catSelect) {
+        var catName = product.category_name || product.category || '';
+        var matched = false;
+        for (var i = 0; i < catSelect.options.length; i++) {
+          var opt = catSelect.options[i];
+          if (String(opt.text) === String(catName) || String(opt.value) === String(catName)) {
+            catSelect.value = opt.value;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) catSelect.value = '';
+      }
       document.getElementById('edit-price').value = Math.round(product.price || 0);
       document.getElementById('edit-stock').value = product.stock || 0;
       document.getElementById('edit-unit').value = product.unit || 'kg';
       document.getElementById('edit-description').value = product.description || '';
+      // New fields
+      var skuEl = document.getElementById('edit-sku');
+      if (skuEl) skuEl.value = product.sku || '';
+      var barcodeEl = document.getElementById('edit-barcode');
+      if (barcodeEl) barcodeEl.value = product.barcode || '';
+      var brandEl = document.getElementById('edit-brand');
+      if (brandEl) brandEl.value = product.brand || '';
+      var weightEl = document.getElementById('edit-weight');
+      if (weightEl) weightEl.value = product.weight || '';
+      var lengthEl = document.getElementById('edit-length');
+      if (lengthEl) lengthEl.value = product.length || '';
+      var widthEl = document.getElementById('edit-width');
+      if (widthEl) widthEl.value = product.width || '';
+      var heightEl = document.getElementById('edit-height');
+      if (heightEl) heightEl.value = product.height || '';
+      var prodDateEl = document.getElementById('edit-production-date');
+      if (prodDateEl) prodDateEl.value = product.production_date || '';
+      var expDateEl = document.getElementById('edit-expired-date');
+      if (expDateEl) expDateEl.value = product.expired_date || '';
     } else {
       modalTitle.textContent = 'Tambah Produk Baru';
       productForm.reset();
@@ -242,13 +303,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const id = document.getElementById('edit-id').value;
     const isEdit = !!id;
 
+    var catId = parseInt(document.getElementById('edit-category')?.value) || null;
     const data = {
       product_name: document.getElementById('edit-name').value.trim(),
-      category: document.getElementById('edit-category').value.trim(),
+      category: catId,
       price: parseFloat(document.getElementById('edit-price').value),
       stock: parseInt(document.getElementById('edit-stock').value) || 0,
       unit: document.getElementById('edit-unit').value.trim(),
-      description: document.getElementById('edit-description').value.trim()
+      description: document.getElementById('edit-description').value.trim(),
+      // New fields
+      sku: document.getElementById('edit-sku')?.value || null,
+      barcode: document.getElementById('edit-barcode')?.value || null,
+      brand: document.getElementById('edit-brand')?.value || null,
+      weight: parseFloat(document.getElementById('edit-weight')?.value) || null,
+      length: parseFloat(document.getElementById('edit-length')?.value) || null,
+      width: parseFloat(document.getElementById('edit-width')?.value) || null,
+      height: parseFloat(document.getElementById('edit-height')?.value) || null,
+      production_date: document.getElementById('edit-production-date')?.value || null,
+      expired_date: document.getElementById('edit-expired-date')?.value || null
     };
 
     const submitBtn = productForm.querySelector('button[type="submit"]');
@@ -310,5 +382,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   searchInput?.addEventListener('input', fetchProducts);
 
   // Initialize data load
+  loadCategories();
   fetchProducts();
 });

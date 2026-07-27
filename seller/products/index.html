@@ -59,7 +59,7 @@
             <div class="brand-block">
               <img src="/static/images/Warungio L.png" alt="Warungio logo" />
               <div>
-                <h2 class="brand-name">Warung Bu Sari</h2>
+                <h2 class="brand-name" id="shopName">Warung Saya</h2>
                 <span class="status-badge aktif">Aktif</span>
               </div>
             </div>
@@ -68,9 +68,9 @@
                 <i class="fa-solid fa-bell"></i><span class="dot"></span>
               </div>
               <div class="profile">
-                <span>Bu Sari</span>
+                <span id="userName">Seller</span>
                 <small>Seller</small>
-                <img src="/static/images/av-siti.png" alt="user" />
+                <img src="/static/images/store-icon-T.png" alt="user" id="userAvatar" />
               </div>
               <button class="dropdown-toggle" aria-label="Menu dropdown">
                 <i class="fa-solid fa-chevron-down"></i>
@@ -112,8 +112,8 @@
             <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
             <div class="stat-content">
               <span>Total Produk</span>
-              <h3 id="totalProducts">48</h3>
-              <small>Produk Aktif</small>
+              <h3 id="totalProducts"><span class="skeleton" style="display:inline-block;width:40px;height:16px;border-radius:4px;background:#e2e8f0;"></span></h3>
+              <small id="totalProductsLabel">Memuat...</small>
             </div>
           </div>
           <div class="stat-card">
@@ -122,24 +122,24 @@
             </div>
             <div class="stat-content">
               <span>Stok Habis</span>
-              <h3 id="emptyStock">3</h3>
-              <small>Perlu restock</small>
+              <h3 id="emptyStock"><span class="skeleton" style="display:inline-block;width:40px;height:16px;border-radius:4px;background:#e2e8f0;"></span></h3>
+              <small id="emptyStockLabel">Memuat...</small>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon info"><i class="fa-solid fa-tags"></i></div>
             <div class="stat-content">
               <span>Total Kategori</span>
-              <h3 id="totalCategories">6</h3>
-              <small>Kategori</small>
+              <h3 id="totalCategories"><span class="skeleton" style="display:inline-block;width:40px;height:16px;border-radius:4px;background:#e2e8f0;"></span></h3>
+              <small id="totalCategoriesLabel">Memuat...</small>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon success"><i class="fa-solid fa-eye"></i></div>
             <div class="stat-content">
               <span>Dilihat Hari Ini</span>
-              <h3 id="viewedToday">1.250</h3>
-              <small>Product dilihat</small>
+              <h3 id="viewedToday"><span class="skeleton" style="display:inline-block;width:40px;height:16px;border-radius:4px;background:#e2e8f0;"></span></h3>
+              <small id="viewedTodayLabel">Memuat...</small>
             </div>
           </div>
         </section>
@@ -398,6 +398,7 @@
     <script src="/static/js/device-detector.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="../shared-sidebar.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

@@ -81,7 +81,7 @@
                                 <img src="/static/images/av-siti.png" alt="user" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
                                 <div class="status-online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #108d35; border-radius: 50%; border: 2px solid white;"></div>
                             </div>
-                            <span>Warung Bu Sari</span>
+                            <span id="headerShopName">Memuat...</span>
                             <i class="fa-solid fa-chevron-down" style="color: #94a3b8; font-size: 12px; margin-left: 4px;"></i>
                         </div>
                     </div>
@@ -93,38 +93,38 @@
                     <div class="icon-box green"><i class="fa-solid fa-cart-shopping"></i></div>
                     <div class="stat-info">
                         <span>Total Penjualan</span>
-                        <h3 id="total-sales">Rp 8.560.000</h3>
-                        <p class="trend up"><i class="fa-solid fa-arrow-up"></i> 12,5% dari kemarin</p>
+                        <h3 id="total-sales"><span class="skeleton" style="display:inline-block;width:80px;height:18px;border-radius:4px;background:#e2e8f0;"></span></h3>
+                        <p class="trend up" id="sales-trend-text"><span class="skeleton" style="display:inline-block;width:60px;height:10px;border-radius:4px;background:#e2e8f0;"></span></p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="icon-box blue"><i class="fa-solid fa-box-open"></i></div>
                     <div class="stat-info">
                         <span>Pesanan Baru</span>
-                        <h3 id="new-orders">12</h3>
-                        <p class="trend up"><i class="fa-solid fa-arrow-up"></i> 3 dari kemarin</p>
+                        <h3 id="new-orders"><span class="skeleton" style="display:inline-block;width:40px;height:18px;border-radius:4px;background:#e2e8f0;"></span></h3>
+                        <p class="trend up" id="orders-trend-text"><span class="skeleton" style="display:inline-block;width:60px;height:10px;border-radius:4px;background:#e2e8f0;"></span></p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="icon-box orange"><i class="fa-solid fa-layer-group"></i></div>
                     <div class="stat-info">
                         <span>Produk Aktif</span>
-                        <h3 id="active-products">128</h3>
-                        <p>Semua produk tersedia</p>
+                        <h3 id="active-products"><span class="skeleton" style="display:inline-block;width:40px;height:18px;border-radius:4px;background:#e2e8f0;"></span></h3>
+                        <p id="active-products-label">Memuat...</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="icon-box purple"><i class="fa-solid fa-star"></i></div>
                     <div class="stat-info">
                         <span>Penilaian Toko</span>
-                        <h3 id="store-rating">4.9</h3>
-                        <p>(236) Review</p>
+                        <h3 id="store-rating"><span class="skeleton" style="display:inline-block;width:40px;height:18px;border-radius:4px;background:#e2e8f0;"></span></h3>
+                        <p id="store-rating-label">Memuat...</p>
                     </div>
                 </div>
                 <div class="stat-card balance-card">
                     <div class="stat-info">
                         <span>Saldo Warungio</span>
-                        <h3 id="store-balance">Rp 2.350.000</h3>
+                        <h3 id="store-balance"><span class="skeleton" style="display:inline-block;width:80px;height:18px;border-radius:4px;background:#e2e8f0;"></span></h3>
                         <a href="#" class="withdraw-btn">Tarik Saldo</a>
                     </div>
                 </div>
@@ -213,7 +213,9 @@
                                 </label>
                                 <label>
                                     <span>Kategori</span>
-                                    <input type="text" name="category" placeholder="Contoh: Sayuran" autocomplete="off" required>
+                                    <select name="category" required style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;background:white;color:#1e293b;">
+                                        <option value="">Pilih kategori</option>
+                                    </select>
                                 </label>
                             </div>
                             <div class="form-row">
@@ -282,6 +284,7 @@
     <script src="/static/js/device-detector.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="../shared-sidebar.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

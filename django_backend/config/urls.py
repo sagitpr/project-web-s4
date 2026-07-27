@@ -147,6 +147,7 @@ urlpatterns += [
     path('seller/pengaturan/', login_required(seller_required(TemplateView.as_view(template_name='seller/pengaturan/index.html'))), name='page-seller-pengaturan'),
     path('seller/promo-diskon/', login_required(seller_required(TemplateView.as_view(template_name='seller/promo-diskon/index.html'))), name='page-seller-promo-diskon'),
     path('seller/ulasan/', login_required(seller_required(TemplateView.as_view(template_name='seller/ulasan/index.html'))), name='page-seller-ulasan'),
+    path('seller/chat/', login_required(seller_required(TemplateView.as_view(template_name='seller/chat/index.html'))), name='page-seller-chat'),
     path('seller/supplier/', login_required(seller_required(TemplateView.as_view(template_name='seller/supplier/index.html'))), name='page-seller-supplier'),
     path('seller/stock-prediction/', login_required(seller_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html'))), name='page-seller-stock-prediction'),
     # ── DUPLICATE SHORTHAND ROUTES → CANONICAL PERMANENT REDIRECTS ──
@@ -165,6 +166,12 @@ urlpatterns += [
     path('wallet/', RedirectView.as_view(url='/buyer/wallet/', permanent=True), name='page-wallet'),
     path('settings/', RedirectView.as_view(url='/buyer/settings/', permanent=True), name='page-settings'),
     path('buyer/chat/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/chat/index.html'))), name='page-buyer-chat'),
+    # Buyer Notifications page
+    path('buyer/notifications/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/notifications/index.html'))), name='page-buyer-notifications'),
+    # Buyer Invoice page
+    path('buyer/invoice/<int:pk>/', login_required(buyer_required(TemplateView.as_view(template_name='buyer/invoice/index.html'))), name='page-buyer-invoice'),
+    # Redirect /help/ → /bantuan/
+    path('help/', RedirectView.as_view(url='/bantuan/', permanent=True), name='page-help-redirect'),
     # Buyer Refund pages
     path('buyer/refunds/', login_required(TemplateView.as_view(template_name='buyer/refunds/index.html')), name='page-buyer-refunds'),
     path('buyer/refunds/create/', login_required(TemplateView.as_view(template_name='buyer/refunds/create.html')), name='page-buyer-refund-create'),
@@ -194,6 +201,7 @@ urlpatterns += [
     path('admin-panel/suppliers/', staff(TemplateView.as_view(template_name='admin/suppliers/index.html')), name='admin-suppliers'),
     path('admin-panel/loyalty/', staff(TemplateView.as_view(template_name='admin/loyalty/index.html')), name='admin-loyalty'),
     path('admin-panel/monitoring/', staff(TemplateView.as_view(template_name='admin/monitoring/index.html')), name='admin-monitoring'),
+    path('admin-panel/delivery/', staff(TemplateView.as_view(template_name='admin/delivery/index.html')), name='admin-delivery'),
     path('admin-panel/ai/', staff(TemplateView.as_view(template_name='admin/ai/index.html')), name='admin-ai'),
     path('admin-panel/analytics/', staff(TemplateView.as_view(template_name='admin/analytics/index.html')), name='admin-analytics'),
     path('admin-panel/reports/', staff(TemplateView.as_view(template_name='admin/reports/index.html')), name='admin-reports'),
