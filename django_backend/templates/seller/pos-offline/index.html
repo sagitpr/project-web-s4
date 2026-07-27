@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Offline - Warungio Seller</title>
+    <title>AI POS Kasir - Warungio Seller</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
@@ -12,8 +12,6 @@
     <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/seller/pos-offline/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/quagga2@1.0.1/dist/quagga.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    <link rel="stylesheet" href="{% static 'css/pages/seller/pos-offline/qr-scanner.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 </head>
 <body>
@@ -22,14 +20,14 @@
     <aside class="sidebar" id="sidebarNav">
         <div class="logo">
             <img src="{% static 'images/Warungio L.png' %}" alt="logo">
-            <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Mitra</small></div>
+            <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Kasir</small></div>
         </div>
         <nav>
             <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
             <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
             <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-            <a href="{% url 'page-seller-smart-scan' %}"><i class="fa-solid fa-robot"></i> Smart AI Scan</a>
-            <a href="{% url 'page-seller-pos' %}" class="active"><i class="fa-solid fa-cash-register"></i> POS Offline</a>
+            <a href="{% url 'page-seller-smart-scan' %}"><i class="fa-solid fa-robot"></i> AI Product Registration</a>
+            <a href="{% url 'page-seller-pos' %}" class="active"><i class="fa-solid fa-cash-register"></i> AI POS Kasir</a>
             <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
             <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
             <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
@@ -65,81 +63,75 @@
             </div>
         </header>
 
-        <!-- POS Layout: 3-column grid -->
+        <!-- AI POS Status Bar -->
+        <div class="pos-status-bar" id="posStatusBar">
+            <div class="pos-status-left">
+                <span class="pos-ai-status" id="posAIStatus"><span class="status-dot idle"></span> Kamera tidak aktif</span>
+            </div>
+            <div class="pos-status-right">
+                <span class="pos-date" id="posDate"></span>
+                <span class="pos-time" id="posTime"></span>
+            </div>
+        </div>
+
+        <!-- POS Layout: 2-column grid (Scanner + Cart | Payment) -->
         <div class="pos-layout">
-            <!-- Column 1: Scanner -->
+            <!-- Column 1: AI Camera Scanner + Cart -->
             <div class="pos-scanner-col">
+                <!-- AI Camera Scanner -->
                 <div class="card pos-card">
                     <div class="card-header">
-                        <h3><i class="fa-solid fa-camera"></i> Scanner</h3>
-                        <div class="pos-mode-selector">
-                            <button class="btn-sm btn-primary" id="posModeCamera"><i class="fa-solid fa-camera"></i> Kamera</button>
-                            <button class="btn-sm btn-secondary" id="posModeBarcode"><i class="fa-solid fa-barcode"></i> Barcode</button>
-                            <button class="btn-sm btn-secondary" id="posModeManual"><i class="fa-solid fa-keyboard"></i> Manual</button>
-                        </div>
+                        <h3><i class="fa-solid fa-camera"></i> AI Kamera</h3>
+                        <span class="pos-cam-info" id="posCamInfo">Arahkan produk ke kamera</span>
                     </div>
                     <div class="card-body pos-scanner-body">
-                        <!-- Camera view -->
                         <div class="pos-camera-view" id="posCameraView">
                             <video id="posVideoFeed" autoplay playsinline class="pos-video"></video>
+                            <canvas id="posBboxOverlay" class="pos-bbox-overlay"></canvas>
                             <div id="posPlaceholder" class="pos-placeholder">
                                 <i class="fa-solid fa-camera fa-2x"></i>
-                                <span>Scan produk dengan kamera</span>
+                                <span>AI Kasir siap digunakan</span>
+                                <small>Klik tombol di bawah untuk mulai scan otomatis</small>
+                            </div>
+                            <div id="posScanIndicator" class="pos-scan-indicator" style="display:none;">
+                                <div class="pos-scan-line"></div>
+                                <span class="pos-scan-text">AI Mendeteksi...</span>
                             </div>
                         </div>
                         <div class="pos-scanner-controls">
-                            <button id="posBtnStart" class="btn-primary"><i class="fa-solid fa-video"></i> Mulai Kamera</button>
-                            <button id="posBtnStop" class="btn-secondary" style="display:none;"><i class="fa-solid fa-stop"></i> Hentikan</button>
-                            <button id="posBtnScanBarcode" class="btn-secondary" style="display:none;"><i class="fa-solid fa-barcode"></i> Scan Sekarang</button>
-                        </div>
-                        <!-- Manual product search -->
-                        <div class="pos-manual-search" id="posManualSearch" style="display:none;">
-                            <div class="search-wrapper">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="posProductSearch" placeholder="Cari produk... (nama atau barcode)">
-                            </div>
-                            <div id="posSearchResults" class="pos-search-results"></div>
-                        </div>
-                        <!-- Recent scan quick add -->
-                        <div class="pos-scanner-extra">
-                            <button class="btn-sm btn-secondary" id="btnScanQR" onclick="window.scanQRForDelivery(null)" style="width:100%;margin-bottom:8px;">
-                                <i class="fa-solid fa-qrcode"></i> Scan QR Pengiriman
-                            </button>
-                        </div>
-                        <div class="pos-quick-products" id="posQuickProducts">
-                            <h4><i class="fa-solid fa-clock-rotate-left"></i> Produk Sering Dibeli</h4>
-                            <div id="posQuickList" class="pos-quick-list"></div>
+                            <button id="posBtnStart" class="btn-primary btn-lg"><i class="fa-solid fa-video"></i> Hidupkan Kamera</button>
+                            <button id="posBtnStop" class="btn-secondary btn-lg" style="display:none;"><i class="fa-solid fa-stop"></i> Matikan Kamera</button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Column 2: Cart -->
-            <div class="pos-cart-col">
+                <!-- Cart -->
                 <div class="card pos-card pos-cart-card">
                     <div class="card-header">
-                        <h3><i class="fa-solid fa-cart-shopping"></i> Keranjang</h3>
-                        <button id="posClearCart" class="btn-ghost btn-sm"><i class="fa-solid fa-trash"></i> Kosongkan</button>
+                        <h3><i class="fa-solid fa-cart-shopping"></i> Keranjang <span class="cart-count-badge" id="cartCountBadge">0</span></h3>
+                        <div class="cart-header-actions">
+                            <button id="posClearCart" class="btn-ghost btn-sm"><i class="fa-solid fa-trash"></i> Kosongkan</button>
+                        </div>
                     </div>
                     <div class="card-body pos-cart-body" id="posCartBody">
                         <div id="posCartEmpty" class="pos-empty-cart">
                             <i class="fa-solid fa-cart-plus fa-2x"></i>
                             <h4>Keranjang Kosong</h4>
-                            <p>Scan atau cari produk untuk memulai transaksi</p>
+                            <p>Scan produk dengan kamera, AI akan otomatis menambahkan ke keranjang</p>
                         </div>
                         <div class="pos-cart-items" id="posCartItems" style="display:none;"></div>
                     </div>
-                    <!-- Cart Summary -->
                     <div class="pos-cart-summary" id="posCartSummary" style="display:none;">
                         <div class="pos-summary-row"><span>Subtotal</span><span id="posSubtotal">Rp 0</span></div>
+                        <div class="pos-summary-row pos-discount-row" id="posDiscountRow" style="display:none;"><span>Diskon</span><span id="posDiscountAmount" class="pos-amount-negative">- Rp 0</span></div>
+                        <div class="pos-summary-row" id="posTaxRow" style="display:none;"><span>Pajak (PPN)</span><span id="posTaxAmount">Rp 0</span></div>
                         <div class="pos-summary-row"><span>Biaya Admin</span><span id="posAdminFee">Rp 0</span></div>
-                        <div class="pos-summary-row"><span>Diskon</span><span id="posDiscount">Rp 0</span></div>
                         <div class="pos-summary-row pos-total-row"><span>Total</span><span id="posTotal">Rp 0</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Column 3: Payment -->
+            <!-- Column 2: Payment -->
             <div class="pos-payment-col">
                 <div class="card pos-card">
                     <div class="card-header">
@@ -148,8 +140,36 @@
                     <div class="card-body pos-payment-body">
                         <div class="pos-buyer-info">
                             <div class="form-row">
-                                <label><span>Nama Pembeli</span><input type="text" id="posBuyerName" placeholder="Opsional"></label>
+                                <label><span>Nama Pembeli</span><input type="text" id="posBuyerName" placeholder="Walk-in Customer"></label>
                             </div>
+                        </div>
+
+                        <!-- Diskon -->
+                        <h4 class="pos-payment-title">Diskon & Pajak</h4>
+                        <div class="pos-discount-section">
+                            <div class="pos-discount-type">
+                                <label class="pos-radio-label active" data-dtype="percent">
+                                    <input type="radio" name="discount_type" value="percent" checked hidden>
+                                    <span>%</span>
+                                </label>
+                                <label class="pos-radio-label" data-dtype="nominal">
+                                    <input type="radio" name="discount_type" value="nominal" hidden>
+                                    <span>Rp</span>
+                                </label>
+                            </div>
+                            <div class="pos-discount-input-wrap">
+                                <input type="number" id="posDiscountInput" class="form-input" placeholder="0" min="0" max="100" step="1" value="0">
+                                <span class="pos-discount-suffix" id="posDiscountSuffix">%</span>
+                            </div>
+                        </div>
+                        <div class="pos-tax-toggle">
+                            <label class="pos-switch-label">
+                                <span>PPN 11%</span>
+                                <div class="pos-switch" id="posTaxSwitch">
+                                    <input type="checkbox" id="posTaxCheckbox" hidden>
+                                    <div class="pos-switch-track"><div class="pos-switch-thumb"></div></div>
+                                </div>
+                            </label>
                         </div>
 
                         <h4 class="pos-payment-title">Metode Pembayaran</h4>
@@ -203,9 +223,19 @@
                             <label><span>Catatan</span><textarea id="posNotes" rows="2" placeholder="Catatan transaksi (opsional)"></textarea></label>
                         </div>
 
+                        <div class="pos-grand-total" id="posGrandTotal">
+                            <span>Total Bayar</span>
+                            <span id="posGrandTotalAmount">Rp 0</span>
+                        </div>
+
                         <button id="posProcessPayment" class="btn-primary btn-lg pos-pay-btn" disabled>
-                            <i class="fa-solid fa-check-circle"></i> Proses Pembayaran
+                            <i class="fa-solid fa-check-circle"></i> Bayar
                         </button>
+
+                        <div class="pos-keyboard-shortcuts">
+                            <span><kbd>F2</kbd> Bayar</span>
+                            <span><kbd>F8</kbd> Kosongkan</span>
+                        </div>
                     </div>
                 </div>
 
@@ -242,7 +272,7 @@
     <div class="modal-content modal-sm">
         <div class="modal-header">
             <h3><i class="fa-solid fa-receipt"></i> Transaksi Berhasil</h3>
-            <button class="btn-close-modal modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <button class="btn-close-modal modal-close" id="btnCloseReceipt"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body receipt-body" id="receiptBody"></div>
         <div class="modal-actions">
@@ -252,8 +282,36 @@
     </div>
 </div>
 
-<!-- QR Scanner Modal -->
-{% include 'seller/pos-offline/qr-scanner-modal.html' %}
+<!-- AI Learning Dialog (for unrecognized products) -->
+<div id="posLearningModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-brain"></i> Produk Tidak Dikenali</h3>
+            <button class="btn-ghost" id="btnClosePosLearning"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-desc">AI tidak mengenali produk ini. Isi data berikut agar AI bisa mendeteksinya di lain waktu.</p>
+            <div class="form-group">
+                <label>Nama Produk <span class="required">*</span></label>
+                <input type="text" id="posLearnName" class="form-input" placeholder="Contoh: Keripik Singkong">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Harga <span class="required">*</span></label>
+                    <input type="number" id="posLearnPrice" class="form-input" placeholder="10000">
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <input type="text" id="posLearnCategory" class="form-input" placeholder="Makanan Ringan">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="btnSavePosLearning" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan & Tambahkan</button>
+            <button class="btn-secondary" onclick="document.getElementById('posLearningModal').style.display='none'">Lewati</button>
+        </div>
+    </div>
+</div>
 
 <!-- Toast -->
 <div id="toast-notification" class="toast"></div>
@@ -267,7 +325,6 @@
 <script src="{% static 'js/websocket.js' %}"></script>
 <script src="{% static 'js/utils/notifications.js' %}"></script>
 <script src="{% static 'js/nav.js' %}"></script>
-<script src="{% static 'js/pages/seller/pos-offline/qr-scanner.js' %}"></script>
 <script src="{% static 'js/pages/seller/pos-offline/script.js' %}"></script>
 </body>
 </html>

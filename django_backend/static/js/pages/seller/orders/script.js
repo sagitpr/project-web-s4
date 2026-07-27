@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (order.items && order.items.length > 0) {
         order.items.forEach(item => {
           const img = item.product_photo || WarungioAssets.img('vega-fresh.png');
-          const subtotal = toRupiah(Number(item.price || 0) * (item.qty || 1));
+          const subtotal = toRupiah(Number(item.price || 0) * (item.qty != null ? item.qty : 1));
           
           detailItemsList.innerHTML += `
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">

@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     els.btnPlus.addEventListener('click', () => {
       let v = parseInt(els.qtyInput.value) || 1;
-      if (productData && v < parseInt(productData.stock || 999)) {
+      if (productData && v < parseInt(productData.stock != null ? productData.stock : 999)) {
         els.qtyInput.value = v + 1;
       }
     });
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Add to Cart ──
   if (els.btnAddCart && els.qtyInput) {
     els.btnAddCart.addEventListener('click', async () => {
-      const qty = parseInt(els.qtyInput.value) || 1;
+      const qty = parseInt(els.qtyInput.value) || 1; // qtyInput min=1, so NaN → 1
       els.btnAddCart.disabled = true;
       els.btnAddCart.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menambahkan...';
 
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Buy Now ──
   if (els.btnBuy && els.qtyInput) {
     els.btnBuy.addEventListener('click', async () => {
-      const qty = parseInt(els.qtyInput.value) || 1;
+      const qty = parseInt(els.qtyInput.value) || 1; // qtyInput min=1
       try {
         await WarungioAPI.addToCart({ product: Number(productId), qty });
         window.location.href = '/buyer/checkout/';
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Star breakdown
       const dist = [0, 0, 0, 0, 0];
-      reviews.forEach((r) => { const i = Math.min(Math.max((r.rating || 1) - 1, 0), 4); dist[i]++; });
+      reviews.forEach((r) => { const i = Math.min(Math.max((r.rating != null ? r.rating : 1) - 1, 0), 4); dist[i]++; });
 
       els.reviewSummary.innerHTML = `
         <div class="pd-review-average">

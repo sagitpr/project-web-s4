@@ -38,7 +38,7 @@
         if (loadingState) loadingState.style.display = 'none';
         promoGrid.innerHTML = data.results.map(function (p) {
           const imgSrc = p.product_photo_url || p.product_photo || '/static/images/paket-sayur.png';
-          const discount = p.discount_pct || Math.floor(Math.random() * 30) + 10;
+          const discount = p.discount_pct != null ? p.discount_pct : Math.floor(Math.random() * 30) + 10;
           return '<div class="promo-card-item">' +
             '<div class="promo-discount-badge">-' + discount + '%</div>' +
             '<img src="' + imgSrc + '" alt="' + p.product_name + '" loading="lazy">' +

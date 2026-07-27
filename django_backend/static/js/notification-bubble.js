@@ -360,7 +360,7 @@
       });
 
       if (existing.length >= CONFIG.groupThreshold - 1) {
-        this.groupCounts[type] = (this.groupCounts[type] || 1) + 1;
+        this.groupCounts[type] = (this.groupCounts[type] != null ? this.groupCounts[type] : 1) + 1;
         var count = this.groupCounts[type];
 
         var groupEl = this.container.querySelector('.notif-bubble.group-summary[data-type="' + type + '"]');

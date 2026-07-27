@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         : WarungioAssets.img('vega-fresh.png');
       var name = item.product_name || 'Produk';
       var price = Number(item.product_price || item.price || 0);
-      var qty = item.qty || 1;
+      var qty = item.qty != null && item.qty !== '' ? Number(item.qty) : 1;
 
       var div = document.createElement('div');
       div.className = 'order-item-sm';
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateTotals() {
     var subtotal = cartItems.reduce(function(sum, i) {
-      return sum + (Number(i.product_price || i.price || 0) * i.qty);
+      return sum + (Number(i.product_price || i.price || 0) * (i.qty != null ? i.qty : 1));
     }, 0);
     var shippingCost = getShippingFee();
     var total = Math.max(0, subtotal + shippingCost - voucherDiscount);

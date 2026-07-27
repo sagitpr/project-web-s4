@@ -168,7 +168,7 @@ class StockPredictor:
         else:
             safety_stock = round(avg_daily * 3)  # Default: 3 days buffer
 
-        reorder_point = round(avg_predicted_daily * p.unit or 7) + safety_stock
+        reorder_point = round(avg_predicted_daily * (p.unit if p.unit is not None else 7)) + safety_stock
 
         # Days until stockout
         if avg_predicted_daily > 0 and current_stock > 0:

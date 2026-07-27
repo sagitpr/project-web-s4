@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const banner = s.banner || `/static/images/promosi-toko.png`;
         const category = s.category_name || (s.id === 1 ? 'Toko Sembako' : 'Warung Segar');
         const city = s.city || (s.id === 1 ? 'Bandung' : 'Jakarta Pusat');
-        const rating = Number(s.rating_avg || 4.5).toFixed(1);
+        const rating = Number(s.rating_avg != null ? s.rating_avg : 4.5).toFixed(1);
         const deliveryTime = s.is_open ? '10-20 min' : 'Tutup';
         const favClass = s.is_favorite ? 'is-fav' : '';
 
@@ -488,7 +488,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       list.forEach(s => {
-        const rating = Number(s.rating_avg || 4.7).toFixed(1);
+        const rating = Number(s.rating_avg != null ? s.rating_avg : 4.7).toFixed(1);
         const distance = storeCatalogState.coords ? '0.8 km' : '0.5 km';
         const deliveryTime = s.is_open ? '10-20 min' : 'Tutup';
         const logo = s.logo || `/static/images/store-icon-T.png`;
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const openStatusClass = s.is_open ? 'bg-primary/10 text-primary' : 'bg-red-500/10 text-red-500';
         const openStatusText = s.is_open ? 'Buka' : 'Tutup';
         const category = s.category_name || (s.id === 1 ? 'Sembako' : 'Sayuran');
-        const totalProducts = s.product_count || 150;
+        const totalProducts = s.product_count != null ? s.product_count : 150;
         
         const card = document.createElement('div');
         card.className = 'store-card bg-white rounded-3xl overflow-hidden border border-slate-100 flex flex-col shadow-sm relative group cursor-pointer';
@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const originalPrice = Math.round(Number(p.price) / 0.85); // 15% discount simulation
         const oldPriceStr = 'Rp ' + originalPrice.toLocaleString('id-ID');
         const img = p.product_photo || p.image || `/static/images/paket-sayur.png`;
-        const rating = Number(p.rating_avg || 4.8).toFixed(1);
+        const rating = Number(p.rating_avg != null ? p.rating_avg : 4.8).toFixed(1);
         
         const card = document.createElement('div');
         card.className = 'produk-card';
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <i class="fa-solid fa-star"></i>
               <span>${rating}</span>
               <span class="meta-divider">•</span>
-              <span>Terjual ${p.sold_count || 10}+</span>
+              <span>Terjual ${p.sold_count != null ? p.sold_count : 10}+</span>
             </div>
             <div class="produk-price-row">
               <div class="produk-price-box">

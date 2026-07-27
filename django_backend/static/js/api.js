@@ -659,7 +659,7 @@
   // ---- Stock Alerts ----
   RealAPI.getLowStockProducts = function (threshold) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
-    return auth.api('/products/low-stock/?threshold=' + (threshold || 5));
+    return auth.api('/products/low-stock/?threshold=' + (threshold != null ? threshold : 5));
   };
 
   // ──────────────────────────────────────────────────────────────────────────

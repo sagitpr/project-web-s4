@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
               if (resStatus) { resStatus.textContent = 'Jangan Dijual (Evaluasi Pemasok)'; resStatus.style.color = '#fca5a5'; }
             }
 
-            if (resFreshness) resFreshness.textContent = (res.freshness_score || 95) + '%';
+            if (resFreshness) resFreshness.textContent = (res.freshness_score != null ? res.freshness_score : 95) + '%';
             if (resDesc) resDesc.textContent = res.ai_result;
           } else if (activeScanMode === 'barcode') {
             if (resConfidenceContainer) resConfidenceContainer.style.display = 'none';
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     item.style.marginBottom = '8px';
     
     let statusColor = '#22c55e';
-    let statusText = `Segar (${res.freshness_score || 95}%)`;
+    let statusText = `Segar (${res.freshness_score != null ? res.freshness_score : 95}%)`;
 
     const isCV = res.mode === 'computer_vision';
 

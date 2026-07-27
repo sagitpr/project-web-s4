@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       metrics.total++;
       
       // QC passed logic
-      const score = p.quality_score || 85;
+      const score = p.quality_score != null ? p.quality_score : 85;
       if (score >= 70) {
         metrics.passedQC++;
       } else {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const photo = p.product_photo || p.image || WarungioAssets.img('vega-fresh.png');
       const price = toRupiah(p.price || 0);
       const stock = Number(p.stock || 0);
-      const score = p.quality_score || 85;
+      const score = p.quality_score != null ? p.quality_score : 85;
 
       // Quality badge
       let qualityBadge = `<span style="color:#b45309;font-weight:700;">Cukup (${score}/100)</span>`;

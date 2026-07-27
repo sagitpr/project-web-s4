@@ -290,10 +290,11 @@ class GrabExpressClient(BaseDeliveryClient):
 
         from .distance import calculate_haversine_distance
 
-        distance = calculate_haversine_distance(
+        d = calculate_haversine_distance(
             origin.get('latitude'), origin.get('longitude'),
             destination.get('latitude'), destination.get('longitude'),
-        ) or 3.0  # default 3km
+        )
+        distance = d if d is not None and d > 0 else 3.0  # default 3km
 
         # Grab pricing: Rp 5,000 base + Rp 3,000/km (Instant)
         # SameDay: Rp 3,000 base + Rp 2,000/km
@@ -526,10 +527,11 @@ class GoSendClient(BaseDeliveryClient):
 
         from .distance import calculate_haversine_distance
 
-        distance = calculate_haversine_distance(
+        d = calculate_haversine_distance(
             origin.get('latitude'), origin.get('longitude'),
             destination.get('latitude'), destination.get('longitude'),
-        ) or 3.0
+        )
+        distance = d if d is not None and d > 0 else 3.0
 
         base_fees = {'Instant': 4000, 'SameDay': 2500}
         per_km = {'Instant': 2500, 'SameDay': 1500}

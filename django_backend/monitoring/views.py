@@ -340,7 +340,9 @@ class CurrentMonthUptimeView(views.APIView):
         month_start = today.replace(day=1)
 
         records = UptimeRecord.objects.filter(date__gte=month_start)
-        avg_uptime = records.aggregate(avg=Avg('uptime_percent'))['avg'] or 100
+        avg_uptime = records.aggregate(avg=Avg('uptime_percent'))['avg']
+        if avg_uptime is None:
+            avg_uptime = 100
 
         return Response({
             'month': month_start.strftime('%B %Y'),

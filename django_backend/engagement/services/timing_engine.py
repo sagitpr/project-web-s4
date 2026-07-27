@@ -173,8 +173,8 @@ class TimingEngine:
 
         # Check night mode
         if quiet_config.reduce_at_night:
-            night_start = quiet_config.night_hour_start or 21
-            night_end = quiet_config.night_hour_end or 8
+            night_start = quiet_config.night_hour_start if quiet_config.night_hour_start is not None else 21
+            night_end = quiet_config.night_hour_end if quiet_config.night_hour_end is not None else 8
             if current_hour >= night_start or current_hour < night_end:
                 return True
 

@@ -891,6 +891,134 @@ class LowStockReportView(APIView):
 
 
 # =============================================================================
+# AI AUTO-REGISTER — Create Draft Product from Scan
+# =============================================================================
+
+
+@extend_schema(exclude=True)
+class AIAutoRegisterDraftView(APIView):
+    """
+    Auto-create a draft Product from AI recognition results.
+    
+    POST /api/inventory/ai-auto-register/
+    {
+        "product_name": "Nama Produk",
+        "brand": "Merek",
+        "category": "Kategori",
+        "subcategory": "Subkategori",
+        "packaging_type": "botol|plastik|kaleng|kardus|sachet|dll",
+        "unit": "pcs|kg|ml|gr",
+        "weight_value": 250,
+        "weight_unit": "ml",
+        "estimated_price": 10000,
+        "description": "Deskripsi produk",
+        "composition": "Komposisi",
+        "expiry_date": "2027-12-31",
+        "barcode": "optional_barcode",
+        "confidence": 0.85,
+        "images": ["base64_img1", "base64_img2"],
+        "freshness_score": null,
+        "freshness_status": null
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    @transaction.atomic
+    def post(self, request):
+        from products.models import Product, Category
+
+        product_name = request.data.get('product_name', '').strip()
+        if not product_name:
+            return Response({'error': 'Nama produk wajib diisi.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        store = request.user.store
+        if not store:
+            return Response({'error': 'Anda belum memiliki toko.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        # Find or create category
+        category_name = request.data.get('category', '').strip() or 'Umum'
+        category, _ = Category.objects.get_or_create(
+            category_name__iexact=category_name,
+            defaults={'category_name': category_name, 'is_active': True}
+        )
+
+        # Build description from AI data
+        ai_parts = []
+        packaging = request.data.get('packaging_type', '')
+        if packaging:
+            ai_parts.append(f"Jenis kemasan: {packaging}")
+        composition = request.data.get('composition', '')
+        if composition:
+            ai_parts.append(f"Komposisi: {composition}")
+        freshness = request.data.get('freshness_status', '')
+        if freshness:
+            ai_parts.append(f"Tingkat kesegaran: {freshness}")
+
+        description = request.data.get('description', '').strip()
+        if ai_parts:
+            ai_note = '\n'.join(ai_parts)
+            description = (description + '\n\n' + ai_note) if description else ai_note
+
+        confidence = float(request.data.get('confidence', 0))
+        ai_scan_notes = f"Produk dibuat dari AI Auto-Register (confidence: {confidence*100:.0f}%)"
+
+        product = Product.objects.create(
+            store=store,
+            category=category,
+            product_name=product_name,
+            brand=request.data.get('brand', ''),
+            description=description,
+            price=Decimal(str(request.data.get('estimated_price', 0))),
+            stock=0,
+            unit=request.data.get('unit', 'pcs'),
+            weight_value=request.data.get('weight_value'),
+            weight_unit=request.data.get('weight_unit', ''),
+            is_active=False,
+            product_status='draft',
+            notes=ai_scan_notes,
+        )
+
+        # Save first image as product photo
+        images = request.data.get('images', [])
+        if images:
+            try:
+                import base64
+                img_str = images[0]
+                if ',' in img_str:
+                    img_str = img_str.split(',')[1]
+                img_bytes = base64.b64decode(img_str)
+                from django.core.files.basefile import ContentFile
+                content = ContentFile(img_bytes)
+                ext = 'jpg'
+                fname = f"ai_draft_{product.id}_{int(timezone.now().timestamp())}.{ext}"
+                product.product_photo.save(fname, content, save=True)
+            except Exception as exc:
+                logger.warning(f"Failed to save AI draft image for product {product.id}: {exc}")
+
+        # Update store product count
+        store.product_count = Product.objects.filter(store=store).count()
+        store.save(update_fields=['product_count'])
+
+        # Log & broadcast
+        logger.info(f"AI Auto-Register: '{product_name}' (ID: {product.id}) created as draft")
+        try:
+            from products.views import notify_product_update
+            notify_product_update(store.id, product.id, product.product_name, 'product_created', store.user_id)
+        except Exception as exc:
+            logger.warning(f"WebSocket broadcast failed: {exc}")
+
+        return Response({
+            'success': True,
+            'product_id': product.id,
+            'product_slug': getattr(product, 'slug', ''),
+            'is_draft': True,
+            'message': f'Produk "{product_name}" berhasil dibuat sebagai draft.',
+        }, status=status.HTTP_201_CREATED)
+
+
+# =============================================================================
 # AI PRODUCT RECOGNITION — Hybrid Pipeline
 # =============================================================================
 

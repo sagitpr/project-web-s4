@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           : WarungioAssets.img('vega-fresh.png');
         const name = item.product_name || 'Produk';
         const price = Number(item.product_price || item.price || 0);
-        const qty = item.qty || 1;
+        const qty = item.qty != null ? Number(item.qty) : 1;
         const subtotal = price * qty;
 
         const itemDiv = document.createElement('div');
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="item-qty">
             <button class="qty-btn qty-minus" data-id="${item.id}">-</button>
-            <input type="number" class="qty-value" value="${qty}" min="1" max="${item.product_stock || 99}" data-id="${item.id}">
+            <input type="number" class="qty-value" value="${qty}" min="1" max="${item.product_stock != null ? item.product_stock : 99}" data-id="${item.id}">
             <button class="qty-btn qty-plus" data-id="${item.id}">+</button>
           </div>
           <div class="item-subtotal">

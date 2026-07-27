@@ -53,7 +53,7 @@ class DashboardSummaryView(views.APIView):
             start_date = today - timedelta(days=30)
 
         # Previous period for trend comparison
-        period_days = (today - start_date).days or 1
+        period_days = (today - start_date).days if (today - start_date).days is not None else 1
         prev_start = start_date - timedelta(days=period_days)
         prev_end = start_date - timedelta(days=1)
         
@@ -239,7 +239,7 @@ class DashboardSummaryView(views.APIView):
         mobile = activities.filter(device_type='mobile').count()
         tablet = activities.filter(device_type='tablet').count()
         desktop = activities.filter(device_type='desktop').count()
-        total = mobile + tablet + desktop or 1
+        total = (mobile + tablet + desktop) if (mobile + tablet + desktop) != 0 else 1
         
         return {
             'mobile_percentage': round(mobile / total * 100, 2),

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
           avatar: r.user_avatar || r.user?.profile_photo || '/static/images/store-icon-T.png',
           product: r.product_name || r.product?.product_name || 'Produk',
           qty: r.quantity ? r.quantity + ' item' : '1 item',
-          rating: r.rating || 5,
+          rating: r.rating != null ? r.rating : 5,
           text: r.comment || r.review_text || '',
           date: r.created_at ? new Date(r.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '',
           time: r.created_at ? new Date(r.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) + ' WIB' : '',

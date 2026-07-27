@@ -47,6 +47,9 @@ urlpatterns = [
     # AI Smart Inventory Scanning
     path('ai-scan/', include('inventory.ai_scan.urls')),
 
+    # AI Auto-Register Draft Product
+    path('ai-auto-register/', views.AIAutoRegisterDraftView.as_view(), name='ai-auto-register'),
+
     # AI Product Recognition (Hybrid Pipeline)
     path('ai-recognize/', views.AIProductRecognizeView.as_view(), name='ai-product-recognize'),
     path('ai-multi-detect/', views.AIMultiDetectView.as_view(), name='ai-multi-detect'),

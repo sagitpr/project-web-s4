@@ -1682,10 +1682,11 @@ class DeliveryRateView(views.APIView):
             client = get_gosend_client()
             result = client.calculate_rate(origin, destination, items, service_type)
         else:
-            distance = calculate_haversine_distance(
+            d = calculate_haversine_distance(
                 origin.get('latitude'), origin.get('longitude'),
                 destination.get('latitude'), destination.get('longitude'),
-            ) or 3.0
+            )
+            distance = d if d is not None and d > 0 else 3.0
             result = {
                 'total_fee': float(estimate_shipping_fee(5000, distance)),
                 'currency': 'IDR',
