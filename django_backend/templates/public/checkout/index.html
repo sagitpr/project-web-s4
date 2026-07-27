@@ -1,0 +1,461 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - {{ store.store_name }} | Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/public/checkout.css' %}">
+</head>
+<body>
+<div class="checkout-page">
+    <!-- Header -->
+    <header class="checkout-header">
+        <div class="checkout-header-inner">
+            <a href="/toko/{{ store.slug }}/" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Toko
+            </a>
+            <div class="checkout-header-brand">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" class="checkout-logo">
+                <span class="checkout-brand-name">Warungio</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="checkout-layout">
+        <!-- Left: Form -->
+        <div class="checkout-form-col">
+            <h1 class="checkout-title">Checkout</h1>
+            <p class="checkout-subtitle">Pesanan ke <strong>{{ store.store_name }}</strong></p>
+
+            <!-- Buyer Info -->
+            <section class="checkout-section">
+                <h2><i class="fa-solid fa-user"></i> Informasi Pembeli</h2>
+                <div class="form-group">
+                    <label>Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" id="buyerName" class="form-input" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label>Nomor HP <span class="required">*</span></label>
+                    <input type="tel" id="buyerPhone" class="form-input" placeholder="Contoh: 081234567890" required>
+                </div>
+                <div class="form-group">
+                    <label>Alamat Pengiriman <span class="required">*</span></label>
+                    <textarea id="deliveryAddress" class="form-input" rows="3" placeholder="Contoh: Jl. Merdeka No. 123, RT 01/RW 02, Kel. Gambir, Kec. Gambir, Jakarta Pusat" required></textarea>
+                </div>
+            </section>
+
+            <!-- Products -->
+            <section class="checkout-section">
+                <h2><i class="fa-solid fa-box"></i> Produk</h2>
+                <div id="productList" class="product-list"></div>
+                <div id="emptyStore" class="empty-state" style="display:none;">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h3>Toko Belum Punya Produk</h3>
+                    <p>Toko ini belum memiliki produk yang tersedia untuk dibeli.</p>
+                </div>
+            </section>
+
+            <!-- Notes -->
+            <section class="checkout-section">
+                <h2><i class="fa-solid fa-pen"></i> Catatan</h2>
+                <div class="form-group">
+                    <textarea id="orderNotes" class="form-input" rows="2" placeholder="Catatan untuk penjual (opsional)"></textarea>
+                </div>
+            </section>
+
+            <!-- Voucher -->
+            <section class="checkout-section">
+                <h2><i class="fa-solid fa-ticket"></i> Voucher / Kode Promo</h2>
+                <div class="voucher-row">
+                    <input type="text" id="voucherCode" class="form-input" placeholder="Masukkan kode voucher">
+                    <button id="btnApplyVoucher" class="btn-secondary btn-sm">Pakai</button>
+                </div>
+                <div id="voucherResult" class="voucher-result" style="display:none;"></div>
+            </section>
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div class="checkout-sidebar">
+            <!-- Shipping Method -->
+            <div class="checkout-card">
+                <h3><i class="fa-solid fa-truck"></i> Metode Pengiriman</h3>
+                <div id="shippingMethods" class="shipping-methods">
+                    <div class="shipping-option" data-method="antar_sendiri">
+                        <input type="radio" name="shipping" value="antar_sendiri" checked hidden>
+                        <i class="fa-solid fa-store"></i>
+                        <div><strong>Antar Sendiri</strong><small>Diambil atau diantar toko</small></div>
+                    </div>
+                    <div class="shipping-option" data-method="grabexpress">
+                        <input type="radio" name="shipping" value="grabexpress" hidden>
+                        <i class="fa-brands fa-gripfire"></i>
+                        <div><strong>GrabExpress</strong><small>Instant & Same Day</small></div>
+                    </div>
+                    <div class="shipping-option" data-method="gosend">
+                        <input type="radio" name="shipping" value="gosend" hidden>
+                        <i class="fa-solid fa-bolt"></i>
+                        <div><strong>GoSend</strong><small>Gojek courier</small></div>
+                    </div>
+                    <div class="shipping-option" data-method="mitra_pengiriman">
+                        <input type="radio" name="shipping" value="mitra_pengiriman" hidden>
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <div><strong>Kurir Warungio</strong><small>Mitra pengiriman internal</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="checkout-card">
+                <h3><i class="fa-solid fa-credit-card"></i> Metode Pembayaran</h3>
+                <div id="paymentMethods" class="payment-methods">
+                    <div class="payment-option" data-method="cash">
+                        <input type="radio" name="payment" value="cash" checked hidden>
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                        <span>Tunai</span>
+                    </div>
+                    <div class="payment-option" data-method="qris">
+                        <input type="radio" name="payment" value="qris" hidden>
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>QRIS</span>
+                    </div>
+                    <div class="payment-option" data-method="midtrans">
+                        <input type="radio" name="payment" value="midtrans" hidden>
+                        <i class="fa-solid fa-globe"></i>
+                        <span>Midtrans</span>
+                    </div>
+                    <div class="payment-option" data-method="transfer">
+                        <input type="radio" name="payment" value="transfer" hidden>
+                        <i class="fa-solid fa-building-columns"></i>
+                        <span>Transfer</span>
+                    </div>
+                    <div class="payment-option" data-method="gopay">
+                        <input type="radio" name="payment" value="gopay" hidden>
+                        <i class="fa-brands fa-google-wallet"></i>
+                        <span>GoPay</span>
+                    </div>
+                    <div class="payment-option" data-method="ovo">
+                        <input type="radio" name="payment" value="ovo" hidden>
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>OVO</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="checkout-card order-summary-card">
+                <h3><i class="fa-solid fa-receipt"></i> Ringkasan Pesanan</h3>
+                <div id="orderItems" class="order-items"></div>
+                <div class="order-divider"></div>
+                <div class="order-total-row"><span>Subtotal</span><span id="subtotal">Rp 0</span></div>
+                <div class="order-total-row"><span>Ongkos Kirim</span><span id="shippingCost">Rp 0</span></div>
+                <div class="order-total-row"><span>Biaya Admin</span><span id="adminFee">Rp 1.500</span></div>
+                <div id="discountRow" class="order-total-row" style="display:none;"><span>Diskon</span><span id="discountAmount" style="color:#22c55e;">-Rp 0</span></div>
+                <div class="order-divider"></div>
+                <div class="order-grand-total"><span>Total</span><span id="grandTotal">Rp 0</span></div>
+
+                <button id="btnPlaceOrder" class="btn-primary btn-lg btn-block" disabled>
+                    <i class="fa-solid fa-check-circle"></i> Buat Pesanan
+                </button>
+                <p class="order-notice">Dengan membuat pesanan, Anda menyetujui <a href="/info/kebijakan/" target="_blank">syarat & ketentuan</a> Warungio.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal" id="successModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i> Pesanan Berhasil!</h3>
+            <button class="btn-close-modal modal-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:24px;">
+            <i class="fa-solid fa-circle-check" style="font-size:48px;color:#22c55e;margin-bottom:16px;display:block;"></i>
+            <h4 style="margin:0 0 8px;">Terima kasih, <span id="successBuyerName"></span>!</h4>
+            <p style="font-size:14px;color:#475569;margin:0;">Pesanan Anda telah diterima oleh <strong>{{ store.store_name }}</strong>.</p>
+            <div style="margin:20px 0;padding:16px;background:#f8fafc;border-radius:12px;">
+                <p style="font-size:12px;color:#64748b;margin:0 0 4px;">Nomor Pesanan</p>
+                <p style="font-size:20px;font-weight:800;color:#0f172a;margin:0;" id="successOrderNumber">---</p>
+            </div>
+            <a id="trackingLink" href="" class="btn-primary" style="display:inline-flex;gap:6px;margin-top:8px;">
+                <i class="fa-solid fa-location-dot"></i> Lacak Pesanan
+            </a>
+        </div>
+        <div class="modal-actions" style="justify-content:center;">
+            <a href="/" class="btn-secondary">Kembali ke Beranda</a>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal" id="errorModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i> Gagal Membuat Pesanan</h3>
+            <button class="btn-close-modal modal-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="errorModalBody" style="text-align:center;padding:24px;color:#ef4444;"></div>
+        <div class="modal-actions">
+            <button class="btn-primary modal-close">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const storeSlug = '{{ store.slug }}';
+    const storeId = {{ store.id }};
+    let products = [];
+    let selectedShipping = 'antar_sendiri';
+    let selectedPayment = 'cash';
+    let appliedVoucher = null;
+    let cartItems = {};
+    let shippingCost = 0;
+
+    // ── Load Products ──
+    function loadProducts() {
+        const list = document.getElementById('productList');
+        const empty = document.getElementById('emptyStore');
+        
+        if (window.WarungioAPI && window.WarungioAPI.getProducts) {
+            window.WarungioAPI.getProducts({ store: storeId, limit: 50 })
+                .then(function (data) {
+                    products = data.results || [];
+                    if (products.length === 0) {
+                        list.style.display = 'none';
+                        empty.style.display = 'block';
+                        return;
+                    }
+                    list.style.display = 'block';
+                    empty.style.display = 'none';
+                    renderProducts();
+                })
+                .catch(function () {
+                    list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Gagal memuat produk. Silakan refresh halaman.</p></div>';
+                });
+        } else {
+            list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Memuat produk...</p></div>';
+        }
+    }
+
+    function renderProducts() {
+        const list = document.getElementById('productList');
+        list.innerHTML = products.map(function (p) {
+            var price = Number(p.price || 0);
+            var stock = p.available_stock || p.stock || 0;
+            var img = p.product_photo || '';
+            var imgHtml = img ? '<img src="' + img + '" alt="' + escapeHtml(p.product_name) + '">' : '<div class="prod-img-placeholder"><i class="fa-solid fa-box"></i></div>';
+            return '<div class="product-item" data-id="' + p.id + '">' +
+                '<div class="prod-img">' + imgHtml + '</div>' +
+                '<div class="prod-info">' +
+                '<div class="prod-name">' + escapeHtml(p.product_name) + '</div>' +
+                '<div class="prod-price">Rp ' + formatNumber(price) + '</div>' +
+                '<div class="prod-stock">Stok: ' + stock + '</div>' +
+                '</div>' +
+                '<div class="prod-qty">' +
+                '<button class="qty-btn qty-minus" onclick="adjustQty(' + p.id + ',-1)"><i class="fa-solid fa-minus"></i></button>' +
+                '<input type="number" class="qty-input" id="qty-' + p.id + '" value="0" min="0" max="' + stock + '" onchange="updateQty(' + p.id + ')">' +
+                '<button class="qty-btn qty-plus" onclick="adjustQty(' + p.id + ',1)"><i class="fa-solid fa-plus"></i></button>' +
+                '</div></div>';
+        }).join('');
+        updateSummary();
+    }
+
+    window.adjustQty = function (id, delta) {
+        const input = document.getElementById('qty-' + id);
+        if (!input) return;
+        var val = parseInt(input.value) || 0;
+        var max = parseInt(input.max) || 999;
+        val = Math.max(0, Math.min(max, val + delta));
+        input.value = val;
+        updateSummary();
+    };
+
+    window.updateQty = function (id) {
+        const input = document.getElementById('qty-' + id);
+        if (!input) return;
+        var val = parseInt(input.value) || 0;
+        var max = parseInt(input.max) || 999;
+        if (val > max) { val = max; input.value = max; }
+        if (val < 0) { val = 0; input.value = 0; }
+        updateSummary();
+    };
+
+    function updateSummary() {
+        var items = document.getElementById('orderItems');
+        var subtotal = 0;
+        var hasItems = false;
+        var html = '';
+        
+        products.forEach(function (p) {
+            var input = document.getElementById('qty-' + p.id);
+            var qty = input ? parseInt(input.value) || 0 : 0;
+            if (qty > 0) {
+                hasItems = true;
+                var sub = Number(p.price) * qty;
+                subtotal += sub;
+                html += '<div class="order-item-row"><span>' + escapeHtml(p.product_name.substring(0, 30)) + ' x' + qty + '</span><span>Rp ' + formatNumber(sub) + '</span></div>';
+            }
+        });
+
+        items.innerHTML = html || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px;">Belum ada produk dipilih</div>';
+        
+        var adminFee = 1500;
+        var total = subtotal + shippingCost + adminFee;
+        if (appliedVoucher && subtotal > 0) {
+            var disc = Math.min(appliedVoucher.discount || 0, subtotal);
+            total -= disc;
+            document.getElementById('discountRow').style.display = 'flex';
+            document.getElementById('discountAmount').textContent = '-Rp ' + formatNumber(disc);
+        } else {
+            document.getElementById('discountRow').style.display = 'none';
+        }
+
+        document.getElementById('subtotal').textContent = 'Rp ' + formatNumber(subtotal);
+        document.getElementById('shippingCost').textContent = 'Rp ' + formatNumber(shippingCost);
+        document.getElementById('grandTotal').textContent = 'Rp ' + formatNumber(Math.max(0, total));
+        document.getElementById('btnPlaceOrder').disabled = !hasItems;
+    }
+
+    // ── Shipping ──
+    document.querySelectorAll('.shipping-option').forEach(function (opt) {
+        opt.addEventListener('click', function () {
+            document.querySelectorAll('.shipping-option').forEach(function (o) { o.classList.remove('active'); });
+            this.classList.add('active');
+            this.querySelector('input[type="radio"]').checked = true;
+            selectedShipping = this.dataset.method;
+            if (selectedShipping === 'antar_sendiri') shippingCost = 0;
+            else if (selectedShipping === 'mitra_pengiriman') shippingCost = 5000;
+            else shippingCost = 10000;
+            updateSummary();
+        });
+    });
+    document.querySelector('.shipping-option[data-method="antar_sendiri"]').classList.add('active');
+
+    // ── Payment ──
+    document.querySelectorAll('.payment-option').forEach(function (opt) {
+        opt.addEventListener('click', function () {
+            document.querySelectorAll('.payment-option').forEach(function (o) { o.classList.remove('active'); });
+            this.classList.add('active');
+            this.querySelector('input[type="radio"]').checked = true;
+            selectedPayment = this.dataset.method;
+        });
+    });
+    document.querySelector('.payment-option[data-method="cash"]').classList.add('active');
+
+    // ── Voucher ──
+    document.getElementById('btnApplyVoucher').addEventListener('click', function () {
+        var code = document.getElementById('voucherCode').value.trim();
+        if (!code) return;
+        if (window.WarungioAPI && window.WarungioAPI.checkVoucher) {
+            var total = parseInt(document.getElementById('subtotal').textContent.replace(/[^0-9]/g, '') || 0);
+            window.WarungioAPI.checkVoucher(code, total)
+                .then(function (data) {
+                    if (data.valid) {
+                        appliedVoucher = data;
+                        document.getElementById('voucherResult').style.display = 'block';
+                        document.getElementById('voucherResult').innerHTML = '<span style="color:#22c55e;"><i class="fa-solid fa-check-circle"></i> ' + escapeHtml(data.message || 'Voucher berlaku!') + '</span>';
+                        updateSummary();
+                    } else {
+                        document.getElementById('voucherResult').style.display = 'block';
+                        document.getElementById('voucherResult').innerHTML = '<span style="color:#ef4444;"><i class="fa-solid fa-times-circle"></i> ' + escapeHtml(data.error || 'Voucher tidak valid') + '</span>';
+                    }
+                })
+                .catch(function () {
+                    document.getElementById('voucherResult').style.display = 'block';
+                    document.getElementById('voucherResult').innerHTML = '<span style="color:#ef4444;">Gagal validasi voucher</span>';
+                });
+        } else {
+            document.getElementById('voucherResult').style.display = 'block';
+            document.getElementById('voucherResult').innerHTML = '<span style="color:#ef4444;">Fitur voucher tidak tersedia</span>';
+        }
+    });
+
+    // ── Place Order ──
+    document.getElementById('btnPlaceOrder').addEventListener('click', function () {
+        var name = document.getElementById('buyerName').value.trim();
+        var phone = document.getElementById('buyerPhone').value.trim();
+        var address = document.getElementById('deliveryAddress').value.trim();
+        var notes = document.getElementById('orderNotes').value.trim();
+
+        if (!name) { alert('Nama lengkap wajib diisi.'); return; }
+        if (!phone) { alert('Nomor HP wajib diisi.'); return; }
+        if (!address) { alert('Alamat pengiriman wajib diisi.'); return; }
+
+        var items = [];
+        products.forEach(function (p) {
+            var qty = parseInt(document.getElementById('qty-' + p.id)?.value || 0);
+            if (qty > 0) items.push({ product_id: p.id, quantity: qty });
+        });
+
+        if (items.length === 0) { alert('Pilih minimal 1 produk.'); return; }
+
+        var payload = {
+            store_slug: storeSlug,
+            items: items,
+            buyer_name: name,
+            buyer_phone: phone,
+            delivery_address: address,
+            notes: notes,
+            shipping_method: selectedShipping,
+            payment_method: selectedPayment,
+        };
+
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+        var apiUrl = '/api/orders/guest-checkout/';
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            body: JSON.stringify(payload),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success && data.order) {
+                document.getElementById('successBuyerName').textContent = name;
+                document.getElementById('successOrderNumber').textContent = data.order.order_number;
+                document.getElementById('trackingLink').href = '/order/' + data.order.order_number + '/track/';
+                openModal('successModal');
+            } else {
+                document.getElementById('errorModalBody').textContent = data.error || 'Gagal membuat pesanan. Silakan coba lagi.';
+                openModal('errorModal');
+            }
+        })
+        .catch(function (err) {
+            document.getElementById('errorModalBody').textContent = 'Gagal terhubung ke server. Periksa koneksi Anda.';
+            openModal('errorModal');
+        })
+        .finally(function () {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Buat Pesanan';
+        });
+    });
+
+    // ── Modal ──
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    document.querySelectorAll('.modal-close, .modal-actions .btn-primary, .modal-actions .btn-secondary').forEach(function (el) {
+        el.addEventListener('click', function () { document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; }); });
+    });
+
+    // ── Helpers ──
+    function formatNumber(n) { return Number(n || 0).toLocaleString('id-ID'); }
+    function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&#34;'); }
+    function getCSRFToken() {
+        var name = 'csrftoken';
+        var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : '';
+    }
+
+    loadProducts();
+});
+</script>
+</body>
+</html>

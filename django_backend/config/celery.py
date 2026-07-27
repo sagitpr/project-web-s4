@@ -107,6 +107,13 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=4, minute=0, day_of_week=0),
     },
 
+    # ── AI Expired Reminder (Global Expiry Check) ──
+    'ai-global-expiry-check': {
+        'task': 'inventory.tasks.ai_global_expiry_check_task',
+        'schedule': crontab(hour=6, minute=0),  # Daily at 06:00
+        'options': {'queue': 'default'},
+    },
+
     # ── Payment Reconciliation ──
     'reconcile-orphan-webhooks': {
         'task': 'payments.tasks.reconcile_orphan_webhooks_task',

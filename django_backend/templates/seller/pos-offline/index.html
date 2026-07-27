@@ -1,0 +1,273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Offline - Warungio Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/seller/pos-offline/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/quagga2@1.0.1/dist/quagga.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <link rel="stylesheet" href="{% static 'css/pages/seller/pos-offline/qr-scanner.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body>
+<div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebarNav">
+        <div class="logo">
+            <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+            <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Mitra</small></div>
+        </div>
+        <nav>
+            <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
+            <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+            <a href="{% url 'page-seller-smart-scan' %}"><i class="fa-solid fa-robot"></i> Smart AI Scan</a>
+            <a href="{% url 'page-seller-pos' %}" class="active"><i class="fa-solid fa-cash-register"></i> POS Offline</a>
+            <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
+            <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
+            <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
+            <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
+            <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+        </nav>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Compact Header -->
+        <header class="dashboard-header">
+            <div class="top-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+                    <div class="shop-status-block">
+                        <div class="shop-name-row">
+                            <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
+                            <span class="badge-active">Aktif</span>
+                        </div>
+                        <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div id="notif-container" class="notif-wrap"></div>
+                    <div class="profile-block">
+                        <div class="avatar-wrap"><img src="{% static 'images/av-siti.png' %}" alt="" class="avatar-img" id="profileAvatar"><div class="status-online"></div></div>
+                        <div class="profile-info"><span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span><span class="profile-role">Seller</span></div>
+                        <i class="fa-solid fa-chevron-down profile-chevron"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- POS Layout: 3-column grid -->
+        <div class="pos-layout">
+            <!-- Column 1: Scanner -->
+            <div class="pos-scanner-col">
+                <div class="card pos-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-camera"></i> Scanner</h3>
+                        <div class="pos-mode-selector">
+                            <button class="btn-sm btn-primary" id="posModeCamera"><i class="fa-solid fa-camera"></i> Kamera</button>
+                            <button class="btn-sm btn-secondary" id="posModeBarcode"><i class="fa-solid fa-barcode"></i> Barcode</button>
+                            <button class="btn-sm btn-secondary" id="posModeManual"><i class="fa-solid fa-keyboard"></i> Manual</button>
+                        </div>
+                    </div>
+                    <div class="card-body pos-scanner-body">
+                        <!-- Camera view -->
+                        <div class="pos-camera-view" id="posCameraView">
+                            <video id="posVideoFeed" autoplay playsinline class="pos-video"></video>
+                            <div id="posPlaceholder" class="pos-placeholder">
+                                <i class="fa-solid fa-camera fa-2x"></i>
+                                <span>Scan produk dengan kamera</span>
+                            </div>
+                        </div>
+                        <div class="pos-scanner-controls">
+                            <button id="posBtnStart" class="btn-primary"><i class="fa-solid fa-video"></i> Mulai Kamera</button>
+                            <button id="posBtnStop" class="btn-secondary" style="display:none;"><i class="fa-solid fa-stop"></i> Hentikan</button>
+                            <button id="posBtnScanBarcode" class="btn-secondary" style="display:none;"><i class="fa-solid fa-barcode"></i> Scan Sekarang</button>
+                        </div>
+                        <!-- Manual product search -->
+                        <div class="pos-manual-search" id="posManualSearch" style="display:none;">
+                            <div class="search-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="posProductSearch" placeholder="Cari produk... (nama atau barcode)">
+                            </div>
+                            <div id="posSearchResults" class="pos-search-results"></div>
+                        </div>
+                        <!-- Recent scan quick add -->
+                        <div class="pos-scanner-extra">
+                            <button class="btn-sm btn-secondary" id="btnScanQR" onclick="window.scanQRForDelivery(null)" style="width:100%;margin-bottom:8px;">
+                                <i class="fa-solid fa-qrcode"></i> Scan QR Pengiriman
+                            </button>
+                        </div>
+                        <div class="pos-quick-products" id="posQuickProducts">
+                            <h4><i class="fa-solid fa-clock-rotate-left"></i> Produk Sering Dibeli</h4>
+                            <div id="posQuickList" class="pos-quick-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Cart -->
+            <div class="pos-cart-col">
+                <div class="card pos-card pos-cart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-cart-shopping"></i> Keranjang</h3>
+                        <button id="posClearCart" class="btn-ghost btn-sm"><i class="fa-solid fa-trash"></i> Kosongkan</button>
+                    </div>
+                    <div class="card-body pos-cart-body" id="posCartBody">
+                        <div id="posCartEmpty" class="pos-empty-cart">
+                            <i class="fa-solid fa-cart-plus fa-2x"></i>
+                            <h4>Keranjang Kosong</h4>
+                            <p>Scan atau cari produk untuk memulai transaksi</p>
+                        </div>
+                        <div class="pos-cart-items" id="posCartItems" style="display:none;"></div>
+                    </div>
+                    <!-- Cart Summary -->
+                    <div class="pos-cart-summary" id="posCartSummary" style="display:none;">
+                        <div class="pos-summary-row"><span>Subtotal</span><span id="posSubtotal">Rp 0</span></div>
+                        <div class="pos-summary-row"><span>Biaya Admin</span><span id="posAdminFee">Rp 0</span></div>
+                        <div class="pos-summary-row"><span>Diskon</span><span id="posDiscount">Rp 0</span></div>
+                        <div class="pos-summary-row pos-total-row"><span>Total</span><span id="posTotal">Rp 0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Payment -->
+            <div class="pos-payment-col">
+                <div class="card pos-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-credit-card"></i> Pembayaran</h3>
+                    </div>
+                    <div class="card-body pos-payment-body">
+                        <div class="pos-buyer-info">
+                            <div class="form-row">
+                                <label><span>Nama Pembeli</span><input type="text" id="posBuyerName" placeholder="Opsional"></label>
+                            </div>
+                        </div>
+
+                        <h4 class="pos-payment-title">Metode Pembayaran</h4>
+                        <div class="pos-payment-methods" id="posPaymentMethods">
+                            <label class="pos-payment-option active" data-method="cash">
+                                <input type="radio" name="payment" value="cash" checked hidden>
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                                <span>Tunai</span>
+                            </label>
+                            <label class="pos-payment-option" data-method="qris">
+                                <input type="radio" name="payment" value="qris" hidden>
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>QRIS</span>
+                            </label>
+                            <label class="pos-payment-option" data-method="midtrans">
+                                <input type="radio" name="payment" value="midtrans" hidden>
+                                <i class="fa-solid fa-globe"></i>
+                                <span>Midtrans</span>
+                            </label>
+                            <label class="pos-payment-option" data-method="transfer">
+                                <input type="radio" name="payment" value="transfer" hidden>
+                                <i class="fa-solid fa-building-columns"></i>
+                                <span>Transfer</span>
+                            </label>
+                            <label class="pos-payment-option" data-method="gopay">
+                                <input type="radio" name="payment" value="gopay" hidden>
+                                <i class="fa-brands fa-google-pay"></i>
+                                <span>GoPay</span>
+                            </label>
+                            <label class="pos-payment-option" data-method="ovo">
+                                <input type="radio" name="payment" value="ovo" hidden>
+                                <i class="fa-solid fa-wallet"></i>
+                                <span>OVO</span>
+                            </label>
+                        </div>
+
+                        <div class="pos-amount-input" id="posAmountInput" style="display:none;">
+                            <label><span>Jumlah Tunai</span>
+                                <div class="pos-amount-field">
+                                    <span class="pos-amount-prefix">Rp</span>
+                                    <input type="number" id="posCashAmount" placeholder="0" min="0">
+                                </div>
+                            </label>
+                            <div class="pos-change-row" id="posChangeRow" style="display:none;">
+                                <span>Kembalian</span>
+                                <span id="posChangeAmount">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <div class="pos-notes">
+                            <label><span>Catatan</span><textarea id="posNotes" rows="2" placeholder="Catatan transaksi (opsional)"></textarea></label>
+                        </div>
+
+                        <button id="posProcessPayment" class="btn-primary btn-lg pos-pay-btn" disabled>
+                            <i class="fa-solid fa-check-circle"></i> Proses Pembayaran
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card pos-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Transaksi Terakhir</h3>
+                    </div>
+                    <div class="card-body pos-recent-body" id="posRecentBody">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-receipt"></i>
+                            <p>Belum ada transaksi hari ini</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="seller-footer">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
+                    <p>Platform belanja kebutuhan sehari-hari dari warung terdekat.</p>
+                    <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal" id="receiptModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-receipt"></i> Transaksi Berhasil</h3>
+            <button class="btn-close-modal modal-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body receipt-body" id="receiptBody"></div>
+        <div class="modal-actions">
+            <button class="btn-primary btn-sm" id="btnPrintReceipt"><i class="fa-solid fa-print"></i> Cetak Struk</button>
+            <button class="btn-secondary btn-sm" id="btnNewTransaction"><i class="fa-solid fa-plus"></i> Transaksi Baru</button>
+        </div>
+    </div>
+</div>
+
+<!-- QR Scanner Modal -->
+{% include 'seller/pos-offline/qr-scanner-modal.html' %}
+
+<!-- Toast -->
+<div id="toast-notification" class="toast"></div>
+
+<script src="{% static 'js/device-detector.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+<script src="{% static 'js/utils/toast.js' %}"></script>
+<script src="{% static 'js/utils/format.js' %}"></script>
+<script src="{% static 'js/utils/scan-sound.js' %}"></script>
+<script src="{% static 'js/websocket.js' %}"></script>
+<script src="{% static 'js/utils/notifications.js' %}"></script>
+<script src="{% static 'js/nav.js' %}"></script>
+<script src="{% static 'js/pages/seller/pos-offline/qr-scanner.js' %}"></script>
+<script src="{% static 'js/pages/seller/pos-offline/script.js' %}"></script>
+</body>
+</html>

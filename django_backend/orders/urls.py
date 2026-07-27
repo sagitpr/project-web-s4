@@ -4,6 +4,7 @@ Orders URL configuration for Warungio Marketplace.
 
 from django.urls import path
 from . import views
+from . import views_guest_checkout
 
 urlpatterns = [
     # Cart
@@ -67,4 +68,10 @@ urlpatterns = [
 
     # Proof of Delivery (POD) Upload
     path('<int:order_id>/delivery/pod/', views.DeliveryPODUploadView.as_view(), name='delivery-pod-upload'),
+
+    # Guest Checkout (public — no auth required)
+    path('guest-checkout/', views_guest_checkout.GuestCheckoutView.as_view(), name='guest-checkout'),
+
+    # Public Tracking (no auth required)
+    path('track-public/', views_guest_checkout.TrackOrderPublicView.as_view(), name='track-public'),
 ]

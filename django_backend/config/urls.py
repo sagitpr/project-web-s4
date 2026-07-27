@@ -150,6 +150,10 @@ urlpatterns += [
     path('seller/chat/', login_required(seller_required(TemplateView.as_view(template_name='seller/chat/index.html'))), name='page-seller-chat'),
     path('seller/supplier/', login_required(seller_required(TemplateView.as_view(template_name='seller/supplier/index.html'))), name='page-seller-supplier'),
     path('seller/stock-prediction/', login_required(seller_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html'))), name='page-seller-stock-prediction'),
+    # Seller Smart AI Scan page
+    path('seller/smart-scan/', login_required(seller_required(TemplateView.as_view(template_name='seller/smart-scan/index.html'))), name='page-seller-smart-scan'),
+    # Seller POS Offline page
+    path('seller/pos-offline/', login_required(seller_required(TemplateView.as_view(template_name='seller/pos-offline/index.html'))), name='page-seller-pos'),
     # ── DUPLICATE SHORTHAND ROUTES → CANONICAL PERMANENT REDIRECTS ──
     # These shorthand paths (without /buyer/ prefix) duplicate the canonical /buyer/* routes.
     # Keeping them as direct routes creates multiple entry points and inconsistent redirects.
@@ -281,6 +285,10 @@ urlpatterns += [
     path('buyer/followed-stores/', login_required(TemplateView.as_view(template_name='buyer/favorites/index.html')), name='page-buyer-followed-stores'),
     path('buyer/recently-viewed/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-buyer-recently-viewed'),
     path('seller/stock-alerts/', login_required(TemplateView.as_view(template_name='seller/products/index.html')), name='page-seller-stock-alerts'),
+
+    # ── Public Pages (Guest Checkout & Tracking) ──
+    path('store/<slug:slug>/checkout/', seo_views.public_checkout, name='page-public-checkout'),
+    path('order/<str:order_number>/track/', seo_views.public_tracking, name='page-public-tracking'),
 ]
 
 if settings.DEBUG:

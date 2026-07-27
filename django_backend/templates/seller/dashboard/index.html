@@ -277,6 +277,38 @@
             </div>
         </div>
 
+        <!-- Prediksi Restok (AI Restock Prediction) -->
+        <div class="card action-card">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-chart-simple"></i> Prediksi Restok AI</h3>
+                <a href="{% url 'page-seller-stock-prediction' %}" class="btn-ghost btn-sm">Lihat Detail <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="card-body">
+                <div id="restockWidgetContent">
+                    <div id="restockWidgetSummary" class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+                        <div class="stat-card" style="padding:12px;">
+                            <div class="stat-label" style="font-size:11px;">Stok Menipis</div>
+                            <div class="stat-value" id="restockWidgetLowCount" style="font-size:20px;"><span class="skeleton" style="display:inline-block;width:40px;height:14px;"></span></div>
+                        </div>
+                        <div class="stat-card" style="padding:12px;">
+                            <div class="stat-label" style="font-size:11px;">Stok Habis</div>
+                            <div class="stat-value" id="restockWidgetOutCount" style="font-size:20px;"><span class="skeleton" style="display:inline-block;width:40px;height:14px;"></span></div>
+                        </div>
+                        <div class="stat-card" style="padding:12px;">
+                            <div class="stat-label" style="font-size:11px;">Rekomendasi</div>
+                            <div class="stat-value" id="restockWidgetReorderCount" style="font-size:20px;color:#0891b2;"><span class="skeleton" style="display:inline-block;width:40px;height:14px;"></span></div>
+                        </div>
+                    </div>
+                    <div id="restockWidgetList" class="restock-list">
+                        <div style="text-align:center;color:#94a3b8;font-size:13px;padding:16px;">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:8px;"></i>
+                            Memuat data prediksi...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Activity -->
         <div class="card activity-card">
             <div class="card-header">

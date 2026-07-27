@@ -1,0 +1,46 @@
+{% load static %}
+<div class="modal qr-scanner-modal" id="qrScannerModal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-qrcode"></i> Scan QR Pengiriman</h3>
+      <button class="btn-close-modal" id="qrScannerBtnClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body qr-scanner-body">
+      <!-- Camera Viewport -->
+      <div class="qr-camera-viewport">
+        <video id="qrScannerVideo" autoplay playsinline></video>
+        <canvas id="qrScannerCanvas" style="display:none;"></canvas>
+        <div class="qr-camera-placeholder" id="qrScannerPlaceholder">
+          <i class="fa-solid fa-camera"></i>
+          <span>Arahkan QR Code ke kamera</span>
+        </div>
+        <div class="qr-scanner-indicator" id="qrScannerIndicator" style="display:none;"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="qr-scanner-controls">
+        <button class="btn-primary btn-sm" id="qrScannerBtnStart"><i class="fa-solid fa-video"></i> Mulai Kamera</button>
+        <button class="btn-secondary btn-sm" id="qrScannerBtnStop" style="display:none;"><i class="fa-solid fa-stop"></i> Hentikan</button>
+      </div>
+
+      <!-- Manual Input -->
+      <div class="qr-manual-row">
+        <input type="text" id="qrScannerManualInput" placeholder="Atau masukkan kode QR manual">
+        <button class="btn-secondary btn-sm" id="qrScannerManualBtn"><i class="fa-solid fa-check"></i> Gunakan</button>
+      </div>
+
+      <!-- Result -->
+      <div class="qr-scan-result" id="qrScannerResult" style="display:none;">
+        <h4><i class="fa-solid fa-circle-check"></i> QR Terdeteksi</h4>
+        <p id="qrScannerResultText">---</p>
+        <pre id="qrScannerResultData"></pre>
+      </div>
+
+      <!-- Actions -->
+      <div class="qr-scanner-actions">
+        <button class="btn-primary" id="qrScannerBtnConfirm" style="display:none;"><i class="fa-solid fa-check-circle"></i> Konfirmasi QR</button>
+        <button class="btn-secondary" id="qrScannerBtnCancel"><i class="fa-solid fa-xmark"></i> Batal</button>
+      </div>
+    </div>
+  </div>
+</div>

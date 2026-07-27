@@ -46,4 +46,16 @@ urlpatterns = [
 
     # AI Smart Inventory Scanning
     path('ai-scan/', include('inventory.ai_scan.urls')),
+
+    # AI Product Recognition (Hybrid Pipeline)
+    path('ai-recognize/', views.AIProductRecognizeView.as_view(), name='ai-product-recognize'),
+    path('ai-multi-detect/', views.AIMultiDetectView.as_view(), name='ai-multi-detect'),
+    path('ai-freshness/', views.AIFreshnessView.as_view(), name='ai-freshness'),
+    path('ai-learn-product/', views.AILearnProductView.as_view(), name='ai-learn-product'),
+
+    # AI Expired Reminder & Discount Recommendations
+    path('expired-reminder/dashboard/', views.ExpiredReminderDashboardView.as_view(), name='expired-reminder-dashboard'),
+    path('expired-reminder/flash-sale/', views.FlashSaleCandidatesView.as_view(), name='expired-reminder-flash-sale'),
+    path('expired-reminder/discounts/', views.DiscountRecommendationsView.as_view(), name='expired-reminder-discounts'),
+    path('expired-reminder/check/', views.TriggerExpiryCheckView.as_view(), name='expired-reminder-check'),
 ]

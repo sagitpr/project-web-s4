@@ -32,6 +32,11 @@ def _record_behavior_event(user, event_type: str, event_category: str = '',
     """Helper to record a behavior event."""
     from engagement.models import BehaviorEvent
 
+    # Skip recording for anonymous users (guest checkout, system events, etc.)
+    if user is None:
+        logger.debug('Skipping behavior event %s: user is None (guest/system)', event_type)
+        return
+
     try:
         BehaviorEvent.objects.create(
             user=user,
@@ -128,7 +133,8 @@ def _connect_order_signals():
                     value=float(instance.total_price),
                     source='system'
                 )
-                _update_behavior_profile(instance.user)
+                if instance.user:
+                    _update_behavior_profile(instance.user)
             else:
                 # Check for status changes
                 old_status = getattr(instance, '_old_order_status', None)
@@ -150,7 +156,8 @@ def _connect_order_signals():
                             },
                             source='system'
                         )
-                        _update_behavior_profile(instance.user)
+                        if instance.user:
+                            _update_behavior_profile(instance.user)
 
                         # Trigger engagement notification for completed orders
                         if instance.order_status == 'completed':

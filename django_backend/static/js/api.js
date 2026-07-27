@@ -216,6 +216,27 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/orders/cart/count/');
   };
+  // ---- Stock Prediction & Restock ----
+  RealAPI.getStockPrediction = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/stock-prediction/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getReorderSuggestions = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/products/reorder-suggestions/');
+  };
+  RealAPI.getStockForecast = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/stock-forecast/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getLowStockProducts = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/low-stock/' + (qs ? '?' + qs : ''));
+  };
+
   RealAPI.addToCart = function (data) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/orders/cart/', { method: 'POST', body: JSON.stringify(data) });

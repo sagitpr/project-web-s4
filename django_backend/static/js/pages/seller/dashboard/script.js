@@ -803,11 +803,35 @@ document.addEventListener('DOMContentLoaded', () => {
     var badgeEl = document.getElementById('expiringBadge');
     if (!listEl) return;
 
+    var now = new Date();
+    var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    var aiRecommendations = [];
+
+    // Try to load AI-powered recommendations first
+    try {
+      var csrf = getCSRFToken();
+      var resp = await fetch('/api/inventory/expired-reminder/dashboard/', {
+        method: 'GET',
+        headers: { 'X-CSRFToken': csrf },
+      });
+      if (resp.ok) {
+        var aiData = await resp.json();
+        if (aiData && aiData.recommendations) {
+          aiRecommendations = aiData.recommendations;
+          // Update badge with AI count
+          if (badgeEl) {
+            badgeEl.textContent = aiData.total_expiring || aiRecommendations.length || 0;
+            badgeEl.style.display = (aiData.total_expiring > 0) ? 'inline-flex' : 'none';
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('AI expiry dashboard unavailable, falling back:', e.message);
+    }
+
     try {
       var res = await WarungioAPI.getMyProducts();
       var products = Array.isArray(res) ? res : (res.results || []);
-      var now = new Date();
-      var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       
       var expiringProducts = products.filter(function(p) {
         if (!p.expired_date) return false;
@@ -815,31 +839,66 @@ document.addEventListener('DOMContentLoaded', () => {
         return expDate >= now && expDate <= sevenDaysLater;
       });
 
-      if (badgeEl) {
+      if (badgeEl && aiRecommendations.length === 0) {
         badgeEl.textContent = expiringProducts.length;
         badgeEl.style.display = expiringProducts.length > 0 ? 'inline-flex' : 'none';
       }
 
-      if (expiringProducts.length === 0) {
-        listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;"><i class="fa-solid fa-check-circle" style="font-size:24px;display:block;margin-bottom:8px;color:#22c55e;"></i> Tidak ada produk yang hampir kedaluwarsa.</div>';
-        return;
+      // Combine AI recommendations with product data
+      var displayHtml = '';
+
+      // Show AI-powered discount recommendations with urgency badges
+      if (aiRecommendations.length > 0) {
+        displayHtml += '<div style="margin-bottom:12px;"><h4 style="font-size:13px;font-weight:700;color:#0f172a;margin:0 0 8px;"><i class="fa-solid fa-robot"></i> Rekomendasi AI Diskon</h4>';
+        aiRecommendations.slice(0, 5).forEach(function(rec) {
+          var urgencyColor = rec.urgency === 'critical' ? '#ef4444' : rec.urgency === 'high' ? '#f59e0b' : '#0891b2';
+          var discountBadge = rec.discount_pct ? rec.discount_pct + '% OFF' : 'Promo';
+          displayHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin-bottom:6px;background:#f8fafc;border-radius:8px;border-left:3px solid ' + urgencyColor + ';">';
+          displayHtml += '<div><b style="font-size:13px;">' + escapeHtml(rec.product_name || 'Produk') + '</b><br><small style="color:#64748b;">' + escapeHtml(rec.message || '') + '</small></div>';
+          displayHtml += '<div style="text-align:right;"><span style="background:' + urgencyColor + '15;color:' + urgencyColor + ';padding:4px 8px;border-radius:6px;font-weight:700;font-size:11px;">' + discountBadge + '</span>';
+          if (rec.suggested_price) {
+            displayHtml += '<br><small style="color:#16a34a;font-weight:600;">Rp ' + Number(rec.suggested_price).toLocaleString('id-ID') + '</small>';
+          }
+          displayHtml += '</div></div>';
+        });
+        displayHtml += '</div>';
       }
 
-      listEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">';
-      expiringProducts.forEach(function(p) {
-        var expDate = new Date(p.expired_date);
-        var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-        var statusColor = daysLeft <= 2 ? '#ef4444' : '#f59e0b';
-        var recommend = daysLeft <= 2 ? 'Diskon besar!' : 'Beri promosi';
-        listEl.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:8px;">';
-        listEl.innerHTML += '<div><b>' + (p.product_name || 'Produk') + '</b><br><small style="color:#64748b;">Kedaluwarsa: ' + expDate.toLocaleDateString('id-ID') + ' (' + daysLeft + ' hari lagi)</small></div>';
-        listEl.innerHTML += '<span style="background:' + statusColor + '15;color:' + statusColor + ';padding:4px 10px;border-radius:6px;font-weight:600;font-size:12px;">' + recommend + '</span>';
-        listEl.innerHTML += '</div>';
-      });
-      listEl.innerHTML += '</div>';
+      // Then show basic expiring products
+      if (expiringProducts.length > 0) {
+        displayHtml += '<h4 style="font-size:13px;font-weight:700;color:#0f172a;margin:0 0 8px;">Produk Hampir Kedaluwarsa</h4>';
+        expiringProducts.forEach(function(p) {
+          var expDate = new Date(p.expired_date);
+          var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+          var statusColor = daysLeft <= 2 ? '#ef4444' : '#f59e0b';
+          var recommend = daysLeft <= 2 ? 'Diskon besar!' : 'Beri promosi';
+          displayHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin-bottom:6px;background:#f8fafc;border-radius:8px;">';
+          displayHtml += '<div><b>' + escapeHtml(p.product_name || 'Produk') + '</b><br><small style="color:#64748b;">Kedaluwarsa: ' + expDate.toLocaleDateString('id-ID') + ' (' + daysLeft + ' hari lagi)</small></div>';
+          displayHtml += '<span style="background:' + statusColor + '15;color:' + statusColor + ';padding:4px 10px;border-radius:6px;font-weight:600;font-size:12px;">' + recommend + '</span>';
+          displayHtml += '</div>';
+        });
+      }
+
+      // If nothing found at all
+      if (!displayHtml) {
+        displayHtml = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;"><i class="fa-solid fa-check-circle" style="font-size:24px;display:block;margin-bottom:8px;color:#22c55e;"></i> Tidak ada produk yang hampir kedaluwarsa.</div>';
+      }
+
+      listEl.innerHTML = displayHtml;
     } catch (err) {
       console.warn('Failed to load expiring products:', err);
     }
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&#34;');
+  }
+
+  function getCSRFToken() {
+    var name = 'csrftoken';
+    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : '';
   }
 
   // ── Chat Unread Badge ──
@@ -916,10 +975,75 @@ document.addEventListener('DOMContentLoaded', () => {
     trySetup();
   }
 
+  // ── Restock Prediction Widget ──
+  async function loadRestockWidget() {
+    var lowCountEl = document.getElementById('restockWidgetLowCount');
+    var outCountEl = document.getElementById('restockWidgetOutCount');
+    var reorderCountEl = document.getElementById('restockWidgetReorderCount');
+    var listEl = document.getElementById('restockWidgetList');
+    if (!listEl) return;
+
+    try {
+      // Load low stock + reorder suggestions in parallel
+      var [lowStockData, reorderData] = await Promise.all([
+        WarungioAPI.getLowStockProducts({ threshold: 5 }),
+        WarungioAPI.getReorderSuggestions().catch(function () { return null; }),
+      ]);
+
+      var lowCount = lowStockData?.total_low_stock || 0;
+      var outCount = lowStockData?.total_out_of_stock || 0;
+      var reorderCount = reorderData?.urgent_reorders?.length || reorderData?.total_suggestions || (lowCount + outCount);
+
+      if (lowCountEl) lowCountEl.textContent = lowCount;
+      if (outCountEl) outCountEl.textContent = outCount;
+      if (reorderCountEl) reorderCountEl.textContent = reorderCount;
+
+      // Build product list
+      var html = '';
+      var products = lowStockData?.low_stock || [];
+      var outOfStock = lowStockData?.out_of_stock || [];
+
+      // Show low stock items
+      if (products.length > 0) {
+        html += '<h4 style="font-size:13px;font-weight:700;color:#f59e0b;margin:0 0 8px;"><i class="fa-solid fa-exclamation-triangle"></i> Stok Menipis</h4>';
+        products.slice(0, 5).forEach(function (p) {
+          var pct = Math.min(100, Math.round((p.stock / 20) * 100));
+          var barColor = p.stock <= 2 ? '#ef4444' : '#f59e0b';
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-bottom:4px;background:#f8fafc;border-radius:8px;">' +
+            '<div style="flex:1;"><b style="font-size:13px;">' + escapeHtml(p.product_name || 'Produk') + '</b>' +
+            '<div style="margin-top:4px;background:#e2e8f0;height:4px;border-radius:2px;max-width:120px;"><div style="width:' + pct + '%;height:4px;background:' + barColor + ';border-radius:2px;"></div></div></div>' +
+            '<div style="text-align:right;"><span style="font-weight:700;font-size:13px;color:' + barColor + ';">' + p.stock + '</span><br><small style="font-size:10px;color:#94a3b8;">' + escapeHtml(p.unit || 'pcs') + '</small></div></div>';
+        });
+      }
+
+      // Show out of stock items
+      if (outOfStock.length > 0) {
+        html += '<h4 style="font-size:13px;font-weight:700;color:#ef4444;margin:8px 0 8px;"><i class="fa-solid fa-circle-exclamation"></i> Stok Habis</h4>';
+        outOfStock.slice(0, 3).forEach(function (p) {
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-bottom:4px;background:#fef2f2;border-radius:8px;">' +
+            '<div><b style="font-size:13px;color:#dc2626;">' + escapeHtml(p.product_name || 'Produk') + '</b><br><small style="color:#ef4444;">Perlu restok segera</small></div>' +
+            '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">0</span></div>';
+        });
+      }
+
+      if (!html) {
+        html = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:16px;"><i class="fa-solid fa-check-circle" style="font-size:20px;display:block;margin-bottom:6px;color:#22c55e;"></i> Semua produk dalam stok cukup.</div>';
+      }
+
+      listEl.innerHTML = html;
+    } catch (err) {
+      console.warn('Restock widget load failed:', err);
+      if (listEl) {
+        listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:16px;">Gagal memuat data prediksi restok.</div>';
+      }
+    }
+  }
+
   // ── Init everything ──
   loadStoreProfile();
   loadDashboardData();
   loadExpiringProducts();
+  loadRestockWidget();
   updateChatUnreadBadge();
   initRealtimeSellerListeners();
 

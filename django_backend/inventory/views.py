@@ -35,6 +35,8 @@ from .serializers import (
 )
 from .services.barcode_lookup import lookup_barcode, validate_barcode_checksum
 from .services.fefo_engine import stock_in, stock_out, get_batch_summary, get_expiry_summary
+from .services.ai_product_recognition import get_ai_product_recognition_pipeline
+from .services.expired_reminder import get_expired_reminder
 from drf_spectacular.utils import extend_schema
 
 # ── Cache TTLs ──
@@ -885,4 +887,233 @@ class LowStockReportView(APIView):
             'items': sorted(low_stock_items, key=lambda x: x['shortage'], reverse=True),
         }
         cache.set(cache_key, result, LOW_STOCK_CACHE_TTL)
+        return Response(result)
+
+
+# =============================================================================
+# AI PRODUCT RECOGNITION — Hybrid Pipeline
+# =============================================================================
+
+
+@extend_schema(exclude=True)
+class AIProductRecognizeView(APIView):
+    """
+    AI Product Recognition — Hybrid Pipeline.
+    
+    End-to-end product recognition from a single image.
+    Combines Gemini Vision + OCR + Barcode + Freshness detection.
+    
+    POST /api/inventory/ai-recognize/
+    {
+        "image": "base64_encoded_image",
+        "barcode_hint": "optional_barcode",
+        "ocr_text_hint": "optional_ocr_text",
+        "scan_mode": "auto|freshness|multi"
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        image = request.data.get('image', '')
+        if not image:
+            return Response({'error': 'Image (base64) wajib diisi.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline = get_ai_product_recognition_pipeline()
+        result = pipeline.recognize_product(
+            image_data=image,
+            store=request.user.store,
+            barcode_hint=request.data.get('barcode_hint', ''),
+            ocr_text_hint=request.data.get('ocr_text_hint', ''),
+            scan_mode=request.data.get('scan_mode', 'auto'),
+        )
+
+        return Response(result)
+
+
+@extend_schema(exclude=True)
+class AIMultiDetectView(APIView):
+    """
+    Multi-Object Detection — detect multiple products in one image.
+    
+    POST /api/inventory/ai-multi-detect/
+    {
+        "image": "base64_encoded_image"
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        image = request.data.get('image', '')
+        if not image:
+            return Response({'error': 'Image (base64) wajib diisi.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline = get_ai_product_recognition_pipeline()
+        result = pipeline.detect_multi_object(
+            image_data=image,
+            store=request.user.store,
+        )
+
+        return Response(result)
+
+
+@extend_schema(exclude=True)
+class AIFreshnessView(APIView):
+    """
+    Freshness Classification — analyze freshness of produce.
+    
+    POST /api/inventory/ai-freshness/
+    {
+        "image": "base64_encoded_image",
+        "product_name": "optional_product_name"
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        image = request.data.get('image', '')
+        if not image:
+            return Response({'error': 'Image (base64) wajib diisi.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline = get_ai_product_recognition_pipeline()
+        result = pipeline.classify_freshness(
+            image_data=image,
+            product_name=request.data.get('product_name', ''),
+        )
+
+        return Response(result)
+
+
+@extend_schema(exclude=True)
+class AILearnProductView(APIView):
+    """
+    Smart UMKM Learning — register a new product from multiple images.
+    
+    POST /api/inventory/ai-learn-product/
+    {
+        "images": ["base64_img_1", "base64_img_2"],
+        "product_name": "Nama Produk",
+        "brand": "Merek",
+        "category": "Kategori",
+        "price": 10000,
+        "unit": "pcs",
+        "stock": 24,
+        "expiry_date": "2027-12-31"
+    }
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        images = request.data.get('images', [])
+        if not images:
+            return Response({'error': 'Minimal 1 foto diperlukan.'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline = get_ai_product_recognition_pipeline()
+        result = pipeline.learn_new_product(
+            images=images,
+            seller_input={
+                'product_name': request.data.get('product_name', ''),
+                'brand': request.data.get('brand', ''),
+                'category': request.data.get('category', 'UMKM'),
+                'price': request.data.get('price', 0),
+                'unit': request.data.get('unit', 'pcs'),
+                'stock': request.data.get('stock', 0),
+                'expiry_date': request.data.get('expiry_date', ''),
+                'barcode': request.data.get('barcode', ''),
+                'subcategory': request.data.get('subcategory', ''),
+                'weight_value': request.data.get('weight_value'),
+                'weight_unit': request.data.get('weight_unit', ''),
+                'manufacturer': request.data.get('manufacturer', ''),
+                'bpom_number': request.data.get('bpom_number', ''),
+            },
+            store=request.user.store,
+            user=request.user,
+        )
+
+        return Response(result, status=status.HTTP_201_CREATED if result.get('is_new') else status.HTTP_200_OK)
+
+
+# =============================================================================
+# AI EXPIRED REMINDER & DISCOUNT RECOMMENDATIONS
+# =============================================================================
+
+
+@extend_schema(exclude=True)
+class ExpiredReminderDashboardView(APIView):
+    """
+    Get AI Expired Reminder dashboard widget data.
+    
+    GET /api/inventory/expired-reminder/dashboard/
+    Returns summary of expiring batches, discount recs, and bundling suggestions.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        reminder = get_expired_reminder()
+        data = reminder.get_seller_discount_recommendations(
+            store_id=request.user.store.id
+        )
+        return Response(data)
+
+
+@extend_schema(exclude=True)
+class FlashSaleCandidatesView(APIView):
+    """
+    Get products needing urgent flash sale (<=3 days to expiry).
+    
+    GET /api/inventory/expired-reminder/flash-sale/
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        reminder = get_expired_reminder()
+        candidates = reminder.get_flash_sale_candidates(
+            store_id=request.user.store.id
+        )
+        return Response({
+            'count': len(candidates),
+            'candidates': candidates,
+        })
+
+
+@extend_schema(exclude=True)
+class DiscountRecommendationsView(APIView):
+    """
+    Get discount recommendations for expiring products.
+    
+    GET /api/inventory/expired-reminder/discounts/
+    Returns tiered discount suggestions with bundling.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        reminder = get_expired_reminder()
+        data = reminder.get_seller_discount_recommendations(
+            store_id=request.user.store.id
+        )
+        return Response({
+            'recommendations': data.get('recommendations', []),
+            'bundling_suggestions': data.get('bundling_suggestions', []),
+            'financial_impact': data.get('financial_impact', {}),
+        })
+
+
+@extend_schema(exclude=True)
+class TriggerExpiryCheckView(APIView):
+    """
+    Manually trigger full expiry check for this store.
+    
+    POST /api/inventory/expired-reminder/check/
+    Updates batch statuses and sends notifications.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        reminder = get_expired_reminder()
+        result = reminder.check_store_expiry(
+            store_id=request.user.store.id
+        )
         return Response(result)

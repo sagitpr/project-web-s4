@@ -51,6 +51,7 @@ urlpatterns = [
     
     # Smart Stock Prediction (seller)
     path('stock-prediction/', views.StockPredictionView.as_view(), name='stock-prediction'),
+    path('restock/recommendations/', views.StockPredictionView.as_view(), name='restock-recommendations'),
     path('store-forecast/', views.StoreStockForecastView.as_view(), name='store-forecast'),
     path('reorder-suggestions/', views.ReorderSuggestionView.as_view(), name='reorder-suggestions'),
     # Mock endpoint removed for production

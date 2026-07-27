@@ -1,0 +1,133 @@
+/* ── QR Scanner Modal CSS for POS Offline ── */
+.qr-scanner-modal .modal-content {
+  max-width: 520px;
+}
+
+.qr-scanner-body {
+  padding: 20px;
+}
+
+.qr-camera-viewport {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.qr-camera-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.qr-camera-placeholder {
+  text-align: center;
+  color: #94a3b8;
+}
+.qr-camera-placeholder i {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+.qr-camera-placeholder span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.qr-scanner-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border: 2px dashed rgba(8, 145, 178, 0.6);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.qr-scanner-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #0891b2;
+  border-radius: 2px;
+  animation: qrScan 2s ease-in-out infinite;
+}
+@keyframes qrScan {
+  0% { top: 0; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0; }
+}
+
+.qr-scanner-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.qr-manual-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.qr-manual-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.qr-scan-result {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.qr-scan-result h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #16a34a;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qr-scan-result p {
+  font-size: 13px;
+  color: #166534;
+  margin: 0 0 4px;
+  word-break: break-all;
+}
+.qr-scan-result pre {
+  font-size: 11px;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 6px;
+  max-height: 100px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.qr-scanner-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}

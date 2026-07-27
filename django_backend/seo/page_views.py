@@ -13,6 +13,7 @@ All pages extend base.html for automatic SEO meta, JSON-LD, and navigation.
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404
 from django.views.decorators.cache import cache_page
+from django.views.generic import TemplateView
 from django.utils.text import slugify
 from django.db.models import Count, Q
 
@@ -290,3 +291,29 @@ def promo_landing(request, slug):
         'products': products,
     }
     return render(request, 'seo/promo_page.html', context)
+
+
+# ── PUBLIC GUEST CHECKOUT PAGE ──
+
+def public_checkout(request, slug):
+    """Render public guest checkout page with store info."""
+    if not _HAS_PRODUCTS or Store is None:
+        raise Http404("Toko tidak tersedia")
+
+    store = get_object_or_404(Store, slug=slug, status='active')
+
+    context = {
+        'store': store,
+    }
+    return render(request, 'public/checkout/index.html', context)
+
+
+# ── PUBLIC ORDER TRACKING PAGE ──
+
+def public_tracking(request, order_number):
+    """Render public order tracking page."""
+    context = {
+        'order_number': order_number,
+        'store_initial': order_number[:1] if order_number else 'W',
+    }
+    return render(request, 'public/tracking/index.html', context)

@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lacak Pesanan | Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/public/tracking.css' %}">
+</head>
+<body>
+<div class="tracking-page">
+    <header class="tracking-header">
+        <div class="tracking-header-inner">
+            <a href="/" class="tracking-logo">
+                <img src="{% static 'images/Warungio L.png' %}" alt="Warungio" height="32">
+                <span>Warungio</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="tracking-container">
+        <!-- Search -->
+        <div class="tracking-search-card">
+            <h1><i class="fa-solid fa-location-dot"></i> Lacak Pesanan</h1>
+            <p>Masukkan nomor pesanan untuk melihat status terkini.</p>
+            <div class="tracking-search-row">
+                <input type="text" id="orderNumberInput" class="form-input" placeholder="Contoh: WRG-ABC12345" value="{{ order_number|default:'' }}">
+                <button id="btnTrackOrder" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Lacak</button>
+            </div>
+        </div>
+
+        <!-- Result (hidden by default) -->
+        <div id="trackingResult" class="tracking-result" style="display:none;">
+            <!-- Store Info -->
+            <div class="tracking-store-card">
+                <div class="tracking-store-icon">{{ store_initial|default:'?' }}</div>
+                <div>
+                    <h3 id="storeName">---</h3>
+                    <p id="orderNumberDisplay">---</p>
+                </div>
+                <span id="orderStatusBadge" class="status-badge">---</span>
+            </div>
+
+            <!-- Timeline -->
+            <div class="tracking-card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Status Pesanan</h3>
+                <div id="timeline" class="timeline"></div>
+            </div>
+
+            <!-- Live Map (placeholder) -->
+            <div class="tracking-card" id="mapCard" style="display:none;">
+                <h3><i class="fa-solid fa-map"></i> Live Tracking</h3>
+                <div id="liveMap" class="live-map">
+                    <div class="map-placeholder">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <p>Peta live tracking akan muncul saat kurir dalam perjalanan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Info -->
+            <div class="tracking-card" id="driverCard" style="display:none;">
+                <h3><i class="fa-solid fa-user"></i> Informasi Driver</h3>
+                <div id="driverInfo" class="driver-info"></div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="tracking-card">
+                <h3><i class="fa-solid fa-receipt"></i> Detail Pesanan</h3>
+                <div id="orderDetails" class="order-details"></div>
+                <div class="order-divider"></div>
+                <div class="order-summary" id="orderSummary"></div>
+            </div>
+
+            <!-- Proof of Delivery -->
+            <div class="tracking-card" id="podCard" style="display:none;">
+                <h3><i class="fa-solid fa-image"></i> Bukti Pengiriman</h3>
+                <div id="podContent" class="pod-content"></div>
+            </div>
+
+            <!-- Contact Seller -->
+            <div class="tracking-card">
+                <h3><i class="fa-solid fa-headset"></i> Butuh Bantuan?</h3>
+                <p style="font-size:14px;color:#475569;">Hubungi penjual jika ada pertanyaan tentang pesanan Anda.</p>
+                <p style="font-size:14px;font-weight:600;" id="sellerContact">---</p>
+            </div>
+        </div>
+
+        <!-- Not Found -->
+        <div id="trackingNotFound" class="tracking-card" style="display:none;">
+            <div class="empty-state">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <h3>Pesanan Tidak Ditemukan</h3>
+                <p>Periksa kembali nomor pesanan Anda atau hubungi penjual.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var numberInput = document.getElementById('orderNumberInput');
+    var btnTrack = document.getElementById('btnTrackOrder');
+
+    function trackOrder() {
+        var orderNumber = numberInput.value.trim();
+        if (!orderNumber) { alert('Masukkan nomor pesanan.'); return; }
+
+        var resultDiv = document.getElementById('trackingResult');
+        var notFoundDiv = document.getElementById('trackingNotFound');
+        resultDiv.style.display = 'none';
+        notFoundDiv.style.display = 'none';
+
+        fetch('/api/orders/track-public/?order_number=' + encodeURIComponent(orderNumber))
+            .then(function (res) {
+                if (!res.ok) throw new Error('Not found');
+                return res.json();
+            })
+            .then(function (data) {
+                renderTracking(data);
+                resultDiv.style.display = 'block';
+            })
+            .catch(function () {
+                notFoundDiv.style.display = 'block';
+            });
+    }
+
+    btnTrack.addEventListener('click', trackOrder);
+    numberInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') trackOrder(); });
+
+    // Auto-track if order number is pre-filled
+    if (numberInput.value) trackOrder();
+
+    function renderTracking(data) {
+        var order = data.order || {};
+        var delivery = data.delivery || {};
+        var items = data.items || [];
+
+        document.getElementById('storeName').textContent = order.store_name || 'Toko';
+        document.getElementById('orderNumberDisplay').textContent = 'Pesanan: ' + (order.order_number || '');
+        document.getElementById('orderStatusBadge').textContent = getStatusLabel(order.order_status || 'pending');
+        document.getElementById('orderStatusBadge').className = 'status-badge ' + (order.order_status || 'pending');
+
+        // Timeline
+        renderTimeline(delivery.delivery_status || 'menunggu_konfirmasi');
+
+        // Map
+        if (delivery.delivery_status === 'dalam_perjalanan' || delivery.delivery_status === 'kurir_menjemput') {
+            document.getElementById('mapCard').style.display = 'block';
+        }
+
+        // Driver
+        if (delivery.driver_name) {
+            document.getElementById('driverCard').style.display = 'block';
+            document.getElementById('driverInfo').innerHTML =
+                '<div class="driver-row"><i class="fa-solid fa-user"></i> ' + escapeHtml(delivery.driver_name) + '</div>' +
+                (delivery.driver_phone ? '<div class="driver-row"><i class="fa-solid fa-phone"></i> ' + escapeHtml(delivery.driver_phone) + '</div>' : '') +
+                (delivery.vehicle_plate ? '<div class="driver-row"><i class="fa-solid fa-car"></i> ' + escapeHtml(delivery.vehicle_plate) + '</div>' : '');
+        }
+
+        // Order Items
+        var itemsHtml = items.map(function (item) {
+            return '<div class="item-row"><span>' + escapeHtml(item.product_name) + ' x' + item.qty + '</span><span>Rp ' + formatNumber(item.subtotal) + '</span></div>';
+        }).join('');
+        document.getElementById('orderDetails').innerHTML = itemsHtml;
+
+        // Summary
+        document.getElementById('orderSummary').innerHTML =
+            '<div class="summary-row"><span>Subtotal</span><span>Rp ' + formatNumber(order.subtotal) + '</span></div>' +
+            '<div class="summary-row"><span>Ongkir</span><span>Rp ' + formatNumber(order.shipping_cost) + '</span></div>' +
+            '<div class="summary-row grand-total"><span>Total</span><span>Rp ' + formatNumber(order.total_price) + '</span></div>';
+
+        // POD
+        if (delivery.pod_photo) {
+            document.getElementById('podCard').style.display = 'block';
+            document.getElementById('podContent').innerHTML = '<img src="' + delivery.pod_photo + '" alt="POD" style="max-width:100%;border-radius:8px;">';
+        }
+
+        // Contact
+        document.getElementById('sellerContact').textContent = order.store_phone ? 'No. Toko: ' + order.store_phone : 'Hubungi toko melalui chat';
+    }
+
+    function renderTimeline(status) {
+        var steps = [
+            { key: 'menunggu_konfirmasi', label: 'Pesanan Dibuat', icon: 'fa-file-invoice' },
+            { key: 'diproses_penjual', label: 'Diproses Penjual', icon: 'fa-box' },
+            { key: 'menunggu_penjemputan', label: 'Siap Diambil', icon: 'fa-box-open' },
+            { key: 'kurir_menjemput', label: 'Kurir Menjemput', icon: 'fa-motorcycle' },
+            { key: 'dalam_perjalanan', label: 'Dalam Perjalanan', icon: 'fa-truck' },
+            { key: 'pesanan_diterima', label: 'Pesanan Diterima', icon: 'fa-circle-check' },
+        ];
+
+        var statusOrder = steps.map(function (s) { return s.key; });
+        var currentIdx = statusOrder.indexOf(status);
+        if (currentIdx === -1) currentIdx = 0;
+
+        var html = '';
+        steps.forEach(function (step, i) {
+            var isCompleted = i <= currentIdx;
+            var isCurrent = i === currentIdx;
+            html += '<div class="timeline-item ' + (isCompleted ? 'completed' : '') + (isCurrent ? ' current' : '') + '">' +
+                '<div class="timeline-dot"><i class="fa-solid ' + step.icon + '"></i></div>' +
+                '<div class="timeline-content"><span class="timeline-label">' + step.label + '</span></div></div>';
+        });
+        document.getElementById('timeline').innerHTML = html;
+    }
+
+    function getStatusLabel(status) {
+        var labels = {
+            'pending': 'Menunggu Pembayaran',
+            'paid': 'Lunas',
+            'processed': 'Diproses',
+            'shipped': 'Dikirim',
+            'completed': 'Selesai',
+            'cancelled': 'Dibatalkan',
+            'refunded': 'Dikembalikan',
+            'menunggu_konfirmasi': 'Menunggu Konfirmasi',
+            'diproses_penjual': 'Diproses',
+            'menunggu_penjemputan': 'Siap Diambil',
+            'kurir_menjemput': 'Kurir Menjemput',
+            'dalam_perjalanan': 'Dalam Perjalanan',
+            'pesanan_diterima': 'Selesai',
+        };
+        return labels[status] || status;
+    }
+
+    function formatNumber(n) { return Number(n || 0).toLocaleString('id-ID'); }
+    function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&#34;'); }
+});
+</script>
+</body>
+</html>
