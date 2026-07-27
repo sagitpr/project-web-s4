@@ -23,6 +23,7 @@ from .fraud_detection import get_fraud_detection
 from .notification_generator import get_notification_generator
 from .dashboard_insights import get_dashboard_insights
 from drf_spectacular.utils import extend_schema
+from notifications.services import notify_ai_scan_complete
 
 # Celery task imports — wrapped so import doesn't fail if Celery/Redis is down
 try:
@@ -168,6 +169,14 @@ class AIProductVisionView(views.APIView):
                 result = vision.scan_label(image_data)
             else:
                 result = vision.analyze_product_image(image_data, product_name)
+            # Notify on sync completion
+            try:
+                if result and result.get('status') in ('success', None):
+                    pname = product_name or result.get('title', 'Produk')
+                    confidence = float(result.get('confidence', 0) or 0)
+                    notify_ai_scan_complete(request.user.id, pname, result, confidence)
+            except Exception as exc:
+                logger.warning('AI scan notification failed: %s', exc)
             return Response(result)
 
         # Async mode (default) — dispatch to Celery, return task_id
@@ -372,6 +381,18 @@ class AISellerStockView(views.APIView):
         assistant = get_seller_assistant(store)
         stock_recs = assistant.get_stock_recommendations()
         promo_recs = assistant.get_promotion_recommendations()
+        
+        # Send notification for stock recommendations
+        try:
+            from notifications.services import notify_stock_prediction
+            for rec in (stock_recs or []):
+                product_name = rec.get('product_name', 'Produk')
+                predicted_days = rec.get('predicted_days', 7)
+                current_stock = rec.get('current_stock', 0)
+                notify_stock_prediction(request.user.id, product_name, predicted_days, current_stock)
+        except Exception as exc:
+            logger.warning('Stock prediction notification failed: %s', exc)
+        
         return Response({'stock_recommendations': stock_recs, 'promotion_recommendations': promo_recs})
 
 

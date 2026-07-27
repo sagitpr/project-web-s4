@@ -22,8 +22,12 @@ from rest_framework.response import Response
 from django.db.models import Sum, Count, Q
 from django.core.cache import cache
 from accounts.permissions import IsSeller
+from accounts.response_utils import success_response, error_response
 
-from .models import Payment, PaymentMethod, MidtransTransaction, BankAccount
+from .models import (
+    Payment, PaymentMethod, MidtransTransaction, BankAccount, 
+    BankAccountChangeRequest,
+)
 from .serializers import (
     PaymentMethodSerializer, PaymentSerializer, MidtransSnapRequest,
     MidtransNotificationSerializer, PaymentHistorySerializer, BankAccountSerializer
@@ -370,15 +374,460 @@ class BankAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 @extend_schema(exclude=True)
 class BankAccountSetPrimaryView(views.APIView):
-    """Set a specific bank account as primary/default."""
+    """Set a specific bank account as primary/default.
+    
+    NOTE: Once an account is verified (is_verified=True), it is READ-ONLY.
+    Use the 'Request Account Change' flow to change it.
+    """
     permission_classes = (permissions.IsAuthenticated, IsSeller)
 
     def post(self, request, pk):
         store = request.user.store
         account = generics.get_object_or_404(BankAccount, pk=pk, store=store)
+        
+        # Prevent changing an already-verified primary account
+        if account.is_primary and account.is_verified:
+            return error_response(
+                message='Rekening utama yang telah terverifikasi tidak dapat diubah langsung. '
+                        'Gunakan fitur "Ajukan Perubahan Rekening" di Pengaturan Akun.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='primary_account_locked',
+            )
+        
         account.is_primary = True
         account.save()
         return Response({'message': 'Rekening bank utama berhasil diperbarui.', 'account': BankAccountSerializer(account).data})
+
+
+@extend_schema(exclude=True)
+class BankAccountRequestChangeView(views.APIView):
+    """
+    Request a change to the primary withdrawal account.
+    
+    Step 1: Submit new account details → triggers OTP verification.
+    Step 2: Verify OTP → triggers password confirmation.
+    Step 3: Confirm password → enters waiting period.
+    Step 4: Waiting period ends → new account becomes active.
+    
+    During the process, the OLD account remains active for withdrawals.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        from .serializers import BankAccountChangeRequestSerializer
+        
+        store = request.user.store
+        user = request.user
+        
+        # Get current primary account
+        current_primary = BankAccount.objects.filter(store=store, is_primary=True).first()
+        if not current_primary:
+            return error_response(
+                message='Belum ada rekening utama yang terdaftar.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='no_primary_account',
+            )
+        
+        new_bank_name = request.data.get('bank_name', '').strip()
+        new_account_number = request.data.get('account_number', '').strip()
+        new_account_holder = request.data.get('account_holder', '').strip()
+        
+        if not new_bank_name or not new_account_number or not new_account_holder:
+            return error_response(
+                message='Nama bank, nomor rekening, dan nama pemilik rekening wajib diisi.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='missing_fields',
+            )
+        
+        # Check for existing pending request
+        existing_pending = BankAccountChangeRequest.objects.filter(
+            store=store,
+            status__in=['pending_otp', 'pending_password', 'pending_waiting_period']
+        ).first()
+        if existing_pending:
+            return error_response(
+                message=f'Masih ada permintaan perubahan rekening yang sedang diproses '
+                        f'(Status: {existing_pending.get_status_display()}). '
+                        f'Selesaikan atau batalkan permintaan tersebut terlebih dahulu.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='pending_request_exists',
+                existing_request_id=existing_pending.id,
+                existing_request_status=existing_pending.status,
+            )
+        
+        # Create change request
+        ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+        
+        change_req = BankAccountChangeRequest.objects.create(
+            store=store,
+            user=user,
+            old_bank_name=current_primary.bank_name,
+            old_account_number=current_primary.account_number,
+            old_account_holder=current_primary.account_holder,
+            new_bank_name=new_bank_name,
+            new_account_number=new_account_number,
+            new_account_holder=new_account_holder,
+            status='pending_otp',
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        
+        logger.info(
+            'BANK ACCOUNT CHANGE REQUEST CREATED — User: %s | Store: %s | '
+            'Old: %s ••••%s → New: %s ••••%s | IP: %s | Request ID: %d',
+            user.email, store.id,
+            current_primary.bank_name, current_primary.account_number[-4:],
+            new_bank_name, new_account_number[-4:],
+            ip_address, change_req.id,
+        )
+        
+        # Send notification to user about the change request
+        try:
+            Notification.objects.create(
+                user=user,
+                notification_type='system',
+                priority='high',
+                title='Permintaan Perubahan Rekening Diajukan',
+                description=f'Perubahan rekening penarikan dari '
+                            f'{current_primary.bank_name} ••••{current_primary.account_number[-4:]} '
+                            f'ke {new_bank_name} ••••{new_account_number[-4:]} sedang diproses. '
+                            f'Selesaikan verifikasi OTP dan password untuk melanjutkan.',
+                action_url='/seller/pengaturan/',
+                action_text='Lihat Status',
+            )
+        except Exception as exc:
+            logger.warning('Bank change request notification failed: %s', exc)
+        
+        # Generate and send OTP
+        from accounts.models import OTP
+        otp = OTP.objects.create(
+            user=user,
+            email=user.email,
+            phone=str(user.phone) if user.phone else None,
+            purpose='payment',
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        # Store OTP hash on the change request for verification
+        change_req.otp_code_hash = otp.otp_code_hash
+        change_req.save(update_fields=['otp_code_hash'])
+        
+        # Send OTP via Celery async or sync fallback
+        from accounts.views import _dispatch_otp_async
+        channels = _dispatch_otp_async(
+            email=user.email,
+            phone=str(user.phone) if user.phone else None,
+            otp_code=otp.otp_code,
+            purpose='payment',
+            user_full_name=user.full_name,
+        )
+        if not channels:
+            from accounts.services.email_service import send_otp_email
+            send_otp_email(
+                email=user.email,
+                otp_code=otp.otp_code,
+                purpose='payment',
+                user_full_name=user.full_name,
+            )
+        
+        return success_response(
+            message='Permintaan perubahan rekening telah dibuat. '
+                    'Silakan verifikasi OTP yang dikirim ke email Anda.',
+            status_code=status.HTTP_201_CREATED,
+            change_request_id=change_req.id,
+            masked_current_account=current_primary.masked_account,
+            masked_new_account=f'{new_bank_name} ••••{new_account_number[-4:]}',
+            next_step='verify_otp',
+        )
+
+
+@extend_schema(exclude=True)
+class BankAccountVerifyChangeOTPView(views.APIView):
+    """
+    Step 2: Verify OTP for the bank account change request.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        from accounts.models import OTP
+        from django.utils import timezone
+        
+        store = request.user.store
+        user = request.user
+        
+        change_request_id = request.data.get('change_request_id')
+        otp_code = request.data.get('otp_code', '').strip()
+        
+        if not change_request_id or not otp_code:
+            return error_response(
+                message='ID permintaan dan kode OTP wajib diisi.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='missing_fields',
+            )
+        
+        change_req = generics.get_object_or_404(
+            BankAccountChangeRequest,
+            id=change_request_id, store=store, user=user
+        )
+        
+        if change_req.status != 'pending_otp':
+            return error_response(
+                message=f'Status permintaan tidak valid (saat ini: {change_req.get_status_display()}).',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='invalid_status',
+            )
+        
+        # Verify OTP hash
+        otp_code_hash = OTP.hash_otp(otp_code)
+        if change_req.otp_code_hash != otp_code_hash:
+            logger.warning(
+                'BANK ACCOUNT CHANGE OTP FAILED — User: %s | Request: %d',
+                user.email, change_request_id,
+            )
+            return error_response(
+                message='Kode OTP tidak valid.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='invalid_otp',
+            )
+        
+        # Mark OTP as verified
+        change_req.otp_verified = True
+        change_req.otp_verified_at = timezone.now()
+        change_req.status = 'pending_password'
+        change_req.save(update_fields=['otp_verified', 'otp_verified_at', 'status'])
+        
+        logger.info(
+            'BANK ACCOUNT CHANGE OTP VERIFIED — User: %s | Request: %d',
+            user.email, change_request_id,
+        )
+        
+        return success_response(
+            message='OTP berhasil diverifikasi. Silakan konfirmasi password Anda.',
+            status_code=status.HTTP_200_OK,
+            change_request_id=change_req.id,
+            next_step='confirm_password',
+        )
+
+
+@extend_schema(exclude=True)
+class BankAccountConfirmPasswordView(views.APIView):
+    """
+    Step 3: Confirm password for the bank account change request.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        from django.utils import timezone
+        
+        store = request.user.store
+        user = request.user
+        
+        change_request_id = request.data.get('change_request_id')
+        password = request.data.get('password', '')
+        
+        if not change_request_id or not password:
+            return error_response(
+                message='ID permintaan dan password wajib diisi.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='missing_fields',
+            )
+        
+        change_req = generics.get_object_or_404(
+            BankAccountChangeRequest,
+            id=change_request_id, store=store, user=user
+        )
+        
+        if change_req.status != 'pending_password':
+            return error_response(
+                message=f'Status permintaan tidak valid (saat ini: {change_req.get_status_display()}).',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='invalid_status',
+            )
+        
+        if not user.check_password(password):
+            logger.warning(
+                'BANK ACCOUNT CHANGE PASSWORD FAILED — User: %s | Request: %d',
+                user.email, change_request_id,
+            )
+            return error_response(
+                message='Password tidak valid.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='invalid_password',
+            )
+        
+        # Mark password as verified, enter waiting period
+        change_req.password_verified = True
+        change_req.password_verified_at = timezone.now()
+        change_req.status = 'pending_waiting_period'
+        change_req.waiting_started_at = timezone.now()
+        change_req.waiting_ends_at = timezone.now() + timezone.timedelta(
+            hours=change_req.waiting_period_hours
+        )
+        change_req.save(update_fields=[
+            'password_verified', 'password_verified_at', 'status',
+            'waiting_started_at', 'waiting_ends_at',
+        ])
+        
+        logger.info(
+            'BANK ACCOUNT CHANGE PASSWORD VERIFIED — User: %s | Request: %d | '
+            'Waiting until: %s',
+            user.email, change_request_id, change_req.waiting_ends_at,
+        )
+        
+        return success_response(
+            message=f'Password berhasil dikonfirmasi. Perubahan rekening akan aktif '
+                    f'setelah masa tunggu {change_req.waiting_period_hours} jam '
+                    f'(hingga {change_req.waiting_ends_at.strftime("%d %b %H:%M")}). '
+                    f'Rekening lama tetap aktif selama proses ini.',
+            status_code=status.HTTP_200_OK,
+            change_request_id=change_req.id,
+            waiting_ends_at=change_req.waiting_ends_at.isoformat(),
+            next_step='waiting_period',
+        )
+
+
+@extend_schema(exclude=True)
+class BankAccountCancelChangeView(views.APIView):
+    """
+    Cancel a pending bank account change request.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def post(self, request):
+        store = request.user.store
+        user = request.user
+        
+        change_request_id = request.data.get('change_request_id')
+        if not change_request_id:
+            return error_response(
+                message='ID permintaan wajib diisi.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='missing_fields',
+            )
+        
+        change_req = generics.get_object_or_404(
+            BankAccountChangeRequest,
+            id=change_request_id, store=store, user=user
+        )
+        
+        if change_req.status in ['completed', 'approved', 'rejected', 'expired']:
+            return error_response(
+                message=f'Permintaan dengan status {change_req.get_status_display()} tidak dapat dibatalkan.',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code='cannot_cancel',
+            )
+        
+        change_req.status = 'cancelled'
+        change_req.save(update_fields=['status'])
+        
+        logger.info(
+            'BANK ACCOUNT CHANGE CANCELLED — User: %s | Request: %d',
+            user.email, change_request_id,
+        )
+        
+        return success_response(
+            message='Permintaan perubahan rekening berhasil dibatalkan.',
+            status_code=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(exclude=True)
+class BankAccountChangeRequestListView(views.APIView):
+    """
+    List all bank account change requests for the seller.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        from .serializers import BankAccountChangeRequestSerializer
+        
+        store = request.user.store
+        requests_qs = BankAccountChangeRequest.objects.filter(
+            store=store
+        ).order_by('-created_at')[:20]
+        
+        return Response({
+            'count': requests_qs.count(),
+            'results': BankAccountChangeRequestSerializer(requests_qs, many=True).data,
+        })
+
+
+@extend_schema(exclude=True)
+class BankAccountCheckActivationView(views.APIView):
+    """
+    Check and activate bank account changes whose waiting period has expired.
+    
+    The frontend should call this periodically (e.g., on visiting the settings page)
+    to check if a pending change request's waiting period has ended.
+    If so, the request is activated and the new account becomes primary.
+    """
+    permission_classes = (permissions.IsAuthenticated, IsSeller)
+
+    def get(self, request):
+        store = request.user.store
+        now = timezone.now()
+        activated = []
+        
+        # Find all change requests whose waiting period has expired
+        pending_requests = BankAccountChangeRequest.objects.filter(
+            store=store,
+            status='pending_waiting_period',
+            waiting_ends_at__lte=now,
+            otp_verified=True,
+            password_verified=True,
+        )
+        
+        for change_req in pending_requests:
+            try:
+                new_account = change_req.activate()
+                activated.append({
+                    'id': change_req.id,
+                    'new_account_id': new_account.id,
+                    'new_account_masked': new_account.masked_account,
+                    'completed_at': change_req.completed_at.isoformat() if change_req.completed_at else None,
+                })
+                
+                # Notify user
+                try:
+                    Notification.objects.create(
+                        user=request.user,
+                        notification_type='system',
+                        priority='high',
+                        title='Rekening Utama Berhasil Diperbarui',
+                        description=f'Rekening penarikan utama telah berubah menjadi '
+                                    f'{new_account.bank_name} ••••{new_account.account_number[-4:]} '
+                                    f'a.n. {new_account.account_holder}.',
+                        action_url='/seller/pengaturan/',
+                        action_text='Lihat Rekening',
+                    )
+                except Exception as exc:
+                    logger.warning('Activation notification failed: %s', exc)
+                    
+                logger.info(
+                    'BANK ACCOUNT CHANGE ACTIVATED — Request: %d | '
+                    'Old: %s ••••%s → New: %s ••••%s',
+                    change_req.id,
+                    change_req.old_bank_name, change_req.old_account_number[-4:],
+                    new_account.bank_name, new_account.account_number[-4:],
+                )
+            except Exception as exc:
+                logger.error('Bank account activation failed for request %d: %s', change_req.id, exc)
+        
+        # Also return pending requests that are still in waiting period
+        still_pending = BankAccountChangeRequest.objects.filter(
+            store=store,
+            status='pending_waiting_period',
+            waiting_ends_at__gt=now,
+        ).first()
+        
+        return success_response(
+            message=f'{len(activated)} perubahan rekening telah diaktifkan.' if activated else 'Tidak ada perubahan rekening yang perlu diaktifkan.',
+            activated_count=len(activated),
+            activated=activated,
+            has_pending=still_pending is not None,
+            pending_ends_at=still_pending.waiting_ends_at.isoformat() if still_pending else None,
+        )
 
 
 @extend_schema(exclude=True)

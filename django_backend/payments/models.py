@@ -5,6 +5,7 @@ Midtrans Snap payment integration.
 
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 
 
@@ -189,7 +190,22 @@ class MidtransTransaction(models.Model):
 
 
 class BankAccount(models.Model):
-    """Store withdrawal bank accounts."""
+    """Store withdrawal bank accounts.
+    
+    The first bank account added during/after registration is automatically
+    set as the PRIMARY WITHDRAWAL ACCOUNT (is_primary=True, is_verified=True).
+    
+    Primary accounts are READ-ONLY in the settings UI to prevent misuse.
+    To change the primary account, the seller must use the "Ajukan Perubahan
+    Rekening" flow which requires:
+      1. OTP verification via email/phone
+      2. Password confirmation
+      3. Identity verification (if applicable)
+      4. Waiting period before new account becomes active
+    
+    All change requests are logged in BankAccountChangeRequest with
+    full audit trail (IP, device, timestamps, old/new accounts).
+    """
     store = models.ForeignKey(
         'stores.Store', on_delete=models.CASCADE,
         related_name='bank_accounts'
@@ -198,6 +214,9 @@ class BankAccount(models.Model):
     account_number = models.CharField(max_length=50, verbose_name='Nomor Rekening')
     account_holder = models.CharField(max_length=100, verbose_name='Nama Pemilik Rekening')
     is_primary = models.BooleanField(default=False, verbose_name='Rekening Utama')
+    is_verified = models.BooleanField(default=False, verbose_name='Terverifikasi',
+        help_text='Rekening utama yang telah terverifikasi dan menjadi tujuan pencairan dana')
+    verified_at = models.DateTimeField(null=True, blank=True, verbose_name='Terverifikasi Pada')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -208,19 +227,171 @@ class BankAccount(models.Model):
         ordering = ['-is_primary', '-created_at']
 
     def __str__(self):
-        return f'{self.bank_name} - {self.account_number} ({self.account_holder})'
+        return f'{self.bank_name} - {self.masked_account} ({self.account_holder})'
+
+    @property
+    def masked_account(self) -> str:
+        """Return masked account number for display (e.g. 'BCA ••••1234')."""
+        if not self.account_number or len(self.account_number) < 4:
+            return self.account_number or ''
+        return f'{self.bank_name} ••••{self.account_number[-4:]}'
 
     def save(self, *args, **kwargs):
+        # Auto-verify when set as primary (first account or explicitly set)
+        has_update_fields = bool(kwargs.get('update_fields'))
+        if self.is_primary and not self.verified_at and not has_update_fields:
+            # Only auto-set timestamps on full save, never on partial update_fields
+            self.is_verified = True
+            self.verified_at = timezone.now()
+            
         if self.is_primary:
             # Set other bank accounts of this store to non-primary
             BankAccount.objects.filter(store=self.store, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
         super().save(*args, **kwargs)
         # Sync back to Store model to preserve legacy compatibility
-        if self.is_primary:
+        if self.is_primary and not has_update_fields:
             self.store.bank_name = self.bank_name
             self.store.bank_account = self.account_number
             self.store.bank_owner = self.account_holder
             self.store.save(update_fields=['bank_name', 'bank_account', 'bank_owner'])
+
+
+class BankAccountChangeRequest(models.Model):
+    """
+    Track and secure bank account change requests.
+    
+    Sellers cannot freely change their primary withdrawal account.
+    Any change must go through this secure flow:
+      1. Seller submits change request with new account details
+      2. System sends OTP to email/phone for verification
+      3. Seller confirms with OTP + password
+      4. Waiting period before change takes effect (configurable)
+      5. Notification sent to seller about the change
+      6. Full audit trail recorded
+    
+    During the waiting period, the OLD account remains active for withdrawals.
+    """
+    STATUS_CHOICES = [
+        ('pending_otp', 'Menunggu Verifikasi OTP'),
+        ('pending_password', 'Menunggu Konfirmasi Password'),
+        ('pending_approval', 'Menunggu Persetujuan'),
+        ('pending_waiting_period', 'Masa Tunggu'),
+        ('approved', 'Disetujui'),
+        ('completed', 'Selesai'),
+        ('rejected', 'Ditolak'),
+        ('cancelled', 'Dibatalkan'),
+        ('expired', 'Kadaluwarsa'),
+    ]
+
+    store = models.ForeignKey(
+        'stores.Store', on_delete=models.CASCADE,
+        related_name='account_change_requests'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='account_change_requests'
+    )
+    
+    # Old account (read-only reference)
+    old_bank_name = models.CharField(max_length=50, verbose_name='Bank Lama')
+    old_account_number = models.CharField(max_length=50, verbose_name='No. Rekening Lama')
+    old_account_holder = models.CharField(max_length=100, verbose_name='Pemilik Rekening Lama')
+    
+    # New requested account
+    new_bank_name = models.CharField(max_length=50, verbose_name='Bank Baru')
+    new_account_number = models.CharField(max_length=50, verbose_name='No. Rekening Baru')
+    new_account_holder = models.CharField(max_length=100, verbose_name='Pemilik Rekening Baru')
+    
+    # Verification
+    status = models.CharField(
+        max_length=30, choices=STATUS_CHOICES,
+        default='pending_otp', verbose_name='Status'
+    )
+    otp_verified = models.BooleanField(default=False, verbose_name='OTP Terverifikasi')
+    password_verified = models.BooleanField(default=False, verbose_name='Password Terverifikasi')
+    otp_verified_at = models.DateTimeField(null=True, blank=True)
+    password_verified_at = models.DateTimeField(null=True, blank=True)
+    
+    # Security
+    otp_code_hash = models.CharField(max_length=64, blank=True, null=True)
+    verification_token = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Waiting period (default 24 hours, configurable)
+    waiting_period_hours = models.IntegerField(default=24, verbose_name='Masa Tunggu (Jam)')
+    waiting_started_at = models.DateTimeField(null=True, blank=True)
+    waiting_ends_at = models.DateTimeField(null=True, blank=True)
+    
+    # Audit trail
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True, verbose_name='Catatan')
+    
+    # Admin approval (optional — for high-value changes)
+    requires_admin_approval = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='approved_account_changes'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'bank_account_change_requests'
+        verbose_name = 'Permintaan Perubahan Rekening'
+        verbose_name_plural = 'Permintaan Perubahan Rekening'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['store', 'status']),
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['status']),
+        ]
+
+    def __str__(self):
+        return (f'Change Req #{self.id}: {self.old_bank_name} → {self.new_bank_name} '
+                f'({self.get_status_display()})')
+
+    def can_activate(self) -> bool:
+        """Check if the new account can be activated."""
+        if not self.otp_verified or not self.password_verified:
+            return False
+        if self.status != 'pending_waiting_period':
+            return False
+        if self.waiting_ends_at and timezone.now() < self.waiting_ends_at:
+            return False
+        return True
+
+    def activate(self):
+        """Activate the new bank account as primary."""
+        from django.utils import timezone
+        
+        # Create the new bank account as primary
+        new_account = BankAccount.objects.create(
+            store=self.store,
+            bank_name=self.new_bank_name,
+            account_number=self.new_account_number,
+            account_holder=self.new_account_holder,
+            is_primary=True,
+            is_verified=True,
+            verified_at=timezone.now(),
+        )
+        
+        # Mark old primary account as non-primary (BUT keep it for audit)
+        old_accounts = BankAccount.objects.filter(
+            store=self.store, is_primary=True
+        ).exclude(pk=new_account.pk)
+        old_accounts.update(is_primary=False)
+        
+        # Update request status
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save(update_fields=['status', 'completed_at'])
+        
+        return new_account
 
 
 class AdminFeeTransaction(models.Model):

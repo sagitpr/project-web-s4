@@ -101,26 +101,51 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
             )
             return False
     
+    # ⚠️ CRITICAL FIX: Only append 'email' to channels if safe_delay() returns True.
+    # Previously, 'email' was always appended regardless of whether the Celery task
+    # was actually dispatched. This caused the RegisterView to think the OTP was
+    # sent successfully when Celery/Redis was down, bypassing the sync fallback.
+    # The sync fallback (send_otp_email called directly) is the caller's responsibility
+    # when channels is empty — see RegisterView.create() and LoginView.post().
     if email:
-        safe_delay(
+        if safe_delay(
             send_otp_task,
             identifier=email,
             otp_code=otp_code,
             purpose=purpose,
             user_full_name=user_full_name,
-        )
-        channels.append('email')
+        ):
+            channels.append('email')
+            logger.info(
+                'OTP async dispatch succeeded — Email: %s | Purpose: %s',
+                email, purpose,
+            )
+        else:
+            logger.warning(
+                'OTP async dispatch FAILED — Email: %s | Purpose: %s | '
+                'Will fall back to sync delivery',
+                email, purpose,
+            )
     
     if phone and _whatsapp_configured():
-        safe_delay(
+        if safe_delay(
             send_whatsapp_only_otp_task,
             phone=phone,
             otp_code=otp_code,
             purpose=purpose,
             user_full_name=user_full_name,
-        )
-        if 'whatsapp' not in channels:
-            channels.append('whatsapp')
+        ):
+            if 'whatsapp' not in channels:
+                channels.append('whatsapp')
+            logger.info(
+                'WhatsApp OTP async dispatch succeeded — Phone: %s | Purpose: %s',
+                phone, purpose,
+            )
+        else:
+            logger.warning(
+                'WhatsApp OTP async dispatch FAILED — Phone: %s | Purpose: %s',
+                phone, purpose,
+            )
     
     return channels
 

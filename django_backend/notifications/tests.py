@@ -162,3 +162,162 @@ class TestNotificationUnreadCountAPI:
         resp = authed_client.get(self.URL)
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json()["total_unread"] >= 1
+
+
+# ─── New View Tests ──────────────────────────────────────────────────────────
+
+class TestNotificationArchiveAPI:
+    """Test NotificationArchiveView."""
+    URL = reverse("notification-archive")
+
+    def test_archive_requires_auth(self, api_client):
+        resp = api_client.post(self.URL, {'notification_ids': [1]}, format='json')
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_archive_single(self, authed_client, verified_user):
+        n = Notification.objects.create(
+            user=verified_user, title="Arsipkan",
+            description="Test", notification_type="system",
+        )
+        resp = authed_client.post(self.URL, {
+            'notification_ids': [n.id], 'archive': True
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        n.refresh_from_db()
+        assert n.is_archived is True
+
+    def test_unarchive(self, authed_client, verified_user):
+        n = Notification.objects.create(
+            user=verified_user, title="Pulihkan",
+            description="Test", notification_type="system",
+            is_archived=True,
+        )
+        resp = authed_client.post(self.URL, {
+            'notification_ids': [n.id], 'archive': False
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        n.refresh_from_db()
+        assert n.is_archived is False
+
+    def test_archive_other_user_not_affected(self, db, verified_user, buyer_user):
+        from rest_framework.test import APIClient
+        client = APIClient()
+        client.force_authenticate(user=buyer_user)
+        n = Notification.objects.create(
+            user=verified_user, title="Bukan punyamu",
+            description="Test", notification_type="system",
+        )
+        resp = client.post(self.URL, {
+            'notification_ids': [n.id], 'archive': True
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        n.refresh_from_db()
+        assert n.is_archived is False
+
+
+class TestNotificationDeleteBulkAPI:
+    """Test NotificationDeleteBulkView."""
+    URL = reverse("notification-delete-bulk")
+
+    def test_delete_bulk(self, authed_client, verified_user):
+        n1 = Notification.objects.create(
+            user=verified_user, title="Hapus 1",
+            description="Test", notification_type="system",
+        )
+        n2 = Notification.objects.create(
+            user=verified_user, title="Hapus 2",
+            description="Test", notification_type="system",
+        )
+        resp = authed_client.delete(self.URL, {
+            'notification_ids': [n1.id, n2.id]
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        assert Notification.objects.filter(id__in=[n1.id, n2.id]).count() == 0
+
+    def test_delete_requires_auth(self, api_client):
+        resp = api_client.delete(self.URL, {
+            'notification_ids': [1]
+        }, format='json')
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_delete_other_user_not_affected(self, db, verified_user, buyer_user):
+        from rest_framework.test import APIClient
+        client = APIClient()
+        client.force_authenticate(user=buyer_user)
+        n = Notification.objects.create(
+            user=verified_user, title="Jangan hapus",
+            description="Test", notification_type="system",
+        )
+        resp = client.delete(self.URL, {
+            'notification_ids': [n.id]
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        assert Notification.objects.filter(id=n.id).count() == 1  # Still exists
+
+
+class TestNotificationBroadcastAPI:
+    """Test NotificationBroadcastView."""
+    BROADCAST_URL = reverse("notification-broadcast")
+    ARCHIVE_URL = reverse("notification-archive")
+    DELETE_BULK_URL = reverse("notification-delete-bulk")
+
+    def test_broadcast_requires_admin(self, authed_client):
+        """Non-admin users cannot broadcast."""
+        resp = authed_client.post(self.BROADCAST_URL, {
+            'title': 'Test', 'description': 'Test',
+        }, format='json')
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_broadcast_requires_auth(self, api_client):
+        resp = api_client.post(self.BROADCAST_URL, {
+            'title': 'Test', 'description': 'Test',
+        }, format='json')
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_broadcast_success(self, api_client, db, verified_user):
+        """Admin can broadcast to all users."""
+        from rest_framework.test import APIClient
+        from accounts.models import User
+        # Manually create admin user
+        admin = User.objects.create_superuser(
+            email='admin@test.com',
+            password='admin123',
+            username='admin',
+        )
+        client = APIClient()
+        client.force_authenticate(user=admin)
+        
+        resp = client.post(self.BROADCAST_URL, {
+            'title': 'Test Broadcast',
+            'description': 'Test deskripsi',
+            'target_role': 'all',
+            'notification_type': 'system',
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert data['sent_count'] >= 1
+        assert data['target_role'] == 'all'
+
+    def test_broadcast_by_role(self, api_client, db, verified_user):
+        """Broadcast to specific role."""
+        from rest_framework.test import APIClient
+        from accounts.models import User
+        admin = User.objects.create_superuser(
+            email='admin2@test.com',
+            password='admin123',
+            username='admin2',
+        )
+        client = APIClient()
+        client.force_authenticate(user=admin)
+        
+        resp = client.post(self.BROADCAST_URL, {
+            'title': 'Test Broadcast',
+            'description': 'Test deskripsi',
+            'target_role': 'buyer',
+            'notification_type': 'promo',
+            'action_url': '/buyer/promo/',
+            'action_text': 'Lihat Promo',
+        }, format='json')
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert data['sent_count'] >= 0

@@ -538,6 +538,27 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/notifications/' + id + '/delete/', { method: 'DELETE' });
   };
+  RealAPI.getNotificationsUnreadCount = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/unread-count/');
+  };
+  RealAPI.archiveNotifications = function (ids, archive) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/archive/', { method: 'POST', body: JSON.stringify({ notification_ids: ids, archive: archive !== false }) });
+  };
+  RealAPI.deleteNotificationsBulk = function (ids) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/delete-bulk/', { method: 'DELETE', body: JSON.stringify({ notification_ids: ids }) });
+  };
+  RealAPI.broadcastNotification = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/broadcast/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getNotificationsByType = function (type, params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/notifications/' + (type ? '?type=' + type : '') + (qs && type ? '&' + qs : qs ? '?' + qs : ''));
+  };
 
   // ---- Chat ----
   RealAPI.getConversations = function () {

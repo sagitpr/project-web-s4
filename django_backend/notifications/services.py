@@ -404,4 +404,264 @@ def notify_user_welcome(user_id, full_name, role='buyer'):
 # Alias for backward compatibility (used by inventory.expiry_service)
 # ═══════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════
+# NEW NOTIFICATION TYPE HELPERS (v2 — Notification Center)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def notify_inventory_low(user_id, product_name, current_stock, store_name=None):
+    """Notify about low inventory levels."""
+    priority = 'critical' if current_stock == 0 else 'warning'
+    title = 'Stok Habis' if current_stock == 0 else 'Stok Menipis'
+    desc = f'Stok {product_name} habis!' if current_stock == 0 else f'Stok {product_name} tersisa {current_stock}. Segera restok!'
+    if store_name:
+        desc += f' — {store_name}'
+    return create_notification(
+        user_id=user_id,
+        notification_type='inventory',
+        priority=priority,
+        title=title,
+        description=desc,
+        action_url='/seller/products/',
+        action_text='Lihat Produk',
+        metadata={'product_name': product_name, 'current_stock': current_stock},
+    )
+
+
+def notify_expired_product(user_id, product_name, days_remaining, store_name=None):
+    """Notify about products nearing expiration."""
+    if days_remaining <= 0:
+        priority = 'critical'
+        title = 'Produk Kedaluwarsa'
+        desc = f'{product_name} sudah kedaluwarsa!'
+    elif days_remaining <= 7:
+        priority = 'warning'
+        title = 'Segera Kedaluwarsa'
+        desc = f'{product_name} akan kedaluwarsa dalam {days_remaining} hari. Segera diskon atau hapus!'
+    else:
+        priority = 'info'
+        title = 'Pengingat Kedaluwarsa'
+        desc = f'{product_name} akan kedaluwarsa dalam {days_remaining} hari.'
+    if store_name:
+        desc += f' — {store_name}'
+    return create_notification(
+        user_id=user_id,
+        notification_type='inventory',
+        priority=priority,
+        title=title,
+        description=desc,
+        action_url='/seller/products/',
+        action_text='Kelola Produk',
+        metadata={'product_name': product_name, 'days_remaining': days_remaining},
+    )
+
+
+def notify_ai_scan_complete(user_id, product_name, scan_result, confidence):
+    """Notify when AI Scan completes."""
+    status = 'berhasil' if confidence > 0.8 else 'perlu diperiksa'
+    return create_notification(
+        user_id=user_id,
+        notification_type='ai_scan',
+        priority='info' if confidence > 0.8 else 'warning',
+        title='AI Scan Selesai',
+        description=f'Pemindaian {product_name} {status} (confidence: {confidence:.0%}).',
+        action_url='/seller/smart-scan/',
+        action_text='Lihat Hasil',
+        metadata={'product_name': product_name, 'scan_result': scan_result, 'confidence': confidence},
+    )
+
+
+def notify_ai_learn_complete(user_id, product_name):
+    """Notify when AI Learning completes for a new product."""
+    return create_notification(
+        user_id=user_id,
+        notification_type='ai_scan',
+        priority='success',
+        title='AI Mempelajari Produk Baru',
+        description=f'{product_name} telah dipelajari AI. Scan berikutnya akan langsung dikenali.',
+        action_url='/seller/smart-scan/',
+        action_text='Lihat Produk',
+        metadata={'product_name': product_name},
+    )
+
+
+def notify_flash_sale_started(user_id, promo_name, discount_desc, store_name=None):
+    """Notify when a flash sale starts."""
+    desc = f'{store_name}: {discount_desc}' if store_name else discount_desc
+    return create_notification(
+        user_id=user_id,
+        notification_type='flash_sale',
+        priority='critical',
+        title=f'FLASH SALE: {promo_name}',
+        description=desc,
+        action_url='/promo/',
+        action_text='Lihat Promo',
+        metadata={'promo_name': promo_name, 'store_name': store_name},
+    )
+
+
+def notify_loyalty_points(user_id, points_earned, total_points, level=None):
+    """Notify about loyalty points earned."""
+    level_info = f' — Naik level ke {level}!' if level else ''
+    return create_notification(
+        user_id=user_id,
+        notification_type='loyalty',
+        priority='success',
+        title='Poin Didapatkan',
+        description=f'Anda mendapat {points_earned} poin! Total: {total_points} poin.{level_info}',
+        action_url='/buyer/loyalty/',
+        action_text='Lihat Poin',
+        metadata={'points_earned': points_earned, 'total_points': total_points, 'level': level or ''},
+    )
+
+
+def notify_voucher_available(user_id, voucher_code, discount_desc, store_name=None):
+    """Notify about available voucher."""
+    store_info = f' di {store_name}' if store_name else ''
+    return create_notification(
+        user_id=user_id,
+        notification_type='voucher',
+        priority='warning',
+        title='Voucher Tersedia',
+        description=f'Voucher {voucher_code}{store_info}: {discount_desc}',
+        action_url='/buyer/promo/',
+        action_text='Gunakan Voucher',
+        metadata={'voucher_code': voucher_code, 'store_name': store_name or ''},
+    )
+
+
+def notify_security_alert(user_id, activity, device_info=None):
+    """Notify about security-related activity."""
+    device = f' dari {device_info}' if device_info else ''
+    return create_notification(
+        user_id=user_id,
+        notification_type='security',
+        priority='critical',
+        title='Peringatan Keamanan',
+        description=f'{activity}{device}. Segera periksa akun Anda!',
+        action_url='/buyer/settings/',
+        action_text='Periksa Keamanan',
+        metadata={'activity': activity, 'device_info': device_info or ''},
+    )
+
+
+def notify_wallet_credit(user_id, amount, description=''):
+    """Notify about wallet credit."""
+    return create_notification(
+        user_id=user_id,
+        notification_type='wallet',
+        priority='success',
+        title='Saldo Masuk',
+        description=description or f'Saldo Warungio Anda bertambah Rp {amount:,.0f}.',
+        action_url='/buyer/wallet/',
+        action_text='Lihat Dompet',
+        metadata={'amount': str(amount)},
+    )
+
+
+def notify_wallet_debit(user_id, amount, description=''):
+    """Notify about wallet debit."""
+    return create_notification(
+        user_id=user_id,
+        notification_type='wallet',
+        priority='warning',
+        title='Penarikan Saldo',
+        description=description or f'Penarikan sebesar Rp {amount:,.0f} telah diproses.',
+        action_url='/buyer/wallet/',
+        action_text='Lihat Dompet',
+        metadata={'amount': str(amount)},
+    )
+
+
+def notify_report_ready(user_id, report_type, period):
+    """Notify when a report is ready."""
+    type_labels = {'sales': 'Penjualan', 'profit': 'Laba', 'stock': 'Stok', 'refund': 'Refund', 'delivery': 'Pengiriman'}
+    label = type_labels.get(report_type, report_type)
+    return create_notification(
+        user_id=user_id,
+        notification_type='report',
+        priority='info',
+        title=f'Laporan {label} Siap',
+        description=f'Laporan {label} periode {period} sudah siap diunduh.',
+        action_url='/seller/laporan/',
+        action_text='Lihat Laporan',
+        metadata={'report_type': report_type, 'period': period},
+    )
+
+
+def notify_delivery_status(user_id, order_number, order_id, delivery_status, courier=None):
+    """Notify about delivery status change."""
+    status_labels = {
+        'driver_assigned': 'Kurir Ditugaskan',
+        'driver_on_the_way': 'Kurir Menuju Toko',
+        'picked_up': 'Pesanan Diambil',
+        'in_transit': 'Dalam Perjalanan',
+        'arrived': 'Hampir Tiba',
+        'delivered': 'Pesanan Diterima',
+        'cancelled': 'Pengiriman Dibatalkan',
+    }
+    label = status_labels.get(delivery_status, delivery_status)
+    courier_info = f' via {courier}' if courier else ''
+    return create_notification(
+        user_id=user_id,
+        notification_type='delivery',
+        priority='high' if delivery_status in ('delivered', 'arrived') else 'info',
+        title=f'Pengiriman {label}',
+        description=f'Status pengiriman {order_number}: {label}{courier_info}.',
+        action_url=f'/buyer/order-detail/?id={order_id}',
+        action_text='Lacak',
+        metadata={
+            'order_number': order_number,
+            'order_id': order_id,
+            'delivery_status': delivery_status,
+            'courier': courier or '',
+        },
+    )
+
+
+def notify_broadcast(user_id, title, description, notification_type='system', action_url='', action_text='Lihat'):
+    """Send broadcast notification (admin use). Title should already include 📢 prefix."""
+    return create_notification(
+        user_id=user_id,
+        notification_type=notification_type,
+        priority='info',
+        title=title,
+        description=description,
+        action_url=action_url,
+        action_text=action_text,
+        metadata={'is_broadcast': True},
+    )
+
+
+def notify_stock_prediction(user_id, product_name, predicted_days, current_stock):
+    """AI recommendation: notify about predicted stock depletion."""
+    return create_notification(
+        user_id=user_id,
+        notification_type='inventory',
+        priority='warning',
+        title='Prediksi Stok Habis',
+        description=f'{product_name} diperkirakan habis dalam {predicted_days} hari (stok: {current_stock}). Segera restok!',
+        action_url='/seller/stock-prediction/',
+        action_text='Lihat Prediksi',
+        metadata={'product_name': product_name, 'predicted_days': predicted_days, 'current_stock': current_stock},
+    )
+
+
+def notify_discount_recommendation(user_id, product_name, current_stock, days_to_expiry):
+    """AI recommendation: notify about discount suggestion for expiring products."""
+    return create_notification(
+        user_id=user_id,
+        notification_type='inventory',
+        priority='warning',
+        title='Rekomendasi Diskon',
+        description=f'{product_name} (stok: {current_stock}) akan EXP dalam {days_to_expiry} hari. Diskon atau bundling disarankan!',
+        action_url='/seller/promo-diskon/',
+        action_text='Buat Promo',
+        metadata={'product_name': product_name, 'current_stock': current_stock, 'days_to_expiry': days_to_expiry},
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Alias for backward compatibility
+# ═══════════════════════════════════════════════════════════════════════════
+
 send_notification = create_notification

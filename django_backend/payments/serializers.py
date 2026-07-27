@@ -4,7 +4,7 @@ Midtrans Snap payment integration.
 """
 
 from rest_framework import serializers
-from .models import Payment, PaymentMethod, MidtransTransaction, BankAccount
+from .models import Payment, PaymentMethod, MidtransTransaction, BankAccount, BankAccountChangeRequest
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
 
@@ -105,8 +105,72 @@ class PaymentHistorySerializer(serializers.ModelSerializer):
 
 
 class BankAccountSerializer(serializers.ModelSerializer):
-    """Serializer for store bank accounts."""
+    """Serializer for store bank accounts.
+    
+    Primary accounts (is_primary=True, is_verified=True) are READ-ONLY.
+    To change the primary account, use the 'Request Account Change' flow
+    which requires OTP + password verification.
+    
+    Account numbers are returned fully for API/Celery/withdrawal operations
+    but should be masked on the frontend for display purposes.
+    """
+    masked_account = serializers.SerializerMethodField()
+    
     class Meta:
         model = BankAccount
-        fields = ('id', 'store', 'bank_name', 'account_number', 'account_holder', 'is_primary', 'created_at')
-        read_only_fields = ('store', 'created_at')
+        fields = ('id', 'store', 'bank_name', 'account_number', 'account_holder',
+                  'is_primary', 'is_verified', 'verified_at', 'masked_account',
+                  'created_at', 'updated_at')
+        read_only_fields = ('store', 'created_at', 'updated_at', 'is_verified',
+                          'verified_at', 'masked_account')
+
+    def get_masked_account(self, obj):
+        return obj.masked_account
+
+    def validate(self, attrs):
+        """Prevent changing primary/verified accounts through normal update."""
+        if self.instance and self.instance.is_primary and self.instance.is_verified:
+            raise serializers.ValidationError(
+                'Rekening utama tidak dapat diubah langsung. '
+                'Gunakan fitur "Ajukan Perubahan Rekening" untuk mengganti '
+                'rekening utama yang memerlukan verifikasi OTP dan password.'
+            )
+        return attrs
+
+
+class BankAccountChangeRequestSerializer(serializers.ModelSerializer):
+    """Serializer for requesting a bank account change."""
+    masked_old_account = serializers.SerializerMethodField()
+    masked_new_account = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = BankAccountChangeRequest
+        fields = (
+            'id', 'store', 'user', 'status',
+            'old_bank_name', 'old_account_number', 'old_account_holder',
+            'new_bank_name', 'new_account_number', 'new_account_holder',
+            'masked_old_account', 'masked_new_account',
+            'otp_verified', 'password_verified',
+            'requires_admin_approval', 'rejection_reason',
+            'waiting_period_hours', 'waiting_ends_at',
+            'created_at', 'updated_at', 'completed_at',
+        )
+        read_only_fields = (
+            'id', 'store', 'user', 'status',
+            'old_bank_name', 'old_account_number', 'old_account_holder',
+            'masked_old_account', 'masked_new_account',
+            'otp_verified', 'password_verified',
+            'requires_admin_approval', 'rejection_reason',
+            'waiting_period_hours', 'waiting_ends_at',
+            'created_at', 'updated_at', 'completed_at',
+        )
+
+    def get_masked_old_account(self, obj):
+        if not obj.old_account_number or len(obj.old_account_number) < 4:
+            return obj.old_account_number or ''
+        return f'{obj.old_bank_name} ••••{obj.old_account_number[-4:]}'
+
+    def get_masked_new_account(self, obj):
+        if not obj.new_account_number or len(obj.new_account_number) < 4:
+            return obj.new_account_number or ''
+        return f'{obj.new_bank_name} ••••{obj.new_account_number[-4:]}'

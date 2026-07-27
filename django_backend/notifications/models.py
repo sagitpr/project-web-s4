@@ -17,6 +17,15 @@ class Notification(models.Model):
         ('follow', 'Follow'),
         ('review', 'Review'),
         ('product', 'Product'),
+        ('inventory', 'Inventory'),
+        ('ai_scan', 'AI Scan'),
+        ('flash_sale', 'Flash Sale'),
+        ('loyalty', 'Loyalty'),
+        ('voucher', 'Voucher'),
+        ('security', 'Security'),
+        ('delivery', 'Delivery'),
+        ('wallet', 'Wallet'),
+        ('report', 'Report'),
     ]
 
     PRIORITY_CHOICES = [
@@ -24,7 +33,58 @@ class Notification(models.Model):
         ('medium', 'Medium'),
         ('high', 'High'),
         ('urgent', 'Urgent'),
+        ('info', 'Info'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('critical', 'Critical'),
     ]
+
+    PRIORITY_ICONS = {
+        'info': 'fa-circle-info',
+        'success': 'fa-circle-check',
+        'warning': 'fa-triangle-exclamation',
+        'critical': 'fa-circle-exclamation',
+    }
+
+    TYPE_ICONS = {
+        'order': 'fa-bag-shopping',
+        'payment': 'fa-credit-card',
+        'chat': 'fa-comment-dots',
+        'promo': 'fa-tag',
+        'system': 'fa-gear',
+        'follow': 'fa-user-plus',
+        'review': 'fa-star',
+        'product': 'fa-box',
+        'inventory': 'fa-warehouse',
+        'ai_scan': 'fa-camera',
+        'flash_sale': 'fa-bolt',
+        'loyalty': 'fa-gem',
+        'voucher': 'fa-ticket',
+        'security': 'fa-shield-halved',
+        'delivery': 'fa-truck',
+        'wallet': 'fa-wallet',
+        'report': 'fa-chart-simple',
+    }
+
+    TYPE_COLORS = {
+        'order': '#2563eb',
+        'payment': '#16a34a',
+        'chat': '#7c3aed',
+        'promo': '#d97706',
+        'system': '#64748b',
+        'follow': '#0891b2',
+        'review': '#f59e0b',
+        'product': '#4f46e5',
+        'inventory': '#0f766e',
+        'ai_scan': '#db2777',
+        'flash_sale': '#dc2626',
+        'loyalty': '#9333ea',
+        'voucher': '#ca8a04',
+        'security': '#b91c1c',
+        'delivery': '#0284c7',
+        'wallet': '#059669',
+        'report': '#6366f1',
+    }
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
@@ -73,6 +133,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.title} - {self.user.email}'
+
+    @property
+    def type_icon(self):
+        return self.TYPE_ICONS.get(self.notification_type, 'fa-bell')
+
+    @property
+    def type_color(self):
+        return self.TYPE_COLORS.get(self.notification_type, '#64748b')
+
+    @property
+    def priority_icon(self):
+        return self.PRIORITY_ICONS.get(self.priority, 'fa-circle-info')
 
     def mark_as_read(self):
         from django.utils import timezone

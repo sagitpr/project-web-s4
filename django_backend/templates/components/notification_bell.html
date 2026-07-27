@@ -1,0 +1,234 @@
+<!--
+  Warungio Notification Bell Component
+  Reusable for Buyer, Seller, and Admin pages.
+  Includes badge, dropdown, real-time WebSocket updates.
+  Usage: {% include 'components/notification_bell.html' with position='topbar' %}
+-->
+<div class="notif-bell-container" id="notifBellContainer">
+    <button class="notif-bell-trigger" id="notifBellTrigger" aria-label="Notifikasi" title="Notifikasi">
+        <i class="fa-regular fa-bell" style="font-size:18px;color:var(--color-text-secondary);transition:color 0.15s;"></i>
+        <span class="notif-bell-badge" id="notifBellBadge" style="display:none;position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--color-danger,#ef4444);color:white;font-size:10px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 2px 4px rgba(239,68,68,0.3);">0</span>
+    </button>
+
+    <div class="notif-bell-dropdown" id="notifBellDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:380px;max-width:90vw;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);border:1px solid var(--color-border,#e2e8f0);z-index:1000;overflow:hidden;">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--color-border,#e2e8f0);">
+            <h4 style="margin:0;font-size:14px;font-weight:800;color:var(--color-text-primary,#0f172a);">Notifikasi</h4>
+            <div style="display:flex;gap:6px;">
+                <button class="notif-bell-action" id="notifBellMarkAll" title="Tandai semua dibaca" style="border:none;background:none;padding:4px 8px;font-size:11px;font-weight:600;color:var(--color-brand,#2563eb);cursor:pointer;border-radius:6px;">
+                    <i class="fa-regular fa-check-double"></i> Baca Semua
+                </button>
+                <a href="/notifications/" class="notif-bell-action" id="notifBellViewAll" style="text-decoration:none;padding:4px 8px;font-size:11px;font-weight:600;color:var(--color-brand,#2563eb);border-radius:6px;">
+                    <i class="fa-regular fa-eye"></i> Lihat Semua
+                </a>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div class="notif-bell-list" id="notifBellList" style="max-height:400px;overflow-y:auto;">
+            <div class="notif-bell-loading" style="text-align:center;padding:30px 16px;color:var(--color-text-tertiary,#94a3b8);font-size:13px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Memuat...
+            </div>
+        </div>
+
+        <!-- Footer with link to notification center -->
+        <a href="/notifications/" style="display:block;text-align:center;padding:10px 16px;border-top:1px solid var(--color-border,#e2e8f0);font-size:12px;font-weight:600;color:var(--color-brand,#2563eb);text-decoration:none;">
+            <i class="fa-regular fa-bell"></i> Buka Pusat Notifikasi
+        </a>
+    </div>
+</div>
+
+<style>
+    .notif-bell-container { position:relative; display:inline-flex; align-items:center; }
+    .notif-bell-trigger { position:relative; display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; border:none; background:transparent; cursor:pointer; transition:all 0.15s; }
+    .notif-bell-trigger:hover { background:var(--color-gray-100,#f1f5f9); }
+    .notif-bell-trigger:hover i { color:var(--color-brand,#2563eb); }
+    .notif-bell-item { display:flex; align-items:flex-start; gap:10px; padding:12px 16px; cursor:pointer; transition:all 0.1s; border-bottom:1px solid var(--color-border-light,#f1f5f9); }
+    .notif-bell-item:hover { background:var(--color-gray-50,#f8fafc); }
+    .notif-bell-item.unread { background:#f0f7ff; }
+    .notif-bell-item.unread:hover { background:#e6f0fa; }
+    .notif-bell-item:last-child { border-bottom:none; }
+    .notif-bell-icon { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:white; }
+    .notif-bell-content { flex:1;min-width:0; }
+    .notif-bell-title { font-size:12px;font-weight:700;color:var(--color-text-primary,#0f172a);margin-bottom:1px; }
+    .notif-bell-item.unread .notif-bell-title { color:var(--color-brand,#2563eb); }
+    .notif-bell-desc { font-size:11px;color:var(--color-text-secondary,#64748b);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden; }
+    .notif-bell-time { font-size:10px;color:var(--color-text-tertiary,#94a3b8);margin-top:3px; }
+    .notif-bell-empty { text-align:center;padding:40px 16px;color:var(--color-text-tertiary,#94a3b8); }
+    .notif-bell-empty i { font-size:32px;margin-bottom:8px;color:var(--color-border,#e2e8f0); }
+    .notif-bell-empty p { font-size:12px;margin:0; }
+    @media (max-width:640px) { .notif-bell-dropdown { width:calc(100vw - 24px);right:-60px; } }
+</style>
+
+<script>
+(function() {
+    'use strict';
+    if (window._notifBellInitialized) return;
+    window._notifBellInitialized = true;
+
+    var trigger = document.getElementById('notifBellTrigger');
+    var dropdown = document.getElementById('notifBellDropdown');
+    var listEl = document.getElementById('notifBellList');
+    var badge = document.getElementById('notifBellBadge');
+    var markAllBtn = document.getElementById('notifBellMarkAll');
+
+    var isOpen = false;
+    var unreadCount = 0;
+    var pollTimer = null;
+
+    // ── Toggle dropdown ──
+    if (trigger) {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isOpen = !isOpen;
+            dropdown.style.display = isOpen ? 'block' : 'none';
+            if (isOpen) fetchNotifications();
+        });
+    }
+
+    // ── Close dropdown on outside click ──
+    document.addEventListener('click', function(e) {
+        if (isOpen && !e.target.closest('.notif-bell-container')) {
+            isOpen = false;
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // ── Fetch unread count ──
+    function fetchUnreadCount() {
+        if (!window.WarungioAPI) return;
+        WarungioAPI.getNotificationsUnreadCount()
+            .then(function(data) {
+                unreadCount = data.total_unread || 0;
+                updateBadge();
+            })
+            .catch(function() {});
+    }
+
+    // ── Update badge ──
+    function updateBadge() {
+        if (!badge) return;
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // ── Fetch notifications for dropdown ──
+    function fetchNotifications() {
+        if (!window.WarungioAPI || !listEl) return;
+        listEl.innerHTML = '<div class="notif-bell-loading" style="text-align:center;padding:20px;color:var(--color-text-tertiary);"><i class="fa-solid fa-spinner fa-spin"></i> Memuat...</div>';
+
+        WarungioAPI.getNotifications({ pageSize: 10 })
+            .then(function(data) {
+                var items = data.results || [];
+                if (items.length === 0) {
+                    listEl.innerHTML = '<div class="notif-bell-empty"><i class="fa-regular fa-bell-slash"></i><p>Belum ada notifikasi</p></div>';
+                    return;
+                }
+                listEl.innerHTML = '';
+                items.forEach(function(n) {
+                    var icon = getTypeIcon(n.notification_type);
+                    var color = getTypeColor(n.notification_type);
+                    var isUnread = !n.is_read;
+                    var timeAgoStr = timeAgo(n.created_at);
+
+                    var item = document.createElement('div');
+                    item.className = 'notif-bell-item' + (isUnread ? ' unread' : '');
+                    item.innerHTML =
+                        '<div class="notif-bell-icon" style="background:' + color + '">' +
+                            '<i class="fa-solid ' + icon + '"></i>' +
+                        '</div>' +
+                        '<div class="notif-bell-content">' +
+                            '<div class="notif-bell-title">' + escapeHtml(n.title) + '</div>' +
+                            (n.description ? '<div class="notif-bell-desc">' + escapeHtml(n.description) + '</div>' : '') +
+                            '<div class="notif-bell-time"><i class="fa-regular fa-clock"></i> ' + timeAgoStr + '</div>' +
+                        '</div>';
+
+                    // Click → navigate
+                    item.addEventListener('click', function() {
+                        var url = n.action_url || '#';
+                        if (url && url !== '#') window.location.href = url;
+                        // Mark read
+                        if (!n.is_read && window.WarungioAPI) {
+                            WarungioAPI.markNotificationRead(n.id).catch(function() {});
+                        }
+                    });
+
+                    listEl.appendChild(item);
+                });
+            })
+            .catch(function() {
+                listEl.innerHTML = '<div class="notif-bell-empty"><i class="fa-regular fa-circle-exclamation"></i><p>Gagal memuat</p></div>';
+            });
+    }
+
+    // ── Mark all read ──
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!window.WarungioAPI) return;
+            unreadCount = 0;
+            updateBadge();
+            listEl.querySelectorAll('.notif-bell-item.unread').forEach(function(el) { el.classList.remove('unread'); });
+            WarungioAPI.markAllNotificationsRead().catch(function() {});
+        });
+    }
+
+    // ── Helpers ──
+    function getTypeIcon(type) {
+        var icons = { order:'fa-bag-shopping', payment:'fa-credit-card', chat:'fa-comment-dots',
+            promo:'fa-tag', system:'fa-gear', follow:'fa-user-plus', review:'fa-star',
+            product:'fa-box', inventory:'fa-warehouse', ai_scan:'fa-camera',
+            flash_sale:'fa-bolt', loyalty:'fa-gem', voucher:'fa-ticket',
+            security:'fa-shield-halved', delivery:'fa-truck', wallet:'fa-wallet', report:'fa-chart-simple' };
+        return icons[type] || 'fa-bell';
+    }
+
+    function getTypeColor(type) {
+        var colors = { order:'#2563eb', payment:'#16a34a', chat:'#7c3aed', promo:'#d97706',
+            system:'#64748b', follow:'#0891b2', review:'#f59e0b', product:'#4f46e5',
+            inventory:'#0f766e', ai_scan:'#db2777', flash_sale:'#dc2626',
+            loyalty:'#9333ea', voucher:'#ca8a04', security:'#b91c1c',
+            delivery:'#0284c7', wallet:'#059669', report:'#6366f1' };
+        return colors[type] || '#64748b';
+    }
+
+    function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        var diff = Date.now() - new Date(dateStr).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'Baru saja';
+        if (mins < 60) return mins + ' menit';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + ' jam';
+        var days = Math.floor(hours / 24);
+        return days + ' hari';
+    }
+
+    function escapeHtml(text) {
+        var d = document.createElement('div');
+        d.textContent = text || '';
+        return d.innerHTML;
+    }
+
+    // ── Real-time via WebSocket ──
+    if (window.WarungioWS && typeof window.WarungioWS.on === 'function') {
+        WarungioWS.on('notification', function() { fetchUnreadCount(); });
+        WarungioWS.on('unread_count', function(data) {
+            unreadCount = data.count || 0;
+            updateBadge();
+        });
+    }
+
+    // ── Polling fallback ──
+    fetchUnreadCount();
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(fetchUnreadCount, 30000);
+
+    // ── Expose for external use ──
+    window.WarungioNotifBell = { refresh: fetchUnreadCount };
+})();
+</script>

@@ -209,6 +209,10 @@ def complete_profile(
     
     Sets the password and profile information.
     
+    NIK/KTP is NOT collected during registration to keep onboarding simple.
+    Identity verification (NIK/KTP) is handled separately in Settings →
+    Verifikasi Identitas when the seller needs to activate payment features.
+    
     Returns:
         dict with success, message, next_step (store_setup for sellers, complete for buyers)
     """
@@ -233,18 +237,10 @@ def complete_profile(
         if password:
             user.set_password(password)
         
-        # Validate NIK if provided
-        if nik:
-            from .indonesia_validators import validate_nik
-            nik_result = validate_nik(nik)
-            if nik_result['valid']:
-                user.nik = nik
-            else:
-                return {
-                    'success': False,
-                    'error': '; '.join(nik_result['errors']),
-                    'nik_errors': nik_result['errors'],
-                }
+        # NIK/KTP is NOT validated during registration to keep onboarding simple.
+        # Identity verification (NIK/KTP) is handled separately in Settings →
+        # Verifikasi Identitas for payment activation (Midtrans, withdrawals, etc.).
+        # Keep the User.nik field for later use, skip validation here.
 
         # Determine next step
         if user.role == 'seller':

@@ -1,0 +1,514 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Notifikasi - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <style>
+        .notif-center { max-width: 800px; margin: 0 auto; }
+        .notif-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .notif-header h1 { font-size: 22px; font-weight: 800; margin: 0; }
+        .notif-header-actions { display: flex; align-items: center; gap: 8px; }
+        .notif-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .notif-filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--color-border); background: white; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--color-text-secondary); }
+        .notif-filter-btn:hover { border-color: var(--color-brand); color: var(--color-brand); }
+        .notif-filter-btn.active { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+        .notif-search { margin-bottom: 16px; }
+        .notif-search input { width: 100%; padding: 10px 14px 10px 36px; border: 1px solid var(--color-border); border-radius: 10px; font-size: 13px; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>') 10px center no-repeat; background-size: 18px; outline: none; }
+        .notif-search input:focus { border-color: var(--color-brand); }
+        .notif-list { display: flex; flex-direction: column; gap: 1px; background: var(--color-border); border-radius: 12px; overflow: hidden; }
+        .notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: white; cursor: pointer; transition: all 0.15s; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #f0f7ff; }
+        .notif-item.unread:hover { background: #e6f0fa; }
+        .notif-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; color: white; }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-title { font-size: 13px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+        .notif-item.unread .notif-title { color: var(--color-brand); }
+        .notif-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .notif-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 10px; color: var(--color-text-tertiary); }
+        .notif-time { display: flex; align-items: center; gap: 4px; }
+        .notif-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .notif-action-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--color-text-tertiary); transition: all 0.15s; }
+        .notif-action-btn:hover { background: var(--color-gray-100); color: var(--color-text-primary); }
+        .notif-empty { text-align: center; padding: 60px 20px; color: var(--color-text-secondary); }
+        .notif-empty i { font-size: 48px; color: var(--color-border); margin-bottom: 16px; }
+        .notif-loading { text-align: center; padding: 40px; color: var(--color-text-secondary); }
+        .notif-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--color-brand); color: white; font-size: 10px; font-weight: 700; }
+        .notif-priority-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .notif-bulk-actions { display: flex; gap: 8px; margin-bottom: 12px; padding: 10px 16px; background: #f8fafc; border-radius: 10px; align-items: center; }
+        .notif-bulk-actions.hidden { display: none; }
+        .notif-bulk-actions span { font-size: 12px; font-weight: 600; color: var(--color-text-secondary); }
+        .notif-action-link { color: var(--color-brand); text-decoration: none; font-weight: 600; font-size: 12px; }
+        .notif-action-link:hover { text-decoration: underline; }
+        @media (max-width: 640px) {
+            .notif-header { flex-direction: column; align-items: flex-start; }
+            .notif-filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+            .notif-filter-btn { white-space: nowrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        {% include 'components/sidebar.html' %}
+
+        <main class="main-content-area">
+            {% include 'components/topbar.html' %}
+
+            <div class="seller-content-wrapper">
+                <div class="notif-center">
+                    <!-- Header -->
+                    <div class="notif-header">
+                        <h1><i class="fa-regular fa-bell" style="margin-right:8px;color:var(--color-brand);"></i>Pusat Notifikasi</h1>
+                        <div class="notif-header-actions">
+                            <span class="notif-badge" id="unreadTotalBadge">0</span>
+                            <span style="font-size:12px;color:var(--color-text-secondary);">belum dibaca</span>
+                            <button class="btn btn-sm" id="btnMarkAllRead" style="padding:6px 12px;font-size:12px;">
+                                <i class="fa-regular fa-check-double"></i> Baca Semua
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="notif-search">
+                        <input type="text" id="notifSearch" placeholder="Cari notifikasi..." />
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="notif-filters" id="notifFilters">
+                        <button class="notif-filter-btn active" data-type="all">Semua</button>
+                        <button class="notif-filter-btn" data-type="order">Pesanan</button>
+                        <button class="notif-filter-btn" data-type="payment">Pembayaran</button>
+                        <button class="notif-filter-btn" data-type="inventory">Stok</button>
+                        <button class="notif-filter-btn" data-type="delivery">Pengiriman</button>
+                        <button class="notif-filter-btn" data-type="wallet">Dompet</button>
+                        <button class="notif-filter-btn" data-type="chat">Chat</button>
+                        <button class="notif-filter-btn" data-type="promo">Promo</button>
+                        <button class="notif-filter-btn" data-type="security">Keamanan</button>
+                        <button class="notif-filter-btn" data-type="system">Sistem</button>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="notif-bulk-actions hidden" id="bulkActions">
+                        <span><span id="selectedCount">0</span> dipilih</span>
+                        <button class="btn btn-sm" id="btnBulkRead" style="font-size:11px;padding:4px 10px;">
+                            <i class="fa-regular fa-check"></i> Baca
+                        </button>
+                        <button class="btn btn-sm" id="btnBulkArchive" style="font-size:11px;padding:4px 10px;">
+                            <i class="fa-regular fa-box-archive"></i> Arsip
+                        </button>
+                        <button class="btn btn-sm btn-danger" id="btnBulkDelete" style="font-size:11px;padding:4px 10px;">
+                            <i class="fa-regular fa-trash-can"></i> Hapus
+                        </button>
+                        <button class="btn btn-sm" id="btnBulkCancel" style="font-size:11px;padding:4px 10px;margin-left:auto;">
+                            Batal
+                        </button>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div id="notificationList" class="notif-list">
+                        <div class="notif-loading">
+                            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                            <p style="margin-top:12px;font-size:13px;">Memuat notifikasi...</p>
+                        </div>
+                    </div>
+
+                    <!-- Load More -->
+                    <div id="loadMoreContainer" style="text-align:center;padding:20px;display:none;">
+                        <button class="btn btn-secondary" id="btnLoadMore" style="padding:8px 24px;">Muat Lainnya</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+    WarungioAuthUI?.init({ syncBalance: false, syncCart: false });
+    </script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script src="{% static 'js/utils/websocket.js' %}"></script>
+    <script>
+    // ═══════════════════════════════════════════════════════════════════════
+    //  Seller Notification Center — Full Controller
+    // ═══════════════════════════════════════════════════════════════════════
+
+    document.addEventListener('DOMContentLoaded', function () {
+      'use strict';
+
+      var currentType = 'all';
+      var currentPage = 1;
+      var searchQuery = '';
+      var isLoading = false;
+      var hasMore = true;
+      var selectedIds = {};
+      var allNotifications = [];
+
+      // DOM refs
+      var listEl = document.getElementById('notificationList');
+      var searchEl = document.getElementById('notifSearch');
+      var filterBtns = document.querySelectorAll('.notif-filter-btn');
+      var btnMarkAll = document.getElementById('btnMarkAllRead');
+      var btnLoadMore = document.getElementById('btnLoadMore');
+      var loadMoreContainer = document.getElementById('loadMoreContainer');
+      var bulkActions = document.getElementById('bulkActions');
+      var selectedCountEl = document.getElementById('selectedCount');
+      var unreadBadge = document.getElementById('unreadTotalBadge');
+      var btnBulkRead = document.getElementById('btnBulkRead');
+      var btnBulkArchive = document.getElementById('btnBulkArchive');
+      var btnBulkDelete = document.getElementById('btnBulkDelete');
+      var btnBulkCancel = document.getElementById('btnBulkCancel');
+
+      // ── Helpers ──
+
+      function getTypeIcon(type) {
+        var icons = {
+          order: 'fa-bag-shopping', payment: 'fa-credit-card', chat: 'fa-comment-dots',
+          promo: 'fa-tag', system: 'fa-gear', follow: 'fa-user-plus', review: 'fa-star',
+          product: 'fa-box', inventory: 'fa-warehouse', ai_scan: 'fa-camera',
+          flash_sale: 'fa-bolt', loyalty: 'fa-gem', voucher: 'fa-ticket',
+          security: 'fa-shield-halved', delivery: 'fa-truck', wallet: 'fa-wallet',
+          report: 'fa-chart-simple'
+        };
+        return icons[type] || 'fa-bell';
+      }
+
+      function getTypeColor(type) {
+        var colors = {
+          order: '#2563eb', payment: '#16a34a', chat: '#7c3aed', promo: '#d97706',
+          system: '#64748b', follow: '#0891b2', review: '#f59e0b', product: '#4f46e5',
+          inventory: '#0f766e', ai_scan: '#db2777', flash_sale: '#dc2626',
+          loyalty: '#9333ea', voucher: '#ca8a04', security: '#b91c1c',
+          delivery: '#0284c7', wallet: '#059669', report: '#6366f1'
+        };
+        return colors[type] || '#64748b';
+      }
+
+      function getPriorityColor(priority) {
+        return { info: '#3b82f6', success: '#22c55e', warning: '#f59e0b', critical: '#ef4444' }[priority] || '#64748b';
+      }
+
+      function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        var diff = Date.now() - new Date(dateStr).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'Baru saja';
+        if (mins < 60) return mins + ' menit lalu';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + ' jam lalu';
+        var days = Math.floor(hours / 24);
+        return days + ' hari lalu';
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+      }
+
+      function getActionUrl(n) {
+        return n.action_url || '#';
+      }
+
+      // ── Load Notifications ──
+
+      function loadNotifications(append) {
+        if (isLoading) return;
+        isLoading = true;
+
+        if (!append) {
+          currentPage = 1;
+          listEl.innerHTML = '<div class="notif-loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;font-size:13px;">Memuat notifikasi...</p></div>';
+          allNotifications = [];
+        }
+
+        var params = { page: currentPage, pageSize: 30 };
+        if (currentType !== 'all') params.type = currentType;
+        if (searchQuery) params.search = searchQuery;
+
+        WarungioAPI.getNotifications(params)
+          .then(function (data) {
+            var results = data.results || [];
+            hasMore = results.length >= 30;
+
+            if (append) {
+              allNotifications = allNotifications.concat(results);
+            } else {
+              allNotifications = results;
+            }
+
+            renderNotifications(append);
+            updateUnreadBadge();
+            isLoading = false;
+
+            loadMoreContainer.style.display = hasMore ? 'block' : 'none';
+          })
+          .catch(function (err) {
+            console.warn('Failed to load notifications:', err);
+            listEl.innerHTML = '<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Gagal memuat notifikasi.</p></div>';
+            isLoading = false;
+          });
+      }
+
+      function renderNotifications(append) {
+        if (allNotifications.length === 0) {
+          listEl.innerHTML = '<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><h3 style="font-weight:700;margin:0 0 4px;">Belum ada notifikasi</h3><p style="font-size:13px;">Tidak ada notifikasi untuk ditampilkan.</p></div>';
+          return;
+        }
+
+        if (!append) listEl.innerHTML = '';
+
+        allNotifications.forEach(function (n) {
+          var isUnread = !n.is_read;
+          var icon = getTypeIcon(n.notification_type);
+          var color = getTypeColor(n.notification_type);
+          var priorityColor = getPriorityColor(n.priority);
+          var isSelected = selectedIds[n.id];
+
+          var item = document.createElement('div');
+          item.className = 'notif-item' + (isUnread ? ' unread' : '');
+          item.dataset.id = n.id;
+          item.dataset.read = n.is_read ? '1' : '0';
+          item.innerHTML =
+            '<div class="notif-icon" style="background:' + color + '">' +
+              '<i class="fa-solid ' + icon + '"></i>' +
+            '</div>' +
+            '<div class="notif-content">' +
+              '<div class="notif-title">' + escapeHtml(n.title) + '</div>' +
+              (n.description ? '<div class="notif-desc">' + escapeHtml(n.description) + '</div>' : '') +
+              '<div class="notif-meta">' +
+                '<span class="notif-priority-dot" style="background:' + priorityColor + '"></span>' +
+                '<span class="notif-time"><i class="fa-regular fa-clock"></i> ' + timeAgo(n.created_at) + '</span>' +
+                '<span>' + n.notification_type + '</span>' +
+                (n.is_archived ? '<span style="color:var(--color-text-tertiary)"><i class="fa-regular fa-box-archive"></i> Diarsipkan</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="notif-actions">' +
+              '<input type="checkbox" class="notif-select" ' + (isSelected ? 'checked' : '') + ' style="accent-color:var(--color-brand);cursor:pointer;" />' +
+              '<button class="notif-action-btn notif-mark-read" title="Tandai dibaca"><i class="fa-regular fa-check"></i></button>' +
+              '<button class="notif-action-btn notif-archive-btn" title="Arsipkan"><i class="fa-regular fa-box-archive"></i></button>' +
+              '<button class="notif-action-btn notif-delete-btn" title="Hapus"><i class="fa-regular fa-trash-can"></i></button>' +
+            '</div>';
+
+          // Click to navigate
+          var actionUrl = getActionUrl(n);
+          item.querySelector('.notif-content').addEventListener('click', function (e) {
+            if (actionUrl && actionUrl !== '#') {
+              window.location.href = actionUrl;
+            }
+            // Mark as read
+            if (!n.is_read) {
+              WarungioAPI.markNotificationRead(n.id).catch(function () {});
+              n.is_read = true;
+              item.classList.remove('unread');
+              item.querySelector('.notif-title').style.color = '';
+              updateUnreadBadge();
+            }
+          });
+
+          // Checkbox
+          var checkbox = item.querySelector('.notif-select');
+          checkbox.addEventListener('change', function () {
+            if (checkbox.checked) {
+              selectedIds[n.id] = true;
+            } else {
+              delete selectedIds[n.id];
+            }
+            updateBulkActions();
+          });
+
+          // Mark read
+          item.querySelector('.notif-mark-read').addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!n.is_read) {
+              WarungioAPI.markNotificationRead(n.id).catch(function () {});
+              n.is_read = true;
+              item.classList.remove('unread');
+              item.querySelector('.notif-title').style.color = '';
+              updateUnreadBadge();
+            }
+          });
+
+          // Archive
+          item.querySelector('.notif-archive-btn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            WarungioAPI.archiveNotifications([n.id], true).catch(function () {});
+            n.is_archived = true;
+            item.style.transition = 'all 0.3s';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(30px)';
+            setTimeout(function () {
+              item.remove();
+              allNotifications = allNotifications.filter(function (x) { return x.id !== n.id; });
+              updateUnreadBadge();
+            }, 300);
+          });
+
+          // Delete
+          item.querySelector('.notif-delete-btn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!confirm('Hapus notifikasi ini?')) return;
+            WarungioAPI.deleteNotification(n.id).catch(function () {});
+            item.style.transition = 'all 0.3s';
+            item.style.opacity = '0';
+            item.style.transform = 'scale(0.9)';
+            setTimeout(function () {
+              item.remove();
+              allNotifications = allNotifications.filter(function (x) { return x.id !== n.id; });
+              updateUnreadBadge();
+            }, 300);
+          });
+
+          listEl.appendChild(item);
+        });
+      }
+
+      // ── Unread Badge ──
+
+      function updateUnreadBadge() {
+        var count = allNotifications.filter(function (n) { return !n.is_read; }).length;
+        if (unreadBadge) {
+          unreadBadge.textContent = count > 99 ? '99+' : count;
+          unreadBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+        // Update original badge in sidebar via socket
+        try { window.dispatchEvent(new CustomEvent('warungio:notif-updated')); } catch(e) {}
+      }
+
+      // ── Bulk Actions ──
+
+      function updateBulkActions() {
+        var count = Object.keys(selectedIds).length;
+        if (count > 0) {
+          bulkActions.classList.remove('hidden');
+          selectedCountEl.textContent = count;
+        } else {
+          bulkActions.classList.add('hidden');
+        }
+      }
+
+      btnBulkRead.addEventListener('click', function () {
+        var ids = Object.keys(selectedIds).map(Number);
+        if (ids.length === 0) return;
+        WarungioAPI.markNotificationRead(ids[0]).catch(function () {});
+        ids.forEach(function (id) {
+          var n = allNotifications.find(function (x) { return x.id === id; });
+          if (n) n.is_read = true;
+        });
+        selectedIds = {};
+        updateBulkActions();
+        loadNotifications(false);
+      });
+
+      btnBulkArchive.addEventListener('click', function () {
+        var ids = Object.keys(selectedIds).map(Number);
+        if (ids.length === 0) return;
+        WarungioAPI.archiveNotifications(ids, true).catch(function () {});
+        allNotifications = allNotifications.filter(function (n) { return !selectedIds[n.id]; });
+        selectedIds = {};
+        updateBulkActions();
+        updateUnreadBadge();
+        loadNotifications(false);
+      });
+
+      btnBulkDelete.addEventListener('click', function () {
+        var ids = Object.keys(selectedIds).map(Number);
+        if (ids.length === 0) return;
+        if (!confirm('Hapus ' + ids.length + ' notifikasi?')) return;
+        WarungioAPI.deleteNotificationsBulk(ids).catch(function () {});
+        allNotifications = allNotifications.filter(function (n) { return !selectedIds[n.id]; });
+        selectedIds = {};
+        updateBulkActions();
+        updateUnreadBadge();
+        loadNotifications(false);
+      });
+
+      btnBulkCancel.addEventListener('click', function () {
+        selectedIds = {};
+        updateBulkActions();
+        document.querySelectorAll('.notif-select').forEach(function (cb) { cb.checked = false; });
+      });
+
+      // ── Filters & Search ──
+
+      filterBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          filterBtns.forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          currentType = btn.dataset.type;
+          selectedIds = {};
+          updateBulkActions();
+          loadNotifications(false);
+        });
+      });
+
+      var searchTimer = null;
+      searchEl.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          searchQuery = searchEl.value.trim();
+          selectedIds = {};
+          updateBulkActions();
+          loadNotifications(false);
+        }, 300);
+      });
+
+      // ── Mark All Read ──
+
+      btnMarkAll.addEventListener('click', function () {
+        WarungioAPI.markAllNotificationsRead()
+          .then(function () {
+            allNotifications.forEach(function (n) { n.is_read = true; });
+            updateUnreadBadge();
+            document.querySelectorAll('.notif-item').forEach(function (item) {
+              item.classList.remove('unread');
+              var title = item.querySelector('.notif-title');
+              if (title) title.style.color = '';
+            });
+            window.WarungioToast?.show('Semua notifikasi ditandai sudah dibaca.', 'success');
+          })
+          .catch(function () {
+            window.WarungioToast?.show('Gagal menandai semua.', 'error');
+          });
+      });
+
+      // ── Load More ──
+
+      btnLoadMore.addEventListener('click', function () {
+        currentPage++;
+        loadNotifications(true);
+      });
+
+      // ── Real-time via WebSocket ──
+
+      if (window.WarungioWS && typeof window.WarungioWS.on === 'function') {
+        WarungioWS.on('notification', function () {
+          // Refresh to pick up new notification
+          loadNotifications(false);
+        });
+        WarungioWS.on('connected', function () {
+          loadNotifications(false);
+        });
+      } else {
+        // Fallback: poll every 60s
+        setInterval(function () { loadNotifications(false); }, 60000);
+      }
+
+      // ── Init ──
+
+      loadNotifications(false);
+    });
+    </script>
+</body>
+</html>

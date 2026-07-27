@@ -22,6 +22,13 @@ urlpatterns = [
     path('finance/bank-accounts/<int:pk>/', views.BankAccountDetailView.as_view(), name='finance-bank-account-detail'),
     path('finance/bank-accounts/<int:pk>/set-primary/', views.BankAccountSetPrimaryView.as_view(), name='finance-bank-account-set-primary'),
     path('finance/withdraw/', views.WithdrawBalanceView.as_view(), name='finance-withdraw'),
+    # Bank Account Change Request (secure multi-step flow)
+    path('finance/bank-accounts/request-change/', views.BankAccountRequestChangeView.as_view(), name='finance-bank-request-change'),
+    path('finance/bank-accounts/verify-change-otp/', views.BankAccountVerifyChangeOTPView.as_view(), name='finance-bank-verify-change-otp'),
+    path('finance/bank-accounts/confirm-change-password/', views.BankAccountConfirmPasswordView.as_view(), name='finance-bank-confirm-change-password'),
+    path('finance/bank-accounts/cancel-change/', views.BankAccountCancelChangeView.as_view(), name='finance-bank-cancel-change'),
+    path('finance/bank-accounts/change-requests/', views.BankAccountChangeRequestListView.as_view(), name='finance-bank-change-requests'),
+    path('finance/bank-accounts/check-activation/', views.BankAccountCheckActivationView.as_view(), name='finance-bank-check-activation'),
     # Public API Configuration (safe frontend keys)
     path('config/public/', views.PublicApiConfigView.as_view(), name='public-api-config'),
 

@@ -150,6 +150,7 @@ urlpatterns += [
     path('seller/chat/', login_required(seller_required(TemplateView.as_view(template_name='seller/chat/index.html'))), name='page-seller-chat'),
     path('seller/supplier/', login_required(seller_required(TemplateView.as_view(template_name='seller/supplier/index.html'))), name='page-seller-supplier'),
     path('seller/stock-prediction/', login_required(seller_required(TemplateView.as_view(template_name='seller/stock-prediction/index.html'))), name='page-seller-stock-prediction'),
+    path('seller/notifications/', login_required(seller_required(TemplateView.as_view(template_name='seller/notifications/index.html'))), name='page-seller-notifications'),
     # Seller Smart AI Scan page
     path('seller/smart-scan/', login_required(seller_required(TemplateView.as_view(template_name='seller/smart-scan/index.html'))), name='page-seller-smart-scan'),
     # Seller POS Offline page

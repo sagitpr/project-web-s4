@@ -18,6 +18,10 @@ from accounts.permissions import IsSeller, IsStoreOwner
 
 logger = logging.getLogger(__name__)
 from .models import MasterProduct, ProductBatch, InventoryStock, ExpiryNotification, StockAlert
+from notifications.services import (
+    notify_inventory_low, notify_expired_product,
+    notify_ai_scan_complete, notify_stock_prediction, notify_discount_recommendation,
+)
 from .serializers import (
     MasterProductSerializer,
     MasterProductCreateSerializer,
@@ -441,6 +445,22 @@ class BatchDisposeView(APIView):
                 )
             except Exception as exc:
                 logger.warning('Stock broadcast failed for batch dispose: %s', exc)
+            # Send low stock notification if applicable
+            try:
+                store_user_id = batch.store.user_id
+                product_name = batch.product.product_name
+                remaining = float(sum(
+                    ProductBatch.objects.filter(
+                        store=batch.store,
+                        master_product=batch.master_product,
+                        is_active=True,
+                        status__in=['fresh', 'expiring_soon'],
+                    ).values_list('current_quantity', flat=True)
+                ))
+                if remaining <= 5:
+                    notify_inventory_low(store_user_id, product_name, remaining, batch.store.store_name)
+            except Exception as exc:
+                logger.warning('Low stock notification failed for batch dispose: %s', exc)
 
         return Response({
             'success': True,
@@ -758,6 +778,7 @@ class ExpirySummaryView(APIView):
             'already_expired': data.get('already_expired', []),
         }
         cache.set(cache_key, result, EXPIRY_CACHE_TTL)
+        
         return Response(result)
 
 
@@ -1055,7 +1076,16 @@ class AIProductRecognizeView(APIView):
             ocr_text_hint=request.data.get('ocr_text_hint', ''),
             scan_mode=request.data.get('scan_mode', 'auto'),
         )
-
+        
+        # Send notification for scan results
+        try:
+            product_name = result.get('product_name', '') or result.get('recognized_product', {}).get('product_name', '')
+            confidence = float(result.get('confidence', 0) or result.get('recognized_product', {}).get('confidence', 0))
+            if product_name:
+                notify_ai_scan_complete(request.user.id, product_name, result, confidence)
+        except Exception as exc:
+            logger.warning('AI scan notification failed: %s', exc)
+        
         return Response(result)
 
 
@@ -1244,4 +1274,27 @@ class TriggerExpiryCheckView(APIView):
         result = reminder.check_store_expiry(
             store_id=request.user.store.id
         )
+        
+        # Send notifications for expired products found during check
+        try:
+            store = request.user.store
+            store_user_id = store.user_id
+            expired_count = result.get('expired_count', 0) or len(result.get('expired', []))
+            expiring_count = result.get('expiring_count', 0) or len(result.get('expiring', []))
+            
+            if expired_count > 0:
+                for item in result.get('expired', []):
+                    pname = item.get('product_name', item.get('batch', {}).get('master_product', {}).get('product_name', 'Produk'))
+                    notify_expired_product(store_user_id, pname, 0, store.store_name)
+            
+            if expiring_count > 0:
+                for item in result.get('expiring', []):
+                    pname = item.get('product_name', item.get('batch', {}).get('master_product', {}).get('product_name', 'Produk'))
+                    days = item.get('days_until_expiry', 7)
+                    notify_expired_product(store_user_id, pname, days, store.store_name)
+                    if days <= 3:
+                        notify_discount_recommendation(store_user_id, pname, 0, days)
+        except Exception as exc:
+            logger.warning('Expiry notification failed: %s', exc)
+        
         return Response(result)
