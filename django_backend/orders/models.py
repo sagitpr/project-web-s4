@@ -71,6 +71,9 @@ class Cart(models.Model):
         verbose_name_plural = 'Keranjang'
         unique_together = ['user', 'product']
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
 
     def __str__(self):
         return f'{self.user.email} - {self.product.product_name} x{self.qty}'
@@ -165,6 +168,7 @@ class Order(models.Model):
             models.Index(fields=['store', 'order_status']),
             models.Index(fields=['order_number']),
             models.Index(fields=['created_at']),
+            models.Index(fields=['order_status']),
         ]
 
     def __str__(self):
@@ -340,6 +344,10 @@ class Delivery(models.Model):
         db_table = 'deliveries'
         verbose_name = 'Pengiriman'
         verbose_name_plural = 'Pengiriman'
+        indexes = [
+            models.Index(fields=['delivery_status']),
+            models.Index(fields=['courier_provider', 'delivery_status']),
+        ]
 
     def __str__(self):
         return f'Delivery for Order #{self.order.order_number}'
@@ -450,6 +458,10 @@ class PackingSession(models.Model):
         verbose_name = 'Sesi Packing'
         verbose_name_plural = 'Sesi Packing'
         ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['order', 'status']),
+            models.Index(fields=['store', 'status']),
+        ]
 
     def __str__(self):
         return f'Packing #{self.id} - Order #{self.order.order_number} ({self.get_status_display()})'

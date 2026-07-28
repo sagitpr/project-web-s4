@@ -120,16 +120,20 @@ class StartConversationView(views.APIView):
             return Response({'error': 'Tidak bisa chat dengan diri sendiri.'},
                           status=status.HTTP_400_BAD_REQUEST)
         
-        # Find existing conversation
+        # Find existing conversation — prefetch participants to avoid N+1 in serializer
         conversation = Conversation.objects.filter(
             participants=request.user
         ).filter(
             participants__id=receiver_id
-        ).first()
+        ).prefetch_related('participants').first()
         
         if not conversation:
             conversation = Conversation.objects.create()
             conversation.participants.add(request.user, receiver_id)
+            # Re-fetch with prefetch for serializer
+            conversation = Conversation.objects.filter(
+                id=conversation.id
+            ).prefetch_related('participants').first()
         
         # Send initial message
         if message:

@@ -5,6 +5,7 @@ google-auth>=2.0      # Google OAuth2 social login
 channels>=4.0
 channels-redis>=4.1
 django-cors-headers>=4.0
+django-csp>=4.0          # Content Security Policy — required by config/settings.py
 django-filter>=23.0
 django-phonenumber-field[phonenumbers]
 phonenumbers>=8.13.0

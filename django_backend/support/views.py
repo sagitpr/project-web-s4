@@ -447,18 +447,17 @@ class ComplaintListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         complaint = serializer.save(user=self.request.user)
         # Notify admins about new complaint
-        from notifications.services import create_notification
+        from notifications.services import notify_system
         from accounts.models import AdminAuditLog
         admin_staff = User.objects.filter(is_staff=True, is_active=True)[:5]
         for admin in admin_staff:
-            create_notification(
+            notify_system(
                 user_id=admin.id,
-                notification_type='system',
                 title='Komplain Baru',
                 description=f'Komplain #{complaint.id}: {complaint.get_complaint_type_display()} dari {complaint.user.full_name}',
                 action_url='/admin-panel/support/',
-                action_text='Lihat Komplain',
                 priority='high' if complaint.status == 'pending' else 'medium',
+                action_text='Lihat Komplain',
             )
         # Audit log
         AdminAuditLog.objects.create(
@@ -525,13 +524,12 @@ class ReportProductModerateView(views.APIView):
             report.product.save(update_fields=['is_active'])
 
         # Notify reporter about moderation result
-        from notifications.services import create_notification
-        create_notification(
+        from notifications.services import notify_system
+        notify_system(
             user_id=report.reporter_id,
-            notification_type='system',
             title=f'Laporan Produk {new_status.title()}',
             description=f'Laporan Anda terhadap {report.product.name} telah {new_status}.' if new_status == 'approved' else f'Laporan Anda terhadap {report.product.name} ditolak.',
-            action_text='Lihat Detail',
+            action_url='/support/',
         )
         # Audit log
         from accounts.models import AdminAuditLog
@@ -631,14 +629,12 @@ class DisputeResolveView(views.APIView):
         dispute.save()
 
         # Notify parties about resolution
-        from notifications.services import create_notification
-        create_notification(
+        from notifications.services import notify_system
+        notify_system(
             user_id=dispute.opened_by_id,
-            notification_type='system',
             title='Sengketa Terselesaikan',
             description=f'Sengketa #{dispute.id} telah diselesaikan: {dispute.get_resolution_display()}',
             action_url='/admin-panel/support/',
-            action_text='Lihat Detail',
         )
         # Audit log
         from accounts.models import AdminAuditLog

@@ -295,8 +295,14 @@ def notify_stock_warning(user_id, product_name, current_stock, threshold=5):
     )
 
 
-def notify_wallet_transaction(user_id, amount, transaction_type, description=''):
-    """Notify about a wallet transaction."""
+def notify_wallet_transaction(user_id, amount, transaction_type, description='', action_url=None, action_text=None, priority=None):
+    """Notify about a wallet transaction.
+    
+    Args:
+        action_url: Override the default URL (default seller-facing; buyer refunds should pass '/buyer/wallet/')
+        action_text: Override the default button text
+        priority: Override the default priority ('medium')
+    """
     if transaction_type == 'credit':
         title = 'Saldo Masuk'
         desc = description or f'Saldo Warungio Anda bertambah Rp {amount:,.0f}.'
@@ -307,11 +313,11 @@ def notify_wallet_transaction(user_id, amount, transaction_type, description='')
     return create_notification(
         user_id=user_id,
         notification_type='payment',
-        priority='medium',
+        priority=priority or 'medium',
         title=title,
         description=desc,
-        action_url='/seller/keuangan/index.html',
-        action_text='Lihat Keuangan',
+        action_url=action_url or '/seller/keuangan/index.html',
+        action_text=action_text or 'Lihat Keuangan',
         metadata={'amount': str(amount), 'transaction_type': transaction_type},
     )
 
@@ -334,16 +340,21 @@ def notify_promotion(user_id, promo_name, promo_code, discount_desc, store_name=
     )
 
 
-def notify_system(user_id, title, description, action_url=None):
-    """Send a system announcement."""
+def notify_system(user_id, title, description, action_url=None, priority=None, action_text=None):
+    """Send a system announcement.
+    
+    Args:
+        priority: Override the default priority ('low'). Use 'high', 'medium', 'info', etc.
+        action_text: Override the default button text.
+    """
     return create_notification(
         user_id=user_id,
         notification_type='system',
-        priority='low',
+        priority=priority or 'low',
         title=title,
         description=description,
         action_url=action_url or '',
-        action_text='Detail' if action_url else '',
+        action_text=action_text or ('Detail' if action_url else ''),
     )
 
 
@@ -529,45 +540,62 @@ def notify_voucher_available(user_id, voucher_code, discount_desc, store_name=No
     )
 
 
-def notify_security_alert(user_id, activity, device_info=None):
-    """Notify about security-related activity."""
+def notify_security_alert(user_id, activity, device_info=None, title=None, action_url=None, action_text=None):
+    """Notify about security-related activity.
+    
+    Args:
+        title: Override the default title (e.g., 'Permintaan Perubahan Rekening')
+        action_url: Override the default URL (default buyer-facing; sellers should pass '/seller/pengaturan/')
+        action_text: Override the default button text
+    """
     device = f' dari {device_info}' if device_info else ''
     return create_notification(
         user_id=user_id,
         notification_type='security',
         priority='critical',
-        title='Peringatan Keamanan',
+        title=title or 'Peringatan Keamanan',
         description=f'{activity}{device}. Segera periksa akun Anda!',
-        action_url='/buyer/settings/',
-        action_text='Periksa Keamanan',
+        action_url=action_url or '/buyer/settings/',
+        action_text=action_text or 'Periksa Keamanan',
         metadata={'activity': activity, 'device_info': device_info or ''},
     )
 
 
-def notify_wallet_credit(user_id, amount, description=''):
-    """Notify about wallet credit."""
+def notify_wallet_credit(user_id, amount, description='', action_url=None, action_text=None, priority=None):
+    """Notify about wallet credit.
+    
+    Args:
+        action_url: Override the default URL (default buyer-facing; seller credits should pass '/seller/keuangan/')
+        action_text: Override the default button text
+        priority: Override the default priority ('success')
+    """
     return create_notification(
         user_id=user_id,
         notification_type='wallet',
-        priority='success',
+        priority=priority or 'success',
         title='Saldo Masuk',
         description=description or f'Saldo Warungio Anda bertambah Rp {amount:,.0f}.',
-        action_url='/buyer/wallet/',
-        action_text='Lihat Dompet',
+        action_url=action_url or '/buyer/wallet/',
+        action_text=action_text or 'Lihat Dompet',
         metadata={'amount': str(amount)},
     )
 
 
-def notify_wallet_debit(user_id, amount, description=''):
-    """Notify about wallet debit."""
+def notify_wallet_debit(user_id, amount, description='', action_url=None, action_text=None):
+    """Notify about wallet debit.
+    
+    Args:
+        action_url: Override the default URL (default buyer-facing; sellers should pass '/seller/keuangan/')
+        action_text: Override the default button text
+    """
     return create_notification(
         user_id=user_id,
         notification_type='wallet',
         priority='warning',
         title='Penarikan Saldo',
         description=description or f'Penarikan sebesar Rp {amount:,.0f} telah diproses.',
-        action_url='/buyer/wallet/',
-        action_text='Lihat Dompet',
+        action_url=action_url or '/buyer/wallet/',
+        action_text=action_text or 'Lihat Dompet',
         metadata={'amount': str(amount)},
     )
 

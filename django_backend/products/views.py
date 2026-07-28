@@ -323,7 +323,9 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         # Users can only manage their own reviews
-        return Review.objects.filter(user=self.request.user)
+        return Review.objects.filter(user=self.request.user).select_related(
+            'product', 'product__store'
+        )
 
     def perform_update(self, serializer):
         review = serializer.save()
@@ -407,7 +409,9 @@ class SellerPromoManageView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsStoreOwner)
 
     def get_queryset(self):
-        return Promo.objects.filter(store__user=self.request.user)
+        return Promo.objects.filter(store__user=self.request.user).select_related(
+            'store'
+        )
 
 
 class QualityCheckListView(generics.ListCreateAPIView):

@@ -13,7 +13,8 @@ from .services import (
     notify_new_order, notify_payment_confirmed, notify_order_status_change,
     notify_new_review, notify_stock_warning, notify_promotion, notify_system,
     notify_buyer_order_confirmed, notify_delivery_update,
-    notify_refund_status, notify_wallet_topup, notify_review_reminder,
+    notify_refund_status, notify_wallet_topup, notify_wallet_credit,
+    notify_wallet_debit, notify_wallet_transaction, notify_review_reminder,
     notify_store_update, notify_account_activity, notify_new_follower,
     notify_user_welcome,
 )
@@ -406,28 +407,31 @@ def connect_wallet_signals():
                     method=instance.description or 'Bank Transfer',
                 )
             elif instance.tx_type == 'withdrawal':
-                from .services import create_notification
-                create_notification(
+                notify_wallet_debit(
                     user_id=user_id,
-                    notification_type='payment',
-                    priority='medium',
-                    title='Penarikan Saldo',
+                    amount=amount,
                     description=f'Penarikan saldo sebesar Rp {amount:,.0f} telah diproses.',
                     action_url='/seller/keuangan/index.html',
                     action_text='Lihat Keuangan',
-                    metadata={'amount': str(amount), 'tx_type': 'withdrawal'},
                 )
             elif instance.tx_type == 'refund':
-                from .services import create_notification
-                create_notification(
+                notify_wallet_transaction(
                     user_id=user_id,
-                    notification_type='payment',
-                    priority='high',
-                    title='Dana Refund Masuk',
+                    amount=amount,
+                    transaction_type='credit',
                     description=f'Dana refund sebesar Rp {amount:,.0f} telah masuk ke dompet Anda.',
                     action_url='/buyer/wallet/index.html',
                     action_text='Lihat Dompet',
-                    metadata={'amount': str(amount), 'tx_type': 'refund'},
+                    priority='high',
+                )
+            elif instance.tx_type == 'payment':
+                # Seller wallet credited from order completion
+                notify_wallet_credit(
+                    user_id=user_id,
+                    amount=amount,
+                    description=f'Pendapatan dari pesanan: {instance.description or "Penjualan"}',
+                    action_url='/seller/keuangan/',
+                    action_text='Lihat Keuangan',
                 )
         
         logger.info('Wallet transaction notification signals connected')

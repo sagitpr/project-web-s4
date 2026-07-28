@@ -894,14 +894,15 @@ _CSP_DIRECTIVES = {
     'default-src': ("'self'",),
     'script-src': (
         "'self'",
-        "'unsafe-inline'",  # Required for inline scripts
-        "'unsafe-eval'",    # Required for some JS libraries
+        "'unsafe-inline'",  # Required for inline scripts in templates
+        "'unsafe-eval'",    # Required by Chart.js, TensorFlow.js
         "https://pagead2.googlesyndication.com",   # Google AdSense
-        "https://googleads.g.doubleclick.net",      # Google AdSense
-        "https://www.googletagmanager.com",
-        "https://www.google.com",
-        "https://www.gstatic.com",
-        "https://cdnjs.cloudflare.com",             # Font Awesome, etc.
+        "https://googleads.g.doubleclick.net",      # AdSense dynamic ads
+        "https://www.gstatic.com",                  # Google Identity, AdSense assets
+        "https://accounts.google.com",              # Google OAuth GSI (auth pages)
+        "https://cdnjs.cloudflare.com",             # Font Awesome icons (seller/buyer)
+        "https://cdn.jsdelivr.net",                 # Chart.js, Tesseract.js, TensorFlow.js, QR
+        "https://unpkg.com",                       # Leaflet maps, AOS animations
         "https://app.sandbox.midtrans.com",         # Midtrans Sandbox
         "https://app.midtrans.com",                 # Midtrans Production
         "https://maps.googleapis.com",              # Google Maps
@@ -911,6 +912,8 @@ _CSP_DIRECTIVES = {
         "'unsafe-inline'",  # Inline styles from templates
         "https://fonts.googleapis.com",             # Google Fonts
         "https://cdnjs.cloudflare.com",             # Font Awesome CSS
+        "https://cdn.jsdelivr.net",                 # Chart.js styles (admin dashboard)
+        "https://unpkg.com",                       # Leaflet CSS (buyer order tracking)
         "https://pagead2.googlesyndication.com",    # AdSense styles
     ),
     'img-src': (
@@ -918,6 +921,7 @@ _CSP_DIRECTIVES = {
         "data:",
         "blob:",
         "https:",  # Allow images from any HTTPS source
+        "https://tpc.googlesyndication.com",  # AdSense image delivery
     ),
     'font-src': (
         "'self'",
@@ -929,11 +933,11 @@ _CSP_DIRECTIVES = {
         "'self'",
         "https://pagead2.googlesyndication.com",
         "https://googleads.g.doubleclick.net",
-        "https://www.google.com",
+        "https://accounts.google.com",              # Google OAuth token exchange
         "https://www.gstatic.com",
         "https://app.sandbox.midtrans.com",
         "https://app.midtrans.com",
-        "https://api.whatsapp.com",
+        "https://cdn.jsdelivr.net",                 # Model weights (TensorFlow.js)
         "wss://warungio.web.id",
         "ws://localhost:8000",
         "wss://localhost:8000",
@@ -942,7 +946,7 @@ _CSP_DIRECTIVES = {
         "'self'",
         "https://pagead2.googlesyndication.com",
         "https://googleads.g.doubleclick.net",
-        "https://www.google.com",
+        "https://accounts.google.com",              # Google OAuth popup
         "https://app.sandbox.midtrans.com",         # Midtrans Snap iframe
         "https://app.midtrans.com",                 # Midtrans Snap iframe
         "https://maps.googleapis.com",              # Google Maps embed

@@ -4,10 +4,13 @@ Real-time messaging between buyers and sellers.
 """
 
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from .models import Conversation, Message
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -78,6 +81,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'conversation_id': conversation_id,
                 }
             )
+
+            # Persist notification to database + broadcast via WebSocket
+            await self.persist_chat_notification(receiver_id, content)
 
             # Send notification to receiver via notification group
             # NOTE: Group name must match NotificationConsumer group name:
@@ -161,6 +167,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         except Conversation.DoesNotExist:
             return None
+
+    @database_sync_to_async
+    def persist_chat_notification(self, receiver_id, content):
+        """Create a persistent DB notification for the chat message.
+        
+        This ensures chat notifications survive page refresh and appear
+        in the Notification Center alongside all other notification types.
+        """
+        try:
+            from notifications.services import create_notification
+            create_notification(
+                user_id=receiver_id,
+                notification_type='chat',
+                title=f'Pesan dari {self.user.full_name}',
+                description=content[:200],
+                priority='info',
+                action_url=f'/chat/?conversation={self.conversation_id}',
+                action_text='Balas',
+                metadata={
+                    'sender_id': self.user.id,
+                    'sender_name': self.user.full_name,
+                    'conversation_id': self.conversation_id,
+                },
+                send_ws=False,  # WebSocket already sent above
+            )
+        except Exception as e:
+            logger.warning('Failed to persist chat notification: %s', e)
 
     @database_sync_to_async
     def mark_messages_read(self, conversation_id):

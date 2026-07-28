@@ -235,15 +235,16 @@ class DashboardSummaryView(views.APIView):
         }
 
     def _get_device_breakdown(self, store, start_date):
-        """Get device usage breakdown."""
-        activities = UserActivity.objects.filter(
+        """Get device usage breakdown — consolidated into 1 query."""
+        counts = UserActivity.objects.filter(
             store=store,
             created_at__date__gte=start_date
-        )
+        ).values('device_type').annotate(cnt=Count('id'))
         
-        mobile = activities.filter(device_type='mobile').count()
-        tablet = activities.filter(device_type='tablet').count()
-        desktop = activities.filter(device_type='desktop').count()
+        indexed = {row['device_type']: row['cnt'] for row in counts}
+        mobile = indexed.get('mobile', 0)
+        tablet = indexed.get('tablet', 0)
+        desktop = indexed.get('desktop', 0)
         total = (mobile + tablet + desktop) if (mobile + tablet + desktop) != 0 else 1
         
         return {
@@ -369,19 +370,15 @@ class DeviceAnalyticsView(views.APIView):
         
         start_date = timezone.now().date() - timedelta(days=days)
         
-        activities = UserActivity.objects.filter(
+        counts = UserActivity.objects.filter(
             store=store,
             created_at__date__gte=start_date
-        )
+        ).values('device_type').annotate(cnt=Count('id'))
         
-        mobile = activities.filter(device_type='mobile').count()
-        tablet = activities.filter(device_type='tablet').count()
-        desktop = activities.filter(device_type='desktop').count()
-        
-        # Browser breakdown
-        browsers = activities.values('device_type').annotate(
-            count=Count('id')
-        )
+        indexed = {row['device_type']: row['cnt'] for row in counts}
+        mobile = indexed.get('mobile', 0)
+        tablet = indexed.get('tablet', 0)
+        desktop = indexed.get('desktop', 0)
         
         return Response({
             'mobile': mobile,
@@ -389,8 +386,8 @@ class DeviceAnalyticsView(views.APIView):
             'desktop': desktop,
             'total': mobile + tablet + desktop,
             'breakdown': [
-                {'device': b['device_type'], 'count': b['count']}
-                for b in browsers
+                {'device': k, 'count': v}
+                for k, v in indexed.items()
             ],
         })
 
@@ -502,7 +499,9 @@ class AdminAIBusinessOverviewView(views.APIView):
 
     def get(self, request):
         from stores.models import Store
-        stores = Store.objects.filter(status='active')[:10]
+        stores = Store.objects.filter(status='active').select_related(
+            'user'
+        )[:10]
         all_insights = []
         for store in stores:
             try:

@@ -20,6 +20,7 @@ from channels.layers import get_channel_layer
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 from django.db.models import Sum, Count, Q
+from django.db.models.functions import TruncDay
 from django.core.cache import cache
 from accounts.permissions import IsSeller
 from accounts.response_utils import success_response, error_response
@@ -34,7 +35,6 @@ from .serializers import (
 )
 from .services.midtrans import create_snap_token, get_snap_js_url, process_webhook_notification, is_configured
 from .services.wallet import get_wallet, debit_wallet, get_transactions_paginated
-from notifications.models import Notification
 from orders.models import Order
 from drf_spectacular.utils import extend_schema
 
@@ -484,15 +484,13 @@ class BankAccountRequestChangeView(views.APIView):
         
         # Send notification to user about the change request
         try:
-            Notification.objects.create(
-                user=user,
-                notification_type='system',
-                priority='high',
+            from notifications.services import notify_security_alert
+            notify_security_alert(
+                user_id=user.id,
+                activity='Permintaan Perubahan Rekening Diajukan',
+                device_info=f'Dari {current_primary.bank_name} ••••{current_primary.account_number[-4:]} '
+                            f'ke {new_bank_name} ••••{new_account_number[-4:]}',
                 title='Permintaan Perubahan Rekening Diajukan',
-                description=f'Perubahan rekening penarikan dari '
-                            f'{current_primary.bank_name} ••••{current_primary.account_number[-4:]} '
-                            f'ke {new_bank_name} ••••{new_account_number[-4:]} sedang diproses. '
-                            f'Selesaikan verifikasi OTP dan password untuk melanjutkan.',
                 action_url='/seller/pengaturan/',
                 action_text='Lihat Status',
             )
@@ -790,14 +788,12 @@ class BankAccountCheckActivationView(views.APIView):
                 
                 # Notify user
                 try:
-                    Notification.objects.create(
-                        user=request.user,
-                        notification_type='system',
-                        priority='high',
+                    from notifications.services import notify_security_alert
+                    notify_security_alert(
+                        user_id=request.user.id,
+                        activity='Rekening Utama Berhasil Diperbarui',
+                        device_info=f'Rekening baru: {new_account.bank_name} ••••{new_account.account_number[-4:]}',
                         title='Rekening Utama Berhasil Diperbarui',
-                        description=f'Rekening penarikan utama telah berubah menjadi '
-                                    f'{new_account.bank_name} ••••{new_account.account_number[-4:]} '
-                                    f'a.n. {new_account.account_holder}.',
                         action_url='/seller/pengaturan/',
                         action_text='Lihat Rekening',
                     )
@@ -852,10 +848,13 @@ class FinanceSummaryView(views.APIView):
             store=store,
             order_status='completed'
         )
-        total_income_gross = completed_orders.aggregate(total=Sum('total_price'))['total'] or 0
-
-        # 1b. Total Admin Fee Seller yang dipotong dari seller (Rp 1.000)
-        total_admin_fees = completed_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
+        # Consolidated: single annotated query instead of 2 separate aggregates
+        aggr = completed_orders.aggregate(
+            gross=Sum('total_price'),
+            admin=Sum('admin_fee'),
+        )
+        total_income_gross = aggr['gross'] or 0
+        total_admin_fees = aggr['admin'] or 0
 
         # 1c. Pemasukan BERSIH seller (setelah dipotong admin_fee)
         total_income_net = total_income_gross - total_admin_fees
@@ -892,29 +891,53 @@ class FinanceSummaryView(views.APIView):
         withdrawal_trend = []
         
         today = timezone.now().date()
+        thirty_days_ago = today - timedelta(days=29)
+        
+        # Batch: single annotated query for all 30 days of income (was 60 queries)
+        daily_orders = Order.objects.filter(
+            store=store,
+            order_status='completed',
+            completed_at__date__gte=thirty_days_ago,
+        ).annotate(
+            day=TruncDay('completed_at')
+        ).values('day').annotate(
+            gross=Sum('total_price'),
+            admin=Sum('admin_fee'),
+        ).order_by('day')
+        daily_income_index = {}
+        for row in daily_orders:
+            if row['day']:
+                daily_income_index[row['day'].date()] = row
+        
+        # Batch: single annotated query for all 30 days of withdrawals (was 30 queries)
+        daily_wdr_qs = Payment.objects.filter(
+            user=request.user,
+            payment_type='withdrawal',
+            payment_status='paid',
+            created_at__date__gte=thirty_days_ago,
+        ).annotate(
+            day=TruncDay('created_at')
+        ).values('day').annotate(
+            total=Sum('amount')
+        ).order_by('day')
+        daily_wdr_index = {}
+        for row in daily_wdr_qs:
+            if row['day']:
+                daily_wdr_index[row['day'].date()] = row
+        
         for i in range(29, -1, -1):
             d = today - timedelta(days=i)
             labels.append(d.strftime('%d %b'))
 
-            # Daily Income NET (setelah admin_fee)
-            daily_orders = Order.objects.filter(
-                store=store,
-                order_status='completed',
-                completed_at__date=d
-            )
-            daily_gross = daily_orders.aggregate(total=Sum('total_price'))['total'] or 0
-            daily_admin = daily_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
-            daily_net = daily_gross - daily_admin
-            income_trend.append(float(daily_net))
+            # Daily Income NET (setelah admin_fee) — from batch index
+            inc = daily_income_index.get(d, {})
+            daily_gross = float(inc.get('gross', 0) or 0)
+            daily_admin = float(inc.get('admin', 0) or 0)
+            income_trend.append(daily_gross - daily_admin)
 
-            # Daily Withdrawals
-            daily_wdr = Payment.objects.filter(
-                user=request.user,
-                payment_type='withdrawal',
-                payment_status='paid',
-                created_at__date=d
-            ).aggregate(total=Sum('amount'))['total'] or 0
-            withdrawal_trend.append(float(daily_wdr))
+            # Daily Withdrawals — from batch index
+            wdr = daily_wdr_index.get(d, {})
+            withdrawal_trend.append(float(wdr.get('total', 0) or 0))
 
         data = {
             'total_balance': float(available_balance + held_balance),
@@ -1105,8 +1128,12 @@ class WithdrawBalanceView(views.APIView):
 
         # 3. Available balance validation (consistent with FinanceSummaryView)
         completed_orders = Order.objects.filter(store=store, order_status='completed')
-        total_income_gross = completed_orders.aggregate(total=Sum('total_price'))['total'] or 0
-        total_admin_fees = completed_orders.aggregate(total=Sum('admin_fee'))['total'] or 0
+        aggr = completed_orders.aggregate(
+            gross=Sum('total_price'),
+            admin=Sum('admin_fee'),
+        )
+        total_income_gross = aggr['gross'] or 0
+        total_admin_fees = aggr['admin'] or 0
         total_income_net = total_income_gross - total_admin_fees
 
         total_withdrawals = Payment.objects.filter(
@@ -1153,13 +1180,12 @@ class WithdrawBalanceView(views.APIView):
 
         # 6. Notify seller via notification
         try:
-            Notification.objects.create(
-                user=user,
-                notification_type='withdrawal',
-                priority='high',
-                title='Penarikan Dana Berhasil Diajukan',
-                description=f'Penarikan dana sebesar Rp {amount:,.0f} ke {primary_bank.bank_name} sedang diproses.',
-                action_url='/seller/dashboard/finance/',
+            from notifications.services import notify_wallet_debit
+            notify_wallet_debit(
+                user_id=user.id,
+                amount=amount,
+                description=f'Penarikan dana ke {primary_bank.bank_name} - {primary_bank.account_number[-4:]} sedang diproses.',
+                action_url='/seller/keuangan/',
                 action_text='Lihat Status',
             )
         except Exception as exc:

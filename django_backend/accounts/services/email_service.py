@@ -101,7 +101,7 @@ def send_otp_email(
     def _create_otp_inapp_notification(email_addr, otp, otp_purpose, otp_expiry):
         """Create in-app notification fallback for OTP delivery."""
         try:
-            from notifications.services import create_notification
+            from notifications.services import notify_system
             from accounts.models import User
             user = User.objects.filter(email=email_addr).first()
             if not user:
@@ -120,15 +120,11 @@ def send_otp_email(
             else:
                 desc = f'Kode {label} telah dikirim ke {email_addr}. Periksa inbox/spam Anda. Jika tidak ada, minta ulang.'
             
-            create_notification(
+            notify_system(
                 user_id=user.id,
-                notification_type='system',
-                priority='high',
                 title=f'{label} — Kode OTP',
                 description=desc,
                 action_url=f'/auth/otp/?email={email_addr}&purpose={otp_purpose}',
-                action_text='Verifikasi Sekarang',
-                metadata={'otp_purpose': otp_purpose, 'email': email_addr},
             )
         except Exception as notif_err:
             logger.warning('Failed to create OTP in-app notification: %s', notif_err)

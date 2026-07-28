@@ -222,7 +222,9 @@ class CartDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.filter(user=self.request.user).select_related(
+            'product', 'product__store'
+        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -343,7 +345,8 @@ class OrderCreateView(views.APIView):
                     pass
 
             # Calculate dynamic shipping cost based on distance
-            store = Store.objects.filter(id=store_id).first()
+            # Use the store already prefetched via cart_items.select_related('product__store') — no extra query
+            store = items[0].product.store if items else Store.objects.filter(id=store_id).first()
             distance = None
             shipping_cost = 0.0
             if shipping_method:
@@ -674,7 +677,7 @@ class OrderStatusUpdateView(views.APIView):
             except Exception as e:
                 logger.error('Failed to credit seller wallet for completed order %s: %s', order.id, e)
 
-        # ── Broadcast delivery_update via WebSocket for real-time tracking ──
+        # ── Broadcast delivery_update via WebSocket + DB for real-time tracking ──
         if delivery_status and order.user_id:
             notify_delivery_update(
                 user_id=order.user_id,
@@ -684,6 +687,17 @@ class OrderStatusUpdateView(views.APIView):
                 tracking_number=serializer.validated_data.get('tracking_number', order.tracking_number or ''),
                 courier=serializer.validated_data.get('courier', order.courier or ''),
             )
+            try:
+                from notifications.services import notify_delivery_status
+                notify_delivery_status(
+                    user_id=order.user_id,
+                    order_number=order.order_number,
+                    order_id=order.id,
+                    delivery_status=delivery_status,
+                    courier=serializer.validated_data.get('courier', order.courier or ''),
+                )
+            except Exception as exc:
+                logger.warning('Delivery status notify failed: %s', exc)
 
         # ── Build notification message ──
         cancel_reason = serializer.validated_data.get('cancel_reason', '')
@@ -848,6 +862,17 @@ class DeliveryTrackingView(views.APIView):
                 delivery_status=new_status,
                 courier=delivery.courier_name or '',
             )
+            try:
+                from notifications.services import notify_delivery_status
+                notify_delivery_status(
+                    user_id=order.user_id,
+                    order_number=order.order_number,
+                    order_id=order.id,
+                    delivery_status=new_status,
+                    courier=delivery.courier_name or '',
+                )
+            except Exception as exc:
+                logger.warning('Delivery status notify failed: %s', exc)
 
         return Response(result)
 
@@ -1620,6 +1645,17 @@ def _process_delivery_webhook(request, provider):
             tracking_number=delivery_id,
             courier=provider.capitalize(),
         )
+        try:
+            from notifications.services import notify_delivery_status
+            notify_delivery_status(
+                user_id=delivery.order.user_id,
+                order_number=delivery.order.order_number,
+                order_id=delivery.order.id,
+                delivery_status=internal_status,
+                courier=provider.capitalize(),
+            )
+        except Exception as exc:
+            logger.warning('Delivery status notify failed: %s', exc)
 
     logger.info(f'{provider} webhook: order #{delivery.order.id} status={internal_status}')
     return None
@@ -1855,6 +1891,17 @@ class MitraAssignDriverView(views.APIView):
                 delivery_status='menunggu_penjemputan',
                 courier='Mitra Pengiriman',
             )
+            try:
+                from notifications.services import notify_delivery_status
+                notify_delivery_status(
+                    user_id=delivery.order.user_id,
+                    order_number=delivery.order.order_number,
+                    order_id=delivery.order.id,
+                    delivery_status='menunggu_penjemputan',
+                    courier='Mitra Pengiriman',
+                )
+            except Exception as exc:
+                logger.warning('Delivery status notify failed: %s', exc)
         return Response({
             'success': True,
             'message': f'Driver {driver.name} berhasil ditugaskan.',
@@ -1953,6 +2000,17 @@ class VerifyDeliveryQRView(views.APIView):
                 delivery_status=delivery.delivery_status,
                 courier=delivery.courier_provider or delivery.courier_name or 'Mitra Pengiriman',
             )
+            try:
+                from notifications.services import notify_delivery_status
+                notify_delivery_status(
+                    user_id=order.user_id,
+                    order_number=order.order_number,
+                    order_id=order.id,
+                    delivery_status=delivery.delivery_status,
+                    courier=delivery.courier_provider or delivery.courier_name or 'Mitra Pengiriman',
+                )
+            except Exception as exc:
+                logger.warning('Delivery status notify failed: %s', exc)
 
         return Response({
             'success': True,

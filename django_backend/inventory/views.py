@@ -871,24 +871,41 @@ class LowStockReportView(APIView):
 
         today = timezone.now().date()
 
-        low_stock_items = []
-        for alert in alerts:
-            # Sum all batch quantities for this product
-            total_qty = ProductBatch.objects.filter(
+        # Force single evaluation of alerts queryset
+        alerts_list = list(alerts)
+        mp_ids = [a.master_product_id for a in alerts_list]
+
+        # --- Batch query 1: total quantities per master_product ---
+        qty_map = dict(
+            ProductBatch.objects.filter(
                 store=store,
-                master_product=alert.master_product,
+                master_product_id__in=mp_ids,
                 is_active=True,
                 status__in=['fresh', 'expiring_soon'],
-            ).aggregate(total=Sum('current_quantity'))['total'] or 0
+            ).values('master_product_id').annotate(
+                total=Sum('current_quantity')
+            ).values_list('master_product_id', 'total')
+        )
+
+        # --- Batch query 2: nearest expiry date per master_product (no per-product loop) ---
+        from django.db.models import Min
+        nearest_date_map = dict(
+            ProductBatch.objects.filter(
+                store=store,
+                master_product_id__in=mp_ids,
+                is_active=True,
+                status__in=['fresh', 'expiring_soon'],
+            ).values('master_product_id').annotate(
+                nearest=Min('expiry_date')
+            ).values_list('master_product_id', 'nearest')
+        )
+
+        low_stock_items = []
+        for alert in alerts_list:
+            total_qty = qty_map.get(alert.master_product_id, 0) or 0
 
             if total_qty < alert.min_stock:
-                # Get nearest expiry batch info
-                nearest_batch = ProductBatch.objects.filter(
-                    store=store,
-                    master_product=alert.master_product,
-                    is_active=True,
-                    status__in=['fresh', 'expiring_soon'],
-                ).order_by('expiry_date').first()
+                nearest_expiry = nearest_date_map.get(alert.master_product_id)
 
                 low_stock_items.append({
                     'alert_id': alert.id,
@@ -898,8 +915,8 @@ class LowStockReportView(APIView):
                     'current_stock': float(total_qty),
                     'min_stock': float(alert.min_stock),
                     'shortage': float(alert.min_stock - total_qty),
-                    'nearest_expiry': nearest_batch.expiry_date.isoformat() if nearest_batch else None,
-                    'days_until_expiry': (nearest_batch.expiry_date - today).days if nearest_batch else None,
+                    'nearest_expiry': nearest_expiry.isoformat() if nearest_expiry else None,
+                    'days_until_expiry': (nearest_expiry - today).days if nearest_expiry else None,
                 })
 
         result = {
