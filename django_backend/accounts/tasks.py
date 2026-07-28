@@ -17,7 +17,18 @@ def send_otp_task(self, identifier, otp_code, purpose='registration', user_full_
     Returns delivery status without blocking the register/login view.
     
     Retry up to 3 times with 5-second delays on failure.
+    
+    DIAGNOSTIC LOGGING: Each execution logs timing, retry count, and result.
     """
+    import time
+    _task_start = time.time()
+    _retry_count = self.request.retries if hasattr(self, 'request') else 0
+    
+    logger.info(
+        'CELERY_OTP_TASK [START] identifier=%s purpose=%s retry=%d/3',
+        identifier, purpose, _retry_count,
+    )
+    
     from accounts.services.notification_service import notification_service
     
     try:
@@ -28,19 +39,40 @@ def send_otp_task(self, identifier, otp_code, purpose='registration', user_full_
             user_full_name=user_full_name,
         )
         
+        _task_elapsed = time.time() - _task_start
+        
         if result.get('success'):
-            logger.info('OTP sent successfully to %s via %s', identifier, result.get('provider', 'unknown'))
+            logger.info(
+                'CELERY_OTP_TASK [SUCCESS] identifier=%s purpose=%s retry=%d/3 '
+                'duration=%.2fs provider=%s',
+                identifier, purpose, _retry_count,
+                _task_elapsed, result.get('provider', 'unknown'),
+            )
         else:
-            logger.warning('OTP delivery failed for %s: %s', identifier, result.get('error'))
+            logger.warning(
+                'CELERY_OTP_TASK [FAILED] identifier=%s purpose=%s retry=%d/3 '
+                'duration=%.2fs error=%s result=%s',
+                identifier, purpose, _retry_count,
+                _task_elapsed, result.get('error'),
+                {k: v for k, v in result.items() if k != 'otp_code'},
+            )
         
         return {
             'success': result.get('success', False),
             'identifier': identifier,
             'purpose': purpose,
+            'duration': round(_task_elapsed, 3),
+            'retry_count': _retry_count,
         }
         
     except Exception as exc:
-        logger.error('OTP task error for %s: %s', identifier, str(exc))
+        _task_elapsed = time.time() - _task_start
+        logger.error(
+            'CELERY_OTP_TASK [EXCEPTION] identifier=%s purpose=%s retry=%d/3 '
+            'duration=%.2fs error=%s',
+            identifier, purpose, _retry_count,
+            _task_elapsed, exc,
+        )
         raise self.retry(exc=exc)
 
 

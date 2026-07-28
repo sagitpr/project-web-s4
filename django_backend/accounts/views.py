@@ -90,10 +90,56 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
     channels = []
     
     def safe_delay(task_func, **kwargs):
-        """Call task.delay() with a timeout-safe wrapper."""
+        """Call task.delay() with a timeout-safe wrapper.
+
+        CRITICAL: This function MUST detect silent task failures.
+
+        When CELERY_TASK_ALWAYS_EAGER=True (DEBUG mode), .delay() runs the
+        task synchronously and returns the ACTUAL return value. Even if the
+        task internally fails (SMTP not configured, wrong credentials, etc.),
+        .delay() does NOT raise an exception — it returns a dict like
+        {'success': False, 'error': 'SMTP not configured'}.
+
+        The old code ALWAYS returned True when no exception was raised,
+        which meant the sync fallback NEVER ran when the task failed
+        silently — the RegisterView thought the OTP was sent successfully
+        when it wasn't. This is the PRIMARY reason OTP was never delivered.
+        """
         try:
-            task_func.delay(**kwargs)
+            result = task_func.delay(**kwargs)
+            # ── EAGER MODE CHECK (DEBUG=True) ──
+            # In eager mode, .delay() returns the actual task return value.
+            # We MUST check it to detect silent failures.
+            if isinstance(result, dict):
+                if not result.get('success', False):
+                    error_msg = result.get('error', 'unknown error (task returned failure)')
+                    logger.warning(
+                        'OTP task FAILED (eager mode) — %s/%s: %s | task_result=%s',
+                        kwargs.get('identifier', kwargs.get('phone', 'unknown')),
+                        kwargs.get('purpose', 'unknown'),
+                        error_msg,
+                        {k: v for k, v in result.items() if k != 'otp_code'},
+                    )
+                    return False
+                else:
+                    logger.info(
+                        'OTP task SUCCEEDED (eager mode) — %s/%s',
+                        kwargs.get('identifier', kwargs.get('phone', 'unknown')),
+                        kwargs.get('purpose', 'unknown'),
+                    )
+                    return True
+
+            # ── PRODUCTION MODE (eager=False) ──
+            # result is an AsyncResult. We can't check the return value
+            # synchronously without blocking. Be optimistic — assume Celery
+            # worker will deliver or retry.
+            logger.info(
+                'OTP task dispatched to Celery worker (async) — %s/%s',
+                kwargs.get('identifier', kwargs.get('phone', 'unknown')),
+                kwargs.get('purpose', 'unknown'),
+            )
             return True
+
         except Exception as exc:
             logger.warning(
                 'Celery unavailable — OTP delivery skipped for %s/%s: %s',
@@ -109,28 +155,36 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
     # sent successfully when Celery/Redis was down, bypassing the sync fallback.
     # The sync fallback (send_otp_email called directly) is the caller's responsibility
     # when channels is empty — see RegisterView.create() and LoginView.post().
+    otp_delivery_log = {'email': email, 'purpose': purpose, 'identifier_for_log': email or phone or 'unknown'}
     if email:
-        if safe_delay(
+        async_ok = safe_delay(
             send_otp_task,
             identifier=email,
             otp_code=otp_code,
             purpose=purpose,
             user_full_name=user_full_name,
-        ):
+        )
+        
+        if async_ok:
             channels.append('email')
             logger.info(
-                'OTP async dispatch succeeded — Email: %s | Purpose: %s',
-                email, purpose,
+                'OTP ASYNC OK — Email: %s | Purpose: %s | safe_delay=True | channels=%s',
+                email, purpose, channels,
             )
+            otp_delivery_log['async'] = 'success'
         else:
             logger.warning(
-                'OTP async dispatch FAILED — Email: %s | Purpose: %s | '
-                'Will fall back to sync delivery',
+                'OTP ASYNC FAILED — Email: %s | Purpose: %s | safe_delay=False | '
+                'Initiating SYNC fallback',
                 email, purpose,
             )
+            otp_delivery_log['async'] = 'failed'
             # ── SYNC FALLBACK: Try direct sync send_otp_email() ──
-            # This handles the case when Celery/Redis is completely unavailable.
+            # This handles the case when:
+            #   a) Celery/Redis completely unavailable (exception on .delay())
+            #   b) Task executed but returned failure (eager mode, SMTP issue)
             # It's the caller's last resort before returning failure.
+            sync_log = {'trigger': 'async_failed'}
             try:
                 sync_result = send_otp_email(
                     email=email,
@@ -138,22 +192,35 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
                     purpose=purpose,
                     user_full_name=user_full_name,
                 )
+                sync_log['result'] = sync_result.get('success', False)
+                sync_log['error'] = sync_result.get('error', None)
+                
                 if sync_result.get('success'):
                     channels.append('email')
                     logger.info(
-                        'OTP SYNC FALLBACK succeeded — Email: %s | Purpose: %s',
-                        email, purpose,
+                        'OTP SYNC FALLBACK OK — Email: %s | Purpose: %s | sync_result=%s',
+                        email, purpose, sync_log,
                     )
+                    otp_delivery_log['sync'] = 'success'
                 else:
                     logger.warning(
-                        'OTP SYNC FALLBACK also failed for %s: %s',
-                        email, sync_result.get('error', 'unknown'),
+                        'OTP SYNC FALLBACK FAILED — Email: %s | Purpose: %s | sync_result=%s',
+                        email, purpose, sync_log,
                     )
+                    otp_delivery_log['sync'] = sync_log
             except Exception as sync_exc:
+                sync_log['exception'] = str(sync_exc)
                 logger.error(
-                    'OTP SYNC FALLBACK raised exception for %s: %s',
-                    email, sync_exc,
+                    'OTP SYNC FALLBACK EXCEPTION — Email: %s | Purpose: %s | error=%s',
+                    email, purpose, sync_exc,
                 )
+                otp_delivery_log['sync'] = sync_log
+        
+        # Log complete OTP delivery diagnostic summary
+        logger.info(
+            'OTP DELIVERY DIAGNOSTIC — Email: %s | Purpose: %s | channels=%s | log=%s',
+            email, purpose, channels, otp_delivery_log,
+        )
     
     if phone and _whatsapp_configured():
         if safe_delay(
@@ -576,6 +643,11 @@ class LogoutView(views.APIView):
 
     def post(self, request):
         user = request.user
+        # ── CRITICAL: Capture user_id BEFORE logout() ──
+        # After logout(request) is called, request.user becomes AnonymousUser
+        # and AnonymousUser.id is None. Any code that references request.user.id
+        # after logout will pass None, causing NOT NULL constraint failures.
+        _user_id = user.id if user.is_authenticated else None
         try:
             refresh_token = request.data.get('refresh')
             if refresh_token:
@@ -595,13 +667,14 @@ class LogoutView(views.APIView):
                 except Exception as e:
                     logger.warning('Failed to create admin logout audit log: %s', e)
             logout(request)
-            try:
-                notify_account_activity(
-                    request.user.id, 'Logout Berhasil',
-                    'Logout dari akun'
-                )
-            except Exception as e:
-                logger.warning('notify_account_activity failed: %s', e)
+            if _user_id:
+                try:
+                    notify_account_activity(
+                        _user_id, 'Logout Berhasil',
+                        'Logout dari akun'
+                    )
+                except Exception as e:
+                    logger.warning('notify_account_activity failed: %s', e)
             return success_response(message='Logout berhasil.')
         except Exception as e:
             logger.warning('Logout error (non-blocking): %s', str(e))
@@ -729,6 +802,13 @@ class OTPRequestView(views.APIView):
                 response_data['otp_channels'] = channels
                 if 'whatsapp' in channels:
                     response_data['message'] = 'Kode OTP telah dikirim via Email dan WhatsApp.'
+            else:
+                # All delivery channels failed — tell frontend to show in-app fallback
+                response_data['in_app_fallback'] = True
+                logger.warning(
+                    'OTP REQUEST — No channels available for %s, setting in_app_fallback',
+                    email,
+                )
 
         # Return OTP in debug mode
         if settings.DEBUG:
@@ -748,6 +828,7 @@ class OTPRequestView(views.APIView):
             expires_in_minutes=response_data.get('expires_in_minutes'),
             otp_channels=response_data.get('otp_channels'),
             otp_code=response_data.get('otp_code'),
+            in_app_fallback=response_data.get('in_app_fallback', False),
         )
 
 
@@ -1149,6 +1230,13 @@ class ResendOTPView(views.APIView):
             )
             if channels:
                 response_data['otp_channels'] = channels
+            else:
+                # All delivery channels failed — tell frontend to show in-app fallback
+                response_data['in_app_fallback'] = True
+                logger.warning(
+                    'OTP RESEND — No channels available for %s, setting in_app_fallback',
+                    email,
+                )
 
         if settings.DEBUG:
             response_data['otp_code'] = otp.otp_code
@@ -1164,6 +1252,7 @@ class ResendOTPView(views.APIView):
             expires_in_minutes=response_data.get('expires_in_minutes'),
             otp_channels=response_data.get('otp_channels'),
             otp_code=response_data.get('otp_code'),
+            in_app_fallback=response_data.get('in_app_fallback', False),
         )
 
 
