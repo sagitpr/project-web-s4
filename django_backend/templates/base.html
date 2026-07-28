@@ -55,6 +55,15 @@
     </script>
     {% endblock %}
 
+    {# ── PWA Manifest ── #}
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Warungio">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#059669">
+    <meta name="application-name" content="Warungio">
+
     {% block extra_head %}{% endblock %}
     {% endblock %}
 

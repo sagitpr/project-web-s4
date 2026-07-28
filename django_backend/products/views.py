@@ -2,6 +2,7 @@
 Products views for Warungio Marketplace.
 """
 
+import os
 import logging
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -13,7 +14,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.core.cache import cache
 
-from .models import Category, Product, Review, Favorite, Promo, RecentlyViewed, Voucher, QualityCheck
+from .models import Category, Product, ProductGallery, Review, Favorite, Promo, RecentlyViewed, Voucher, QualityCheck
 from stores.models import Store
 from .serializers import (
     CategorySerializer, ProductListSerializer, ProductDetailSerializer,
@@ -25,6 +26,7 @@ from accounts.permissions import IsSeller, IsStoreOwner
 from .services.smart_scan import process_scan
 from .services.stock_prediction import StockPredictor, ReorderOptimizer
 from notifications.models import Notification
+from notifications.services import notify_flash_sale_started
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
@@ -137,6 +139,15 @@ class ProductCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         store = self.request.user.store
         product = serializer.save(store=store)
+        # Handle gallery images (additional photos)
+        gallery_files = self.request.FILES.getlist('gallery_images')
+        if gallery_files:
+            gallery_objs = []
+            for idx, f in enumerate(gallery_files):
+                ext = os.path.splitext(f.name)[1] if f.name else '.jpg'
+                f.name = f"gallery_{product.id}_{idx+1}{ext}"
+                gallery_objs.append(ProductGallery(product=product, image=f, order=idx+1))
+            ProductGallery.objects.bulk_create(gallery_objs)
         store.product_count = store.products.count()
         store.save(update_fields=['product_count'])
         # Broadcast to store followers and seller
@@ -168,6 +179,18 @@ class ProductManageView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         old_stock = self.get_object().stock  # capture before save
         product = serializer.save()
+        # Handle gallery images (additional photos) on update
+        gallery_files = self.request.FILES.getlist('gallery_images')
+        if gallery_files:
+            import os
+            # Remove old gallery images
+            product.gallery.all().delete()
+            gallery_objs = []
+            for idx, f in enumerate(gallery_files):
+                ext = os.path.splitext(f.name)[1] if f.name else '.jpg'
+                f.name = f"gallery_{product.id}_{idx+1}{ext}"
+                gallery_objs.append(ProductGallery(product=product, image=f, order=idx+1))
+            ProductGallery.objects.bulk_create(gallery_objs)
         store = product.store
         # Detect if stock changed
         if 'stock' in serializer.validated_data:
@@ -364,7 +387,18 @@ class SellerPromoListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         store = self.request.user.store
-        serializer.save(store=store)
+        promo = serializer.save(store=store)
+        # Send notification for flash sale promos
+        try:
+            if promo.promo_type == 'flash_sale' or (getattr(promo, 'discount_percentage', 0) or 0) >= 50:
+                discount_desc = f"Diskon {promo.discount_percentage}%" if hasattr(promo, 'discount_percentage') and promo.discount_percentage else promo.description or 'Promo Spesial'
+                notify_flash_sale_started(
+                    store.user_id, promo.promo_name or promo.title or 'Promo',
+                    discount_desc, store.store_name
+                )
+        except Exception as exc:
+            _log = logging.getLogger('django_backend.products')
+            _log.warning('notify_flash_sale_started failed: %s', exc)
 
 
 class SellerPromoManageView(generics.RetrieveUpdateDestroyAPIView):

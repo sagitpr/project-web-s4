@@ -1994,3 +1994,90 @@ class DeliveryPODUploadView(views.APIView):
             'pod_photo_url': delivery.pod_photo.url if delivery.pod_photo else '',
             'pod_signed_at': delivery.pod_signed_at.isoformat() if delivery.pod_signed_at else '',
         })
+
+
+class GuestReviewCreateView(views.APIView):
+    """
+    Public endpoint for guests to submit product reviews after order completion.
+    Validates via order_number + phone number.
+    POST /api/orders/guest-review/
+    {
+        "order_number": "WRG-ABC123",
+        "phone": "081234567890",
+        "product_id": 5,
+        "rating": 4,
+        "comment": "Produk bagus, recommended!"
+    }
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        order_number = request.data.get('order_number', '').strip()
+        phone = request.data.get('phone', '').strip()
+        product_id = request.data.get('product_id')
+        rating = request.data.get('rating')
+        comment = request.data.get('comment', '').strip()
+
+        # Validation
+        if not order_number or not phone:
+            return Response({'error': 'Order number dan nomor HP wajib diisi.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not product_id:
+            return Response({'error': 'Produk wajib dipilih.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not rating or not isinstance(rating, int) or rating < 1 or rating > 5:
+            return Response({'error': 'Rating harus antara 1-5.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find order and verify phone matches
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response({'error': 'Pesanan tidak ditemukan.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verify phone number matches the order's recipient phone
+        recipient_phone = getattr(order, 'recipient_phone', '')
+        # Normalize both phones for comparison
+        if recipient_phone and phone:
+            norm_phone = phone.replace(' ', '').replace('-', '').replace('+', '').lstrip('0')
+            norm_recipient = recipient_phone.replace(' ', '').replace('-', '').replace('+', '').lstrip('0')
+            is_phone_match = norm_phone == norm_recipient
+        else:
+            is_phone_match = False
+
+        if not is_phone_match:
+            return Response({'error': 'Nomor HP tidak sesuai dengan pesanan ini.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Check order is completed or delivered
+        delivery = getattr(order, 'delivery', None)
+        is_delivered = delivery and delivery.delivery_status == 'pesanan_diterima'
+        if order.order_status != 'completed' and not is_delivered:
+            return Response({'error': 'Ulasan hanya dapat diberikan setelah pesanan selesai.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify product belongs to this order's store
+        try:
+            product = Product.objects.get(id=product_id, store=order.store)
+        except Product.DoesNotExist:
+            return Response({'error': 'Produk tidak ditemukan di toko ini.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check duplicate review for this order_number + product
+        from products.models import GuestReview
+        existing = GuestReview.objects.filter(order_number=order_number, product=product).first()
+        if existing:
+            return Response({'error': 'Anda sudah memberikan ulasan untuk produk ini.'}, status=status.HTTP_409_CONFLICT)
+
+        # Create review
+        review = GuestReview.objects.create(
+            order_number=order_number,
+            phone=phone,
+            product=product,
+            rating=rating,
+            comment=comment,
+            is_verified=True,
+        )
+
+        logger.info('GUEST REVIEW — Order: %s | Phone: %s | Product: %s | Rating: %d',
+                    order_number, phone, product.product_name, rating)
+
+        return Response({
+            'success': True,
+            'message': 'Terima kasih! Ulasan Anda telah dikirim.',
+            'review_id': review.id,
+        }, status=status.HTTP_201_CREATED)

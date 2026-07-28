@@ -15,39 +15,7 @@
 </head>
 <body>
 <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebarNav">
-        <div class="logo">
-            <img src="{% static 'images/Warungio L.png' %}" alt="logo">
-            <div class="logo-text">
-                <span class="brand-name">Warungio</span>
-                <small class="brand-tag">Seller Dashboard</small>
-            </div>
-        </div>
-        <nav>
-            <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="{% url 'page-seller-products' %}" class="active"><i class="fa-solid fa-box"></i> Produk</a>
-            <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-            <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
-            <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
-            <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
-            <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
-            <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
-            <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
-            <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-            <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
-        </nav>
-        <div class="sidebar-ads">
-            <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
-            <p><b>Tambah produk baru</b></p>
-            <p class="desc">Jangkau lebih banyak pembeli dengan katalog produk yang lengkap.</p>
-            <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
-            <button class="btn-learn">Pelajari</button>
-        </div>
-    </aside>
-
-    <!-- Mobile Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    {% include 'partials/seller_sidebar.html' with active_page='products' %}
 
     <!-- Main Content -->
     <main class="main-content">
@@ -300,6 +268,19 @@
                 </div>
                 <div style="flex:1;min-width:140px;">
                     <label><span>Tgl. Kedaluwarsa</span><input type="date" id="edit-expired-date" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;"></label>
+                </div>
+            </div>
+            <!-- Foto Produk (min 2-5) -->
+            <div class="form-row">
+                <label><span>Foto Produk <small style="color:#94a3b8;font-weight:400;">(min 2, maks 5)</small></span></label>
+                <div class="photo-upload-area" id="photoUploadArea">
+                    <input type="file" id="edit-photos" accept="image/jpeg,image/png,image/webp" multiple style="display:none;">
+                    <div class="photo-dropzone" id="photoDropzone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Klik atau seret foto ke sini</span>
+                        <small>JPEG, PNG, WebP — Min 2, Maks 5 foto</small>
+                    </div>
+                    <div class="photo-preview-grid" id="photoPreviewGrid"></div>
                 </div>
             </div>
             <div class="form-row">

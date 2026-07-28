@@ -67,6 +67,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'csp',
     'channels',
     'django_filters',
     'phonenumber_field',
@@ -881,6 +882,93 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# =============================================================================
+# CONTENT SECURITY POLICY (CSP)
+# =============================================================================
+# Strict CSP to prevent XSS while allowing required third-party services.
+# Google AdSense, Google Fonts, Google Maps, Midtrans, and CDNJS are whitelisted.
+# Using django-csp >= 4.0 format (CONTENT_SECURITY_POLICY dict).
+
+_CSP_DIRECTIVES = {
+    'default-src': ("'self'",),
+    'script-src': (
+        "'self'",
+        "'unsafe-inline'",  # Required for inline scripts
+        "'unsafe-eval'",    # Required for some JS libraries
+        "https://pagead2.googlesyndication.com",   # Google AdSense
+        "https://googleads.g.doubleclick.net",      # Google AdSense
+        "https://www.googletagmanager.com",
+        "https://www.google.com",
+        "https://www.gstatic.com",
+        "https://cdnjs.cloudflare.com",             # Font Awesome, etc.
+        "https://app.sandbox.midtrans.com",         # Midtrans Sandbox
+        "https://app.midtrans.com",                 # Midtrans Production
+        "https://maps.googleapis.com",              # Google Maps
+    ),
+    'style-src': (
+        "'self'",
+        "'unsafe-inline'",  # Inline styles from templates
+        "https://fonts.googleapis.com",             # Google Fonts
+        "https://cdnjs.cloudflare.com",             # Font Awesome CSS
+        "https://pagead2.googlesyndication.com",    # AdSense styles
+    ),
+    'img-src': (
+        "'self'",
+        "data:",
+        "blob:",
+        "https:",  # Allow images from any HTTPS source
+    ),
+    'font-src': (
+        "'self'",
+        "data:",
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com",
+    ),
+    'connect-src': (
+        "'self'",
+        "https://pagead2.googlesyndication.com",
+        "https://googleads.g.doubleclick.net",
+        "https://www.google.com",
+        "https://www.gstatic.com",
+        "https://app.sandbox.midtrans.com",
+        "https://app.midtrans.com",
+        "https://api.whatsapp.com",
+        "wss://warungio.web.id",
+        "ws://localhost:8000",
+        "wss://localhost:8000",
+    ),
+    'frame-src': (
+        "'self'",
+        "https://pagead2.googlesyndication.com",
+        "https://googleads.g.doubleclick.net",
+        "https://www.google.com",
+        "https://app.sandbox.midtrans.com",         # Midtrans Snap iframe
+        "https://app.midtrans.com",                 # Midtrans Snap iframe
+        "https://maps.googleapis.com",              # Google Maps embed
+    ),
+    'media-src': ("'self'", "blob:", "data:"),
+    'object-src': ("'none'",),
+    'base-uri': ("'self'",),
+    'form-action': ("'self'", "https://app.sandbox.midtrans.com", "https://app.midtrans.com"),
+    'frame-ancestors': ("'self'",),
+    'worker-src': ("'self'", "blob:"),
+    'manifest-src': ("'self'",),
+}
+
+if not DEBUG:
+    CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': _CSP_DIRECTIVES,
+    }
+else:
+    # Development: report-only mode (won't block, will log warnings)
+    CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': _CSP_DIRECTIVES,
+    }
+
+# Register CSP middleware early in chain (after SecurityMiddleware, before WhiteNoise)
+# Explicit insertion ensures CSP header is set before any middleware that might read it
+MIDDLEWARE.insert(1, 'csp.middleware.CSPMiddleware')
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'

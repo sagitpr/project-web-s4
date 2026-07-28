@@ -1,60 +1,23 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/invoice/style.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-</head>
-<body>
-    <div class="page-shell">
-        {% include 'components/sidebar.html' %}
-
-        <main class="main-content-area">
-            {% include 'components/topbar.html' %}
-
-            <div class="buyer-content-wrapper">
-                <!-- Page Header -->
-                <div class="page-header-section">
-                    <h1>Invoice</h1>
-                    <p class="page-subtitle">Detail transaksi dan bukti pembayaran pesanan kamu.</p>
-                </div>
-
-                <!-- Loading State -->
-                <div id="invoiceContainer">
-                    <div class="inv-loading-state" id="invLoading">
-                        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-                        <p>Memuat invoice...</p>
-                    </div>
-                </div>
-            </div>
-        </main>
+{% block title %}Invoice - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/invoice/style.css' %}">
+{% endblock %}
+{% block page_title %}Invoice{% endblock %}
+{% block page_subtitle %}Detail transaksi dan bukti pembayaran pesanan kamu{% endblock %}
+{% block content %}
+<div id="invoiceContainer">
+    <div class="inv-loading-state" id="invLoading">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <p>Memuat invoice...</p>
     </div>
-
-    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    WarungioAuthUI?.init({ syncBalance: false, syncCart: false });
-    </script>
-    <script src="{% static 'js/utils/format.js' %}"></script>
-    <script>
-    (function () {
-      'use strict';
-
-      if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
-        window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
-        return;
-      }
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
 
       var container = document.getElementById('invoiceContainer');
       var loadingEl = document.getElementById('invLoading');
@@ -212,6 +175,5 @@
       // ── Init ──
       document.addEventListener('DOMContentLoaded', loadInvoice);
     })();
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

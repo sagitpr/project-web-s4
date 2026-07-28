@@ -1,0 +1,268 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Keranjang Belanja - {{ store.store_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.cart-page { max-width:900px; margin:0 auto; padding:24px 16px; }
+.cart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.cart-header h1 { font-size:20px; font-weight:800; color:#0f172a; margin:0; }
+.cart-header h1 i { color:#059669; }
+.cart-header .cart-count { font-size:14px; font-weight:600; color:#64748b; }
+.cart-empty { text-align:center; padding:64px 20px; }
+.cart-empty i { font-size:56px; color:#cbd5e1; margin-bottom:16px; display:block; }
+.cart-empty h3 { font-size:18px; font-weight:700; color:#64748b; margin:0 0 8px; }
+.cart-empty p { font-size:14px; color:#94a3b8; margin:0 0 24px; }
+.cart-item { display:flex; align-items:center; gap:14px; padding:16px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; margin-bottom:10px; transition:all 0.2s; }
+.cart-item:hover { border-color:#bbf7d0; }
+.cart-item-img { width:64px; height:64px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#f8fafc; display:flex; align-items:center; justify-content:center; }
+.cart-item-img img { width:100%; height:100%; object-fit:cover; }
+.cart-item-img-placeholder { color:#cbd5e1; font-size:24px; }
+.cart-item-info { flex:1; min-width:0; }
+.cart-item-name { font-size:14px; font-weight:600; color:#0f172a; margin-bottom:2px; }
+.cart-item-price { font-size:13px; font-weight:700; color:#059669; }
+.cart-item-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.cart-qty-btn { width:32px; height:32px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#475569; transition:all 0.15s; }
+.cart-qty-btn:hover { background:#f0fdf4; border-color:#bbf7d0; color:#059669; }
+.cart-qty-input { width:44px; height:32px; text-align:center; border:1.5px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; }
+.cart-qty-input:focus { outline:none; border-color:#059669; }
+.cart-item-delete { width:32px; height:32px; border:none; background:transparent; cursor:pointer; color:#94a3b8; font-size:16px; transition:color 0.2s; }
+.cart-item-delete:hover { color:#dc2626; }
+.cart-item-subtotal { font-size:14px; font-weight:700; color:#0f172a; min-width:80px; text-align:right; }
+.cart-summary { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:20px; margin-top:16px; }
+.cart-summary h3 { font-size:15px; font-weight:700; color:#0f172a; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+.cart-summary h3 i { color:#059669; }
+.cart-summary-row { display:flex; justify-content:space-between; font-size:13px; color:#64748b; padding:4px 0; }
+.cart-summary-row.total { font-size:16px; font-weight:800; color:#0f172a; border-top:1px solid #e2e8f0; margin-top:8px; padding-top:10px; }
+.cart-summary-row.discount { color:#059669; }
+.cart-voucher { display:flex; gap:8px; margin-bottom:14px; }
+.cart-voucher input { flex:1; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; font-family:inherit; }
+.cart-voucher input:focus { outline:none; border-color:#059669; }
+.cart-voucher button { padding:10px 18px; background:#059669; color:#fff; border:none; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; transition:background 0.2s; }
+.cart-voucher button:hover { background:#047857; }
+.cart-voucher-result { font-size:12px; margin-top:4px; margin-bottom:12px; }
+.btn-checkout { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; background:#059669; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; text-decoration:none; transition:all 0.2s; margin-top:14px; }
+.btn-checkout:hover { background:#047857; transform:translateY(-1px); box-shadow:0 4px 12px rgba(5,150,105,0.3); }
+.btn-checkout:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-continue { display:inline-flex; align-items:center; gap:8px; color:#059669; text-decoration:none; font-weight:600; font-size:13px; margin-bottom:16px; }
+.btn-continue:hover { text-decoration:underline; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:12px 24px; border-radius:12px; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.toast.show { opacity:1; }
+.toast.success { background:#059669; }
+.toast.error { background:#dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <a href="/toko/{{ store.slug }}/" class="btn-continue"><i class="fa-solid fa-arrow-left"></i> Lanjut Belanja</a>
+
+    <div class="cart-header">
+        <h1><i class="fa-solid fa-cart-shopping"></i> Keranjang Belanja</h1>
+        <span class="cart-count" id="cartItemCount">0 item</span>
+    </div>
+
+    <!-- Cart Items -->
+    <div id="cartItemsContainer"></div>
+
+    <!-- Empty State -->
+    <div id="cartEmpty" class="cart-empty" style="display:none;">
+        <i class="fa-solid fa-cart-plus"></i>
+        <h3>Keranjang Kosong</h3>
+        <p>Belum ada produk di keranjang. Ayo belanja!</p>
+        <a href="/toko/{{ store.slug }}/" class="btn-cta primary" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#059669;color:#fff;border-radius:12px;font-weight:700;text-decoration:none;">
+            <i class="fa-solid fa-store"></i> Mulai Belanja
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div id="cartSummary" class="cart-summary" style="display:none;">
+        <h3><i class="fa-solid fa-receipt"></i> Ringkasan Belanja</h3>
+
+        <div class="cart-voucher">
+            <input type="text" id="voucherInput" placeholder="Kode promo/voucher">
+            <button onclick="applyVoucher()">Pakai</button>
+        </div>
+        <div class="cart-voucher-result" id="voucherResult"></div>
+
+        <div id="cartItemsSummary"></div>
+        <div class="cart-summary-row"><span>Subtotal</span><span id="cartSubtotal">Rp 0</span></div>
+        <div class="cart-summary-row"><span>Biaya Admin</span><span id="cartAdminFee">Rp 1.500</span></div>
+        <div id="cartDiscountRow" class="cart-summary-row discount" style="display:none;">
+            <span>Diskon</span><span id="cartDiscountAmount">-Rp 0</span>
+        </div>
+        <div class="cart-summary-row total"><span>Total</span><span id="cartTotal">Rp 0</span></div>
+
+        <a href="/store/{{ store.slug }}/checkout/" class="btn-checkout" id="btnGoCheckout">
+            <i class="fa-solid fa-credit-card"></i> Lanjut ke Pembayaran
+        </a>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    renderCart();
+});
+
+function getCart() {
+    try { return JSON.parse(localStorage.getItem('store_cart_{{ store.id }}') || '[]'); }
+    catch(e) { return []; }
+}
+
+function saveCart(cart) {
+    localStorage.setItem('store_cart_{{ store.id }}', JSON.stringify(cart));
+    updateBadge(cart);
+}
+
+function updateBadge(cart) {
+    var total = cart.reduce(function(s,i) { return s+(i.qty||0); }, 0);
+    var badge = document.getElementById('storeCartBadge');
+    if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'flex' : 'none'; }
+}
+
+function renderCart() {
+    var cart = getCart();
+    var container = document.getElementById('cartItemsContainer');
+    var empty = document.getElementById('cartEmpty');
+    var summary = document.getElementById('cartSummary');
+
+    document.getElementById('cartItemCount').textContent = cart.length + ' item' + (cart.length !== 1 ? 's' : '');
+
+    if (cart.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        summary.style.display = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    summary.style.display = 'block';
+
+    var itemsHtml = cart.map(function(item, idx) {
+        var imgHtml = item.img ? '<img src="' + item.img + '" alt="' + escapeHtml(item.name) + '">' : '<div class="cart-item-img-placeholder"><i class="fa-solid fa-box"></i></div>';
+        return '<div class="cart-item" data-idx="' + idx + '">' +
+            '<div class="cart-item-img">' + imgHtml + '</div>' +
+            '<div class="cart-item-info">' +
+            '<div class="cart-item-name">' + escapeHtml(item.name) + '</div>' +
+            '<div class="cart-item-price">Rp ' + formatNumber(item.price) + '</div>' +
+            '</div>' +
+            '<div class="cart-item-actions">' +
+            '<button class="cart-qty-btn" onclick="adjustQty(' + idx + ',-1)"><i class="fa-solid fa-minus"></i></button>' +
+            '<input type="number" class="cart-qty-input" id="qty-' + idx + '" value="' + (item.qty || 1) + '" min="0" onchange="updateQty(' + idx + ')">' +
+            '<button class="cart-qty-btn" onclick="adjustQty(' + idx + ',1)"><i class="fa-solid fa-plus"></i></button>' +
+            '<button class="cart-item-delete" onclick="removeItem(' + idx + ')"><i class="fa-solid fa-trash-can"></i></button>' +
+            '</div>' +
+            '<div class="cart-item-subtotal">Rp ' + formatNumber((item.price || 0) * (item.qty || 1)) + '</div>' +
+            '</div>';
+    }).join('');
+    container.innerHTML = itemsHtml;
+    updateSummary();
+}
+
+function adjustQty(idx, delta) {
+    var input = document.getElementById('qty-' + idx);
+    if (!input) return;
+    var val = parseInt(input.value) || 1;
+    val = Math.max(1, val + delta);
+    input.value = val;
+    updateQty(idx);
+}
+
+function updateQty(idx) {
+    var input = document.getElementById('qty-' + idx);
+    if (!input) return;
+    var val = parseInt(input.value) || 1;
+    if (val < 1) { val = 1; input.value = 1; }
+    var cart = getCart();
+    if (cart[idx]) cart[idx].qty = val;
+    saveCart(cart);
+    renderCart();
+}
+
+function removeItem(idx) {
+    var cart = getCart();
+    var name = cart[idx] ? cart[idx].name : '';
+    cart.splice(idx, 1);
+    saveCart(cart);
+    renderCart();
+    if (name) showToast(name + ' dihapus dari keranjang', '');
+}
+
+function updateSummary() {
+    var cart = getCart();
+    var itemsHtml = '';
+    var subtotal = 0;
+    cart.forEach(function(item) {
+        var sub = (item.price || 0) * (item.qty || 1);
+        subtotal += sub;
+        itemsHtml += '<div class="cart-summary-row"><span>' + escapeHtml(item.name.substring(0, 30)) + ' x' + (item.qty || 1) + '</span><span>Rp ' + formatNumber(sub) + '</span></div>';
+    });
+    document.getElementById('cartItemsSummary').innerHTML = itemsHtml;
+
+    var adminFee = 1500;
+    var total = subtotal + adminFee;
+
+    // Check voucher
+    var voucher = window._appliedVoucher;
+    if (voucher && subtotal > 0) {
+        var disc = Math.min(voucher.discount || 0, subtotal);
+        total -= disc;
+        document.getElementById('cartDiscountRow').style.display = 'flex';
+        document.getElementById('cartDiscountAmount').textContent = '-Rp ' + formatNumber(disc);
+    } else {
+        document.getElementById('cartDiscountRow').style.display = 'none';
+    }
+
+    document.getElementById('cartSubtotal').textContent = 'Rp ' + formatNumber(subtotal);
+    document.getElementById('cartTotal').textContent = 'Rp ' + formatNumber(Math.max(0, total));
+
+    // Pass total to checkout via query param or localStorage
+    var checkoutBtn = document.getElementById('btnGoCheckout');
+    if (subtotal > 0) {
+        checkoutBtn.removeAttribute('disabled');
+        checkoutBtn.href = '/store/{{ store.slug }}/checkout/?from_cart=1';
+    } else {
+        checkoutBtn.setAttribute('disabled', 'disabled');
+    }
+}
+
+function applyVoucher() {
+    var code = document.getElementById('voucherInput').value.trim();
+    var resultDiv = document.getElementById('voucherResult');
+    if (!code) return;
+
+    if (window.WarungioAPI && window.WarungioAPI.checkVoucher) {
+        window.WarungioAPI.checkVoucher(code, 0)
+            .then(function(data) {
+                if (data.valid) {
+                    window._appliedVoucher = data;
+                    resultDiv.innerHTML = '<span style="color:#059669;"><i class="fa-solid fa-check-circle"></i> ' + escapeHtml(data.message || 'Voucher berlaku!') + '</span>';
+                } else {
+                    window._appliedVoucher = null;
+                    resultDiv.innerHTML = '<span style="color:#dc2626;"><i class="fa-solid fa-times-circle"></i> ' + escapeHtml(data.error || 'Voucher tidak valid') + '</span>';
+                }
+                updateSummary();
+            })
+            .catch(function() {
+                resultDiv.innerHTML = '<span style="color:#dc2626;">Gagal validasi voucher</span>';
+            });
+    } else {
+        resultDiv.innerHTML = '<span style="color:#dc2626;">Fitur voucher tidak tersedia</span>';
+    }
+}
+
+function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'toast ' + (type || '') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function formatNumber(n) { return Number(n || 0).toLocaleString('id-ID'); }
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/\"/g,'&#34;'); }
+</script>
+{% endblock %}

@@ -114,8 +114,8 @@ def city_index(request):
     ).exclude(
         city__exact=''
     ).values('city').annotate(
-        store_count=_Count('id'),
-        product_count=_Count('products', filter=Q(products__is_active=True))
+        store_count=Count('id'),
+        product_count=Count('products', filter=Q(products__is_active=True))
     ).order_by('-store_count')[:100]
 
     # Get total counts
@@ -195,7 +195,7 @@ def store_landing(request, slug):
     if not _HAS_PRODUCTS or Store is None:
         raise Http404("Toko tidak tersedia")
 
-    store = get_object_or_404(Store, slug=slug, status='active')
+    store = get_object_or_404(Store.objects.select_related('user'), slug=slug, status='active')
 
     products = Product.objects.filter(
         store=store, is_active=True
@@ -208,24 +208,53 @@ def store_landing(request, slug):
         is_active=True
     ).distinct()
 
+    # Get store operating hours, featured products, banners
+    # Get store status
+    store_status = 'buka' if store.is_open else 'tutup'
+    
+    # Get promo counts
+    from django.utils import timezone
+    active_promos_count = 0
+    try:
+        from products.models import Promo
+        active_promos_count = Promo.objects.filter(
+            store=store,
+            is_active=True,
+            start_date__lte=timezone.now().date(),
+            end_date__gte=timezone.now().date(),
+        ).count()
+    except Exception:
+        pass
+
+    # Featured products — separate query (products is already sliced)
+    featured_products = Product.objects.filter(
+        store=store, is_active=True, is_featured=True
+    ).order_by('-sold_count')[:8]
+
     context = {
         'store': store,
         'products': products,
         'categories': categories,
         'product_count': len(products),
+        'store_status': store_status,
+        'active_promos_count': active_promos_count,
+        'featured_products': featured_products,
     }
-    return render(request, 'seo/store_page.html', context)
+    return render(request, 'store/home.html', context)
 
 
-# ── PUBLIC PRODUCT DETAIL PAGES ──
+# ── PUBLIC PRODUCT DETAIL PAGES (standalone store layout) ──
 
 @cache_page(1800)
 def product_detail(request, slug):
-    """Render a public product detail page without requiring authentication."""
+    """Render a public product detail page without requiring authentication.
+    Uses standalone store layout (store/base.html), NOT marketplace base.html.
+    """
     if not _HAS_PRODUCTS or Product is None:
         raise Http404("Produk tidak tersedia")
 
-    product = get_object_or_404(Product, slug=slug, is_active=True)
+    product = get_object_or_404(Product.objects.select_related('store', 'store__user', 'category'), slug=slug, is_active=True)
+    store = product.store
 
     # Get reviews
     reviews = Review.objects.filter(
@@ -238,20 +267,63 @@ def product_detail(request, slug):
         is_active=True
     ).exclude(id=product.id).select_related('store').order_by('-sold_count')[:8]
 
-    # Get more products in same category
-    category_products = Product.objects.filter(
-        category=product.category,
-        is_active=True
-    ).exclude(id=product.id).select_related('store').order_by('-sold_count')[:8]
+    store_status = 'buka' if store.is_open else 'tutup'
 
     context = {
         'product': product,
+        'store': store,
         'reviews': reviews,
         'review_count': len(reviews),
         'related_products': related_products,
-        'category_products': category_products,
+        'store_status': store_status,
     }
-    return render(request, 'seo/product_detail.html', context)
+    return render(request, 'store/product.html', context)
+
+
+# ── STORE PRODUCT DETAIL BY SLUG + STORE SLUG ──
+
+def store_product_detail(request, store_slug, product_slug):
+    """Store-scoped product detail page using standalone store layout."""
+    if not _HAS_PRODUCTS or Product is None:
+        raise Http404("Produk tidak tersedia")
+
+    store = get_object_or_404(Store.objects.select_related('user'), slug=store_slug, status='active')
+    product = get_object_or_404(Product, slug=product_slug, store=store, is_active=True)
+
+    reviews = Review.objects.filter(product=product).select_related('user').order_by('-created_at')[:10]
+    related_products = Product.objects.filter(store=store, is_active=True).exclude(id=product.id).order_by('-sold_count')[:8]
+
+    store_status = 'buka' if store.is_open else 'tutup'
+
+    context = {
+        'product': product,
+        'store': store,
+        'reviews': reviews,
+        'review_count': len(reviews),
+        'related_products': related_products,
+        'store_status': store_status,
+    }
+    return render(request, 'store/product.html', context)
+
+
+# ── STORE CART PAGE ──
+
+def store_cart(request, slug):
+    """Render standalone cart page for store."""
+    if not _HAS_PRODUCTS or Store is None:
+        raise Http404("Toko tidak tersedia")
+
+    store = get_object_or_404(Store.objects.select_related('user'), slug=slug, status='active')
+    store_status = 'buka' if store.is_open else 'tutup'
+
+    context = {
+        'store': store,
+        'store_status': store_status,
+    }
+    return render(request, 'store/cart.html', context)
+
+
+# ── PROMO LANDING PAGES ──
 
 
 # ── PROMO LANDING PAGES ──
@@ -293,17 +365,115 @@ def promo_landing(request, slug):
     return render(request, 'seo/promo_page.html', context)
 
 
-# ── PUBLIC GUEST CHECKOUT PAGE ──
+# ── STORE PRODUCT LISTING ──
 
-def public_checkout(request, slug):
-    """Render public guest checkout page with store info."""
+def store_products(request, slug):
+    """Render store product listing with search and category filter."""
     if not _HAS_PRODUCTS or Store is None:
         raise Http404("Toko tidak tersedia")
 
     store = get_object_or_404(Store, slug=slug, status='active')
 
+    products = Product.objects.filter(
+        store=store, is_active=True
+    ).select_related('category').order_by('-is_featured', '-sold_count')
+
+    categories = Category.objects.filter(
+        products__store=store,
+        products__is_active=True,
+        is_active=True
+    ).distinct()
+
+    store_status = 'buka' if store.is_open else 'tutup'
+
     context = {
         'store': store,
+        'products': products,
+        'categories': categories,
+        'product_count': len(products),
+        'store_status': store_status,
+        'active_page': 'products',
+    }
+    return render(request, 'store/home.html', context)
+
+
+# ── ORDER SUCCESS PAGE (standalone, not a modal) ──
+
+def order_success(request, order_number):
+    """Render a standalone order success page with QR, invoice download, tracking."""
+    from orders.models import Order
+    import json
+
+    try:
+        order = Order.objects.select_related('store').prefetch_related('items').get(
+            order_number=order_number
+        )
+    except Order.DoesNotExist:
+        raise Http404("Pesanan tidak ditemukan")
+
+    store = order.store
+
+    # Build items data for JSON serialization
+    items_data = []
+    for item in order.items.all():
+        items_data.append({
+            'product_name': item.product_name,
+            'qty': item.qty,
+            'price': float(item.price),
+            'subtotal': float(item.subtotal),
+        })
+
+    order_json = {
+        'order_number': order.order_number,
+        'subtotal': float(order.subtotal),
+        'shipping_cost': float(order.shipping_cost),
+        'admin_fee': float(getattr(order, 'admin_fee_buyer', 1500)),
+        'total_price': float(order.total_price),
+        'items': items_data,
+    }
+
+    store_status = 'buka' if store.is_open else 'tutup'
+
+    context = {
+        'order': order,
+        'store': store,
+        'store_status': store_status,
+        'order_json': json.dumps(order_json),
+    }
+    return render(request, 'store/success.html', context)
+
+
+# ── GUEST ORDER HISTORY LOOKUP ──
+
+def order_lookup(request):
+    """Render guest order history lookup page."""
+    return render(request, 'store/history.html')
+
+
+# ── PUBLIC GUEST CHECKOUT PAGE ──
+
+def public_checkout(request, slug):
+    """Render public guest checkout page with store info.
+    
+    Optional query param:
+      ?product_id=N — Pre-select a specific product for quick-buy.
+    """
+    if not _HAS_PRODUCTS or Store is None:
+        raise Http404("Toko tidak tersedia")
+
+    store = get_object_or_404(Store, slug=slug, status='active')
+    
+    # Optional pre-selected product and qty for quick-buy
+    preselected_product_id = request.GET.get('product_id')
+    preselected_qty = request.GET.get('qty')
+    
+    store_status = 'buka' if store.is_open else 'tutup'
+    
+    context = {
+        'store': store,
+        'store_status': store_status,
+        'preselected_product_id': int(preselected_product_id) if preselected_product_id and preselected_product_id.isdigit() else None,
+        'preselected_qty': int(preselected_qty) if preselected_qty and preselected_qty.isdigit() else 1,
     }
     return render(request, 'public/checkout/index.html', context)
 

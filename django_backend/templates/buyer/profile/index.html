@@ -1,31 +1,12 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Saya - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/profile/style.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-</head>
-<body>
-    <div class="page-shell">
-        {% include 'components/sidebar.html' %}
-
-        <main class="main-content-area">
-            {% include 'components/topbar.html' %}
-
-            <div class="buyer-content-wrapper">
-                <div class="page-header-section">
-                    <h1>Profil Saya</h1>
-                    <p class="page-subtitle">Kelola informasi akun, keamanan, dan pengaturan profil Anda.</p>
-                </div>
+{% block title %}Profil Saya - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/profile/style.css' %}">
+{% endblock %}
+{% block page_title %}Profil Saya{% endblock %}
+{% block page_subtitle %}Kelola informasi akun, keamanan, dan pengaturan profil Anda{% endblock %}
+{% block content %}
 
                 <!-- Profile Layout -->
                 <div class="profile-layout">
@@ -185,116 +166,67 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    </div>
 
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-        'use strict';
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
-                if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
-                }
-                
-                // Load profile
-                try {
-                    const data = await WarungioAPI.checkAuth();
-                    if (data && data.user) {
-                        const user = data.user;
-                        document.getElementById('profileDisplayName').textContent = user.full_name || user.email;
-                        document.getElementById('profileEmail').textContent = user.email;
-                        if (user.profile_photo) document.getElementById('profileAvatar').src = user.profile_photo;
-                        
-                        document.getElementById('inputFullName').value = user.full_name || '';
-                        document.getElementById('inputEmail').value = user.email || '';
-                        document.getElementById('inputPhone').value = user.phone_number || '';
-                        if (user.birth_date) document.getElementById('inputBirthDate').value = user.birth_date;
-                        if (user.address) document.getElementById('inputAddress').value = user.address;
-                    }
-                } catch(e) { console.warn(e); }
-            } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const data = await WarungioAPI.checkAuth();
+            if (data && data.user) {
+                const user = data.user;
+                document.getElementById('profileDisplayName').textContent = user.full_name || user.email;
+                document.getElementById('profileEmail').textContent = user.email;
+                if (user.profile_photo) document.getElementById('profileAvatar').src = user.profile_photo;
+                document.getElementById('inputFullName').value = user.full_name || '';
+                document.getElementById('inputEmail').value = user.email || '';
+                document.getElementById('inputPhone').value = user.phone_number || '';
+                if (user.birth_date) document.getElementById('inputBirthDate').value = user.birth_date;
+                if (user.address) document.getElementById('inputAddress').value = user.address;
             }
-            
-            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); }
-            });
+        } catch(e) { console.warn(e); }
 
-            // Tab switching
-            document.querySelectorAll('.tab-header-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.tab-header-btn').forEach(function(b) { b.classList.remove('active'); });
-                    document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
-                    this.classList.add('active');
-                    var tabId = this.dataset.tab;
-                    document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).style.display = 'block';
-                });
-            });
-
-            // Password toggle
-            window.togglePassword = function(inputId, el) {
-                var input = document.getElementById(inputId);
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    el.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
-                } else {
-                    input.type = 'password';
-                    el.innerHTML = '<i class="fa-regular fa-eye"></i>';
-                }
-            };
-
-            // Photo change
-            document.getElementById('btnChangePhoto')?.addEventListener('click', function() {
-                document.getElementById('photoInput').click();
-            });
-            document.getElementById('photoInput')?.addEventListener('change', async function(e) {
-                if (!e.target.files.length) return;
-                try {
-                    const result = await WarungioAPI.uploadProfilePhoto(e.target.files[0]);
-                    if (result && result.user?.profile_photo) {
-                        document.getElementById('profileAvatar').src = result.user.profile_photo;
-                    }
-                } catch(e) { console.warn(e); }
-            });
-
-            // Save profile
-            document.getElementById('profileForm')?.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const btn = document.getElementById('btnSaveProfile');
-                btn.disabled = true;
-                btn.textContent = 'Menyimpan...';
-                
-                try {
-                    const result = await WarungioAPI.updateProfile({
-                        full_name: document.getElementById('inputFullName').value,
-                        phone_number: document.getElementById('inputPhone').value,
-                        birth_date: document.getElementById('inputBirthDate').value,
-                        address: document.getElementById('inputAddress').value
-                    });
-                    if (result && result.user) {
-                        document.getElementById('profileDisplayName').textContent = result.user.full_name || result.user.email;
-                        alert('Profil berhasil diperbarui!');
-                    }
-                } catch(e) {
-                    alert('Gagal menyimpan profil: ' + (e.message || 'Terjadi kesalahan'));
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Simpan Perubahan';
-                }
+        // Tab switching
+        document.querySelectorAll('.tab-header-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-header-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+                this.classList.add('active');
+                var tabId = this.dataset.tab;
+                document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).style.display = 'block';
             });
         });
-    })();
-    </script>
-</body>
-</html>
+
+        window.togglePassword = function(inputId, el) {
+            var input = document.getElementById(inputId);
+            if (input.type === 'password') { input.type = 'text'; el.innerHTML = '<i class="fa-regular fa-eye-slash"></i>'; }
+            else { input.type = 'password'; el.innerHTML = '<i class="fa-regular fa-eye"></i>'; }
+        };
+
+        document.getElementById('btnChangePhoto')?.addEventListener('click', function() { document.getElementById('photoInput').click(); });
+        document.getElementById('photoInput')?.addEventListener('change', async function(e) {
+            if (!e.target.files.length) return;
+            try { const result = await WarungioAPI.uploadProfilePhoto(e.target.files[0]); if (result?.user?.profile_photo) document.getElementById('profileAvatar').src = result.user.profile_photo; }
+            catch(e) { console.warn(e); }
+        });
+
+        document.getElementById('profileForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveProfile');
+            btn.disabled = true; btn.textContent = 'Menyimpan...';
+            try {
+                const result = await WarungioAPI.updateProfile({
+                    full_name: document.getElementById('inputFullName').value,
+                    phone_number: document.getElementById('inputPhone').value,
+                    birth_date: document.getElementById('inputBirthDate').value,
+                    address: document.getElementById('inputAddress').value
+                });
+                if (result?.user) { document.getElementById('profileDisplayName').textContent = result.user.full_name || result.user.email; alert('Profil berhasil diperbarui!'); }
+            } catch(e) { alert('Gagal menyimpan profil: ' + (e.message || 'Terjadi kesalahan')); }
+            finally { btn.disabled = false; btn.textContent = 'Simpan Perubahan'; }
+        });
+    });
+})();
+</script>
+{% endblock %}

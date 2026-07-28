@@ -1,32 +1,12 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Keranjang Belanja - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/cart/style.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-  </head>
-  <body>
-    <div class="page-shell">
-      {% include 'components/sidebar.html' %}
-
-      <main class="main-content-area">
-        {% include 'components/topbar.html' %}
-
-        <div class="cart-content-wrapper">
-          <div class="page-header-section">
-            <h1>Keranjang Belanja</h1>
-            <p class="page-subtitle" id="cartStatusText">Memuat keranjang...</p>
-          </div>
-
-          <!-- Cart Content: Items + Summary -->
+{% block title %}Keranjang Belanja - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/cart/style.css' %}">
+{% endblock %}
+{% block page_title %}Keranjang Belanja{% endblock %}
+{% block page_subtitle %}Produk yang siap kamu beli{% endblock %}
+{% block content %}
           <div class="cart-layout" id="cartLayout">
             <!-- Cart Items -->
             <div class="cart-items-section">
@@ -67,55 +47,19 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
-    </div>
+{% endblock %}
 
-    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-        'use strict';
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            var div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                var authActions = document.getElementById('authHeaderActions');
-                var guestActions = document.getElementById('guestHeaderActions');
-                if (authActions) authActions.style.display = 'flex';
-                if (guestActions) guestActions.style.display = 'none';
-                var u = window.WarungioAuth.getUser();
-                if (u && u.full_name) {
-                    var nameEl = document.getElementById('userName');
-                    if (nameEl) nameEl.textContent = 'Hai, ' + u.full_name.split(' ')[0];
-                }
-            } else {
-                var authActions = document.getElementById('authHeaderActions');
-                var guestActions = document.getElementById('guestHeaderActions');
-                if (authActions) authActions.style.display = 'none';
-                if (guestActions) guestActions.style.display = 'flex';
-            }
-            var logoutBtn = document.getElementById('btnLogout');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (window.WarungioAuth) { WarungioAuth.logout(); }
-                });
-            }
-
-            await loadCart();
-        });
-
-        async function loadCart() {
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    function escapeHtml(str) {
+        if (!str) return ''; var div = document.createElement('div'); div.textContent = str; return div.innerHTML;
+    }
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadCart();
+    });
+    async function loadCart() {
             var skeleton = document.getElementById('cartSkeleton');
             var itemsContainer = document.getElementById('cartItems');
             var empty = document.getElementById('cartEmpty');
@@ -239,6 +183,5 @@
             });
         }
     })();
-    </script>
-  </body>
-</html>
+</script>
+{% endblock %}

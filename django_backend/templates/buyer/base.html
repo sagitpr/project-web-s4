@@ -1,0 +1,114 @@
+{% load static %}{% spaceless %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Warungio{% endblock %}</title>
+    <meta name="description" content="{% block meta_desc %}Belanja kebutuhan harian dari warung terdekat — Warungio{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{% block og_title_inner %}Warungio{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_desc %}Belanja kebutuhan harian langsung dari warung pilihan di sekitar Anda.{% endblock %}">
+    <meta property="og:image" content="{% static 'images/Warungio L.png' %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/premium.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/buyer-tailwind-fix.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="page-shell">
+        {% include 'components/sidebar.html' %}
+        <main class="main-content-area {% block main_content_class %}{% endblock %}">
+            {% include 'components/topbar.html' %}
+            <div class="buyer-content-wrapper">
+                {% block page_header %}
+                <div class="page-header-section">
+                    <h1>{% block page_title %}{% endblock %}</h1>
+                    <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                {% endblock %}
+                {% block content %}{% endblock %}
+            </div>
+            {% block after_content %}{% endblock %}
+            {% block footer %}
+            <footer class="store-footer-premium border-t border-slate-200">
+                <div class="footer-columns-grid">
+                    <div class="footer-brand-col">
+                        <div class="brand-name">
+                            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo">
+                            <span class="logo-text">Warung<span class="logo-green">io</span></span>
+                        </div>
+                        <p class="footer-tagline">Belanja kebutuhan harian langsung dari warung pilihan di sekitar Anda.</p>
+                        <div class="footer-socials">
+                            <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-twitter"></i></a>
+                            <a href="#" class="social-icon"><i class="fa-brands fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Tentang Warungio</h4>
+                        <ul>
+                            <li><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a></li>
+                            <li><a href="{% url 'page-register-mitra' %}">Gabung Mitra Warung</a></li>
+                            <li><a href="#">Karir</a></li>
+                            <li><a href="#">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Kategori Populer</h4>
+                        <ul>
+                            <li><a href="{% url 'page-products' %}">Sayuran Segar</a></li>
+                            <li><a href="{% url 'page-products' %}">Buah-Buahan</a></li>
+                            <li><a href="{% url 'page-products' %}">Daging & Ayam</a></li>
+                            <li><a href="{% url 'page-products' %}">Sembako Pokok</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-col">
+                        <h4>Pusat Bantuan</h4>
+                        <ul>
+                            <li><a href="{% url 'bantuan-page' %}">Pusat Bantuan</a></li>
+                            <li><a href="#">Hubungi Kami</a></li>
+                            <li><a href="#">Panduan Pembeli</a></li>
+                            <li><a href="#">Kebijakan Pengembalian</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom-row">
+                    <span class="copyright">© 2026 Warungio. Hak Cipta Dilindungi.</span>
+                    <div class="legal-links">
+                        <a href="#">Kebijakan Privasi</a>
+                        <span class="dot-separator">•</span>
+                        <a href="#">Syarat & Ketentuan</a>
+                    </div>
+                </div>
+            </footer>
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+{% endspaceless %}

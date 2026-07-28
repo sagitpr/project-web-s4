@@ -169,6 +169,39 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/products/' + id + '/manage/', { method: 'PATCH', body: JSON.stringify(data) });
   };
+  RealAPI.createProductWithPhotos = function (data, photos) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var fd = new FormData();
+    Object.keys(data).forEach(function (k) {
+      if (data[k] !== null && data[k] !== undefined) {
+        fd.append(k, String(data[k]));
+      }
+    });
+    // Append first photo as main product photo, remaining as gallery
+    if (photos && photos.length > 0) {
+      fd.append('product_photo', photos[0]);
+      for (var i = 1; i < photos.length; i++) {
+        fd.append('gallery_images', photos[i]);
+      }
+    }
+    return auth.apiUpload('/products/create/', fd, 'POST');
+  };
+  RealAPI.updateProductWithPhotos = function (id, data, photos) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var fd = new FormData();
+    Object.keys(data).forEach(function (k) {
+      if (data[k] !== null && data[k] !== undefined) {
+        fd.append(k, String(data[k]));
+      }
+    });
+    if (photos && photos.length > 0) {
+      fd.append('product_photo', photos[0]);
+      for (var i = 1; i < photos.length; i++) {
+        fd.append('gallery_images', photos[i]);
+      }
+    }
+    return auth.apiUpload('/products/' + id + '/manage/', fd, 'PATCH');
+  };
   RealAPI.deleteProduct = function (id) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/products/' + id + '/manage/', { method: 'DELETE' });

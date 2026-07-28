@@ -1,26 +1,13 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poin Saya - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/loyalty/style.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-</head>
-<body>
-    <div class="page-shell">
-        {% include 'components/sidebar.html' %}
-        
-        <main class="main-content-area">
-            {% include 'components/topbar.html' %}
-            
-            <div class="buyer-content-wrapper">
+{% block title %}Poin Saya - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/loyalty/style.css' %}">
+{% endblock %}
+{% block page_title %}Poin Saya{% endblock %}
+{% block page_subtitle %}Kelola poin loyalty dan tukarkan reward{% endblock %}
+{% block content %}
+<div class="buyer-content-wrapper">
                 <!-- Points Hero Card -->
                 <div class="points-header">
                     <div class="label">Saldo Poin Loyalty</div>
@@ -56,95 +43,68 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() { loadLoyalty(); });
 
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-        'use strict';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auth state
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
-                if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
-                }
+    async function loadLoyalty() {
+        try {
+            const account = await window.WarungioAuth.api('/api/loyalty/account/');
+            const pts = account.points_balance || 0;
+            document.getElementById('pointsBalance').textContent = pts.toLocaleString('id-ID') + ' pts';
+            const tier = account.tier?.name || 'Bronze';
+            document.getElementById('userTier').textContent = tier;
+            const tiers = ['Bronze','Silver','Gold','Platinum','Diamond'];
+            const tierIdx = tiers.indexOf(tier);
+            if (tierIdx < tiers.length - 1) {
+                document.getElementById('nextTierLabel').textContent = tiers[tierIdx + 1];
+                document.getElementById('tierProgressFill').style.width = ((tierIdx + 1) / tiers.length * 100) + '%';
             } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
+                document.getElementById('nextTierLabel').textContent = 'MAX';
+                document.getElementById('tierProgressFill').style.width = '100%';
             }
-
-            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); }
-            });
-            
-            loadLoyalty();
-        });
-
-        async function loadLoyalty() {
-            try {
-                const account = await window.WarungioAuth.api('/api/loyalty/account/');
-                const pts = account.points_balance || 0;
-                document.getElementById('pointsBalance').textContent = pts.toLocaleString('id-ID') + ' pts';
-                const tier = account.tier?.name || 'Bronze';
-                document.getElementById('userTier').textContent = tier;
-                const tiers = ['Bronze','Silver','Gold','Platinum','Diamond'];
-                const tierIdx = tiers.indexOf(tier);
-                if (tierIdx < tiers.length - 1) {
-                    document.getElementById('nextTierLabel').textContent = tiers[tierIdx + 1];
-                    document.getElementById('tierProgressFill').style.width = ((tierIdx + 1) / tiers.length * 100) + '%';
-                } else {
-                    document.getElementById('nextTierLabel').textContent = 'MAX';
-                    document.getElementById('tierProgressFill').style.width = '100%';
-                }
-            } catch(e) { document.getElementById('pointsBalance').textContent = '0 pts'; }
-            
-            try {
-                const rewards = await window.WarungioAuth.api('/api/loyalty/rewards/');
-                const items = rewards.results || rewards || [];
-                if (items.length) {
-                    document.getElementById('rewardGrid').innerHTML = items.map(function(r) {
-                        return '<div class="reward-item"><div class="name">' + r.name + '</div><div class="cost">' + r.points_required + ' pts</div><div class="desc">' + (r.description||'') + '</div><button class="btn-redeem" onclick="redeem(' + r.id + ')">Tukar</button></div>';
-                    }).join('');
-                }
-            } catch(e) {}
-            
-            try {
-                const txs = await window.WarungioAuth.api('/api/loyalty/transactions/recent/');
-                const list = txs.results || txs || [];
-                if (list.length) {
-                    document.getElementById('txList').innerHTML = list.map(function(t) {
-                        const isEarn = t.transaction_type === 'earn' || t.transaction_type === 'bonus' || t.transaction_type === 'referral';
-                        const icon = t.transaction_type === 'earn' ? 'fa-plus' : t.transaction_type === 'bonus' ? 'fa-gift' : t.transaction_type === 'referral' ? 'fa-user-plus' : 'fa-minus';
-                        return '<div class="tx-item"><div class="tx-icon ' + (isEarn ? 'tx-earn' : 'tx-redeem') + '"><i class="fa-solid ' + icon + '"></i></div><div><div>' + (t.description||'Transaksi') + '</div><small style="color:var(--color-text-tertiary)">' + (t.created_at?new Date(t.created_at).toLocaleDateString('id-ID'):'') + '</small></div><div class="tx-pts" style="color:' + (t.points>0?'#16a34a':'#dc2626') + '">' + (t.points>0?'+':'') + t.points + ' pts</div></div>';
-                    }).join('');
-                }
-            } catch(e) {}
-        }
+        } catch(e) { document.getElementById('pointsBalance').textContent = '0 pts'; }
         
-        window.redeem = async function(id) {
-            if (!confirm('Tukarkan poin Anda untuk reward ini?')) return;
-            try {
-                const result = await window.WarungioAuth.api('/api/loyalty/rewards/' + id + '/redeem/', {method:'POST', body:'{}'});
-                if (result.message || result.success) {
-                    if (window.WarungioToast) window.WarungioToast.show('Reward berhasil ditukar!', 'success');
-                    loadLoyalty();
-                } else {
-                    if (window.WarungioToast) window.WarungioToast.show('Gagal menukar reward.', 'error');
-                }
-            } catch(e) {
-                if (window.WarungioToast) window.WarungioToast.show(e.message||'Gagal menukar reward.', 'error');
+        try {
+            const rewards = await window.WarungioAuth.api('/api/loyalty/rewards/');
+            const items = rewards.results || rewards || [];
+            if (items.length) {
+                document.getElementById('rewardGrid').innerHTML = items.map(function(r) {
+                    return '<div class="reward-item"><div class="name">' + r.name + '</div><div class="cost">' + r.points_required + ' pts</div><div class="desc">' + (r.description||'') + '</div><button class="btn-redeem" onclick="redeem(' + r.id + ')">Tukar</button></div>';
+                }).join('');
             }
-        };
-    })();
-    </script>
-</body>
-</html>
+        } catch(e) {}
+        
+        try {
+            const txs = await window.WarungioAuth.api('/api/loyalty/transactions/recent/');
+            const list = txs.results || txs || [];
+            if (list.length) {
+                document.getElementById('txList').innerHTML = list.map(function(t) {
+                    const isEarn = t.transaction_type === 'earn' || t.transaction_type === 'bonus' || t.transaction_type === 'referral';
+                    const icon = t.transaction_type === 'earn' ? 'fa-plus' : t.transaction_type === 'bonus' ? 'fa-gift' : t.transaction_type === 'referral' ? 'fa-user-plus' : 'fa-minus';
+                    return '<div class="tx-item"><div class="tx-icon ' + (isEarn ? 'tx-earn' : 'tx-redeem') + '"><i class="fa-solid ' + icon + '"></i></div><div><div>' + (t.description||'Transaksi') + '</div><small style="color:var(--color-text-tertiary)">' + (t.created_at?new Date(t.created_at).toLocaleDateString('id-ID'):'') + '</small></div><div class="tx-pts" style="color:' + (t.points>0?'#16a34a':'#dc2626') + '">' + (t.points>0?'+':'') + t.points + ' pts</div></div>';
+                }).join('');
+            }
+        } catch(e) {}
+    }
+    
+    window.redeem = async function(id) {
+        if (!confirm('Tukarkan poin Anda untuk reward ini?')) return;
+        try {
+            const result = await window.WarungioAuth.api('/api/loyalty/rewards/' + id + '/redeem/', {method:'POST', body:'{}'});
+            if (result.message || result.success) {
+                if (window.WarungioToast) window.WarungioToast.show('Reward berhasil ditukar!', 'success');
+                loadLoyalty();
+            } else {
+                if (window.WarungioToast) window.WarungioToast.show('Gagal menukar reward.', 'error');
+            }
+        } catch(e) {
+            if (window.WarungioToast) window.WarungioToast.show(e.message||'Gagal menukar reward.', 'error');
+        }
+    };
+})();
+</script>
+{% endblock %}

@@ -16,25 +16,7 @@
 </head>
 <body>
 <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebarNav">
-        <div class="logo">
-            <img src="{% static 'images/Warungio L.png' %}" alt="logo">
-            <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Kasir</small></div>
-        </div>
-        <nav>
-            <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
-            <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-            <a href="{% url 'page-seller-smart-scan' %}"><i class="fa-solid fa-robot"></i> AI Product Registration</a>
-            <a href="{% url 'page-seller-pos' %}" class="active"><i class="fa-solid fa-cash-register"></i> AI POS Kasir</a>
-            <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
-            <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
-            <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
-            <a href="{% url 'page-seller-laporan' %}"><i class="fa-solid fa-chart-line"></i> Laporan</a>
-            <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-        </nav>
-    </aside>
+    {% include 'partials/seller_sidebar.html' with active_page='pos' %}
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Main Content -->

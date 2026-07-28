@@ -1,0 +1,340 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Pesanan - Warungio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; min-height: 100vh; }
+    .history-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 14px 24px; }
+    .history-header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .history-header a { display: flex; align-items: center; gap: 8px; color: #0f172a; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .history-header a:hover { color: #059669; }
+    .history-header .brand { font-weight: 800; font-size: 16px; }
+    .history-container { max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+    .history-card { background: #fff; border-radius: 20px; padding: 32px; border: 1px solid #e2e8f0; text-align: center; margin-bottom: 24px; }
+    .history-card h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .history-card h1 i { color: #059669; }
+    .history-card > p { font-size: 14px; color: #64748b; margin: 0 0 24px; }
+    .form-group { text-align: left; margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .form-group label .required { color: #dc2626; }
+    .form-input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-family: inherit; color: #0f172a; transition: border-color 0.2s; box-sizing: border-box; }
+    .form-input:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: #059669; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: #047857; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .orders-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .order-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 20px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .order-card:hover { border-color: #bbf7d0; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .order-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .order-card-number { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .order-card-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+    .status-pending, .status-menunggu_konfirmasi { background: #fef3c7; color: #d97706; }
+    .status-processed, .status-diproses_penjual, .status-paid { background: #dbeafe; color: #2563eb; }
+    .status-shipped, .status-dalam_perjalanan { background: #f3e8ff; color: #7c3aed; }
+    .status-completed, .status-pesanan_diterima { background: #d1fae5; color: #059669; }
+    .status-cancelled { background: #fee2e2; color: #dc2626; }
+    .order-card-store { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    .order-card-total { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .order-card-date { font-size: 11px; color: #94a3b8; }
+    .order-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .order-card-actions .action-link { font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+    .order-card-actions .action-link:hover { text-decoration: underline; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: #64748b; margin: 0 0 6px; }
+    .empty-state p { font-size: 13px; margin: 0; }
+    .error-msg { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+    .loading { display: none; align-items: center; justify-content: center; gap: 8px; padding: 20px; color: #64748b; font-size: 14px; }
+    .loading i { font-size: 20px; }
+    @media (max-width: 480px) { .history-container { padding: 20px 16px 60px; } .history-card { padding: 24px 20px; } }
+    </style>
+</head>
+<body>
+<div class="history-header">
+    <div class="history-header-inner">
+        <a href="/"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+        <span class="brand">Warungio</span>
+    </div>
+</div>
+
+<div class="history-container">
+    <!-- Search Card -->
+    <div class="history-card" id="searchCard">
+        <h1><i class="fa-solid fa-truck"></i> Lacak & Riwayat Pesanan</h1>
+        <p>Masukkan nomor pesanan dan nomor HP Anda untuk melihat status terkini dan riwayat pesanan.</p>
+
+        <div class="form-group">
+            <label>Nomor Pesanan <span class="required">*</span></label>
+            <input type="text" id="orderNumberInput" class="form-input" placeholder="Contoh: WRG-ABC12345" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>Nomor HP <span class="required">*</span></label>
+            <input type="tel" id="phoneInput" class="form-input" placeholder="Contoh: 081234567890">
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+        <button id="btnLookup" class="btn-primary" onclick="lookupOrders()"><i class="fa-solid fa-magnifying-glass"></i> Cari Pesanan</button>
+
+        <div class="loading" id="loadingIndicator"><i class="fa-solid fa-spinner fa-spin"></i> Mencari pesanan...</div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsContainer"></div>
+
+    <!-- Guest Review Section -->
+    <div class="history-card" id="reviewCard" style="display:none;">
+        <h1><i class="fa-solid fa-star"></i> Beri Ulasan</h1>
+        <p>Pesanan sudah selesai? Beri ulasan untuk membantu toko semakin baik.</p>
+
+        <div class="form-group">
+            <label>Produk <span class="required">*</span></label>
+            <select id="reviewProduct" class="form-input">
+                <option value="">-- Pilih Produk --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Rating <span class="required">*</span></label>
+            <div id="starRating" style="display:flex;gap:6px;font-size:28px;cursor:pointer;">
+                <span data-star="1" style="color:#d1d5db;">&#9733;</span>
+                <span data-star="2" style="color:#d1d5db;">&#9733;</span>
+                <span data-star="3" style="color:#d1d5db;">&#9733;</span>
+                <span data-star="4" style="color:#d1d5db;">&#9733;</span>
+                <span data-star="5" style="color:#d1d5db;">&#9733;</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Komentar</label>
+            <textarea id="reviewComment" class="form-input" rows="3" placeholder="Bagikan pengalaman belanja Anda..."></textarea>
+        </div>
+        <div class="error-msg" id="reviewError"></div>
+        <button id="btnSubmitReview" class="btn-primary" onclick="submitReview()">
+            <i class="fa-solid fa-paper-plane"></i> Kirim Ulasan
+        </button>
+    </div>
+</div>
+
+<script>
+function lookupOrders() {
+    var orderNumber = document.getElementById('orderNumberInput').value.trim();
+    var phone = document.getElementById('phoneInput').value.trim();
+    var errorEl = document.getElementById('errorMsg');
+    var btn = document.getElementById('btnLookup');
+    var loading = document.getElementById('loadingIndicator');
+
+    errorEl.style.display = 'none';
+
+    if (!orderNumber && !phone) {
+        errorEl.textContent = 'Masukkan nomor pesanan atau nomor HP.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    loading.style.display = 'flex';
+
+    var params = new URLSearchParams();
+    if (orderNumber) params.append('order_number', orderNumber);
+    if (phone) params.append('phone', phone);
+
+    fetch('/api/orders/track-public/?' + params.toString())
+        .then(function(res) {
+            if (!res.ok) throw new Error('Not found');
+            return res.json();
+        })
+        .then(function(data) {
+            loading.style.display = 'none';
+            btn.disabled = false;
+            renderOrders(data);
+        })
+        .catch(function(err) {
+            loading.style.display = 'none';
+            btn.disabled = false;
+            errorEl.textContent = 'Pesanan tidak ditemukan. Periksa kembali nomor pesanan dan nomor HP Anda.';
+            errorEl.style.display = 'block';
+        });
+}
+
+function renderOrders(data) {
+    var container = document.getElementById('resultsContainer');
+    var order = data.order || {};
+    var delivery = data.delivery || {};
+    var items = data.items || [];
+
+    var statusLabel = getStatusLabel(order.order_status || '');
+    var statusClass = (order.order_status || '').toLowerCase();
+
+    var itemsText = items.map(function(i) { return i.product_name + ' x' + i.qty; }).join(', ');
+
+    var html = '<div class="order-card" onclick="window.location.href=\'/order/' + order.order_number + '/track/\'">';
+    html += '<div class="order-card-top">';
+    html += '<span class="order-card-number">' + order.order_number + '</span>';
+    html += '<span class="order-card-status status-' + statusClass + '">' + statusLabel + '</span>';
+    html += '</div>';
+    html += '<div class="order-card-store"><i class="fa-solid fa-store"></i> ' + (order.store_name || 'Toko') + '</div>';
+    html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px;">' + itemsText.substring(0, 100) + '</div>';
+    html += '<div class="order-card-total">Rp ' + formatNumber(order.total_price || 0) + '</div>';
+    html += '<div class="order-card-date">' + (order.created_at ? new Date(order.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '') + '</div>';
+    html += '<div class="order-card-actions">';
+    html += '<a href="/order/' + order.order_number + '/track/" class="action-link"><i class="fa-solid fa-location-dot"></i> Lacak</a>';
+    html += '<a href="/order/' + order.order_number + '/track/" class="action-link"><i class="fa-solid fa-receipt"></i> Detail</a>';
+    html += '</div></div>';
+
+    container.innerHTML = '<h2 style="font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-clock-rotate-left" style="color:#059669;"></i> Hasil Pencarian</h2>' + html;
+}
+
+function getStatusLabel(status) {
+    var labels = {
+        'pending': 'Menunggu',
+        'paid': 'Lunas',
+        'processed': 'Diproses',
+        'shipped': 'Dikirim',
+        'completed': 'Selesai',
+        'cancelled': 'Dibatalkan',
+        'menunggu_konfirmasi': 'Baru',
+        'diproses_penjual': 'Diproses',
+        'menunggu_penjemputan': 'Siap Diambil',
+        'kurir_menjemput': 'Kurir Menjemput',
+        'dalam_perjalanan': 'Dalam Perjalanan',
+        'pesanan_diterima': 'Selesai',
+    };
+    return labels[status] || status;
+}
+
+function formatNumber(n) { return Number(n || 0).toLocaleString('id-ID'); }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var orderInput = document.getElementById('orderNumberInput');
+    var phoneInput = document.getElementById('phoneInput');
+    orderInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupOrders(); });
+    phoneInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupOrders(); });
+
+    // Star Rating
+    var stars = document.querySelectorAll('#starRating span');
+    var selectedRating = 0;
+    stars.forEach(function(s) {
+        s.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.star);
+            stars.forEach(function(st, idx) {
+                st.style.color = idx < selectedRating ? '#f59e0b' : '#d1d5db';
+            });
+        });
+        s.addEventListener('mouseenter', function() {
+            var val = parseInt(this.dataset.star);
+            stars.forEach(function(st, idx) {
+                st.style.color = idx < val ? '#fcd34d' : '#d1d5db';
+            });
+        });
+        s.addEventListener('mouseleave', function() {
+            stars.forEach(function(st, idx) {
+                st.style.color = idx < selectedRating ? '#f59e0b' : '#d1d5db';
+            });
+        });
+    });
+});
+
+var _lastOrderData = null;
+
+function renderOrders(data) {
+    _lastOrderData = data;
+    var container = document.getElementById('resultsContainer');
+    var order = data.order || {};
+    var delivery = data.delivery || {};
+    var items = data.items || [];
+
+    var statusLabel = getStatusLabel(order.order_status || '');
+    var statusClass = (order.order_status || '').toLowerCase();
+
+    var itemsText = items.map(function(i) { return i.product_name + ' x' + i.qty; }).join(', ');
+
+    var html = '<div class="order-card" onclick="window.location.href=\'/order/' + order.order_number + '/track/\'">';
+    html += '<div class="order-card-top">';
+    html += '<span class="order-card-number">' + order.order_number + '</span>';
+    html += '<span class="order-card-status status-' + statusClass + '">' + statusLabel + '</span>';
+    html += '</div>';
+    html += '<div class="order-card-store"><i class="fa-solid fa-store"></i> ' + (order.store_name || 'Toko') + '</div>';
+    html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px;">' + itemsText.substring(0, 100) + '</div>';
+    html += '<div class="order-card-total">Rp ' + formatNumber(order.total_price || 0) + '</div>';
+    html += '<div class="order-card-date">' + (order.created_at ? new Date(order.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '') + '</div>';
+    html += '<div class="order-card-actions">';
+    html += '<a href="/order/' + order.order_number + '/track/" class="action-link"><i class="fa-solid fa-location-dot"></i> Lacak</a>';
+    html += '<a href="/order/' + order.order_number + '/track/" class="action-link"><i class="fa-solid fa-receipt"></i> Detail</a>';
+    html += '</div></div>';
+
+    container.innerHTML = '<h2 style="font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-clock-rotate-left" style="color:#059669;"></i> Hasil Pencarian</h2>' + html;
+
+    // Show review card if order is completed
+    var reviewCard = document.getElementById('reviewCard');
+    if (order.order_status === 'completed' || order.order_status === 'pesanan_diterima') {
+        reviewCard.style.display = 'block';
+        var select = document.getElementById('reviewProduct');
+        select.innerHTML = '<option value="">-- Pilih Produk --</option>';
+        items.forEach(function(item) {
+            select.innerHTML += '<option value="' + (item.product_id || '') + '">' + escapeHtml(item.product_name || 'Produk') + '</option>';
+        });
+    } else {
+        reviewCard.style.display = 'none';
+    }
+}
+
+function submitReview() {
+    var order = _lastOrderData?.order || {};
+    var productId = document.getElementById('reviewProduct').value;
+    var comment = document.getElementById('reviewComment').value.trim();
+    var errorEl = document.getElementById('reviewError');
+    var btn = document.getElementById('btnSubmitReview');
+
+    errorEl.style.display = 'none';
+
+    if (!productId) { errorEl.textContent = 'Pilih produk yang ingin diulas.'; errorEl.style.display = 'block'; return; }
+    if (!selectedRating || selectedRating < 1) { errorEl.textContent = 'Pilih rating (1-5 bintang).'; errorEl.style.display = 'block'; return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+
+    var payload = {
+        order_number: order.order_number || '',
+        phone: document.getElementById('phoneInput').value.trim(),
+        product_id: parseInt(productId),
+        rating: selectedRating,
+        comment: comment,
+    };
+
+    fetch('/api/orders/guest-review/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify(payload),
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            document.getElementById('reviewCard').style.display = 'none';
+            alert('Terima kasih! Ulasan Anda telah dikirim.');
+        } else {
+            errorEl.textContent = data.error || 'Gagal mengirim ulasan.';
+            errorEl.style.display = 'block';
+        }
+    })
+    .catch(function() {
+        errorEl.textContent = 'Gagal terhubung ke server.';
+        errorEl.style.display = 'block';
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Ulasan';
+    });
+}
+
+function getCSRFToken() {
+    var name = 'csrftoken';
+    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : '';
+}
+</script>
+</body>
+</html>

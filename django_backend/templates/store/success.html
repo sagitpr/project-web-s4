@@ -1,0 +1,134 @@
+{% extends "store/base.html" %}
+{% load static %}
+
+{% block title %}Pesanan Berhasil - {{ store.store_name }} - Warungio{% endblock %}
+{% block meta_desc %}Pesanan Anda di {{ store.store_name }} berhasil dibuat — Warungio{% endblock %}
+
+{% block extra_head %}
+<style>
+    .success-page { min-height:calc(100vh - 80px); background:#f0fdf4; font-family:'Plus Jakarta Sans',sans-serif; }
+    .success-container { max-width:600px; margin:0 auto; padding:40px 24px 80px; }
+    .success-card { background:#fff; border-radius:20px; padding:40px 32px; text-align:center; border:1px solid #bbf7d0; }
+    .success-icon { width:72px; height:72px; border-radius:50%; background:#dcfce7; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+    .success-icon i { font-size:32px; color:#16a34a; }
+    .success-card h1 { font-size:22px; font-weight:800; color:#0f172a; margin:0 0 8px; }
+    .success-card > p { font-size:14px; color:#64748b; margin:0 0 24px; }
+    .order-number-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:16px; margin-bottom:24px; }
+    .order-number-box label { font-size:12px; color:#64748b; display:block; margin-bottom:4px; }
+    .order-number-box .number { font-size:22px; font-weight:800; color:#0f172a; letter-spacing:2px; font-family:monospace; }
+    .order-number-box .number a { color:#0f172a; text-decoration:none; }
+    .order-summary-card { background:#f8fafc; border-radius:14px; padding:20px; margin-bottom:24px; text-align:left; }
+    .order-summary-card h3 { font-size:14px; font-weight:700; color:#0f172a; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+    .order-summary-card h3 i { color:#059669; }
+    .order-summary-row { display:flex; justify-content:space-between; font-size:13px; color:#334155; padding:4px 0; }
+    .order-summary-row.total { font-weight:800; font-size:15px; color:#0f172a; border-top:1px solid #e2e8f0; margin-top:8px; padding-top:8px; }
+    .order-summary-items { margin-bottom:12px; }
+    .order-summary-item { display:flex; justify-content:space-between; font-size:12px; color:#64748b; padding:2px 0; }
+    .qr-box { display:inline-flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:24px; }
+    .qr-box canvas, .qr-box img { border-radius:8px; }
+    .qr-box small { font-size:11px; color:#94a3b8; }
+    .action-buttons { display:flex; flex-direction:column; gap:10px; }
+    .action-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border-radius:12px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .action-btn.primary { background:#059669; color:#fff; border:none; }
+    .action-btn.primary:hover { background:#047857; transform:translateY(-1px); box-shadow:0 4px 12px rgba(5,150,105,0.3); }
+    .action-btn.secondary { background:#fff; color:#0f172a; border:1.5px solid #e2e8f0; }
+    .action-btn.secondary:hover { border-color:#94a3b8; background:#f8fafc; }
+    .action-btn.outline { background:transparent; color:#059669; border:1.5px solid #059669; }
+    .action-btn.outline:hover { background:#f0fdf4; }
+    .store-card { display:flex; align-items:center; gap:12px; padding:16px; background:#f8fafc; border-radius:14px; margin-bottom:24px; text-align:left; }
+    .store-card .store-avatar { width:44px; height:44px; border-radius:10px; background:#059669; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex-shrink:0; }
+    .store-card .store-info h4 { font-size:14px; font-weight:700; margin:0; color:#0f172a; }
+    .store-card .store-info p { font-size:12px; color:#64748b; margin:2px 0 0; }
+    .store-card .store-info a { color:#059669; font-weight:600; text-decoration:none; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:12px 24px; border-radius:12px; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+    @media (max-width:480px) { .success-container { padding:24px 16px 60px; } .success-card { padding:24px 20px; } }
+    </style>
+</head>
+<body>
+<div class="success-page">
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <h1>Pesanan Berhasil Dibuat!</h1>
+            <p>Terima kasih, {{ order.recipient_name|default:'Pembeli' }}. Pesanan Anda telah diterima oleh toko dan akan segera diproses.</p>
+
+            <!-- Store -->
+            <div class="store-card">
+                <div class="store-avatar">{{ store.store_name|first|upper }}</div>
+                <div class="store-info">
+                    <h4>{{ store.store_name }}</h4>
+                    <p><a href="/toko/{{ store.slug }}/">Lihat Toko</a>{% if store.user.phone %} &middot; <a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank">Hubungi WA</a>{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Order Number -->
+            <div class="order-number-box">
+                <label>Nomor Pesanan</label>
+                <div class="number"><a href="/order/{{ order.order_number }}/track/" id="orderNumberDisplay">{{ order.order_number }}</a></div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="qr-box" id="qrBox">
+                <div id="qrcode"></div>
+                <small>Scan untuk lacak pesanan</small>
+            </div>
+
+            <!-- Summary -->
+            <div class="order-summary-card">
+                <h3><i class="fa-solid fa-receipt"></i> Ringkasan Pesanan</h3>
+                <div class="order-summary-items" id="orderItems"></div>
+                <div class="order-summary-row"><span>Subtotal</span><span id="subtotalDisplay">Rp 0</span></div>
+                <div class="order-summary-row"><span>Ongkos Kirim</span><span id="shippingDisplay">Rp 0</span></div>
+                <div class="order-summary-row"><span>Biaya Admin</span><span id="adminFeeDisplay">Rp 0</span></div>
+                <div class="order-summary-row total"><span>Total</span><span id="totalDisplay">Rp 0</span></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <a href="/order/{{ order.order_number }}/track/" class="action-btn primary"><i class="fa-solid fa-location-dot"></i> Lacak Pesanan</a>
+                <button onclick="downloadInvoice()" class="action-btn secondary"><i class="fa-solid fa-download"></i> Download Invoice</button>
+                <a href="/toko/{{ store.slug }}/" class="action-btn outline"><i class="fa-solid fa-store"></i> Kembali Belanja</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var order = {{ order_json|default:'{}'|safe }};
+    var storeName = '{{ store.store_name|escapejs }}';
+    var orderNumber = '{{ order.order_number }}';
+    if (window.QRCode) {
+        var trackUrl = window.location.origin + '/order/' + orderNumber + '/track/';
+        new QRCode(document.getElementById('qrcode'), { text: trackUrl, width: 140, height: 140, colorDark: '#0f172a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    }
+    var itemsHtml = '';
+    (order.items || []).forEach(function(item) { itemsHtml += '<div class="order-summary-item"><span>' + (item.product_name || 'Produk') + ' x' + (item.qty || 0) + '</span><span>Rp ' + formatNumber(item.subtotal || 0) + '</span></div>'; });
+    document.getElementById('orderItems').innerHTML = itemsHtml || '<div style="color:#94a3b8;font-size:12px;">Memuat...</div>';
+    document.getElementById('subtotalDisplay').textContent = 'Rp ' + formatNumber(order.subtotal || 0);
+    document.getElementById('shippingDisplay').textContent = 'Rp ' + formatNumber(order.shipping_cost || 0);
+    document.getElementById('adminFeeDisplay').textContent = 'Rp ' + formatNumber(order.admin_fee || 1500);
+    document.getElementById('totalDisplay').textContent = 'Rp ' + formatNumber(order.total_price || 0);
+});
+function downloadInvoice() {
+    var orderNumber = document.getElementById('orderNumberDisplay').textContent;
+    var storeName = '{{ store.store_name|escapejs }}';
+    var items = {{ order_json|default:'{}'|safe }}.items || [];
+    var html = '<html><head><meta charset="utf-8"><title>Invoice ' + orderNumber + '</title><style>body{font-family:sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:20px;}table{width:100%;border-collapse:collapse;margin:20px 0;}th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:13px;}.total{font-weight:bold;font-size:15px;}</style></head><body>';
+    html += '<h1>INVOICE</h1><p><strong>Toko:</strong> ' + storeName + '</p><p><strong>No. Pesanan:</strong> ' + orderNumber + '</p>';
+    html += '<table><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>';
+    items.forEach(function(item) { html += '<tr><td>' + (item.product_name || '') + '</td><td>' + (item.qty || 0) + '</td><td>Rp ' + formatNumber(item.price || 0) + '</td><td>Rp ' + formatNumber(item.subtotal || 0) + '</td></tr>'; });
+    html += '</tbody></table><p><strong>Total: Rp ' + formatNumber({{ order.total_price|default:'0' }}) + '</strong></p>';
+    html += '<p style="color:#94a3b8;font-size:12px;margin-top:40px;">Terima kasih telah berbelanja di ' + storeName + '</p></body></html>';
+    var blob = new Blob([html], {type: 'text/html'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'Invoice_' + orderNumber + '.html'; a.click();
+    URL.revokeObjectURL(url);
+}
+function formatNumber(n) { return Number(n || 0).toLocaleString('id-ID'); }
+</script>
+{% endblock %}

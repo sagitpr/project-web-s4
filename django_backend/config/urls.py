@@ -287,9 +287,15 @@ urlpatterns += [
     path('buyer/recently-viewed/', login_required(TemplateView.as_view(template_name='buyer/products/index.html')), name='page-buyer-recently-viewed'),
     path('seller/stock-alerts/', login_required(TemplateView.as_view(template_name='seller/products/index.html')), name='page-seller-stock-alerts'),
 
-    # ── Public Pages (Guest Checkout & Tracking) ──
+    # ── Online Order Link Pages ──
     path('store/<slug:slug>/checkout/', seo_views.public_checkout, name='page-public-checkout'),
+    path('store/<slug:slug>/products/', seo_views.store_products, name='page-store-products'),
+    path('store/<slug:slug>/product/<slug:product_slug>/', seo_views.store_product_detail, name='page-store-product-detail'),
+    path('store/<slug:slug>/cart/', seo_views.store_cart, name='page-store-cart'),
+    path('store/<slug:slug>/success/<str:order_number>/', seo_views.order_success, name='page-store-success'),
     path('order/<str:order_number>/track/', seo_views.public_tracking, name='page-public-tracking'),
+    path('order/success/<str:order_number>/', seo_views.order_success, name='page-order-success'),
+    path('order/lookup/', seo_views.order_lookup, name='page-order-lookup'),
 ]
 
 if settings.DEBUG:

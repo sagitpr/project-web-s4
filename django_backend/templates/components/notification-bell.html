@@ -1,0 +1,378 @@
+{% comment %}
+  ── Reusable Notification Bell Component ──
+  Usage:
+    {% include 'components/notification-bell.html' with notification_url='/buyer/notifications/' %}
+  
+  Dependencies: WarungioAPI, WarungioAuth (loaded in base)
+  This component handles:
+    - Unread badge count (realtime via WebSocket or polling)
+    - Dropdown with recent notifications (top 5)
+    - Mark all as read
+    - Deep-link to notification detail
+    - Category icons and colors
+    - Auto-refresh every 30 seconds
+{% endcomment %}
+<div class="notification-bell-wrapper" id="notificationBellWrapper">
+  <button class="notification-bell-btn" id="notificationBellBtn" aria-label="Notifikasi" title="Notifikasi">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+  </button>
+  
+  <!-- Dropdown -->
+  <div class="notification-dropdown" id="notificationDropdown">
+    <div class="notification-dropdown-header">
+      <h3 class="notification-dropdown-title">Notifikasi</h3>
+      <button class="notification-mark-read-btn" id="notifMarkAllRead">Tandai Dibaca</button>
+    </div>
+    <div class="notification-dropdown-body" id="notificationDropdownBody">
+      <div class="notification-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i> Memuat...
+      </div>
+    </div>
+    <div class="notification-dropdown-footer">
+      <a href="{{ notification_url|default:'/notifications/' }}" class="notification-view-all">Lihat Semua Notifikasi</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.notification-bell-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+.notification-bell-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.notification-bell-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  animation: notifPulse 2s infinite;
+}
+@keyframes notifPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -8px;
+  width: 380px;
+  max-height: 480px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+  z-index: 9999;
+  display: none;
+  overflow: hidden;
+}
+.notification-dropdown.open {
+  display: block;
+  animation: notifFadeIn 0.2s ease;
+}
+@keyframes notifFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.notification-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.notification-dropdown-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+.notification-mark-read-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.notification-mark-read-btn:hover {
+  background: #f0fdf4;
+}
+.notification-dropdown-body {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.notification-loading {
+  text-align: center;
+  padding: 24px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+.notification-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: #94a3b8;
+}
+.notification-empty i {
+  font-size: 32px;
+  margin-bottom: 8px;
+  display: block;
+}
+.notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f8fafc;
+}
+.notification-item:hover {
+  background: #f8fafc;
+}
+.notification-item.unread {
+  background: #f0fdf4;
+}
+.notification-item.unread:hover {
+  background: #dcfce7;
+}
+.notification-item-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.notification-item-icon.info { background: #eff6ff; color: #2563eb; }
+.notification-item-icon.success { background: #f0fdf4; color: #16a34a; }
+.notification-item-icon.warning { background: #fffbeb; color: #d97706; }
+.notification-item-icon.urgent { background: #fef2f2; color: #dc2626; }
+.notification-item-content {
+  flex: 1;
+  min-width: 0;
+}
+.notification-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+.notification-item-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 4px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notification-item-time {
+  font-size: 10px;
+  color: #94a3b8;
+}
+.notification-dropdown-footer {
+  padding: 10px 20px;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+}
+.notification-view-all {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  text-decoration: none;
+}
+.notification-view-all:hover {
+  text-decoration: underline;
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+  
+  const wrapper = document.getElementById('notificationBellWrapper');
+  const btn = document.getElementById('notificationBellBtn');
+  const dropdown = document.getElementById('notificationDropdown');
+  const badge = document.getElementById('notificationBadge');
+  const body = document.getElementById('notificationDropdownBody');
+  const markAllBtn = document.getElementById('notifMarkAllRead');
+  
+  let notifInterval = null;
+  let isDropdownOpen = false;
+  
+  // Toggle dropdown
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    isDropdownOpen = !isDropdownOpen;
+    dropdown.classList.toggle('open', isDropdownOpen);
+    if (isDropdownOpen) loadNotifications();
+  });
+  
+  // Close on click outside
+  document.addEventListener('click', function(e) {
+    if (isDropdownOpen && !wrapper.contains(e.target)) {
+      dropdown.classList.remove('open');
+      isDropdownOpen = false;
+    }
+  });
+  
+  // Load unread count
+  async function loadUnreadCount() {
+    if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+      badge.style.display = 'none';
+      return;
+    }
+    try {
+      const data = await window.WarungioAPI.getNotificationsUnreadCount();
+      const count = data.count || data.unread_count || 0;
+      if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 99 ? '99+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch(e) {
+      // Silent fail
+    }
+  }
+  
+  // Load notifications list
+  async function loadNotifications() {
+    if (!window.WarungioAuth || !window.WarungioAuth.isAuthenticated()) {
+      body.innerHTML = '<div class="notification-empty"><i class="fa-regular fa-bell"></i><p>Silakan login untuk melihat notifikasi</p></div>';
+      return;
+    }
+    try {
+      const data = await window.WarungioAPI.getNotifications({ page_size: 5 });
+      const items = data.results || [];
+      
+      if (items.length === 0) {
+        body.innerHTML = '<div class="notification-empty"><i class="fa-regular fa-bell-slash"></i><p>Tidak ada notifikasi</p></div>';
+        return;
+      }
+      
+      body.innerHTML = items.map(function(n) {
+        const iconClass = getIconForType(n.notification_type || n.type);
+        const priorityClass = getPriorityClass(n.priority || 'info');
+        const isUnread = !n.is_read;
+        const timeAgo = getTimeAgo(n.created_at);
+        
+        return '<div class="notification-item' + (isUnread ? ' unread' : '') + '" data-id="' + n.id + '" onclick="window.location.href=\'' + (n.action_url || '{% firstof notification_url "/notifications/" %}') + '\'">' +
+          '<div class="notification-item-icon ' + priorityClass + '"><i class="' + iconClass + '"></i></div>' +
+          '<div class="notification-item-content">' +
+            '<p class="notification-item-title">' + escapeHtml(n.title || 'Notifikasi') + '</p>' +
+            (n.description ? '<p class="notification-item-desc">' + escapeHtml(n.description) + '</p>' : '') +
+            '<span class="notification-item-time">' + timeAgo + '</span>' +
+          '</div></div>';
+      }).join('');
+      
+    } catch(e) {
+      body.innerHTML = '<div class="notification-empty"><i class="fa-solid fa-exclamation-triangle"></i><p>Gagal memuat notifikasi</p></div>';
+    }
+  }
+  
+  // Mark all as read
+  markAllBtn.addEventListener('click', async function(e) {
+    e.stopPropagation();
+    try {
+      await window.WarungioAPI.markAllNotificationsRead();
+      badge.style.display = 'none';
+      loadNotifications();
+    } catch(e) {}
+  });
+  
+  // Helpers
+  function getIconForType(type) {
+    const icons = {
+      'order': 'fa-solid fa-receipt',
+      'payment': 'fa-solid fa-credit-card',
+      'delivery': 'fa-solid fa-truck',
+      'chat': 'fa-solid fa-comment',
+      'wallet': 'fa-solid fa-wallet',
+      'promo': 'fa-solid fa-tags',
+      'system': 'fa-solid fa-bell',
+      'security': 'fa-solid fa-shield',
+      'review': 'fa-solid fa-star',
+      'stock': 'fa-solid fa-boxes',
+      'expired': 'fa-solid fa-clock',
+      'ai_scan': 'fa-solid fa-camera',
+      'report': 'fa-solid fa-chart-bar',
+    };
+    return icons[type] || 'fa-solid fa-bell';
+  }
+  
+  function getPriorityClass(priority) {
+    const map = { 'urgent': 'urgent', 'high': 'warning', 'medium': 'info', 'low': 'info' };
+    return map[priority] || 'info';
+  }
+  
+  function getTimeAgo(dateStr) {
+    if (!dateStr) return '';
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Baru saja';
+    if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  }
+  
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  
+  // Poll every 30 seconds
+  loadUnreadCount();
+  notifInterval = setInterval(loadUnreadCount, 30000);
+  
+  // Listen for WebSocket notification events
+  document.addEventListener('notif:update', function() {
+    loadUnreadCount();
+  });
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', function() {
+    if (notifInterval) clearInterval(notifInterval);
+  });
+})();
+</script>

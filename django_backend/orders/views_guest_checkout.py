@@ -272,6 +272,7 @@ class TrackOrderPublicView(APIView):
         items_data = []
         for item in order.items.all():
             items_data.append({
+                'product_id': item.product_id,
                 'product_name': item.product_name,
                 'qty': item.qty,
                 'price': float(item.price),

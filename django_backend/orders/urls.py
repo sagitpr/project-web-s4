@@ -74,4 +74,7 @@ urlpatterns = [
 
     # Public Tracking (no auth required)
     path('track-public/', views_guest_checkout.TrackOrderPublicView.as_view(), name='track-public'),
+
+    # Guest Review (public — no auth required)
+    path('guest-review/', views.GuestReviewCreateView.as_view(), name='guest-review'),
 ]

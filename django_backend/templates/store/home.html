@@ -1,0 +1,267 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}{{ store.store_name }} - Toko Mitra Warungio{% endblock %}
+
+{% block extra_head %}
+<style>
+.store-hero { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%); padding: 40px 24px; color: #fff; text-align: center; }
+.store-hero-banner { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px; margin-top: 16px; }
+.store-hero h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; }
+.store-hero p { font-size: 14px; opacity: 0.85; margin: 0 0 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
+.store-hero-stats { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+.store-hero-stat { text-align: center; }
+.store-hero-stat strong { display: block; font-size: 20px; font-weight: 800; }
+.store-hero-stat span { font-size: 12px; opacity: 0.75; }
+.store-search-wrap { max-width: 500px; margin: -24px auto 24px; position: relative; z-index: 10; padding: 0 16px; }
+.store-search-box { display: flex; background: #fff; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); overflow: hidden; }
+.store-search-box input { flex: 1; border: none; padding: 14px 18px; font-size: 14px; font-family: inherit; outline: none; }
+.store-search-box button { background: #059669; color: #fff; border: none; padding: 14px 22px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+.store-search-box button:hover { background: #047857; }
+.store-section { padding: 24px 16px; max-width: 1200px; margin: 0 auto; }
+.store-section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+.store-section-subtitle { font-size: 13px; color: #64748b; margin: 0 0 20px; }
+.store-section-title i { color: #059669; }
+.category-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.category-chip { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #f0fdf4; color: #065f46; border-radius: 12px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid #bbf7d0; transition: all 0.2s; }
+.category-chip:hover { background: #dcfce7; border-color: #22c55e; transform: translateY(-1px); }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+@media (min-width: 640px) { .prod-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+@media (min-width: 1024px) { .prod-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+.prod-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; transition: all 0.25s; }
+.prod-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.07); border-color: #bbf7d0; }
+.prod-card-img { aspect-ratio: 1/1; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.prod-card-img img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
+.prod-card:hover .prod-card-img img { transform: scale(1.05); }
+.prod-card-body { padding: 12px 14px 14px; }
+.prod-card-name { font-size: 13px; font-weight: 600; color: #0f172a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; line-height: 1.4; }
+.prod-card-price { font-size: 15px; font-weight: 800; color: #059669; }
+.prod-card-meta { display: flex; gap: 8px; font-size: 11px; color: #94a3b8; margin-top: 4px; }
+.prod-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+.prod-card-actions .btn-beli { flex: 1; padding: 8px; background: #059669; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; }
+.prod-card-actions .btn-beli:hover { background: #047857; }
+.prod-card-actions .btn-cart-add { width: 36px; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; }
+.prod-card-actions .btn-cart-add:hover { background: #f0fdf4; color: #059669; border-color: #bbf7d0; }
+.promo-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 14px; padding: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.promo-banner-text h3 { margin: 0; font-size: 16px; font-weight: 700; color: #92400e; }
+.promo-banner-text p { margin: 4px 0 0; font-size: 13px; color: #a16207; }
+.store-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.store-info-item { display: flex; align-items: center; gap: 12px; }
+.store-info-item i { width: 20px; color: #059669; font-size: 16px; }
+.store-info-item span { font-size: 13px; color: #334155; }
+.store-info-item small { display: block; font-size: 11px; color: #94a3b8; }
+.empty-state { text-align: center; padding: 48px 20px; color: #94a3b8; }
+.empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+.empty-state h3 { font-size: 16px; font-weight: 700; color: #64748b; margin: 0 0 6px; }
+.empty-state p { font-size: 13px; margin: 0; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.toast.success { background: #059669; }
+.toast.error { background: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero / Banner -->
+<section class="store-hero">
+    {% if store.store_banner %}
+    <img src="{{ store.store_banner.url }}" alt="{{ store.store_name }}" class="store-hero-banner" loading="eager">
+    {% else %}
+    <h1>{{ store.store_name }}</h1>
+    {% endif %}
+    <p>{{ store.description|default:'Toko mitra Warungio — Belanja kebutuhan harian langsung dari toko terpercaya.' }}</p>
+    <div class="store-hero-stats">
+        <div class="store-hero-stat"><strong>{{ product_count }}</strong><span>Produk</span></div>
+        <div class="store-hero-stat"><strong>{{ store.follower_count }}</strong><span>Pengikut</span></div>
+        {% if store.rating_avg > 0 %}
+        <div class="store-hero-stat"><strong>&#9733; {{ store.rating_avg|floatformat:1 }}</strong><span>Rating</span></div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Search -->
+<div class="store-search-wrap">
+    <div class="store-search-box">
+        <input type="text" id="storeSearchInput" placeholder="Cari produk di {{ store.store_name }}..." onkeydown="if(event.key==='Enter') searchStoreProducts()">
+        <button onclick="searchStoreProducts()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+</div>
+
+<div itemscope itemtype="http://schema.org/LocalBusiness">
+<meta itemprop="name" content="{{ store.store_name }}">
+<meta itemprop="address" content="{{ store.address|default:'' }}">
+{% if store.phone %}<meta itemprop="telephone" content="{{ store.phone }}">{% endif %}
+</div>
+
+<!-- Categories -->
+{% if categories %}
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-tags"></i> Kategori Produk</h2>
+    <p class="store-section-subtitle">Telusuri produk berdasarkan kategori</p>
+    <div class="category-chips">
+        {% for cat in categories %}
+        <a href="#cat-{{ cat.id }}" class="category-chip" onclick="filterByCategory('{{ cat.category_name|escapejs }}')">{{ cat.category_name }}</a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Promo Banner -->
+{% if active_promos_count > 0 %}
+<section class="store-section" style="padding-bottom:0;">
+    <div class="promo-banner">
+        <div class="promo-banner-text">
+            <h3><i class="fa-solid fa-fire"></i> Ada {{ active_promos_count }} Promo Aktif!</h3>
+            <p>Dapatkan penawaran spesial dan diskon menarik di {{ store.store_name }}.</p>
+        </div>
+        <a href="/toko/{{ store.slug }}/products/?promo=1" class="category-chip" style="background:#059669;color:#fff;border:none;">Lihat Promo</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-star"></i> Produk Unggulan</h2>
+    <p class="store-section-subtitle">Produk terlaris dan paling diminati</p>
+    {% if featured_products %}
+    <div class="prod-grid" id="featuredGrid">
+        {% for p in featured_products %}
+        <div class="prod-card">
+            <a href="/produk/{{ p.slug }}/" class="prod-card-img">
+                {% if p.product_photo %}<img src="{{ p.product_photo.url }}" alt="{{ p.product_name }}" loading="lazy">{% else %}<i class="fa-solid fa-box" style="font-size:32px;color:#cbd5e1;"></i>{% endif %}
+            </a>
+            <div class="prod-card-body">
+                <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0 }}</div>
+                <div class="prod-card-meta">
+                    <span>{{ p.sold_count }} terjual</span>
+                    {% if p.rating_avg > 0 %}<span>&#9733; {{ p.rating_avg|floatformat:1 }}</span>{% endif %}
+                </div>
+                <div class="prod-card-actions">
+                    <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
+                    <button class="btn-cart-add" onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ p.price }}, '{{ p.product_photo.url|default:''|escapejs }}')" title="Tambah ke Keranjang"><i class="fa-solid fa-cart-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>Belum Ada Produk Unggulan</h3><p>Produk akan segera ditambahkan.</p></div>
+    {% endif %}
+</section>
+
+<!-- All Products -->
+<section class="store-section" id="allProducts">
+    <h2 class="store-section-title"><i class="fa-solid fa-box"></i> Semua Produk</h2>
+    <p class="store-section-subtitle">Temukan kebutuhan harian Anda</p>
+    {% if products %}
+    <div class="prod-grid" id="productGrid">
+        {% for p in products %}
+        <div class="prod-card" data-category="{{ p.category.category_name|default:''|lower }}">
+            <a href="/produk/{{ p.slug }}/" class="prod-card-img">
+                {% if p.product_photo %}<img src="{{ p.product_photo.url }}" alt="{{ p.product_name }}" loading="lazy">{% else %}<i class="fa-solid fa-box" style="font-size:32px;color:#cbd5e1;"></i>{% endif %}
+            </a>
+            <div class="prod-card-body">
+                <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0 }}</div>
+                <div class="prod-card-meta">
+                    {% if p.available_stock > 0 %}<span>Stok: {{ p.available_stock }}</span>{% else %}<span style="color:#dc2626;">Habis</span>{% endif %}
+                </div>
+                <div class="prod-card-actions">
+                    <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
+                    <button class="btn-cart-add" onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ p.price }}, '{{ p.product_photo.url|default:''|escapejs }}')" title="Tambah ke Keranjang"><i class="fa-solid fa-cart-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>Belum Ada Produk</h3><p>Toko ini belum memiliki produk yang tersedia.</p></div>
+    {% endif %}
+</section>
+
+<!-- Store Info -->
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-circle-info"></i> Informasi Toko</h2>
+    <p class="store-section-subtitle">Detail lengkap {{ store.store_name }}</p>
+    <div class="store-info-card">
+        {% if store.address %}<div class="store-info-item"><i class="fa-solid fa-location-dot"></i><div><span>{{ store.address }}</span></div></div>{% endif %}
+        {% if store.city %}<div class="store-info-item"><i class="fa-solid fa-city"></i><div><span>{{ store.city }}{% if store.district %}, {{ store.district }}{% endif %}</span></div></div>{% endif %}                {% if store.user.phone %}<div class="store-info-item"><i class="fa-solid fa-phone"></i><div><span>{{ store.user.phone }}</span><small><a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank" style="color:#059669;">Hubungi via WhatsApp</a></small></div></div>{% endif %}
+        {% if store.open_time %}<div class="store-info-item"><i class="fa-solid fa-clock"></i><div><span>{{ store.open_time|time:'H:i' }} - {{ store.close_time|time:'H:i' }}</span><small>Jam Operasional</small></div></div>{% endif %}
+        <div class="store-info-item"><i class="fa-solid fa-store"></i><div><span>{% if store.is_open %}Toko Buka{% else %}Toko Tutup{% endif %}</span><small>Status</small></div></div>
+    </div>
+</section>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function searchStoreProducts() {
+    var q = document.getElementById('storeSearchInput').value.trim().toLowerCase();
+    var cards = document.querySelectorAll('#productGrid .prod-card');
+    var found = 0;
+    cards.forEach(function(c) {
+        var name = c.querySelector('.prod-card-name').textContent.toLowerCase();
+        var match = !q || name.includes(q);
+        c.style.display = match ? '' : 'none';
+        if (match) found++;
+    });
+    if (found === 0 && q) {
+        var emptyEl = document.createElement('div');
+        emptyEl.className = 'empty-state';
+        emptyEl.innerHTML = '<i class="fa-solid fa-search"></i><h3>Produk Tidak Ditemukan</h3><p>Tidak ada produk "' + q + '" di toko ini.</p>';
+        var grid = document.getElementById('productGrid');
+        var existing = grid.parentNode.querySelector('.empty-search');
+        if (existing) existing.remove();
+        emptyEl.className += ' empty-search';
+        grid.after(emptyEl);
+    } else {
+        var es = document.querySelector('.empty-search');
+        if (es) es.remove();
+    }
+}
+
+function filterByCategory(cat) {
+    document.getElementById('storeSearchInput').value = '';
+    var q = cat.toLowerCase();
+    var cards = document.querySelectorAll('#productGrid .prod-card');
+    cards.forEach(function(c) {
+        var catAttr = (c.dataset.category || '').toLowerCase();
+        c.style.display = catAttr.includes(q) ? '' : 'none';
+    });
+    var es = document.querySelector('.empty-search');
+    if (es) es.remove();
+}
+
+function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'toast ' + (type || '') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function addToCart(id, name, price, img) {
+    try {
+        var key = 'store_cart_{{ store.id }}';
+        var cart = JSON.parse(localStorage.getItem(key) || '[]');
+        var existing = cart.find(function(i) { return i.id === id; });
+        if (existing) {
+            existing.qty = (existing.qty || 0) + 1;
+        } else {
+            cart.push({ id: id, name: name, price: price, img: img, qty: 1 });
+        }
+        localStorage.setItem(key, JSON.stringify(cart));
+        var total = cart.reduce(function(s, i) { return s + (i.qty || 0); }, 0);
+        var badge = document.getElementById('storeCartBadge');
+        if (badge) {
+            badge.textContent = total;
+            badge.style.display = total > 0 ? 'flex' : 'none';
+        }
+        showToast(name + ' ditambahkan ke keranjang!', 'success');
+    } catch (e) {
+        showToast('Gagal menambahkan ke keranjang', 'error');
+    }
+}
+</script>
+{% endblock %}

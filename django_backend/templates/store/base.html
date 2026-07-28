@@ -1,0 +1,163 @@
+{% load static %}{% spaceless %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ store.store_name|default:'Toko' }} - Warungio{% endblock %}</title>
+    <meta name="description" content="{% block meta_desc %}{{ store.description|truncatechars:160|default:'Belanja online di toko mitra Warungio' }}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ store.store_name }} - Warungio{% endblock %}">
+    <meta property="og:description" content="{% block og_desc %}{{ store.description|truncatechars:200|default:'Belanja kebutuhan harian dari toko mitra Warungio' }}{% endblock %}">
+    <meta property="og:image" content="{% if store.store_logo %}{{ store.store_logo.url }}{% else %}{% static 'images/Warungio L.png' %}{% endif %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    {% if seo and seo.canonical_url %}<link rel="canonical" href="{{ seo.canonical_url }}">{% endif %}
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/store/store.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Store Header -->
+    <header class="store-header" id="storeHeader">
+        <div class="store-header-inner">
+            <div class="store-header-left">
+                <a href="/toko/{{ store.slug }}/" class="store-header-brand">
+                    {% if store.store_logo %}
+                    <img src="{{ store.store_logo.url }}" alt="{{ store.store_name }}" class="store-header-logo">
+                    {% else %}
+                    <div class="store-header-logo-placeholder">{{ store.store_name|first|upper }}</div>
+                    {% endif %}
+                    <div class="store-header-info">
+                        <span class="store-header-name">{{ store.store_name }}</span>
+                        {% if store_status %}
+                        <span class="store-header-status {% if store.is_open %}open{% else %}closed{% endif %}">
+                            <span class="status-dot"></span> {{ store_status|title }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </a>
+                <nav class="store-header-nav" id="storeNav">
+                    <a href="/toko/{{ store.slug }}/" class="store-nav-link {% if active_page == 'home' %}active{% endif %}">
+                        <i class="fa-solid fa-store"></i> Beranda
+                    </a>
+                    <a href="/toko/{{ store.slug }}/products/" class="store-nav-link {% if active_page == 'products' %}active{% endif %}">
+                        <i class="fa-solid fa-box"></i> Produk
+                    </a>
+                </nav>
+            </div>
+            <div class="store-header-right">
+                {% if store.user.phone %}
+                <a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank" class="store-wa-btn" title="Hubungi via WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span class="wa-label">Chat WA</span>
+                </a>
+                {% endif %}
+                <a href="/toko/{{ store.slug }}/cart/" class="store-cart-btn" id="storeCartBtn" title="Keranjang">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="storeCartBadge" style="display:none;">0</span>
+                </a>
+                <button class="store-hamburger" id="storeHamburger" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Nav -->
+    <div class="store-mobile-overlay" id="storeMobileOverlay" style="display:none;"></div>
+    <div class="store-mobile-nav" id="storeMobileNav" style="display:none;">
+        <div class="store-mobile-header">
+            <span class="store-mobile-title">Menu</span>
+            <button class="store-mobile-close" id="storeMobileClose"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="store-mobile-links">
+            <a href="/toko/{{ store.slug }}/" class="store-mobile-link"><i class="fa-solid fa-store"></i> Beranda</a>
+            <a href="/toko/{{ store.slug }}/products/" class="store-mobile-link"><i class="fa-solid fa-box"></i> Produk</a>
+            <a href="/toko/{{ store.slug }}/cart/" class="store-mobile-link"><i class="fa-solid fa-cart-shopping"></i> Keranjang</a>
+            {% if store.user.phone %}
+            <a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank" class="store-mobile-link"><i class="fa-brands fa-whatsapp"></i> Hubungi WA</a>
+            {% endif %}
+            <a href="/order/lookup/" class="store-mobile-link"><i class="fa-solid fa-truck"></i> Lacak Pesanan</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="store-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Store Footer -->
+    <footer class="store-footer">
+        <div class="store-footer-inner">
+            <div class="store-footer-brand">
+                {% if store.store_logo %}
+                <img src="{{ store.store_logo.url }}" alt="{{ store.store_name }}" class="store-footer-logo">
+                {% else %}
+                <div class="store-footer-logo-placeholder">{{ store.store_name|first|upper }}</div>
+                {% endif %}
+                <div>
+                    <h4>{{ store.store_name }}</h4>
+                    <p>{{ store.address|default:'' }}</p>
+                </div>
+            </div>
+            <div class="store-footer-links">
+                <h5>Info Toko</h5>
+                <a href="/toko/{{ store.slug }}/">Beranda</a>
+                <a href="/toko/{{ store.slug }}/products/">Semua Produk</a>
+            </div>
+            <div class="store-footer-links">
+                <h5>Bantuan</h5>
+                <a href="/order/lookup/">Lacak Pesanan</a>
+                <a href="/bantuan/">Pusat Bantuan</a>
+                <a href="/info/kebijakan/">Kebijakan</a>
+            </div>
+            <div class="store-footer-contact">
+                <h5>Kontak</h5>
+                {% if store.user.phone %}<p><i class="fa-solid fa-phone"></i> {{ store.user.phone }}</p>{% endif %}
+                {% if store.city %}<p><i class="fa-solid fa-location-dot"></i> {{ store.city }}{% if store.district %}, {{ store.district }}{% endif %}</p>{% endif %}
+                <div class="store-footer-social">
+                    <p class="store-footer-copy">&copy; 2026 Warungio. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/utils/toast.js' %}"></script>
+    <script src="{% static 'js/utils/format.js' %}"></script>
+    <script>
+    // ── Mobile Menu Toggle ──
+    document.addEventListener('DOMContentLoaded', function () {
+        var hamburger = document.getElementById('storeHamburger');
+        var mobileNav = document.getElementById('storeMobileNav');
+        var mobileOverlay = document.getElementById('storeMobileOverlay');
+        var mobileClose = document.getElementById('storeMobileClose');
+        if (hamburger && mobileNav && mobileOverlay) {
+            function openMobile() { mobileNav.style.display = 'flex'; mobileOverlay.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+            function closeMobile() { mobileNav.style.display = 'none'; mobileOverlay.style.display = 'none'; document.body.style.overflow = ''; }
+            hamburger.addEventListener('click', openMobile);
+            mobileClose.addEventListener('click', closeMobile);
+            mobileOverlay.addEventListener('click', closeMobile);
+        }
+        // ── Cart Badge from localStorage ──
+        try {
+            var cart = JSON.parse(localStorage.getItem('store_cart_' + '{{ store.id }}') || '[]');
+            var total = cart.reduce(function (sum, item) { return sum + (item.qty || 0); }, 0);
+            var badge = document.getElementById('storeCartBadge');
+            if (badge) {
+                if (total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
+                else { badge.style.display = 'none'; }
+            }
+        } catch (e) {}
+    });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+{% endspaceless %}

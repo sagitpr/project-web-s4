@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
+import logging
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 
@@ -21,6 +22,10 @@ from .serializers import (
 )
 from accounts.permissions import IsBuyer, IsAdmin
 from drf_spectacular.utils import extend_schema
+
+logger = logging.getLogger(__name__)
+
+from notifications.services import notify_loyalty_points, notify_voucher_available
 
 
 # =============================================================================
@@ -94,6 +99,16 @@ class EarnPointsView(views.APIView):
         
         account = get_or_create_account(request.user)
         account.add_points(points, description)
+        
+        # Send loyalty points notification
+        try:
+            notify_loyalty_points(
+                request.user.id, points,
+                account.points_balance,
+                account.tier.get_name_display() if account.tier else None
+            )
+        except Exception as e:
+            logger.warning('notify_loyalty_points failed: %s', e)
         
         return Response({
             'message': f'{points} poin berhasil ditambahkan.',
@@ -250,6 +265,16 @@ class RedeemRewardView(views.APIView):
         # Update reward usage count
         reward.usage_count += 1
         reward.save(update_fields=['usage_count'])
+        
+        # Send voucher available notification
+        try:
+            discount_desc = f"{reward.name} — {reward.points_required} poin"
+            notify_voucher_available(
+                request.user.id, voucher_code,
+                discount_desc
+            )
+        except Exception as e:
+            logger.warning('notify_voucher_available failed: %s', e)
         
         return Response({
             'message': f'Reward {reward.name} berhasil ditukarkan!',

@@ -1,11 +1,14 @@
-{% extends "base.html" %}
+{% extends "buyer/base.html" %}
 {% load static %}
 {% block title %}Ajukan Refund - Warungio{% endblock %}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/pages/buyer/refunds/style.css' %}">
 {% endblock %}
+{% block page_title %}Ajukan Pengembalian & Refund{% endblock %}
+{% block page_subtitle %}Ajukan refund untuk pesanan yang bermasalah{% endblock %}
 {% block content %}
-<div class="page-wrapper refund-form-wrapper">
+<div class="refund-form-wrapper">
+  <a href="{% url 'page-buyer-refunds' %}" class="refund-back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
   <a href="{% url 'page-buyer-refunds' %}" class="refund-back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
   <h1 class="refund-form-title">Ajukan Pengembalian & Refund</h1>
 

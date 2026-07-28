@@ -446,6 +446,26 @@ class RecentlyViewed(models.Model):
             RecentlyViewed.objects.filter(id__in=list(old_ids)).delete()
 
 
+class GuestReview(models.Model):
+    """Guest reviews — no account required, verified by order_number + phone."""
+    order_number = models.CharField(max_length=50, db_index=True)
+    phone = models.CharField(max_length=20)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='guest_reviews')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'guest_reviews'
+        verbose_name = 'Ulasan Tamu'
+        verbose_name_plural = 'Ulasan Tamu'
+        unique_together = ['order_number', 'product']
+
+    def __str__(self):
+        return f'Guest review: {self.product} (Order {self.order_number})'
+
+
 class Voucher(models.Model):
     """Discount vouchers."""
     voucher_code = models.CharField(max_length=50, unique=True)

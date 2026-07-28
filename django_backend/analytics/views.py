@@ -8,6 +8,7 @@ from django.db.models.functions import TruncDate, TruncMonth, TruncDay
 from django.utils import timezone
 from datetime import timedelta, date, datetime
 from decimal import Decimal
+import logging
 from rest_framework import status, generics, permissions, views
 from rest_framework.response import Response
 from django.core.cache import cache
@@ -24,6 +25,10 @@ from stores.models import StoreFollower
 from accounts.permissions import IsSeller, IsAdmin
 from .services.ai_insight import AISellerInsightService
 from drf_spectacular.utils import extend_schema
+
+from notifications.services import notify_report_ready
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema(exclude=True)
@@ -799,6 +804,13 @@ class ReportExportView(views.APIView):
         period_label = f'{start_date.isoformat()} s.d. {end_date.isoformat()}'
 
         pct_fn = report_view._pct_change
+        
+        # Send report ready notification
+        try:
+            notify_report_ready(request.user.id, 'sales', f'{start_date.isoformat()} s.d. {end_date.isoformat()}')
+        except Exception as exc:
+            logger.warning('notify_report_ready failed: %s', exc)
+        
         if fmt == 'csv':
             return self._generate_csv(store_name, period_label, current, previous, daily_sales, category_sales, top_products, pct_fn)
         elif fmt == 'xlsx':

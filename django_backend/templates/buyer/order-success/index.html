@@ -1,23 +1,13 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pesanan Berhasil - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/order-success/style.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-  </head>
-  <body>
-    <div class="page-shell">
-      {% include 'components/sidebar.html' %}
-
-      <main class="main-content-area" style="align-items:center; justify-content:center;padding:24px;">
+{% block title %}Pesanan Berhasil - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/order-success/style.css' %}">
+{% endblock %}
+{% block page_title %}Pesanan Berhasil{% endblock %}
+{% block page_subtitle %}Pesanan berhasil dibuat dan sedang diproses{% endblock %}
+{% block content %}
+      <div style="display:flex;flex-direction:column;align-items:center;">
         <div class="success-card">
           <div class="success-icon-wrap">
             <div class="success-icon-circle">
@@ -59,33 +49,16 @@
       </main>
     </div>
 
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-        'use strict';
-        document.addEventListener('DOMContentLoaded', function() {
-            // Parse order ID from URL
-            const params = new URLSearchParams(window.location.search);
-            const orderId = params.get('id');
-            if (orderId) {
-                document.getElementById('orderNumber').textContent = '#INV/' + orderId;
-            }
-            
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
-                if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
-                }
-            } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
-            }
-        });
-    })();
-    </script>
-  </body>
-</html>
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('id');
+        if (orderId) document.getElementById('orderNumber').textContent = '#INV/' + orderId;
+    });
+})();
+</script>
+{% endblock %}
+{% endblock %}

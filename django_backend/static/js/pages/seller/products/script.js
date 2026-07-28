@@ -206,6 +206,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ── Photo Upload State ──
+  let selectedPhotos = []; // Array of File objects
+
+  // Initialize photo upload
+  const photoInput = document.getElementById('edit-photos');
+  const photoDropzone = document.getElementById('photoDropzone');
+  const photoPreviewGrid = document.getElementById('photoPreviewGrid');
+
+  function initPhotoUpload() {
+    if (!photoDropzone || !photoInput || !photoPreviewGrid) return;
+
+    // Click dropzone to open file picker
+    photoDropzone.addEventListener('click', function () { photoInput.click(); });
+
+    // File selected
+    photoInput.addEventListener('change', function (e) {
+      addPhotos(Array.from(e.target.files));
+      e.target.value = '';
+    });
+
+    // Drag & drop
+    var uploadArea = document.getElementById('photoUploadArea');
+    if (uploadArea) {
+      uploadArea.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('dragover'); });
+      uploadArea.addEventListener('dragleave', function (e) { e.preventDefault(); this.classList.remove('dragover'); });
+      uploadArea.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        addPhotos(Array.from(e.dataTransfer.files));
+      });
+    }
+  }
+
+  function addPhotos(files) {
+    var imageFiles = files.filter(function (f) { return f.type.startsWith('image/'); });
+    var remaining = 5 - selectedPhotos.length;
+    if (imageFiles.length > remaining) {
+      imageFiles = imageFiles.slice(0, remaining);
+      window.WarungioToast?.show('Maksimal 5 foto', 'warning');
+    }
+    imageFiles.forEach(function (f) { selectedPhotos.push(f); });
+    renderPhotoPreviews();
+  }
+
+  function removePhoto(index) {
+    selectedPhotos.splice(index, 1);
+    renderPhotoPreviews();
+  }
+
+  function renderPhotoPreviews() {
+    if (!photoPreviewGrid) return;
+    photoPreviewGrid.innerHTML = '';
+    if (selectedPhotos.length === 0) {
+      if (photoDropzone) photoDropzone.style.display = 'block';
+      return;
+    }
+    if (photoDropzone) photoDropzone.style.display = selectedPhotos.length >= 5 ? 'none' : 'block';
+
+    selectedPhotos.forEach(function (file, index) {
+      var reader = new FileReader();
+      var div = document.createElement('div');
+      div.className = 'photo-preview-item';
+      div.innerHTML = '<div class="photo-index">' + (index + 1) + '/' + selectedPhotos.length + '</div>' +
+        '<button class="photo-remove" type="button" data-index="' + index + '"><i class="fa-solid fa-xmark"></i></button>';
+      var img = document.createElement('img');
+      img.alt = 'Preview ' + (index + 1);
+      div.insertBefore(img, div.firstChild);
+      reader.onload = function (e) { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+      photoPreviewGrid.appendChild(div);
+
+      div.querySelector('.photo-remove').addEventListener('click', function () {
+        removePhoto(parseInt(this.dataset.index));
+      });
+    });
+  }
+
   // ── Category cache ──
   var categoriesCache = [];
 
@@ -285,6 +362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       modalTitle.textContent = 'Tambah Produk Baru';
       productForm.reset();
       document.getElementById('edit-id').value = '';
+      // Clear photos for new product
+      selectedPhotos = [];
+      renderPhotoPreviews();
     }
   }
 
@@ -304,14 +384,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isEdit = !!id;
 
     var catId = parseInt(document.getElementById('edit-category')?.value) || null;
-    const data = {
+    var data = {
       product_name: document.getElementById('edit-name').value.trim(),
       category: catId,
       price: parseFloat(document.getElementById('edit-price').value),
       stock: parseInt(document.getElementById('edit-stock').value) || 0,
       unit: document.getElementById('edit-unit').value.trim(),
       description: document.getElementById('edit-description').value.trim(),
-      // New fields
       sku: document.getElementById('edit-sku')?.value || null,
       barcode: document.getElementById('edit-barcode')?.value || null,
       brand: document.getElementById('edit-brand')?.value || null,
@@ -323,19 +402,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       expired_date: document.getElementById('edit-expired-date')?.value || null
     };
 
-    const submitBtn = productForm.querySelector('button[type="submit"]');
+    // Validate photo count for new products
+    if (!isEdit && selectedPhotos.length < 2) {
+      window.WarungioToast?.show('Minimal 2 foto produk diperlukan untuk menambahkan produk baru.', 'error');
+      return;
+    }
+
+    var submitBtn = productForm.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Menyimpan...';
 
     try {
       if (isEdit) {
-        await WarungioAPI.updateProduct(Number(id), data);
+        if (selectedPhotos.length > 0) {
+          await WarungioAPI.updateProductWithPhotos(Number(id), data, selectedPhotos);
+        } else {
+          await WarungioAPI.updateProduct(Number(id), data);
+        }
         window.WarungioToast?.show('Informasi produk berhasil diperbarui.', 'success');
       } else {
-        await WarungioAPI.createProduct(data);
+        if (selectedPhotos.length > 0) {
+          await WarungioAPI.createProductWithPhotos(data, selectedPhotos);
+        } else {
+          await WarungioAPI.createProduct(data);
+        }
         window.WarungioToast?.show('Produk baru berhasil ditambahkan.', 'success');
       }
       closeModals();
+      selectedPhotos = [];
+      renderPhotoPreviews();
       fetchProducts();
     } catch (err) {
       window.WarungioToast?.show(err.message || 'Gagal menyimpan produk.', 'error');
@@ -381,7 +476,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   categoryFilter?.addEventListener('change', fetchProducts);
   searchInput?.addEventListener('input', fetchProducts);
 
+  // Initialize photo upload
+  initPhotoUpload();
+
   // Initialize data load
   loadCategories();
   fetchProducts();
+
+  // ── Auto-open edit modal from URL parameter (e.g. from AI Scan redirect) ──
+  (function autoOpenFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    var editId = params.get('edit_product');
+    if (editId) {
+      var product = productsData.find(function (p) { return String(p.id) === editId; });
+      if (product) {
+        setTimeout(function () {
+          openEditModal(product);
+          // Clean URL without reloading
+          var url = new URL(window.location);
+          url.searchParams.delete('edit_product');
+          window.history.replaceState({}, '', url);
+        }, 800);
+      } else {
+        // Product not loaded yet, wait and try again
+        var checkInterval = setInterval(function () {
+          var p2 = productsData.find(function (p) { return String(p.id) === editId; });
+          if (p2) {
+            clearInterval(checkInterval);
+            openEditModal(p2);
+            var url = new URL(window.location);
+            url.searchParams.delete('edit_product');
+            window.history.replaceState({}, '', url);
+          }
+        }, 500);
+        setTimeout(function () { clearInterval(checkInterval); }, 10000);
+      }
+    }
+  })();
+
 });

@@ -1,28 +1,16 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detail Pesanan - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/order-detail/style.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-    <!-- Leaflet Maps CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- QRCode.js for QR code rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  </head>
-  <body>
-    <div class="page-shell">
-      {% include 'components/sidebar.html' %}
-
-      <main class="main-content-area" style="padding:24px 0;">
+{% block title %}Detail Pesanan - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/order-detail/style.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+{% endblock %}
+{% block page_title %}Detail Pesanan{% endblock %}
+{% block page_subtitle %}Informasi lengkap pesanan Anda{% endblock %}
+{% block main_content_class %}style="padding:24px 0;"{% endblock %}
+{% block content %}
         <!-- Loading State -->
         <div class="loading-overlay" id="loadingOverlay" style="display:flex;">
           <div class="spinner"></div>
@@ -170,8 +158,6 @@
             </div>
           </div>
         </div>
-      </main>
-    </div>
 
     <!-- Cancel Modal -->
     <div class="modal-overlay" id="cancelModal" style="display:none;">
@@ -200,11 +186,8 @@
       </div>
     </div>
 
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/utils/asset-loader.js' %}"></script>
-    <script src="{% static 'js/utils/format.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/pages/buyer/order-detail/script.js' %}"></script>
-  </body>
-</html>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/pages/buyer/order-detail/script.js' %}"></script>
+{% endblock %}

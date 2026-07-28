@@ -1,32 +1,12 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penilaian Saya - Warungio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/shared.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/reviews/style.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-</head>
-<body>
-    <div class="page-shell">
-        {% include 'components/sidebar.html' %}
-        
-        <main class="main-content-area">
-            {% include 'components/topbar.html' %}
-            
-            <div class="buyer-content-wrapper">
-                <!-- Page Header -->
-                <div class="page-header-section">
-                    <h1>Penilaian Saya</h1>
-                    <p class="page-subtitle">Cek ulasan produk yang sudah Anda berikan.</p>
-                </div>
-
+{% block title %}Penilaian Saya - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/reviews/style.css' %}">
+{% endblock %}
+{% block page_title %}Penilaian Saya{% endblock %}
+{% block page_subtitle %}Cek ulasan produk yang sudah Anda berikan{% endblock %}
+{% block content %}
                 <!-- Stats Row -->
                 <div class="stats-row">
                     <div class="stat-card"><div class="num" id="totalReviews">0</div><div class="lbl">Total Ulasan</div></div>
@@ -48,98 +28,75 @@
                 <div id="reviewList">
                     <div class="empty-state"><i class="fa-solid fa-star"></i><p>Belum ada ulasan. Belanja sekarang dan berikan penilaian!</p></div>
                 </div>
-            </div>
-        </main>
-    </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    let allReviews = [];
+    let currentFilter = 'all';
 
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script>
-    (function() {
-        'use strict';
-        let allReviews = [];
-        let currentFilter = 'all';
-
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.WarungioAuth && window.WarungioAuth.isAuthenticated()) {
-                document.getElementById('authHeaderActions').style.display = 'flex';
-                document.getElementById('guestHeaderActions').style.display = 'none';
-                const u = window.WarungioAuth.getUser();
-                if (u && u.full_name) {
-                    document.getElementById('userName').textContent = 'Hai, ' + u.full_name.split(' ')[0];
-                }
-            } else {
-                document.getElementById('authHeaderActions').style.display = 'none';
-                document.getElementById('guestHeaderActions').style.display = 'flex';
-            }
-            document.getElementById('btnLogout')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.WarungioAuth) { WarungioAuth.logout(); }
-            });
-            
-            loadReviews();
-            document.querySelectorAll('.filter-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-                    this.classList.add('active');
-                    currentFilter = this.dataset.filter;
-                    renderReviews();
-                });
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReviews();
+        document.querySelectorAll('.filter-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderReviews();
             });
         });
+    });
 
-        async function loadReviews() {
-            try {
-                const data = await window.WarungioAuth.api('/api/products/reviews/mine/');
-                allReviews = data.results || data || [];
-                renderReviews();
-            } catch(e) {
-                document.getElementById('reviewList').innerHTML = '<div class="empty-state"><i class="fa-solid fa-star"></i><p>Gagal memuat ulasan.</p></div>';
-            }
+    async function loadReviews() {
+        try {
+            const data = await window.WarungioAuth.api('/api/products/reviews/mine/');
+            allReviews = data.results || data || [];
+            renderReviews();
+        } catch(e) {
+            document.getElementById('reviewList').innerHTML = '<div class="empty-state"><i class="fa-solid fa-star"></i><p>Gagal memuat ulasan.</p></div>';
         }
+    }
 
-        function renderReviews() {
-            const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(function(r) { return r.rating === parseInt(currentFilter); });
-            document.getElementById('totalReviews').textContent = allReviews.length;
-            const avg = allReviews.length ? allReviews.reduce(function(s,r) { return s + (r.rating||0); }, 0) / allReviews.length : 0;
-            document.getElementById('avgRating').textContent = avg.toFixed(1);
-            document.getElementById('withPhotos').textContent = allReviews.filter(function(r) { return r.photos?.length; }).length;
-            
-            if (!filtered.length) {
-                document.getElementById('reviewList').innerHTML = '<div class="empty-state"><i class="fa-solid fa-star"></i><p>' + (currentFilter==='all'?'Belum ada ulasan.':'Tidak ada ulasan dengan rating ini.') + '</p></div>';
-                return;
-            }
-            
-            document.getElementById('reviewList').innerHTML = filtered.map(function(r) {
-                const filled = Array(r.rating||0).fill(0).map(function() { return '&#9733;'; }).join('');
-                const empty = Array(5-(r.rating||0)).fill(0).map(function() { return '&#9734;'; }).join('');
-                return '<div class="review-card">' +
-                    '<img class="product-img" src="' + (r.product?.product_photo_url || '{% static "images/placeholder.png" %}') + '" alt="" onerror="this.src=\'{% static "images/placeholder.png" %}\'">' +
-                    '<div class="review-body">' +
-                    '<p class="product-name">' + (r.product?.name||'Produk') + '</p>' +
-                    '<div class="stars">' + filled + empty + '</div>' +
-                    '<p class="review-date">' + (r.created_at?new Date(r.created_at).toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'}):'') + '</p>' +
-                    (r.comment ? '<p class="review-text">' + r.comment + '</p>' : '') +
-                    '<div class="review-actions"><a href="#" onclick="deleteReview(' + r.id + ',this)">Hapus</a></div>' +
-                    '</div></div>';
-            }).join('');
+    function renderReviews() {
+        const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(function(r) { return r.rating === parseInt(currentFilter); });
+        document.getElementById('totalReviews').textContent = allReviews.length;
+        const avg = allReviews.length ? allReviews.reduce(function(s,r) { return s + (r.rating||0); }, 0) / allReviews.length : 0;
+        document.getElementById('avgRating').textContent = avg.toFixed(1);
+        document.getElementById('withPhotos').textContent = allReviews.filter(function(r) { return r.photos?.length; }).length;
+        
+        if (!filtered.length) {
+            document.getElementById('reviewList').innerHTML = '<div class="empty-state"><i class="fa-solid fa-star"></i><p>' + (currentFilter==='all'?'Belum ada ulasan.':'Tidak ada ulasan dengan rating ini.') + '</p></div>';
+            return;
         }
+        
+        document.getElementById('reviewList').innerHTML = filtered.map(function(r) {
+            const filled = Array(r.rating||0).fill(0).map(function() { return '&#9733;'; }).join('');
+            const empty = Array(5-(r.rating||0)).fill(0).map(function() { return '&#9734;'; }).join('');
+            return '<div class="review-card">' +
+                '<img class="product-img" src="' + (r.product?.product_photo_url || '{% static "images/placeholder.png" %}') + '" alt="" onerror="this.src=\'{% static "images/placeholder.png" %}\'">' +
+                '<div class="review-body">' +
+                '<p class="product-name">' + (r.product?.name||'Produk') + '</p>' +
+                '<div class="stars">' + filled + empty + '</div>' +
+                '<p class="review-date">' + (r.created_at?new Date(r.created_at).toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'}):'') + '</p>' +
+                (r.comment ? '<p class="review-text">' + r.comment + '</p>' : '') +
+                '<div class="review-actions"><a href="#" onclick="deleteReview(' + r.id + ',this)">Hapus</a></div>' +
+                '</div></div>';
+        }).join('');
+    }
 
-        window.deleteReview = async function(id, el) {
-            if (!confirm('Hapus ulasan ini?')) return;
-            try {
-                await window.WarungioAuth.api('/api/products/reviews/' + id + '/', {method:'DELETE'});
-                el.closest('.review-card').remove();
-                allReviews = allReviews.filter(function(r) { return r.id !== id; });
-                renderReviews();
-                if (window.WarungioToast) window.WarungioToast.show('Ulasan berhasil dihapus', 'success');
-            } catch(e) {
-                if (window.WarungioToast) window.WarungioToast.show('Gagal menghapus ulasan: ' + (e.message||'Terjadi kesalahan'), 'error');
-            }
-        };
-    })();
-    </script>
-</body>
-</html>
+    window.deleteReview = async function(id, el) {
+        if (!confirm('Hapus ulasan ini?')) return;
+        try {
+            await window.WarungioAuth.api('/api/products/reviews/' + id + '/', {method:'DELETE'});
+            el.closest('.review-card').remove();
+            allReviews = allReviews.filter(function(r) { return r.id !== id; });
+            renderReviews();
+            if (window.WarungioToast) window.WarungioToast.show('Ulasan berhasil dihapus', 'success');
+        } catch(e) {
+            if (window.WarungioToast) window.WarungioToast.show('Gagal menghapus ulasan: ' + (e.message||'Terjadi kesalahan'), 'error');
+        }
+    };
+})();
+</script>
+{% endblock %}

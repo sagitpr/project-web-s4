@@ -1,11 +1,13 @@
-{% extends "base.html" %}
+{% extends "buyer/base.html" %}
 {% load static %}
 {% block title %}Detail Refund - Warungio{% endblock %}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/pages/buyer/refunds/style.css' %}">
 {% endblock %}
+{% block page_title %}Detail Refund{% endblock %}
+{% block page_subtitle %}Informasi lengkap pengajuan refund Anda{% endblock %}
 {% block content %}
-<div class="page-wrapper refund-detail-wrapper">
+<div class="refund-detail-wrapper">
   <a href="{% url 'page-buyer-refunds' %}" class="refund-back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Refund</a>
 
   <div id="refundDetail">

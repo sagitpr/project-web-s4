@@ -1,0 +1,83 @@
+{% load static %}
+{# =============================================================================
+   Reusable Seller Sidebar Component
+   Include in any seller template with: {% include 'partials/seller_sidebar.html' %}
+   Set active_page variable before including to highlight the correct menu item.
+   
+   Supported active_page values:
+     dashboard, products, orders, order-detail, smart-scan, pos,
+     pengiriman, keuangan, pelanggan, laporan, pengaturan,
+     promo-diskon, ulasan, supplier, chat, stock-prediction,
+     refunds, notifications, partner-guide
+   ============================================================================= #}
+<aside class="sidebar" id="sidebarNav">
+    <div class="logo">
+        <img src="{% static 'images/Warungio L.png' %}" alt="logo">
+        <div class="logo-text"><span class="brand-name">Warungio</span><small class="brand-tag">Mitra</small></div>
+    </div>
+    <nav>
+        <a href="{% url 'page-seller-dashboard' %}" class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a href="{% url 'page-seller-products' %}" class="{% if active_page == 'products' %}active{% endif %}">
+            <i class="fa-solid fa-box"></i> Produk
+        </a>
+        <a href="{% url 'page-seller-orders' %}" class="{% if active_page == 'orders' %}active{% endif %}">
+            <i class="fa-solid fa-receipt"></i> Pesanan
+        </a>
+        <a href="{% url 'page-seller-smart-scan' %}" class="{% if active_page == 'smart-scan' %}active{% endif %}">
+            <i class="fa-solid fa-robot"></i> AI Product Registration
+        </a>
+        <a href="{% url 'page-seller-pos' %}" class="{% if active_page == 'pos' %}active{% endif %}">
+            <i class="fa-solid fa-cash-register"></i> POS Kasir
+        </a>
+        <a href="{% url 'page-seller-pengiriman' %}" class="{% if active_page == 'pengiriman' %}active{% endif %}">
+            <i class="fa-solid fa-truck"></i> Pengiriman
+        </a>
+        <a href="{% url 'page-seller-keuangan' %}" class="{% if active_page == 'keuangan' %}active{% endif %}">
+            <i class="fa-solid fa-wallet"></i> Keuangan
+        </a>
+        <a href="{% url 'page-seller-pelanggan' %}" class="{% if active_page == 'pelanggan' %}active{% endif %}">
+            <i class="fa-solid fa-users"></i> Pelanggan
+        </a>
+        <a href="{% url 'page-seller-laporan' %}" class="{% if active_page == 'laporan' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i> Laporan
+        </a>
+        <a href="{% url 'page-seller-promo-diskon' %}" class="{% if active_page == 'promo-diskon' %}active{% endif %}">
+            <i class="fa-solid fa-tags"></i> Promo & Diskon
+        </a>
+        <a href="{% url 'page-seller-ulasan' %}" class="{% if active_page == 'ulasan' %}active{% endif %}">
+            <i class="fa-solid fa-star"></i> Ulasan
+        </a>
+        <a href="{% url 'page-seller-supplier' %}" class="{% if active_page == 'supplier' %}active{% endif %}">
+            <i class="fa-solid fa-handshake"></i> Supplier
+        </a>
+        <a href="{% url 'page-seller-chat' %}" class="{% if active_page == 'chat' %}active{% endif %}">
+            <i class="fa-solid fa-comments"></i> Chat
+        </a>
+        <a href="{% url 'page-seller-stock-prediction' %}" class="{% if active_page == 'stock-prediction' %}active{% endif %}">
+            <i class="fa-solid fa-chart-bar"></i> Prediksi Stok
+        </a>
+        <a href="{% url 'page-seller-refunds' %}" class="{% if active_page == 'refunds' %}active{% endif %}">
+            <i class="fa-solid fa-rotate-left"></i> Refund
+        </a>
+        <a href="{% url 'page-seller-notifications' %}" class="{% if active_page == 'notifications' %}active{% endif %}">
+            <i class="fa-solid fa-bell"></i> Notifikasi
+        </a>
+        <a href="{% url 'page-seller-pengaturan' %}" class="{% if active_page == 'pengaturan' %}active{% endif %}">
+            <i class="fa-solid fa-gear"></i> Pengaturan
+        </a>
+        <a href="{% url 'page-seller-partner-guide' %}" class="{% if active_page == 'partner-guide' %}active{% endif %}">
+            <i class="fa-solid fa-circle-question"></i> Bantuan
+        </a>
+    </nav>
+    <!-- Sidebar ads section (for onboarding/promotions) -->
+    <div class="sidebar-ads" id="sidebarAdsContainer">
+        <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
+        <p><b>Mulai jualan sekarang!</b></p>
+        <p class="desc">Tambah produk dan raih lebih banyak pembeli.</p>
+        <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
+        <button class="btn-learn">Pelajari</button>
+    </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

@@ -1,40 +1,13 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seluruh Produk | Warungio Hyperlocal</title>
-    
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Style assets -->
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/premium.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/products/style.css' %}">
-</head>
-<body>
-
-    <div class="page-shell">
-        <!-- Sticky Left Sidebar -->
-        {% include 'components/sidebar.html' %}
-
-        <!-- Main Content Wrapper -->
-        <main class="catalog-main-content">
-            <!-- Glassmorphic Navigation -->
-            {% include 'components/topbar.html' %}
-
-            <!-- Product Grid Catalog Area -->
-            <div class="px-6 md:px-8 py-8 space-y-8 flex-1">
+{% block title %}Seluruh Produk - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/products/style.css' %}">
+{% endblock %}
+{% block page_title %}Seluruh Produk{% endblock %}
+{% block page_subtitle %}Cari kebutuhan harian dari warung terdekat{% endblock %}
+{% block content %}
+<div class="section-layout">
                 
                 <!-- Catalog Header -->
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -150,76 +123,7 @@
 
             </div>
 
-            <!-- Share premium footer layout -->
-            <footer class="store-footer-premium border-t border-slate-200 mt-auto">
-                <div class="footer-columns-grid">
-                    <div class="footer-brand-col">
-                        <div class="brand-name">
-                            <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" class="footer-logo">
-                            <span class="logo-text">Warung<span class="logo-green">io</span></span>
-                        </div>
-                        <p class="footer-tagline">Belanja kebutuhan harian langsung dari warung pilihan di sekitar Anda.</p>
-                        <div class="footer-socials">
-                            <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
-                            <a href="#" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
-                            <a href="#" class="social-icon"><i class="fa-brands fa-twitter"></i></a>
-                            <a href="#" class="social-icon"><i class="fa-brands fa-whatsapp"></i></a>
-                        </div>
-                    </div>
-                    <div class="footer-links-col">
-                        <h4>Tentang Warungio</h4>
-                        <ul>
-                            <li><a href="{% url 'page-tentang-kami' %}">Tentang Kami</a></li>
-                            <li><a href="{% url 'page-register-mitra' %}">Gabung Mitra Warung</a></li>
-                            <li><a href="#">Karir</a></li>
-                            <li><a href="#">Blog Tips Segar</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-links-col">
-                        <h4>Kategori Populer</h4>
-                        <ul>
-                            <li><a href="{% url 'page-products' %}">Sayuran Segar</a></li>
-                            <li><a href="{% url 'page-products' %}">Buah-Buahan Organik</a></li>
-                            <li><a href="{% url 'page-products' %}">Daging & Ayam</a></li>
-                            <li><a href="{% url 'page-products' %}">Sembako Pokok</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-links-col">
-                        <h4>Pusat Bantuan</h4>
-                        <ul>
-                            <li><a href="{% url 'bantuan-page' %}">Pusat Bantuan CS</a></li>
-                            <li><a href="#">Hubungi Kami</a></li>
-                            <li><a href="#">Panduan Pembeli</a></li>
-                            <li><a href="#">Kebijakan Pengembalian</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="footer-bottom-row">
-                    <span class="copyright">© 2026 Warungio. Hak Cipta Dilindungi. Dibuat dengan ❤️ di Indonesia.</span>
-                    <div class="legal-links">
-                        <a href="#">Kebijakan Privasi</a>
-                        <span class="dot-separator">•</span>
-                        <a href="#">Syarat & Ketentuan</a>
-                    </div>
-                </div>
-            </footer>
-        </main>
-    </div>
-
-    <!-- Product Detail Modal Container -->
-    <div id="productDetailModal" class="modal-premium" style="display: none;">
-        <!-- Loaded dynamically by main script or detail script if active -->
-    </div>
-
-    <!-- Global Layout scripts -->
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/utils/toast.js' %}"></script>
-    <script src="{% static 'js/utils/websocket.js' %}"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-
-    <!-- Products Catalog Script (consolidated) -->
-    <script src="{% static 'js/pages/buyer/products/script.js' %}"></script>
-</body>
-</html>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/pages/buyer/products/script.js' %}"></script>
+{% endblock %}

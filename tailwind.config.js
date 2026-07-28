@@ -4,9 +4,7 @@ module.exports = {
     './django_backend/templates/**/*.html',
     './django_backend/static/js/**/*.js',
     './home/**/*.html',
-    './auth/**/*.html',
-    './buyer/**/*.html',
-    './seller/**/*.html',
+    './home/**/*.php',
   ],
   theme: {
     extend: {
@@ -22,22 +20,11 @@ module.exports = {
           700: '#15803d',
           800: '#166534',
           900: '#14532d',
-        },
-        brand: {
-          DEFAULT: '#16a34a',
-          dark: '#15803d',
-          light: '#22c55e',
-          soft: '#f0fdf4',
+          950: '#052e16',
         },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-      },
-      borderRadius: {
-        'squircle-sm': '10px',
-        'squircle-md': '14px',
-        'squircle-lg': '20px',
-        'squircle-xl': '28px',
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
     },
   },

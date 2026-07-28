@@ -394,6 +394,8 @@
         confidence: data.confidence,
         freshness_score: data.freshnessScore,
         freshness_status: data.freshnessStatus,
+        // Pass scanned image as product photo
+        product_image: data.imageData,
       }),
     })
     .then(function (res) { return res.json(); })
@@ -424,8 +426,8 @@
         var bh = data.bbox && data.bbox.height != null ? (data.bbox.height / 100 * vh) : vh * 0.8;
         drawBoundingBox(bx, by, bw, bh, data.productName || 'Produk', data.confidence);
 
-        // Non-blocking redirect banner with countdown
-        var editUrl = '/seller/products/' + result.product_id + '/manage/';
+        // Non-blocking redirect banner → products page with auto-open edit modal
+        var editUrl = '/seller/products/?edit_product=' + result.product_id;
         showRedirectBanner(data.productName, editUrl);
       }
     })

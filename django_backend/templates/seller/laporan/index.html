@@ -25,39 +25,7 @@
     </div>
 
     <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebarNav">
-            <div class="logo">
-                <img src="{% static 'images/Warungio L.png' %}" alt="logo">
-                <div class="logo-text">
-                    <span class="brand-name">Warungio</span>
-                    <small class="brand-tag">Seller Dashboard</small>
-                </div>
-            </div>
-            <nav>
-                <a href="{% url 'page-seller-dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
-                <a href="{% url 'page-seller-products' %}"><i class="fa-solid fa-box"></i> Produk</a>
-                <a href="{% url 'page-seller-orders' %}"><i class="fa-solid fa-receipt"></i> Pesanan</a>
-                <a href="{% url 'page-seller-pengiriman' %}"><i class="fa-solid fa-truck"></i> Pengiriman</a>
-                <a href="{% url 'page-seller-pelanggan' %}"><i class="fa-solid fa-users"></i> Pelanggan</a>
-                <a href="{% url 'page-seller-promo-diskon' %}"><i class="fa-solid fa-bullhorn"></i> Promo & Diskon</a>
-                <a href="{% url 'page-seller-keuangan' %}"><i class="fa-solid fa-wallet"></i> Keuangan</a>
-                <a href="{% url 'page-seller-ulasan' %}"><i class="fa-solid fa-star"></i> Ulasan</a>
-                <a href="{% url 'page-seller-laporan' %}" class="active"><i class="fa-solid fa-chart-line"></i> Laporan</a>
-                <a href="{% url 'page-seller-pengaturan' %}"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-                <a href="{% url 'page-seller-partner-guide' %}"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
-            </nav>
-            <div class="sidebar-ads">
-                <div class="sidebar-ads-close" id="sidebarAdsClose">&times;</div>
-                <p><b>Kelola bisnismu dengan data yang tepat</b></p>
-                <p class="desc">Pantau performa toko kamu dan tingkatkan penjualan!</p>
-                <img src="{% static 'images/ads_penjualan.png' %}" alt="ads" class="ads-img">
-                <button class="btn-learn">Lihat Insight</button>
-            </div>
-        </aside>
-
-        <!-- Mobile Sidebar Overlay -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        {% include 'partials/seller_sidebar.html' with active_page='laporan' %}
 
         <!-- Main Content -->
         <main class="main-content">

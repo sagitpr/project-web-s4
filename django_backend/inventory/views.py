@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 from .models import MasterProduct, ProductBatch, InventoryStock, ExpiryNotification, StockAlert
 from notifications.services import (
     notify_inventory_low, notify_expired_product,
-    notify_ai_scan_complete, notify_stock_prediction, notify_discount_recommendation,
+    notify_ai_scan_complete, notify_ai_learn_complete,
+    notify_stock_prediction, notify_discount_recommendation,
 )
 from .serializers import (
     MasterProductSerializer,
@@ -1190,6 +1191,14 @@ class AILearnProductView(APIView):
             store=request.user.store,
             user=request.user,
         )
+
+        # Send notification for AI learning completion
+        try:
+            product_name = result.get('product_name', request.data.get('product_name', ''))
+            if product_name:
+                notify_ai_learn_complete(request.user.id, product_name)
+        except Exception as exc:
+            logger.warning('notify_ai_learn_complete failed: %s', exc)
 
         return Response(result, status=status.HTTP_201_CREATED if result.get('is_new') else status.HTTP_200_OK)
 

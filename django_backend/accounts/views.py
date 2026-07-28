@@ -60,6 +60,8 @@ except ImportError:
 
 from drf_spectacular.utils import extend_schema
 
+from notifications.services import notify_account_activity, notify_security_alert
+
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserUpdateSerializer, ChangePasswordSerializer,
@@ -126,6 +128,32 @@ def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
                 'Will fall back to sync delivery',
                 email, purpose,
             )
+            # ── SYNC FALLBACK: Try direct sync send_otp_email() ──
+            # This handles the case when Celery/Redis is completely unavailable.
+            # It's the caller's last resort before returning failure.
+            try:
+                sync_result = send_otp_email(
+                    email=email,
+                    otp_code=otp_code,
+                    purpose=purpose,
+                    user_full_name=user_full_name,
+                )
+                if sync_result.get('success'):
+                    channels.append('email')
+                    logger.info(
+                        'OTP SYNC FALLBACK succeeded — Email: %s | Purpose: %s',
+                        email, purpose,
+                    )
+                else:
+                    logger.warning(
+                        'OTP SYNC FALLBACK also failed for %s: %s',
+                        email, sync_result.get('error', 'unknown'),
+                    )
+            except Exception as sync_exc:
+                logger.error(
+                    'OTP SYNC FALLBACK raised exception for %s: %s',
+                    email, sync_exc,
+                )
     
     if phone and _whatsapp_configured():
         if safe_delay(
@@ -272,29 +300,17 @@ class RegisterView(generics.CreateAPIView):
                 user.email, channels, otp.id,
             )
         else:
-            # Priority 2: Celery unavailable — fallback to synchronous send
+            # _dispatch_otp_async() already tried sync fallback internally.
+            # If channels is still empty, ALL delivery methods failed.
             logger.warning(
-                'REGISTER — Celery unavailable, falling back to sync email for %s',
+                'REGISTER — All OTP delivery channels failed for %s',
                 user.email,
             )
-            email_result = send_otp_email(
-                email=user.email,
-                otp_code=otp.otp_code,
-                purpose='registration',
-                user_full_name=user.full_name,
-            )
-            if email_result.get('success'):
-                otp_sent = True
-                channels = ['email']
-                logger.info(
-                    'REGISTER OTP SENT (sync) — Email: %s | OTP ID: %d',
-                    user.email, otp.id,
-                )
         
         # Attempt WhatsApp delivery as bonus channel (non-blocking)
         if user.phone and _whatsapp_configured():
             wa_sent = _dispatch_otp_async(
-                email=user.email,
+                email=None,
                 phone=str(user.phone),
                 otp_code=otp.otp_code,
                 purpose='registration',
@@ -435,7 +451,9 @@ class LoginView(views.APIView):
                 'id': otp.id, 'email': email, 'purpose': 'registration'
             })
 
-            # 3. Send OTP — try Celery async FIRST, fallback to sync
+            # 3. Send OTP — _dispatch_otp_async() tries Celery async FIRST,
+            #    then falls back to sync send_otp_email() internally.
+            #    If channels is empty, ALL channels failed.
             channels = _dispatch_otp_async(
                 email=email,
                 phone=phone,
@@ -444,19 +462,10 @@ class LoginView(views.APIView):
                 user_full_name=user_full_name,
             )
             if not channels:
-                # Celery unavailable — send synchronously
                 logger.warning(
-                    'LOGIN AUTO-OTP — Celery unavailable, falling back to sync email for %s',
+                    'LOGIN AUTO-OTP — All delivery channels failed for %s',
                     email,
                 )
-                email_result = send_otp_email(
-                    email=email,
-                    otp_code=otp.otp_code,
-                    purpose='registration',
-                    user_full_name=user_full_name,
-                )
-                if email_result.get('success'):
-                    channels = ['email']
 
             # Build redirect URL for OTP page
             if user.role == 'seller':
@@ -543,6 +552,13 @@ class LoginView(views.APIView):
         
         log_user_info = f'Email: {user.email} | Role: {user.role} | IP: {ip}'
         logger.info('LOGIN SUCCESS — %s', log_user_info)
+        try:
+            notify_account_activity(
+                request.user.id, 'Login Berhasil',
+                'Login dari IP ' + request.META.get('REMOTE_ADDR', 'unknown')
+            )
+        except Exception as e:
+            logger.warning('notify_account_activity failed: %s', e)
 
         return success_response(
             message='Login berhasil.',
@@ -579,6 +595,13 @@ class LogoutView(views.APIView):
                 except Exception as e:
                     logger.warning('Failed to create admin logout audit log: %s', e)
             logout(request)
+            try:
+                notify_account_activity(
+                    request.user.id, 'Logout Berhasil',
+                    'Logout dari akun'
+                )
+            except Exception as e:
+                logger.warning('notify_account_activity failed: %s', e)
             return success_response(message='Logout berhasil.')
         except Exception as e:
             logger.warning('Logout error (non-blocking): %s', str(e))
@@ -617,6 +640,17 @@ class ChangePasswordView(views.APIView):
         user = request.user
         user.set_password(serializer.validated_data['new_password'])
         user.save()
+        try:
+            notify_security_alert(
+                request.user.id, 'Password Diubah',
+                'Password akun berhasil diubah'
+            )
+            notify_account_activity(
+                request.user.id, 'Password Diubah',
+                'Password akun berhasil diubah'
+            )
+        except Exception as e:
+            logger.warning('notify_security_alert/notify_account_activity failed: %s', e)
         return success_response(message='Password berhasil diubah.')
 
 

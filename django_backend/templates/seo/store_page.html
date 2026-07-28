@@ -56,32 +56,40 @@
         {% if products %}
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {% for product in products %}
-            <a href="/produk/{{ product.slug }}/" class="product-grid-item group">
-                <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
-                    {% if product.product_photo %}
-                    <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
-                    {% else %}
-                    <div class="text-gray-300 text-center">
-                        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="p-3 md:p-4">
-                    <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-2 mb-1">{{ product.product_name }}</h3>
-                    <p class="text-primary-600 font-bold text-sm md:text-base">Rp {{ product.price|floatformat:0 }}</p>
-                    <div class="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                        <span>{{ product.sold_count }} terjual</span>
-                        {% if product.rating_avg > 0 %}
-                        <span>★ {{ product.rating_avg|floatformat:1 }}</span>
+            <div class="product-grid-item group">
+                <a href="/produk/{{ product.slug }}/" class="block">
+                    <div class="aspect-square bg-gray-50 flex items-center justify-center p-4">
+                        {% if product.product_photo %}
+                        <img src="{{ product.product_photo.url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                        {% else %}
+                        <div class="text-gray-300 text-center">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>
                         {% endif %}
                     </div>
-                    {% if product.category %}
-                    <div class="mt-2">
-                        <span class="text-xs px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{{ product.category.category_name }}</span>
+                    <div class="p-3 md:p-4">
+                        <h3 class="font-semibold text-gray-900 text-sm md:text-base line-clamp-2 mb-1">{{ product.product_name }}</h3>
+                        <p class="text-primary-600 font-bold text-sm md:text-base">Rp {{ product.price|floatformat:0 }}</p>
+                        <div class="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                            <span>{{ product.sold_count }} terjual</span>
+                            {% if product.rating_avg > 0 %}
+                            <span>&#9733; {{ product.rating_avg|floatformat:1 }}</span>
+                            {% endif %}
+                        </div>
+                        {% if product.category %}
+                        <div class="mt-2">
+                            <span class="text-xs px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{{ product.category.category_name }}</span>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
+                </a>
+                <div class="px-3 pb-3 md:px-4 md:pb-4">
+                    <a href="/store/{{ store.slug }}/checkout/?product_id={{ product.id }}" class="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 transition-all shadow-sm hover:shadow-md active:scale-[0.98]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        Beli Sekarang
+                    </a>
                 </div>
-            </a>
+            </div>
             {% endfor %}
         </div>
         {% else %}

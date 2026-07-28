@@ -1,70 +1,13 @@
+{% extends "buyer/base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Warungio</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/components.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/premium.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/animations.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-    <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
-    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192x192.png' %}" />
-</head>
-  <body>
-    <header class="header">
-      <div class="header-container">
-        <a href="/" class="logo">
-          <img src="{% static 'images/Warungio L.png' %}" alt="Warungio Logo" />
-          <p class="brand-label">
-            <span class="brand-main">Warung</span><span class="brand-highlight">io</span>
-          </p>
-        </a>
-        <nav class="nav">
-          <a href="/home/">Marketplace</a>
-          <a href="/buyer/orders/">Pesanan</a>
-          <a href="/bantuan/">Bantuan</a>
-        </nav>
-        <div class="header-actions" id="authButtons">
-          <div class="header-profile-wrap" id="authHeaderActions">
-            <div class="profile-box" id="profileBox">
-              <div class="profile-info">
-                <p id="userName">Hai, User</p>
-                <span class="member-badge" id="userRoleBadge">Member</span>
-              </div>
-              <img src="{% static 'images/av-siti.png' %}" alt="Profile" class="profile-avatar" id="userAvatar">
-              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="dropdown-menu-custom" id="dropdownMenu">
-              <a href="/buyer/profile/"><i class="fa-solid fa-user"></i> Profil Saya</a>
-              <a href="/buyer/dashboard/"><i class="fa-solid fa-house"></i> Dashboard Saya</a>
-              <a href="/buyer/profile/"><i class="fa-solid fa-gear"></i> Pengaturan</a>
-              <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-            </div>
-          </div>
-          <div id="guestHeaderActions">
-            <a href="/auth/login/" class="btn-masuk" id="loginBtnNav">Masuk</a>
-            <a href="/auth/register/" class="btn-daftar" id="registerBtnNav">Daftar</a>
-          </div>
-        </div>
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-      </div>
-    </header>
-
+{% block title %}Dashboard - Warungio{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/buyer/dashboard/style.css' %}">
+{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Pantau belanja dan pesanan kamu{% endblock %}
+{% block content %}
     <div class="dashboard-shell">
       <!-- Greeting Bar -->
       <div class="greeting-bar">
@@ -137,15 +80,8 @@
       </div>
     </div>
 
-    <footer class="dashboard-footer">
-      <p>© 2026 Warungio. Hak Cipta Dilindungi.</p>
-    </footer>
-
-    <script src="{% static 'js/utils/asset-loader.js' %}"></script>    <script src="{% static 'js/utils/auth-ui.js' %}"></script>
-    <script src="{% static 'js/utils/loader.js' %}"></script>
-    <script src="{% static 'js/device-detector.js' %}"></script>
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/api.js' %}"></script>
-    <script src="{% static 'js/pages/buyer/dashboard/script.js' %}"></script>
-  </body>
-</html>
+    </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/pages/buyer/dashboard/script.js' %}"></script>
+{% endblock %}

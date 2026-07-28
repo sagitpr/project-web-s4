@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Warungio Design System — Tailwind Base Overrides ── */
+/* ── Warungio Custom Tailwind Extensions ── */
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -12,53 +13,47 @@
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    color: #0f172a;
-    background: #f8fafc;
-    min-height: 100vh;
-    line-height: 1.5;
+    @apply text-slate-800 bg-slate-50;
   }
 }
 
 @layer components {
-  /* ── Warungio custom components using Tailwind utility patterns ── */
-
-  .btn-warung {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-transparent cursor-pointer transition-all duration-200;
+  .btn {
+    @apply inline-flex items-center justify-center font-bold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 
-  .btn-warung-primary {
-    @apply btn-warung bg-[#16a34a] text-white hover:bg-[#15803d] active:bg-[#166534] shadow-[0_4px_12px_rgba(22,163,74,0.25)];
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 active:scale-[0.98];
   }
 
-  .btn-warung-ghost {
-    @apply btn-warung bg-transparent text-[#475569] border-[#e2e8f0] hover:border-[#16a34a] hover:text-[#16a34a];
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-300;
   }
 
-  .card-warung {
-    @apply bg-white rounded-xl overflow-hidden border border-[#e2e8f0] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg;
+  .btn-sm {
+    @apply px-4 py-2 text-xs;
   }
 
-  .input-warung {
-    @apply w-full px-4 py-2.5 text-sm bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-[#0f172a] placeholder:text-[#94a3b8] transition-all duration-200 focus:outline-none focus:border-[#16a34a] focus:ring-[3px] focus:ring-[rgba(22,163,74,0.15)];
+  .btn-lg {
+    @apply px-8 py-3.5 text-sm;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
   }
 
-  .badge-warung {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  .badge-warung-green {
-    @apply badge-warung bg-[#f0fdf4] text-[#16a34a];
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
-  .badge-warung-red {
-    @apply badge-warung bg-[#fef2f2] text-[#ef4444];
-  }
-
-  .badge-warung-yellow {
-    @apply badge-warung bg-[#fffbeb] text-[#f59e0b];
-  }
-
-  .badge-warung-blue {
-    @apply badge-warung bg-[#eff6ff] text-[#3b82f6];
+  .text-balance {
+    text-wrap: balance;
   }
 }

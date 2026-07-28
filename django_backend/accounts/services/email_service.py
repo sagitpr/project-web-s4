@@ -90,7 +90,48 @@ def send_otp_email(
             'Silakan atur EMAIL_HOST_USER dan EMAIL_HOST_PASSWORD di .env.'
         )
         logger.warning('send_otp_email skipped — SMTP not configured')
+        # Create in-app notification fallback so user still gets the OTP
+        _create_otp_inapp_notification(email, otp_code, purpose, expiry_minutes)
         return {'success': False, 'message': msg, 'error': msg}
+
+    # ── IN-APP NOTIFICATION FALLBACK on email failure ──
+    # If email sending fails, we create an in-app notification so the user
+    # can see the OTP in their Notification Center on the web/app.
+    # This is a last-resort delivery method when SMTP is unavailable.
+    def _create_otp_inapp_notification(email_addr, otp, otp_purpose, otp_expiry):
+        """Create in-app notification fallback for OTP delivery."""
+        try:
+            from notifications.services import create_notification
+            from accounts.models import User
+            user = User.objects.filter(email=email_addr).first()
+            if not user:
+                return
+            purpose_labels = {
+                'registration': 'Verifikasi Akun',
+                'login': 'Verifikasi Login',
+                'password_reset': 'Reset Password',
+            }
+            label = purpose_labels.get(otp_purpose, 'Verifikasi')
+            
+            # In production, only show "Cek email Anda" message (never expose OTP in notification)
+            # In DEBUG mode, include OTP code for testing convenience
+            if settings.DEBUG:
+                desc = f'Kode {label} Anda: {otp} — Berlaku {otp_expiry} menit'
+            else:
+                desc = f'Kode {label} telah dikirim ke {email_addr}. Periksa inbox/spam Anda. Jika tidak ada, minta ulang.'
+            
+            create_notification(
+                user_id=user.id,
+                notification_type='system',
+                priority='high',
+                title=f'{label} — Kode OTP',
+                description=desc,
+                action_url=f'/auth/otp/?email={email_addr}&purpose={otp_purpose}',
+                action_text='Verifikasi Sekarang',
+                metadata={'otp_purpose': otp_purpose, 'email': email_addr},
+            )
+        except Exception as notif_err:
+            logger.warning('Failed to create OTP in-app notification: %s', notif_err)
 
     if expiry_minutes is None:
         expiry_minutes = getattr(settings, 'OTP_EXPIRE_MINUTES', 15)
@@ -157,6 +198,7 @@ def send_otp_email(
     except SMTPException:
         msg = 'Gagal mengirim email — masalah koneksi SMTP. Silakan coba lagi.'
         logger.exception('SMTP error for %s', email)
+        _create_otp_inapp_notification(email, otp_code, purpose, expiry_minutes)
         return {'success': False, 'message': msg, 'error': msg}
     except (ConnectionError, TimeoutError) as exc:
         msg = f'Gagal mengirim email — koneksi timeout: {exc}'
