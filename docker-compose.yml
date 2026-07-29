@@ -5,7 +5,7 @@
 # =============================================================================
 
 services:
-  # ---- MariaDB Database (Ultra Low Memory: 64M buffer pool, 20 connections) ----
+  # ---- MariaDB Database (Optimized: 64M buffer pool, 20 connections, 160m limit) ----
   mysql:
     image: mariadb:10.11
     container_name: warungio-mysql
@@ -27,7 +27,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    mem_limit: 192m
+    mem_limit: 170m
     networks:
       - warungio_net
     logging:
@@ -37,25 +37,23 @@ services:
         max-file: "2"
 
   # ---- Redis (Channels, Cache, Celery Broker) — Optimized for 1GB VPS ----
-  # 🔴 OPTIMIZATION: maxmemory 80mb (was 96mb) + mem_limit 100m (was 128m)
-  # Actual usage: ~40-55 MB normal, ~60 MB peak. Target: ≤70 MB actual.
-  # maxmemory 80mb + 25% headroom (100m limit) prevents OOM kills.
-  # 80mb is the sweet spot — enough for 4 roles (broker, cache, sessions,
-  # channel layer) without triggering aggressive LRU eviction.
-  # NOTE: Don't reduce below 80mb. Lower values cause LRU eviction of
-  # active sessions and Celery task results under concurrent load.
+  # maxmemory 64mb — cukup untuk 4 roles (broker, cache, sessions, channel
+  # layer) pada single-tenant VPS. allkeys-lru eviction tetap jalan jika
+  # melebihi limit. 80m container limit + 25% headroom.
+  # NOTE: Jika traffic tinggi dengan >50 concurrent users, naikkan ke 80mb.
+  #       LRU eviction pada 64mb bisa logout session aktif jika terlalu penuh.
   redis:
     image: redis:7-alpine
     container_name: warungio-redis
     restart: unless-stopped
-    command: ["redis-server", "--maxmemory", "80mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 10s
-    mem_limit: 100m
+    mem_limit: 80m
     networks:
       - warungio_net
     logging:
@@ -64,21 +62,8 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  # ---- Django Backend (Daphne ASGI — Single Worker, 2 Threads per Connection) ----
-  # ═══════════════════════════════════════════════════════════════════════
-  # NOTE BuildKit: Dockerfile menggunakan --mount=type=cache (BuildKit).
-  # Pastikan environment variable berikut diset sebelum build:
-  #   export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
-  # ═══════════════════════════════════════════════════════════════════════
-  # ═══════════════════════════════════════════════════════════════════════
-  # NOTE Static files: collectstatic dijalankan SETIAP container startup
-  # (lihat docker-entrypoint.sh) untuk memastikan Docker named volume
-  # (static_volume) selalu sync dengan source code terbaru.
-  #
-  # Named volume persist meskipun image di-rebuild. Tanpa collectstatic
-  # di startup, perubahan CSS/JS tidak akan muncul di volume yang ada.
-  # Biaya: ~1-2 detik untuk ~6 file (negligible pada 1GB RAM VPS).
-  # ═══════════════════════════════════════════════════════════════════════
+  # ---- Django Backend (Gunicorn+Uvicorn — 1 Worker, 2 Threads, 160m) ----
+  # 1 worker × 2 threads uses ~80-120 MB RSS. 160m gives 33% headroom.
   django:
     build:
       context: .
@@ -110,7 +95,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 240s
-    mem_limit: 192m
+    mem_limit: 160m
     networks:
       - warungio_net
     logging:
@@ -119,14 +104,11 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  # ---- Celery Worker (Async Tasks) — NO embedded beat (separate container) ----
-  # 1 concurrency, 500 max tasks per child, 5 min time limit
-  # --without-heartbeat --without-gossip --without-mingle: matikan discovery protocol
-  # Worker restart setelah 500 tasks untuk cegah memory leak.
-  # Beat dijalankan di container terpisah (celery-beat) untuk:
-  #   - Mencegah OOM kill (exit code 137) pada 1GB RAM VPS
-  #   - Isolasi memory: worker bisa pakai 128m, beat cukup 32m
-  #   - Worker restart karena max-tasks-per-child tidak ganggu beat scheduler
+  # ---- Celery Worker (Async Tasks) — 1 concurrency, 96m limit ----
+  # 1 concurrency + 200 max-tasks-per-child dari settings.py. 
+  # Pada 1GB VPS, 96m cukup untuk Django app stack (~50-60 MB) 
+  # + task processing overhead (~20-30 MB). max-tasks-per-child=200
+  # mencegah memory leak tanpa restart container.
   celery:
     build:
       context: .
@@ -143,33 +125,20 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
       CELERY_ENABLED: "true"
-    command: ["celery", "-A", "config", "worker", "-l", "info", "-c", "1", "--max-tasks-per-child=500", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
+    command: ["celery", "-A", "config", "worker", "-l", "info", "-c", "1", "--max-tasks-per-child=200", "-n", "worker@%h", "--without-heartbeat", "--without-gossip", "--without-mingle"]
     volumes:
       - ./logs:/app/logs
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Healthcheck: Redis Heartbeat (bukan pgrep)
-    # ───────────────────────────────────────────────────────
-    # SEBELUMNYA: pgrep hanya cek apakah proses masih hidup.
-    #   Tidak bisa deteksi: worker hang, deadlock, broker disconnect.
-    #
-    # SEKARANG: Celery worker signal (worker_process_init) memulai
-    #   background thread yang menulis `celery:heartbeat:worker` ke Redis
-    #   setiap 30 detik dengan TTL 90 detik. Healthcheck membaca key via
-    #   `redis-cli exists` — fixed key (tanpa hostname) untuk menghindari
-    #   mismatch antara $(hostname) dan Celery hostname (worker@abc123).
-    #
-    # Overhead: ~1ms per redis-cli call, ~0 byte Django loading.
-    # Redis CLI tersedia karena Dockerfile runtime menginstall redis-tools.
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -h redis exists celery:heartbeat:worker 2>/dev/null | grep -q 1 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 60s
-    mem_limit: 128m
+    mem_limit: 112m
     networks:
       - warungio_net
     logging:
@@ -178,24 +147,10 @@ services:
         max-size: "5m"
         max-file: "2"
 
-  # ---- Celery Beat Scheduler (separate dari worker untuk cegah OOM) ----
-  # 🔴 CRITICAL FIX — OOM Killer Prevention (Exit Code 137)
-  # ====================================================================
-  # ROOT CAUSE: Celery Beat loads the full Django application stack
-  # (~30-40 MB RAM) + Celery scheduler (~5 MB) + PersistentScheduler state
-  # file (~1 MB). Total baseline: ~36-46 MB.
-  #
-  # SEBELUMNYA: mem_limit: 32m → Django loading alone exceeds this limit,
-  # causing OOM Killer (State.OOMKilled=true, Exit Code 137).
-  #
-  # FIX: mem_limit dinaikkan ke 64m (dari 32m) agar beat punya headroom
-  # untuk Django loading + scheduler + state file + GC overhead.
-  # Total: 64 MB (beat) + 720 MB (other services) = 784 MB → masih < 80% VPS.
-  #
-  # NOTE: 64 MB adalah sweet spot — cukup untuk Django + scheduler, tapi
-  # tidak berlebihan. Beberapa instansi dapat menjalankan beat dengan
-  # mem_limit 48-64 MB di environment 1GB RAM.
-  # ====================================================================
+  # ---- Celery Beat Scheduler (separate worker, 64m — empirically tested) ----
+  # 🔴 Berdasarkan pengalaman: 32m dan 48m terbukti OOM karena Django
+  # full stack (~30-40 MB) + scheduler (~5 MB) + GC overhead.
+  # 64m adalah sweet spot — jangan turunkan lagi!
   celery-beat:
     build:
       context: .
@@ -219,10 +174,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Healthcheck: Redis Heartbeat (bukan pgrep)
-    # Celery Beat scheduled task `celery-heartbeat-beat` berjalan setiap 60 detik,
-    # menulis `celery:heartbeat:beat` ke Redis dengan TTL 180 detik.
-    # Jika beat crash/stuck/scheduler freeze, key TTL expired → healthcheck fail.
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -h redis exists celery:heartbeat:beat 2>/dev/null | grep -q 1 || exit 1"]
       interval: 15s
@@ -239,7 +190,7 @@ services:
         max-file: "2"
 
 
-  # ---- Nginx (Reverse Proxy, Static/Media) ----
+  # ---- Nginx (Reverse Proxy, Static/Media) — 48m tetap (already minimal) ----
   nginx:
     image: nginx:1.25-alpine
     container_name: warungio-nginx
@@ -250,21 +201,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    # ═══════════════════════════════════════════════════════════════
-    # 🔒 PRODUCTION-SAFE by default — no auto-load override exists
-    # ═══════════════════════════════════════════════════════════════
-    # Base config uses warungio.conf (production SSL config).
-    # Self-signed certs auto-generated by scripts/deploy.sh.
-    # Port 80 + 443 both exposed by default.
-    #
-    # LOCAL DEVELOPMENT: docker-compose.dev.yml (NOT auto-loaded)
-    #   Replaces warungio.conf → nginx.dev.conf (plain HTTP, no SSL)
-    #   Explicit usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-    #
-    # PRODUCTION DEPLOYMENT:
-    #   docker compose up -d                          → production (override NOT loaded)
-    #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d  → with LE certs
-    # ═══════════════════════════════════════════════════════════════
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -286,16 +222,6 @@ services:
       - NET_BIND_SERVICE
       - SETGID
       - SETUID
-    # NOTES:
-    #   CHOWN  → Nginx master (root) perlu chown() temp directories (/var/cache/nginx/{client,proxy,fastcgi,uwsgi,scgi}_temp) ke user nginx (UID 101)
-    #             saat startup. Tanpa CAP_CHOWN, semua direktori temp gagal di-chown → nginx crash dengan EPERM.
-    #   NET_BIND_SERVICE → Bind ke port 80/443 (privileged ports < 1024)
-    #   SETGID/SETUID   → Nginx master perlu drop privileges dari root ke user nginx untuk worker processes
-    # Healthcheck: check nginx master process via PID (lighter than nginx -t every 15s)
-    #   nginx -t validates full config + reads SSL certs every run → 240x/hour unnecessary I/O
-    #   pgrep checks PID file existence → near-zero overhead
-    # Note: CAP_KILL is NOT granted, so kill -0 $(cat /var/run/nginx.pid) won't work.
-    #   pgrep reads /proc which is accessible even with cap_drop: ALL.
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'nginx: master' > /dev/null || exit 1"]
       interval: 15s

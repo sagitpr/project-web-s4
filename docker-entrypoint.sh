@@ -192,10 +192,10 @@ exec gunicorn config.asgi:application \
     -k uvicorn.workers.UvicornWorker \
     -w 1 \
     --threads 2 \
-    --worker-connections 256 \
-    --max-requests 1000 \
-    --max-requests-jitter 100 \
-    --timeout 120 \
+    --worker-connections 128 \
+    --max-requests 500 \
+    --max-requests-jitter 50 \
+    --timeout 180 \
     --keep-alive 2 \
     --bind 0.0.0.0:${PORT} \
     --access-logfile '-' \
