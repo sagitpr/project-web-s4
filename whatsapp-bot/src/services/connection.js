@@ -33,12 +33,18 @@
  *    even across restarts, VPS reboots, or Docker rebuilds.
  *
  * 6. State Machine:
- *    INITIALIZING → CONNECTING → WAITING_FOR_QR → CONNECTED
- *                                 → AUTHENTICATING → CONNECTED
- *                    ↓ (close)
- *                    RECONNECTING → CONNECTING (same auth)
+ *    INITIALIZING → CONNECTING → WAITING_FOR_QR (QR shown, reconnect timers STOPPED)
+ *                                 ↓ QR scanned by phone
+ *                                 PAIRING (auth handshake in progress — QR SUPPRESSED)
+ *                                    ↓
+ *                                 CONNECTED (or LOGGED_OUT if rejected)
+ *                                 AUTHENTICATING (for already-registered reconnect)
+ *                    ↓ (close: timedOut/408)
+ *                    CONNECTING (immediate reconnect for fresh QR — session NOT deleted)
+ *                    ↓ (close: other transient)
+ *                    RECONNECTING → CONNECTING (same auth, backoff)
  *                    LOGGED_OUT → (delete session → INITIALIZING → QR)
- *                    SHUTDOWN (terminal)
+ *                    SHUTDOWN (terminal — session preserved)
  * ───────────────────────────────────────────────────────────── */
 
 const {
@@ -64,6 +70,7 @@ const State = Object.freeze({
   INITIALIZING:   'INITIALIZING',
   CONNECTING:     'CONNECTING',
   WAITING_FOR_QR: 'WAITING_FOR_QR',
+  PAIRING:        'PAIRING',        // phone scanned QR, auth handshake in progress
   AUTHENTICATING: 'AUTHENTICATING',
   CONNECTED:      'CONNECTED',
   RECONNECTING:   'RECONNECTING',
@@ -99,7 +106,6 @@ class ConnectionManager {
     /* ── Mutex: prevents concurrent start() calls ── */
     this._locked = false;
     this._queue = [];
-
 
   }
 
@@ -510,27 +516,47 @@ class ConnectionManager {
 
     /* ── QR Code ──────────────────────────────────────────── */
     if (qr) {
-      // CRITICAL: Only show QR when NOT already registered.
-      // Baileys may emit qr events even during reconnect — we
-      // must NOT show QR if the user is already authenticated.
-      if (this.authState && this.authState.creds && this.authState.creds.registered === true) {
-        // User is already authenticated — ignore QR
+      // CRITICAL: Never show QR if already registered or pairing is in progress.
+      // Baileys may emit qr events during reconnect or while the handshake
+      // is still ongoing — showing a new QR would break an active pairing.
+
+      // ── Already registered — ignore QR entirely ──
+      if (this.authState?.creds?.registered === true) {
         if (this.state !== State.CONNECTED) {
           this._setState(State.AUTHENTICATING);
         }
         return;
       }
 
-      // No valid registration — show QR
+      // ── Pairing in progress — QR MUST NOT change during auth handshake ──
+      if (this.state === State.PAIRING) {
+        appLogger.info('Pairing in progress — new QR ignored');
+        return;
+      }
+
+      // ── Already authenticating — suppress ──
+      if (this.state === State.AUTHENTICATING || this.state === State.CONNECTED) {
+        return;
+      }
+
+      // ── This QR from timedOut(408) recovery — reconnect timer already cleared ──
+      // Show fresh QR
       this._setState(State.WAITING_FOR_QR);
       this.reconnectAttempts = 0;
+
+      // STOP any pending reconnect timer — we have a live QR now
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+
       appLogger.info('=== QR CODE ===');
       qrcode.generate(qr, { small: true });
       appLogger.info('Scan QR with WhatsApp > Linked Devices > Link a Device');
       return;
     }
 
-    /* ── Connected ────────────────────────────────────────── */
+    /* ── Connected (pairing completed or resume) ───────────── */
     if (connection === 'open') {
       this._setState(State.CONNECTED);
       this.reconnectAttempts = 0;
@@ -573,12 +599,33 @@ class ConnectionManager {
         return;
       }
 
+      /* ── TIMED OUT (408) — QR expired, reconnect for fresh QR ── */
+      // This happens when QR was shown but not scanned before it expired.
+      // Do NOT delete session — just create a new socket to get a fresh QR.
+      // Do NOT use backoff — reconnect immediately so the user sees a new QR.
+      if (statusCode === DisconnectReason.timedOut) {
+        appLogger.info('QR expired (timedOut 408) — reconnecting for fresh QR');
+
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = null;
+        }
+        this.reconnectAttempts = 0;
+
+        // Clean socket but KEEP auth files (session is still valid)
+        this._cleanupSocket();
+
+        // Reconnect immediately — the new socket will generate a fresh QR
+        this._setState(State.CONNECTING);
+        setTimeout(() => this.start(), 500);
+        return;
+      }
+
       /* ── RESTART REQUIRED (515/conflict) — reconnect immediately ── */
       if (statusCode === DisconnectReason.restartRequired) {
         appLogger.info('Restart required — reconnecting immediately');
-        // Clean socket but KEEP auth files (session is still valid)
         this._cleanupSocket();
-        this.reconnectAttempts = 0; // don't count restartRequired as failure
+        this.reconnectAttempts = 0;
         this._setState(State.RECONNECTING);
         setTimeout(() => this.start(), 100);
         return;
@@ -586,9 +633,23 @@ class ConnectionManager {
 
       /* ── TRANSIENT ERROR — reconnect with backoff ────────── */
       // Keep session files intact — only the socket needs recreating.
-      // This handles: connectionClosed, connectionLost, timedOut,
-      // connectionReplaced, badSession, streamErrored, etc.
       this._scheduleReconnect();
+      return;
+    }
+
+    /* ── INTERMEDIATE STATE (not qr, not open, not close) ─── */
+    // Baileys may emit intermediate connection.update during the auth
+    // handshake after QR scan but before 'open' or 'close'.
+    // We mark this as PAIRING to prevent new QR generation.
+    if (this.state === State.WAITING_FOR_QR) {
+      this._setState(State.PAIRING);
+
+      // Stop any reconnect timer — pairing is in progress
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      appLogger.info('Phone scanned QR — auth handshake in progress');
       return;
     }
   }
