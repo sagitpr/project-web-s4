@@ -513,84 +513,18 @@
         >
       </div>
       <div class="category-promo-row">
-        <div class="category-panel">
-          <div class="categories-grid icon-replace" data-icon-size="60" data-icon-color="#108d35">
-            <div class="category-item">
-              <img
-                src="{% static 'images/sembako.png' %}"
-                alt="Sembako"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Sembako</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/vegetable.png' %}"
-                alt="Sayuran"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Sayuran</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/fruit.png' %}"
-                alt="Buah"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Buah</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/meat.png' %}"
-                alt="Daging"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Daging</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/beverage.png' %}"
-                alt="Minuman"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Minuman</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/food.png' %}"
-                alt="Makanan"
-                class="category-icon"
-                width="60"
-                height="60"
-                loading="lazy"
-              />
-              <p>Makanan</p>
-            </div>
-            <div class="category-item">
-              <img
-                src="{% static 'images/kebutuhan dapur.png' %}"
-                alt="Kebutuhan"
-                class="category-icon"
-                loading="lazy"
-              />
-              <p>Kebutuhan</p>
-            </div>
-          </div>
+        <!-- New: Text-only rectangular card tabs (no icons/images) -->
+        <div class="category-tabs-wrapper">
+          <a href="/kategori/sembako/" class="category-tab-card" data-cat-id="sembako">Sembako</a>
+          <a href="/kategori/sayuran/" class="category-tab-card" data-cat-id="sayuran">Sayuran</a>
+          <a href="/kategori/buah/" class="category-tab-card" data-cat-id="buah">Buah</a>
+          <a href="/kategori/daging/" class="category-tab-card" data-cat-id="daging">Daging</a>
+          <a href="/kategori/minuman/" class="category-tab-card" data-cat-id="minuman">Minuman</a>
+          <a href="/kategori/makanan/" class="category-tab-card" data-cat-id="makanan">Makanan</a>
+          <a href="/kategori/kebutuhan/" class="category-tab-card" data-cat-id="kebutuhan">Kebutuhan</a>
+          <a href="/kategori/frozen-food/" class="category-tab-card" data-cat-id="frozen">Frozen Food</a>
+          <a href="/kategori/snack/" class="category-tab-card" data-cat-id="snack">Snack</a>
+          <a href="/buyer/products/" class="category-tab-card category-tab-all">Semua <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="promo-card">
           <div class="promo-content">
@@ -598,7 +532,7 @@
             <p>Diskon hingga</p>
             <div class="promo-discount">30%</div>
             <p class="promo-subtitle">Untuk semua produk segar</p>
-            <button class="btn-primary btn-small">Belanja Sekarang</button>
+            <a href="{% url 'page-register' %}" class="btn-primary btn-small">Belanja Sekarang</a>
           </div>
           <img
             src="{% static 'images/tambah-produk.png' %}"

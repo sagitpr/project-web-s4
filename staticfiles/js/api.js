@@ -169,6 +169,39 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/products/' + id + '/manage/', { method: 'PATCH', body: JSON.stringify(data) });
   };
+  RealAPI.createProductWithPhotos = function (data, photos) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var fd = new FormData();
+    Object.keys(data).forEach(function (k) {
+      if (data[k] !== null && data[k] !== undefined) {
+        fd.append(k, String(data[k]));
+      }
+    });
+    // Append first photo as main product photo, remaining as gallery
+    if (photos && photos.length > 0) {
+      fd.append('product_photo', photos[0]);
+      for (var i = 1; i < photos.length; i++) {
+        fd.append('gallery_images', photos[i]);
+      }
+    }
+    return auth.apiUpload('/products/create/', fd, 'POST');
+  };
+  RealAPI.updateProductWithPhotos = function (id, data, photos) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var fd = new FormData();
+    Object.keys(data).forEach(function (k) {
+      if (data[k] !== null && data[k] !== undefined) {
+        fd.append(k, String(data[k]));
+      }
+    });
+    if (photos && photos.length > 0) {
+      fd.append('product_photo', photos[0]);
+      for (var i = 1; i < photos.length; i++) {
+        fd.append('gallery_images', photos[i]);
+      }
+    }
+    return auth.apiUpload('/products/' + id + '/manage/', fd, 'PATCH');
+  };
   RealAPI.deleteProduct = function (id) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/products/' + id + '/manage/', { method: 'DELETE' });
@@ -216,6 +249,27 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/orders/cart/count/');
   };
+  // ---- Stock Prediction & Restock ----
+  RealAPI.getStockPrediction = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/stock-prediction/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getReorderSuggestions = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/products/reorder-suggestions/');
+  };
+  RealAPI.getStockForecast = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/stock-forecast/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.getLowStockProducts = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/products/low-stock/' + (qs ? '?' + qs : ''));
+  };
+
   RealAPI.addToCart = function (data) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/orders/cart/', { method: 'POST', body: JSON.stringify(data) });
@@ -322,6 +376,75 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     var qs = params ? new URLSearchParams(params).toString() : '';
     return auth.api('/payments/wallet/transactions/' + (qs ? '?' + qs : ''));
+  };
+
+  // ---- Delivery (Grab/Gojek/Mitra Courier) ----
+  RealAPI.getDeliveryRate = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/delivery/rate/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getDeliveryPosition = function (orderId) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/position/');
+  };
+  RealAPI.autoBookCourier = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/delivery/auto-book/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getMitraDrivers = function (params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/orders/mitra/drivers/' + (qs ? '?' + qs : ''));
+  };
+  RealAPI.createMitraDriver = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateMitraDriver = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.deleteMitraDriver = function (id) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/drivers/' + id + '/', { method: 'DELETE' });
+  };
+  RealAPI.getMitraTariffs = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/');
+  };
+  RealAPI.createMitraTariff = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.updateMitraTariff = function (id, data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/tariffs/' + id + '/', { method: 'PATCH', body: JSON.stringify(data) });
+  };
+  RealAPI.assignMitraDriver = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/mitra/assign/', { method: 'POST', body: JSON.stringify(data) });
+  };
+
+  // ---- Proof of Delivery (POD) ----
+  RealAPI.uploadPOD = function (orderId, formData) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.apiUpload('/orders/' + orderId + '/delivery/pod/', formData, 'POST');
+  };
+
+  // ---- QR Delivery Codes ----
+  RealAPI.generateDeliveryQR = function (orderId, codeType) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/qr/generate/', {
+      method: 'POST',
+      body: JSON.stringify({ code_type: codeType || 'delivery' }),
+    });
+  };
+  RealAPI.verifyDeliveryQR = function (orderId, qrCode, codeType) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/orders/' + orderId + '/delivery/qr/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ qr_code: qrCode, code_type: codeType || 'delivery' }),
+    });
   };
 
   // ---- Finance (withdrawal, bank accounts) ----
@@ -448,6 +571,27 @@
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
     return auth.api('/notifications/' + id + '/delete/', { method: 'DELETE' });
   };
+  RealAPI.getNotificationsUnreadCount = function () {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/unread-count/');
+  };
+  RealAPI.archiveNotifications = function (ids, archive) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/archive/', { method: 'POST', body: JSON.stringify({ notification_ids: ids, archive: archive !== false }) });
+  };
+  RealAPI.deleteNotificationsBulk = function (ids) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/delete-bulk/', { method: 'DELETE', body: JSON.stringify({ notification_ids: ids }) });
+  };
+  RealAPI.broadcastNotification = function (data) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    return auth.api('/notifications/broadcast/', { method: 'POST', body: JSON.stringify(data) });
+  };
+  RealAPI.getNotificationsByType = function (type, params) {
+    if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
+    var qs = params ? new URLSearchParams(params).toString() : '';
+    return auth.api('/notifications/' + (type ? '?type=' + type : '') + (qs && type ? '&' + qs : qs ? '?' + qs : ''));
+  };
 
   // ---- Chat ----
   RealAPI.getConversations = function () {
@@ -569,7 +713,7 @@
   // ---- Stock Alerts ----
   RealAPI.getLowStockProducts = function (threshold) {
     if (!auth) return Promise.reject({ error: 'WarungioAuth not loaded' });
-    return auth.api('/products/low-stock/?threshold=' + (threshold || 5));
+    return auth.api('/products/low-stock/?threshold=' + (threshold != null ? threshold : 5));
   };
 
   // ──────────────────────────────────────────────────────────────────────────

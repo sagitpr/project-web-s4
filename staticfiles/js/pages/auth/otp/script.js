@@ -283,6 +283,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // ── Helper: show in-app notification banner when email delivery fails ──
+  function showInAppBanner(otpCode) {
+    // Find or create a banner element below the OTP card
+    var otpCard = document.querySelector('.otp-card');
+    if (!otpCard) return;
+    
+    // Remove existing banner if present
+    var existing = document.getElementById('inAppBanner');
+    if (existing) existing.remove();
+    
+    var banner = document.createElement('div');
+    banner.id = 'inAppBanner';
+    banner.style.cssText = [
+      'margin-top: 16px',
+      'padding: 14px 16px',
+      'border-radius: 12px',
+      'background: linear-gradient(135deg, #fef3c7, #fde68a)',
+      'border: 1px solid #f59e0b',
+      'font-size: 0.9rem',
+      'line-height: 1.5',
+      'text-align: center',
+    ].join(';');
+    
+    if (otpCode) {
+      // OTP code available (debug mode or in-app fallback)
+      banner.innerHTML = [
+        '<strong style="color:#92400e;">Kode OTP Anda</strong>',
+        '<div style="font-size:1.8rem;font-weight:800;color:#92400e;letter-spacing:8px;margin:8px 0;">' + otpCode + '</div>',
+        '<span style="color:#78350f;">Gunakan kode di atas untuk verifikasi akun Anda.</span>',
+      ].join('');
+    } else {
+      // No OTP code — provide alternative guidance
+      banner.innerHTML = [
+        '<strong style="color:#92400e;">Tidak menerima email?</strong>',
+        '<div style="color:#78350f;margin-top:4px;">',
+        '  Periksa folder <strong>Spam</strong> atau <strong>Promosi</strong> di email Anda.',
+        '  Jika masih belum muncul, klik "Kirim Ulang" setelah ', '<strong id="inAppCooldown">',
+        Math.max(0, resendCooldown).toString(), ' detik</strong>.',
+        '</div>',
+      ].join('');
+    }
+    
+    // Insert after the OTP message area
+    var messageArea = document.getElementById('otpMessage');
+    if (messageArea && messageArea.parentNode) {
+      messageArea.parentNode.insertBefore(banner, messageArea.nextSibling);
+    } else {
+      otpCard.appendChild(banner);
+    }
+  }
+
   // ── Resend OTP ──
   resendBtn.addEventListener('click', async function() {
     if (!email) {
@@ -296,8 +347,18 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const data = await WarungioAPI.requestOTP(email, purpose);
       
-      showMsg('Kode OTP telah dikirim ulang ke email Anda.' + 
-        (data.otp_code ? ' (Debug: ' + data.otp_code + ')' : ''), 'success');
+      var otpChannels = data.otp_channels || [];
+      var hasInAppFallback = data.in_app_fallback === true;
+      var otpCode = data.otp_code || '';
+      
+      // ── Show in-app notification banner if email delivery failed ──
+      if (hasInAppFallback || otpChannels.length === 0) {
+        showInAppBanner(otpCode);
+        showMsg('Kode OTP tersedia di notifikasi aplikasi. Silakan cek di bawah ini.', 'warning');
+      } else {
+        showMsg('Kode OTP telah dikirim ulang ke email Anda.' + 
+          (otpCode ? ' (Debug: ' + otpCode + ')' : ''), 'success');
+      }
       
       // Reset BOTH timers: OTP expiry (15 min) + resend cooldown (55s)
       otpExpirySeconds = (parseInt(params.get('expires_in')) || 15) * 60;

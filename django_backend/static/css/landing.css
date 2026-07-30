@@ -908,47 +908,60 @@ ul { list-style: none; }
     align-items: stretch;
 }
 
-.category-panel {
+/* ── Kategori Populer — Text-only Rectangular Tab Cards ── */
+.category-tabs-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 4px 0;
     background: var(--surface);
     border-radius: var(--radius-xl);
     padding: 32px 28px;
     border: 1px solid var(--border-light);
 }
 
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 16px;
-}
-
-.category-item {
-    text-align: center;
-    padding: 16px 8px;
-    border-radius: var(--radius-lg);
-    transition: all 0.3s var(--transition);
-    cursor: pointer;
-}
-
-.category-item:hover {
-    background: var(--primary-bg);
-    transform: translateY(-2px);
-}
-
-.category-icon {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-    padding: 12px;
-    margin: 0 auto 10px;
-    border-radius: var(--radius-full);
-    background: var(--primary-bg);
-}
-
-.category-item p {
-    font-size: 13px;
+.category-tab-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 14px;
     font-weight: 600;
-    color: var(--text);
-    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    min-height: 46px;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.category-tab-card:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--surface);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.category-tab-card:active {
+    transform: scale(0.96);
+}
+
+.category-tab-all {
+    background: var(--primary-bg);
+    border-color: var(--primary-bg2);
+    color: var(--primary);
+}
+
+.category-tab-all:hover {
+    background: var(--primary);
+    color: var(--surface);
 }
 
 /* ── Promo Card ── */
@@ -1668,9 +1681,16 @@ ul { list-style: none; }
 
     .category-promo-row { grid-template-columns: 1fr; }
 
-    .categories-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
+    .category-tabs-wrapper {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .category-tabs-wrapper::-webkit-scrollbar {
+        display: none;
     }
 
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1737,7 +1757,12 @@ ul { list-style: none; }
 
     .categories-header { flex-direction: column; gap: 12px; text-align: center; }
 
-    .categories-grid { grid-template-columns: repeat(3, 1fr); }
+    .category-tabs-wrapper {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 8px;
+    }
 
     .promo-card { min-height: 240px; }
 
@@ -1770,8 +1795,10 @@ ul { list-style: none; }
         grid-template-columns: 1fr;
     }
 
-    .categories-grid {
-        grid-template-columns: repeat(3, 1fr);
+    .category-tabs-wrapper {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
     }
 
     .hero-highlights {
@@ -1874,8 +1901,6 @@ ul { list-style: none; }
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 400px) {
     .hero-text h1 { font-size: 1.6rem; }
-
-    .categories-grid { grid-template-columns: repeat(2, 1fr); }
 
     .phone-image { width: 110px; }
 

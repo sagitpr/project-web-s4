@@ -50,12 +50,19 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
      * - Clears ALL localStorage (auth tokens, user data, search history, prefs, drafts)
      * - Clears ALL sessionStorage
      * - Clears Django auth cookies (csrftoken, sessionid)
+     * - Closes WebSocket connections
      * - Clears service worker caches
+     * - Broadcasts cross-tab logout signal via localStorage
      * - Replaces history to block browser back from restoring protected pages
+     * - Shows toast notification "Berhasil keluar dari akun"
      * - Always redirects to Landing Page (/)
      */
     logout() {
       const refresh = this.getRefreshToken();
+      // ── CRITICAL: Capture user BEFORE clearing storage ──
+      // getUser() reads from localStorage. If called AFTER clear(),
+      // it returns null and we lose the role info needed for redirect.
+      var user = this.getUser();
 
       // 1. Fire server logout (fire-and-forget — clear client regardless of response)
       if (refresh) {
@@ -83,17 +90,32 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         });
       }
 
-      // 2. Clear ALL localStorage (auth tokens, user data, search history, prefs, drafts)
+      // 2. Broadcast cross-tab logout signal BEFORE clearing storage
+      //    Other tabs/pages listen for 'warungio_logout' in localStorage
+      //    to detect logout events across tabs.
+      try {
+        localStorage.setItem('warungio_logout', Date.now().toString());
+      } catch(e) {}
+
+      // 3. Close WebSocket connections gracefully
+      if (window.WarungioWS && typeof window.WarungioWS.disconnect === 'function') {
+        try { window.WarungioWS.disconnect(); } catch(e) {}
+      }
+      if (window.ws && typeof window.ws.close === 'function') {
+        try { window.ws.close(); } catch(e) {}
+      }
+
+      // 4. Clear ALL localStorage (auth tokens, user data, search history, prefs, drafts)
       localStorage.clear();
 
-      // 3. Clear ALL sessionStorage
+      // 5. Clear ALL sessionStorage
       sessionStorage.clear();
 
-      // 4. Clear Django auth cookies
+      // 6. Clear Django auth cookies (expire them immediately)
       document.cookie = 'csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
       document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
 
-      // 5. Clear service worker caches
+      // 7. Clear service worker caches
       if ('caches' in window) {
         caches.keys().then(function(names) {
           names.forEach(function(name) {
@@ -102,19 +124,20 @@ var API_BASE = (window.API_BASE_URL || '/api').replace(/\/+$/, '');
         }).catch(function() {});
       }
 
-      // 6. Determine post-logout redirect based on role
-      //    Admin users go to admin login page; all others go to public landing page.
-      var user = this.getUser();
+      // 8. Determine post-logout redirect based on role
+      //    CRITICAL: uses `user` captured at step 0 (before storage clear)
       var postLogoutUrl = '/';
       if (user && (user.role === 'admin' || user.is_staff || user.is_superuser)) {
         postLogoutUrl = '/admin-panel/login/';
       }
+      // Append logout_success flag so the landing page can show a toast notification
+      postLogoutUrl += (postLogoutUrl.indexOf('?') !== -1 ? '&' : '?') + 'logout_success=1';
 
-      // 7. Replace history to prevent browser back from restoring protected pages
+      // 9. Replace history to prevent browser back from restoring protected pages
       try { window.history.replaceState(null, '', postLogoutUrl); } catch(e) {}
 
-      // 8. Redirect to role-appropriate post-logout page — use replace() to remove
-      //    the stale protected page from the browser's session history entirely.
+      // 10. Redirect — use replace() to remove the stale protected page
+      //     from the browser's session history entirely.
       window.location.replace(postLogoutUrl);
     },
 

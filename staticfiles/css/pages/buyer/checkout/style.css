@@ -1,6 +1,11 @@
 /* Warungio Buyer — Checkout Page */
 /* Premium design system using tokens.css + shared.css */
 
+.checkout-content-wrapper {
+  padding: 24px 0;
+  flex: 1;
+}
+
 .checkout-layout {
   display: grid;
   grid-template-columns: 1fr 360px;

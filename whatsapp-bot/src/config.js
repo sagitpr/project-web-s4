@@ -18,6 +18,12 @@ const config = {
   botVersion: process.env.BOT_VERSION || '1.0.0',
   botDescription: process.env.BOT_DESCRIPTION || 'Asisten Virtual Warungio',
 
+  // Connection
+  // How often (ms) to check socket health. Default: 30 seconds.
+  heartbeatIntervalMs: parseInt(process.env.HEARTBEAT_INTERVAL_MS || '30000', 10),
+  // Maximum number of consecutive reconnect attempts before giving up.
+  maxReconnectAttempts: parseInt(process.env.MAX_RECONNECT_ATTEMPTS || '50', 10),
+
   // Logging
   logLevel: process.env.LOG_LEVEL || 'info',
 };
