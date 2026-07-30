@@ -114,6 +114,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'accounts.middleware.CSRFExemptAPIMiddleware',  # Must be before CsrfViewMiddleware
+    'accounts.middleware.CacheControlMiddleware',    # Prevents back-button dashboard access after logout
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -771,7 +772,7 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@warungio.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'warungio.id@gmail.com')
 
 # =============================================================================
 # IMAP (Inbox Audit — email delivery verification)
@@ -1157,7 +1158,7 @@ FCM_CREDENTIALS = os.environ.get('FCM_CREDENTIALS', '')
 # Generate: npx web-push generate-vapid-keys
 VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
 VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
-VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'admin@warungio.com')
+VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'warungio.id@gmail.com')
 
 # =============================================================================
 # ENGAGEMENT ENGINE CONFIGURATION

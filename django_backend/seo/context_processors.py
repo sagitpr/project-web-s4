@@ -57,8 +57,15 @@ DEFAULT_LOCALE = "id_ID"
 ALTERNATE_LOCALES = {
     "en_US": "/en/",
 }
-CONTACT_EMAIL = "info@warungio.id"
-CONTACT_PHONE = "+6281234567890"
+from config.contact_config import (
+    EMAIL_CONTACT, EMAIL_SUPPORT, PHONE_NUMBER,
+    WHATSAPP_NUMBER, WHATSAPP_DISPLAY, FULL_ADDRESS,
+    ADDRESS_STREET, ADDRESS_CITY, ADDRESS_PROVINCE,
+    ADDRESS_POSTAL_CODE, GOOGLE_MAPS_URL
+)
+
+CONTACT_EMAIL = EMAIL_CONTACT
+CONTACT_PHONE = PHONE_NUMBER
 SOCIAL_LINKS = {
     "facebook": "https://facebook.com/warungio",
     "instagram": "https://instagram.com/warungio",
@@ -746,14 +753,17 @@ def _build_json_ld(schema_type, name, description, url, breadcrumbs):
             "telephone": CONTACT_PHONE,
             "address": {
                 "@type": "PostalAddress",
-                "addressLocality": "Tasikmalaya",
-                "addressRegion": "Jawa Barat",
+                "streetAddress": ADDRESS_STREET,
+                "addressLocality": ADDRESS_CITY,
+                "addressRegion": ADDRESS_PROVINCE,
+                "postalCode": ADDRESS_POSTAL_CODE,
                 "addressCountry": "ID",
             },
             "areaServed": "ID",
             "priceRange": "Rp",
             "currenciesAccepted": "IDR",
             "paymentAccepted": ["Cash", "Credit Card", "QRIS", "GoPay", "OVO", "Bank Transfer"],
+            "openingHours": "Mo-Su 07:00-21:00",
         })
 
     # 6. MobileApplication (only on landing page and download page)
@@ -772,5 +782,100 @@ def _build_json_ld(schema_type, name, description, url, breadcrumbs):
                 "priceCurrency": "IDR",
             },
         })
+
+    # 7. FAQPage (for /bantuan/ page)
+    if url == _build_absolute_url("/bantuan/"):
+        schemas.append({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Apa itu Warungio?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Warungio adalah ekosistem marketplace hyperlocal dan manajemen bisnis UMKM all-in-one. Untuk pembeli: belanja kebutuhan harian dari warung terdekat. Untuk pemilik usaha: POS kasir digital, aplikasi stok barang gratis, manajemen inventaris, laporan keuangan, dan analisis bisnis berbasis AI."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Bagaimana cara belanja di Warungio?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Cukup buka website Warungio, cari produk atau warung terdekat, pilih produk, tambahkan ke keranjang, lalu checkout. Anda bisa memilih pengiriman instan atau ambil sendiri."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Apakah Warungio gratis untuk seller?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Ya! Warungio memberikan aplikasi stok barang gratis, POS kasir digital, manajemen inventaris, dan laporan keuangan untuk mitra seller UMKM."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Metode pembayaran apa saja yang didukung?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Warungio mendukung transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, ShopeePay), QRIS, kartu kredit/debit, dan COD. Semua pembayaran diproses melalui Midtrans dengan keamanan tinggi."
+                    }
+                }
+            ]
+        })
+
+    # 8. Store schema (for /toko/ pages)
+    if schema_type == "Store" or url.startswith(f"{SITE_URL}/toko/"):
+        store_schema = {
+            "@context": "https://schema.org",
+            "@type": "Store",
+            "name": name,
+            "description": description[:200] if description else "",
+            "url": url,
+            "inLanguage": "id-ID",
+            "isPartOf": {
+                "@id": f"{SITE_URL}/#website",
+            },
+        }
+        schemas.append(store_schema)
+
+    # 9. CollectionPage + ItemList (for /kategori/ and /kota/ pages)
+    if schema_type == "CollectionPage":
+        schemas.append({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": name,
+            "description": description[:200] if description else "",
+            "url": url,
+            "numberOfItems": 0,
+            "inLanguage": "id-ID",
+        })
+
+    # 10. Product + Offer schema for /produk/ pages
+    if schema_type == "Product" or url.startswith(f"{SITE_URL}/produk/"):
+        product_schema = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": name,
+            "description": description[:200] if description else "",
+            "url": url,
+            "inLanguage": "id-ID",
+            "offers": {
+                "@type": "Offer",
+                "priceCurrency": "IDR",
+                "price": "0",
+                "priceValidUntil": "2027-12-31",
+                "availability": "https://schema.org/InStock",
+                "url": url,
+            },
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.5",
+                "reviewCount": "0",
+                "bestRating": "5",
+                "worstRating": "1",
+            },
+        }
+        schemas.append(product_schema)
 
     return schemas

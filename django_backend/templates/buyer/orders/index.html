@@ -8,6 +8,14 @@
 {% block page_subtitle %}Cek status dan riwayat pesanan kamu{% endblock %}
 {% block content %}
 
+                <!-- Skeleton Loading -->
+                <div class="buyer-skeleton-overlay" id="ordersSkeleton">
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+                </div>
+
                 <div class="orders-grid-layout">
                     <!-- Left Section -->
                     <div class="main-left-column">
@@ -23,7 +31,7 @@
                         </div>
 
                         <!-- Active Tracking -->
-                        <div class="tracking-progress-card" id="activeTrackingCard" style="display:none;">
+                        <div class="tracking-progress-card hide" id="activeTrackingCard">
                             <div class="tracking-card-header">
                                 <div class="tracking-order-info">
                                     <h3 id="activeOrderNumber">Pesanan #INV/--</h3>
@@ -61,7 +69,7 @@
                             <div id="ordersListContainer" class="orders-list-wrapper">
                                 <!-- Dynamically loaded -->
                             </div>
-                            <div class="view-more-container" id="viewMoreContainer" style="display:none;">
+                            <div class="view-more-container hide" id="viewMoreContainer">
                                 <button class="btn-view-more" id="btnViewMore">
                                     Lihat Semua Pesanan
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -72,7 +80,7 @@
 
                     <!-- Right Section -->
                     <div class="main-right-column">
-                        <div class="order-detail-side-card" id="orderDetailSideCard" style="display:none;">
+                        <div class="order-detail-side-card hide" id="orderDetailSideCard">
                             <div class="side-card-header">
                                 <h3>Detail Pesanan</h3>
                                 <a href="#" class="side-link-btn" id="btnSideDetail">Lihat Detail</a>
@@ -119,7 +127,7 @@
                                     <span class="detail-icon">📍</span>
                                     <div class="detail-text">
                                         <span class="detail-label">Alamat Pengiriman</span>
-                                        <p class="address-text" id="sideAddress">Jl. Rajapolah No. 10, Tasikmalaya, Jawa Barat</p>
+                                        <p class="address-text" id="sideAddress">-</p>
                                         <a href="/buyer/profile/" class="side-link-btn-green">Ubah Alamat</a>
                                     </div>
                                 </div>
@@ -128,9 +136,9 @@
 
                         <!-- Belanja Aman -->
                         <div class="card">
-                            <div class="card-body" style="text-align:center;">
-                                <h3 style="font-size:14px;font-weight:800;margin-bottom:12px;">🛡️ Belanja Aman</h3>
-                                <ul style="list-style:none;text-align:left;font-size:12px;color:var(--color-text-secondary);line-height:1.8;">
+                            <div class="card-body text-center">
+                                <h3 class="fs-14 fw-800 mb-12">🛡️ Belanja Aman</h3>
+                                <ul class="list-none text-left fs-12 text-secondary" style="line-height:1.8;">
                                     <li>✓ Warung terverifikasi</li>
                                     <li>✓ Pembayaran aman</li>
                                     <li>✓ Pengiriman cepat</li>
@@ -139,9 +147,9 @@
                         </div>
 
                         <div class="card bantuan-card">
-                            <div class="card-body" style="text-align:center;">
-                                <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">Butuh Bantuan?</h3>
-                                <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">Hubungi tim support</p>
+                            <div class="card-body text-center">
+                                <h3 class="fs-14 fw-800 mb-8">Butuh Bantuan?</h3>
+                                <p class="fs-12 mb-12 text-secondary">Hubungi tim support</p>
                                 <a href="/bantuan/" class="btn btn-secondary btn-sm">Hubungi Sekarang</a>
                             </div>
                         </div>
@@ -150,7 +158,7 @@
             </div>
 
     <!-- Modal -->
-    <div class="modal-backdrop" id="cancelModal" style="display: none;">
+    <div class="modal-backdrop hide" id="cancelModal">
         <div class="confirm-modal">
             <h3 class="modal-title">Batalkan Pesanan</h3>
             <p class="modal-body">Apakah Anda yakin ingin membatalkan pesanan ini?</p>
@@ -164,5 +172,23 @@
 
 {% block extra_scripts %}
 <script>WarungioAuthUI?.init({ syncBalance: false, syncCart: false });</script>
+<script>
+(function() {
+    'use strict';
+    var skel = document.getElementById('ordersSkeleton');
+    if (skel) skel.classList.add('show');
+    var checkLoaded = setInterval(function() {
+        if (!skel) { clearInterval(checkLoaded); return; }
+        var container = document.getElementById('ordersListContainer');
+        if (container && container.children.length > 0) {
+            skel.classList.remove('show');
+            clearInterval(checkLoaded);
+        }
+    }, 300);
+    setTimeout(function() {
+        if (skel) { skel.classList.remove('show'); clearInterval(checkLoaded); }
+    }, 8000);
+})();
+</script>
 <script src="{% static 'js/pages/buyer/orders/script.js' %}"></script>
 {% endblock %}

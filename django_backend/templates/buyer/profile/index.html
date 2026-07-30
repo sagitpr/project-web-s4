@@ -21,9 +21,9 @@
                                 </div>
                             </div>
                             <p class="photo-info">Format: JPG/PNG. Maks. 2MB</p>
-                            <p style="font-size:13px;font-weight:700;text-align:center;color:var(--color-text-primary)" id="profileDisplayName">Nama Pengguna</p>
-                            <p style="font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-top:4px" id="profileEmail">email@example.com</p>
-                            <input type="file" id="photoInput" accept="image/*" style="display:none">
+                            <p class="fs-13 fw-700 text-center" id="profileDisplayName">Nama Pengguna</p>
+                            <p class="fs-11 text-slate-500 text-center mt-4" id="profileEmail">email@example.com</p>
+                            <input type="file" id="photoInput" accept="image/*" class="hide">
                         </div>
 
                         <!-- Quick Stats -->
@@ -83,7 +83,7 @@
                         </div>
 
                         <!-- Tab: Keamanan -->
-                        <div class="tab-content" id="tabSecurity" style="display:none;">
+                        <div class="tab-content hide" id="tabSecurity">
                             <div class="form-section">
                                 <h2>Ubah Password</h2>
                                 <div class="info-alert">
@@ -125,13 +125,13 @@
                                     <div class="form-group">
                                         <label>Verifikasi Email</label>
                                         <p class="input-disabled" style="padding:12px 16px;border:1.5px solid var(--color-border);border-radius:8px;background:#f9fafb;font-size:13px;">
-                                            <i class="fa-solid fa-check-circle" style="color:var(--color-success,#16a34a);"></i> Terverifikasi
+                                            <i class="fa-solid fa-check-circle" class="text-green-600"></i> Terverifikasi
                                         </p>
                                     </div>
                                     <div class="form-group">
                                         <label>Verifikasi Nomor HP</label>
                                         <p class="input-disabled" style="padding:12px 16px;border:1.5px solid var(--color-border);border-radius:8px;background:#f9fafb;font-size:13px;">
-                                            <i class="fa-solid fa-check-circle" style="color:var(--color-success,#16a34a);"></i> Terverifikasi
+                                            <i class="fa-solid fa-check-circle" class="text-green-600"></i> Terverifikasi
                                         </p>
                                     </div>
                                 </div>
@@ -139,7 +139,7 @@
                         </div>
 
                         <!-- Tab: Pengaturan -->
-                        <div class="tab-content" id="tabSettings" style="display:none;">
+                        <div class="tab-content hide" id="tabSettings">
                             <div class="form-section">
                                 <h2>Preferensi</h2>
                                 <div class="form-grid">

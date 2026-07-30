@@ -638,7 +638,7 @@ class LoginView(views.APIView):
 
 @extend_schema(exclude=True)
 class LogoutView(views.APIView):
-    """User logout - blacklist refresh token."""
+    """User logout - blacklist refresh token, destroy session, clear cookies."""
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request):
@@ -675,10 +675,22 @@ class LogoutView(views.APIView):
                     )
                 except Exception as e:
                     logger.warning('notify_account_activity failed: %s', e)
-            return success_response(message='Logout berhasil.')
+            # ── Build response with Cache-Control to prevent back-button access ──
+            response = success_response(message='Berhasil keluar dari akun')
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+            # Clear session cookie explicitly
+            response.delete_cookie('sessionid', path='/')
+            response.delete_cookie('csrftoken', path='/')
+            return response
         except Exception as e:
             logger.warning('Logout error (non-blocking): %s', str(e))
-            return success_response(message='Logout berhasil.')
+            response = success_response(message='Berhasil keluar dari akun')
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+            return response
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):

@@ -91,7 +91,7 @@
       is_cod: $('checkCod') ? $('checkCod').checked : false,
       is_near: $('checkNear') ? $('checkNear').checked : false,
       is_fresh: $('checkFresh') ? $('checkFresh').checked : false,
-      is_discount: $('checkDiscount') ? $('checkDiscount').checked : false,
+      has_promo: $('checkDiscount') ? $('checkDiscount').checked : false,
       is_verified: $('checkVerified') ? $('checkVerified').checked : false,
     };
   }

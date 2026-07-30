@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div class="conversation-list" id="conversationsContainer">
-                <div style="padding:40px; text-align:center; color:var(--muted); font-size:12px;">Memuat percakapan...</div>
+                <div class="p-16 text-center text-secondary">Memuat percakapan...</div>
             </div>
         </aside>
 
@@ -32,7 +32,7 @@
                 <p>Klik kontak di samping untuk mulai chat.</p>
             </div>
 
-            <div style="display: none; flex-direction: column; height: 100%;" id="chatContentArea">
+            <div class="chat-content-area" id="chatContentArea">
                 <!-- Header -->
                 <div class="chat-header">
                     <div class="chat-header-user">
@@ -221,7 +221,7 @@
             async function selectConversation(id) {
                 currentConversationId = id;
                 document.getElementById('chatEmptyState').style.display = 'none';
-                document.getElementById('chatContentArea').style.display = 'flex';
+                document.getElementById('chatContentArea').classList.add('show-flex');
 
                 const conv = conversationsList.find(c => c.id === id);
                 if (!conv) return;

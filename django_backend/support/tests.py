@@ -104,12 +104,12 @@ class BaseTestDataMixin:
     def create_contacts(self):
         self.contact_wa = ContactInfo.objects.create(
             contact_type='whatsapp', label='Chat WhatsApp',
-            value='+6281234567890', sort_order=1,
+            value='+6287833847895', sort_order=1,
             operating_hours='24 jam, 7 hari',
         )
         self.contact_email = ContactInfo.objects.create(
             contact_type='email', label='Email Support',
-            value='support@warungio.com', sort_order=2,
+            value='warungio.id@gmail.com', sort_order=2,
         )
         self.contact_inactive = ContactInfo.objects.create(
             contact_type='phone', label='Telepon Inactive',

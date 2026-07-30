@@ -8,6 +8,14 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block page_subtitle %}Pantau belanja dan pesanan kamu{% endblock %}
 {% block content %}
+    <!-- Skeleton Loading -->
+    <div class="buyer-skeleton-overlay" id="dashSkeleton">
+      <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+      <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+      <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+      <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+    </div>
+
     <div class="dashboard-shell">
       <!-- Greeting Bar -->
       <div class="greeting-bar">
@@ -65,10 +73,10 @@
       </div>
 
       <!-- Recent Orders -->
-      <div class="section-row"><h2>Pesanan Terbaru</h2><a href="/buyer/orders/">Lihat Semua →</a></div>
-      <div class="orders-grid" id="recentOrdersGrid">
-        <div class="empty-state-dash">
-          <img src="{% static 'images/list.png' %}" alt="No orders" />
+      <div class="section-row"><h2>Pesanan Terbaru</h2><a href="/buyer/orders/">Lihat Semua →</a></div>        <div class="orders-grid" id="recentOrdersGrid">
+        <div class="buyer-empty-state">
+          <div class="empty-icon-wrap"><i class="fa-solid fa-box-open"></i></div>
+          <h3>Belum Ada Pesanan</h3>
           <p>Belum ada pesanan. <a href="/home/" class="dash-link-primary">Mulai belanja →</a></p>
         </div>
       </div>
@@ -83,5 +91,29 @@
     </div>
 {% endblock %}
 {% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    var skel = document.getElementById('dashSkeleton');
+    if (skel) skel.classList.add('show');
+    var checkLoaded = setInterval(function() {
+        if (!skel) { clearInterval(checkLoaded); return; }
+        // Wait until promo loads OR any stat changes from '0'
+        var promoGrid = document.getElementById('promoDashGrid');
+        var hasPromoLoaded = promoGrid && !promoGrid.querySelector('.promo-loading-state');
+        var statPending = document.getElementById('statPending');
+        var statShipped = document.getElementById('statShipped');
+        var anyStatLoaded = (statPending && statPending.textContent !== '0') ||
+                            (statShipped && statShipped.textContent !== '0');
+        if (hasPromoLoaded || anyStatLoaded) {
+            skel.classList.remove('show');
+            clearInterval(checkLoaded);
+        }
+    }, 300);
+    setTimeout(function() {
+        if (skel) { skel.classList.remove('show'); clearInterval(checkLoaded); }
+    }, 8000);
+})();
+</script>
 <script src="{% static 'js/pages/buyer/dashboard/script.js' %}"></script>
 {% endblock %}

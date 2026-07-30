@@ -1,15 +1,18 @@
 {% extends 'store/base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}{{ store.store_name }} - Toko Mitra Warungio{% endblock %}
 
 {% block extra_head %}
+{{ block.super }}
 <style>
-.store-hero { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%); padding: 40px 24px; color: #fff; text-align: center; }
+.store-hero { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%); padding: 40px 24px; color: #fff; text-align: center; position: relative; overflow: hidden; }
+.store-hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; background: rgba(255,255,255,0.04); border-radius: 50%; }
+.store-hero::after { content: ''; position: absolute; bottom: -30%; left: -10%; width: 300px; height: 300px; background: rgba(255,255,255,0.03); border-radius: 50%; }
 .store-hero-banner { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px; margin-top: 16px; }
-.store-hero h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; }
-.store-hero p { font-size: 14px; opacity: 0.85; margin: 0 0 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
-.store-hero-stats { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+.store-hero h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; position: relative; z-index: 1; }
+.store-hero p { font-size: 14px; opacity: 0.85; margin: 0 0 16px; max-width: 600px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+.store-hero-stats { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; position: relative; z-index: 1; }
 .store-hero-stat { text-align: center; }
 .store-hero-stat strong { display: block; font-size: 20px; font-weight: 800; }
 .store-hero-stat span { font-size: 12px; opacity: 0.75; }
@@ -28,23 +31,42 @@
 .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
 @media (min-width: 640px) { .prod-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
 @media (min-width: 1024px) { .prod-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
-.prod-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; transition: all 0.25s; }
+.prod-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; transition: all 0.25s; position: relative; }
 .prod-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.07); border-color: #bbf7d0; }
 .prod-card-img { aspect-ratio: 1/1; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .prod-card-img img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
 .prod-card:hover .prod-card-img img { transform: scale(1.05); }
+.prod-card-discount-badge { position: absolute; top: 8px; left: 8px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; z-index: 2; }
+.prod-card-flash-badge { position: absolute; top: 8px; right: 8px; background: #f59e0b; color: #fff; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 6px; z-index: 2; animation: pulse-flash 2s infinite; }
+@keyframes pulse-flash { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
 .prod-card-body { padding: 12px 14px 14px; }
 .prod-card-name { font-size: 13px; font-weight: 600; color: #0f172a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; line-height: 1.4; }
 .prod-card-price { font-size: 15px; font-weight: 800; color: #059669; }
+.prod-card-old-price { font-size: 11px; color: #94a3b8; text-decoration: line-through; margin-left: 4px; }
+.prod-card-savings { font-size: 10px; color: #dc2626; font-weight: 700; display: block; }
 .prod-card-meta { display: flex; gap: 8px; font-size: 11px; color: #94a3b8; margin-top: 4px; }
 .prod-card-actions { display: flex; gap: 6px; margin-top: 10px; }
 .prod-card-actions .btn-beli { flex: 1; padding: 8px; background: #059669; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; }
 .prod-card-actions .btn-beli:hover { background: #047857; }
 .prod-card-actions .btn-cart-add { width: 36px; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; }
 .prod-card-actions .btn-cart-add:hover { background: #f0fdf4; color: #059669; border-color: #bbf7d0; }
-.promo-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 14px; padding: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.promo-banner-text h3 { margin: 0; font-size: 16px; font-weight: 700; color: #92400e; }
-.promo-banner-text p { margin: 4px 0 0; font-size: 13px; color: #a16207; }
+.promo-section { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 20px; padding: 24px; margin: 0 16px; position: relative; overflow: hidden; }
+.promo-section::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(251,191,36,0.15); border-radius: 50%; }
+.promo-section-title { font-size: 20px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 10px; }
+.promo-countdown { display: inline-flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.1); color: #dc2626; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+.promo-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #fde68a; transition: all 0.25s; position: relative; }
+.promo-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(251,191,36,0.15); }
+.promo-card-img { height: 120px; background: #fef9c3; display: flex; align-items: center; justify-content: center; padding: 12px; }
+.promo-card-img img { width: 100%; height: 100%; object-fit: contain; }
+.promo-card-body { padding: 10px 12px 12px; }
+.promo-card-name { font-size: 12px; font-weight: 700; color: #0f172a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
+.promo-card-price-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.promo-card-price { font-size: 14px; font-weight: 800; color: #dc2626; }
+.promo-card-old-price { font-size: 11px; color: #94a3b8; text-decoration: line-through; }
+.promo-card-badge { position: absolute; top: 8px; left: 8px; background: #dc2626; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
+.promo-card-days { font-size: 10px; color: #f59e0b; font-weight: 700; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.promo-card-actions { display: flex; gap: 4px; margin-top: 6px; }
 .store-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .store-info-item { display: flex; align-items: center; gap: 12px; }
 .store-info-item i { width: 20px; color: #059669; font-size: 16px; }
@@ -58,6 +80,7 @@
 .toast.show { opacity: 1; }
 .toast.success { background: #059669; }
 .toast.error { background: #dc2626; }
+@media (max-width: 640px) { .promo-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 {% endblock %}
 
@@ -66,9 +89,8 @@
 <section class="store-hero">
     {% if store.store_banner %}
     <img src="{{ store.store_banner.url }}" alt="{{ store.store_name }}" class="store-hero-banner" loading="eager">
-    {% else %}
-    <h1>{{ store.store_name }}</h1>
     {% endif %}
+    <h1>{{ store.store_name }}</h1>
     <p>{{ store.description|default:'Toko mitra Warungio — Belanja kebutuhan harian langsung dari toko terpercaya.' }}</p>
     <div class="store-hero-stats">
         <div class="store-hero-stat"><strong>{{ product_count }}</strong><span>Produk</span></div>
@@ -79,7 +101,7 @@
     </div>
 </section>
 
-<!-- Search -->
+<!-- Search Bar -->
 <div class="store-search-wrap">
     <div class="store-search-box">
         <input type="text" id="storeSearchInput" placeholder="Cari produk di {{ store.store_name }}..." onkeydown="if(event.key==='Enter') searchStoreProducts()">
@@ -87,44 +109,76 @@
     </div>
 </div>
 
-<div itemscope itemtype="http://schema.org/LocalBusiness">
-<meta itemprop="name" content="{{ store.store_name }}">
-<meta itemprop="address" content="{{ store.address|default:'' }}">
-{% if store.phone %}<meta itemprop="telephone" content="{{ store.phone }}">{% endif %}
-</div>
+<!-- ════════════════════════════════════════════════════════
+     PROMO HARI INI — Discounted Products Section
+     ════════════════════════════════════════════════════════ -->
+{% if promo_products %}
+<section class="store-section" style="padding-bottom:0;">
+    <div class="promo-section">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div>
+                <h2 class="promo-section-title"><i class="fa-solid fa-fire"></i> Promo Hari Ini</h2>
+                {% if promo_products.0.days_left <= 3 %}
+                <span class="promo-countdown"><i class="fa-regular fa-clock"></i> Berakhir dalam {{ promo_products.0.days_left }} hari</span>
+                {% endif %}
+            </div>
+            <a href="/toko/{{ store.slug }}/products/?promo=1" class="inline-flex items-center gap-1 px-4 py-2 bg-amber-500 text-white font-bold text-xs rounded-lg hover:bg-amber-600 transition-all">Lihat Semua Promo <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        
+        <div class="promo-grid">
+            {% for item in promo_products %}
+            {% with p=item.product %}
+            <div class="promo-card">
+                <span class="promo-card-badge">-{{ item.discount_percent }}%</span>
+                <a href="/produk/{{ p.slug }}/" class="promo-card-img">
+                    {% if p.product_photo %}<img src="{{ p.product_photo.url }}" alt="{{ p.product_name }}" loading="lazy">{% else %}<i class="fa-solid fa-box" style="font-size:28px;color:#fbbf24;"></i>{% endif %}
+                </a>
+                <div class="promo-card-body">
+                    <a href="/produk/{{ p.slug }}/" class="promo-card-name">{{ p.product_name }}</a>
+                    <div class="promo-card-price-row">
+                        <strong class="promo-card-price">Rp {{ item.discount_price|floatformat:0|intcomma }}</strong>
+                        <span class="promo-card-old-price">Rp {{ item.original_price|floatformat:0|intcomma }}</span>
+                    </div>
+                    <span class="prod-card-savings">Hemat Rp {{ item.savings|floatformat:0|intcomma }}</span>
+                    <div class="promo-card-days">
+                        <i class="fa-regular fa-clock"></i> {{ item.days_left }} hari lagi
+                    </div>
+                    <div class="promo-card-actions">
+                        <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli" style="flex:1;font-size:11px;"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
+                        <button class="btn-cart-add" onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ item.discount_price }}, '{{ p.product_photo.url|default:''|escapejs }}')" title="Tambah ke Keranjang"><i class="fa-solid fa-cart-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
-<!-- Categories -->
+<!-- ════════════════════════════════════════════════════════
+     CATEGORIES
+     ════════════════════════════════════════════════════════ -->
 {% if categories %}
 <section class="store-section">
     <h2 class="store-section-title"><i class="fa-solid fa-tags"></i> Kategori Produk</h2>
     <p class="store-section-subtitle">Telusuri produk berdasarkan kategori</p>
     <div class="category-chips">
         {% for cat in categories %}
-        <a href="#cat-{{ cat.id }}" class="category-chip" onclick="filterByCategory('{{ cat.category_name|escapejs }}')">{{ cat.category_name }}</a>
+        <a href="/kategori/{{ cat.category_name|slugify }}/" class="category-chip">{{ cat.category_name }}</a>
         {% endfor %}
     </div>
 </section>
 {% endif %}
 
-<!-- Promo Banner -->
-{% if active_promos_count > 0 %}
-<section class="store-section" style="padding-bottom:0;">
-    <div class="promo-banner">
-        <div class="promo-banner-text">
-            <h3><i class="fa-solid fa-fire"></i> Ada {{ active_promos_count }} Promo Aktif!</h3>
-            <p>Dapatkan penawaran spesial dan diskon menarik di {{ store.store_name }}.</p>
-        </div>
-        <a href="/toko/{{ store.slug }}/products/?promo=1" class="category-chip" style="background:#059669;color:#fff;border:none;">Lihat Promo</a>
-    </div>
-</section>
-{% endif %}
-
-<!-- Featured Products -->
+<!-- ════════════════════════════════════════════════════════
+     PRODUK UNGGULAN
+     ════════════════════════════════════════════════════════ -->
+{% if featured_products %}
 <section class="store-section">
     <h2 class="store-section-title"><i class="fa-solid fa-star"></i> Produk Unggulan</h2>
-    <p class="store-section-subtitle">Produk terlaris dan paling diminati</p>
-    {% if featured_products %}
-    <div class="prod-grid" id="featuredGrid">
+    <p class="store-section-subtitle">Produk pilihan dari {{ store.store_name }}</p>
+    <div class="prod-grid">
         {% for p in featured_products %}
         <div class="prod-card">
             <a href="/produk/{{ p.slug }}/" class="prod-card-img">
@@ -132,9 +186,9 @@
             </a>
             <div class="prod-card-body">
                 <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
-                <div class="prod-card-price">Rp {{ p.price|floatformat:0 }}</div>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0|intcomma }}</div>
                 <div class="prod-card-meta">
-                    <span>{{ p.sold_count }} terjual</span>
+                    <span>Terjual {{ p.sold_count }}+</span>
                     {% if p.rating_avg > 0 %}<span>&#9733; {{ p.rating_avg|floatformat:1 }}</span>{% endif %}
                 </div>
                 <div class="prod-card-actions">
@@ -145,12 +199,73 @@
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>Belum Ada Produk Unggulan</h3><p>Produk akan segera ditambahkan.</p></div>
-    {% endif %}
 </section>
+{% endif %}
 
-<!-- All Products -->
+<!-- ════════════════════════════════════════════════════════
+     PRODUK TERLARIS
+     ════════════════════════════════════════════════════════ -->
+{% if best_selling_products %}
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-chart-simple"></i> Produk Terlaris</h2>
+    <p class="store-section-subtitle">Produk paling populer di {{ store.store_name }}</p>
+    <div class="prod-grid">
+        {% for p in best_selling_products %}
+        <div class="prod-card">
+            <a href="/produk/{{ p.slug }}/" class="prod-card-img">
+                {% if p.product_photo %}<img src="{{ p.product_photo.url }}" alt="{{ p.product_name }}" loading="lazy">{% else %}<i class="fa-solid fa-box" style="font-size:32px;color:#cbd5e1;"></i>{% endif %}
+            </a>
+            <div class="prod-card-body">
+                <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0|intcomma }}</div>
+                <div class="prod-card-meta">
+                    <span>Terjual {{ p.sold_count }}+</span>
+                    {% if p.rating_avg > 0 %}<span>&#9733; {{ p.rating_avg|floatformat:1 }}</span>{% endif %}
+                </div>
+                <div class="prod-card-actions">
+                    <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
+                    <button class="btn-cart-add" onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ p.price }}, '{{ p.product_photo.url|default:''|escapejs }}')" title="Tambah ke Keranjang"><i class="fa-solid fa-cart-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════
+     PRODUK TERBARU
+     ════════════════════════════════════════════════════════ -->
+{% if new_products %}
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-clock"></i> Produk Terbaru</h2>
+    <p class="store-section-subtitle">Produk terbaru yang tersedia di {{ store.store_name }}</p>
+    <div class="prod-grid">
+        {% for p in new_products %}
+        <div class="prod-card">
+            <a href="/produk/{{ p.slug }}/" class="prod-card-img">
+                {% if p.product_photo %}<img src="{{ p.product_photo.url }}" alt="{{ p.product_name }}" loading="lazy">{% else %}<i class="fa-solid fa-box" style="font-size:32px;color:#cbd5e1;"></i>{% endif %}
+            </a>
+            <div class="prod-card-body">
+                <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0|intcomma }}</div>
+                <div class="prod-card-meta">
+                    {% if p.available_stock > 0 %}<span>Stok: {{ p.available_stock }}</span>{% else %}<span style="color:#dc2626;">Habis</span>{% endif %}
+                </div>
+                <div class="prod-card-actions">
+                    <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
+                    <button class="btn-cart-add" onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ p.price }}, '{{ p.product_photo.url|default:''|escapejs }}')" title="Tambah ke Keranjang"><i class="fa-solid fa-cart-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════
+     SEMUA PRODUK
+     ════════════════════════════════════════════════════════ -->
 <section class="store-section" id="allProducts">
     <h2 class="store-section-title"><i class="fa-solid fa-box"></i> Semua Produk</h2>
     <p class="store-section-subtitle">Temukan kebutuhan harian Anda</p>
@@ -163,9 +278,10 @@
             </a>
             <div class="prod-card-body">
                 <a href="/produk/{{ p.slug }}/" class="prod-card-name">{{ p.product_name }}</a>
-                <div class="prod-card-price">Rp {{ p.price|floatformat:0 }}</div>
+                <div class="prod-card-price">Rp {{ p.price|floatformat:0|intcomma }}</div>
                 <div class="prod-card-meta">
-                    {% if p.available_stock > 0 %}<span>Stok: {{ p.available_stock }}</span>{% else %}<span style="color:#dc2626;">Habis</span>{% endif %}
+                    <span>Terjual {{ p.sold_count }}+</span>
+                    {% if p.rating_avg > 0 %}<span>&#9733; {{ p.rating_avg|floatformat:1 }}</span>{% endif %}
                 </div>
                 <div class="prod-card-actions">
                     <a href="/store/{{ store.slug }}/checkout/?product_id={{ p.id }}" class="btn-beli"><i class="fa-solid fa-bag-shopping"></i> Beli</a>
@@ -180,22 +296,146 @@
     {% endif %}
 </section>
 
-<!-- Store Info -->
+<!-- ════════════════════════════════════════════════════════
+     ULASAN PELANGGAN
+     ════════════════════════════════════════════════════════ -->
+{% if store_reviews %}
+<section class="store-section">
+    <h2 class="store-section-title"><i class="fa-solid fa-star"></i> Ulasan Pelanggan</h2>
+    <p class="store-section-subtitle">{{ store_review_count }} ulasan untuk {{ store.store_name }}</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+        {% for review in store_reviews %}
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:700;font-size:14px;overflow:hidden;flex-shrink:0;">
+                    {% if review.user.profile_photo %}<img src="{{ review.user.profile_photo.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ review.user.full_name|first|upper }}{% endif %}
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <strong style="font-size:13px;color:#0f172a;display:block;">{{ review.user.full_name }}</strong>
+                    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#f59e0b;">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= review.rating %}<i class="fa-solid fa-star"></i>{% else %}<i class="fa-regular fa-star"></i>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <small style="font-size:10px;color:#94a3b8;">{{ review.created_at|date:'d M Y' }}</small>
+            </div>
+            <p style="font-size:12px;color:#475569;line-height:1.5;margin:0 0 6px;">{{ review.comment|truncatechars:200 }}</p>
+            {% if review.product %}
+            <small style="font-size:10px;color:#94a3b8;">Produk: <a href="/produk/{{ review.product.slug }}/" style="color:#059669;">{{ review.product.product_name|truncatechars:50 }}</a></small>
+            {% endif %}
+            {% if review.seller_reply %}
+            <div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border-radius:8px;border-left:3px solid #059669;">
+                <small style="font-weight:700;color:#059669;display:block;margin-bottom:2px;">Balasan {{ store.store_name }}</small>
+                <p style="font-size:11px;color:#475569;margin:0;">{{ review.seller_reply }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════
+     INFORMASI TOKO
+     ════════════════════════════════════════════════════════ -->
 <section class="store-section">
     <h2 class="store-section-title"><i class="fa-solid fa-circle-info"></i> Informasi Toko</h2>
     <p class="store-section-subtitle">Detail lengkap {{ store.store_name }}</p>
     <div class="store-info-card">
         {% if store.address %}<div class="store-info-item"><i class="fa-solid fa-location-dot"></i><div><span>{{ store.address }}</span></div></div>{% endif %}
-        {% if store.city %}<div class="store-info-item"><i class="fa-solid fa-city"></i><div><span>{{ store.city }}{% if store.district %}, {{ store.district }}{% endif %}</span></div></div>{% endif %}                {% if store.user.phone %}<div class="store-info-item"><i class="fa-solid fa-phone"></i><div><span>{{ store.user.phone }}</span><small><a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank" style="color:#059669;">Hubungi via WhatsApp</a></small></div></div>{% endif %}
+        {% if store.city %}<div class="store-info-item"><i class="fa-solid fa-city"></i><div><span>{{ store.city }}{% if store.district %}, {{ store.district }}{% endif %}</span></div></div>{% endif %}
+        {% if store.user.phone %}<div class="store-info-item"><i class="fa-solid fa-phone"></i><div><span>{{ store.user.phone }}</span><small><a href="https://wa.me/{{ store.user.phone|cut:'+'|cut:' '|cut:'-' }}" target="_blank" style="color:#059669;">Hubungi via WhatsApp</a></small></div></div>{% endif %}
         {% if store.open_time %}<div class="store-info-item"><i class="fa-solid fa-clock"></i><div><span>{{ store.open_time|time:'H:i' }} - {{ store.close_time|time:'H:i' }}</span><small>Jam Operasional</small></div></div>{% endif %}
         <div class="store-info-item"><i class="fa-solid fa-store"></i><div><span>{% if store.is_open %}Toko Buka{% else %}Toko Tutup{% endif %}</span><small>Status</small></div></div>
+        <div class="store-info-item"><i class="fa-solid fa-calendar"></i><div><span>Sejak {{ store.created_at|date:'Y' }}</span><small>Bergabung</small></div></div>
+        {% if store.total_sales and store.total_sales > 0 %}<div class="store-info-item"><i class="fa-solid fa-chart-line"></i><div><span>Rp {{ store.total_sales|floatformat:0|intcomma }}</span><small>Total Penjualan</small></div></div>{% endif %}
     </div>
 </section>
+
+<!-- Store ID (hidden) for WebSocket promo listener -->
+<input type="hidden" id="storeIdData" value="{{ store.id }}">
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ── Promo Realtime Updates (WebSocket + Polling Fallback) ──
+(function() {
+  'use strict';
+  
+  var storeId = (document.getElementById('storeIdData') || {}).value;
+  var lastCheck = Date.now();
+  var checkInterval = null;
+  
+  function showPromoToast(eventName, data) {
+    var toastMsg = '';
+    if (eventName === 'created') {
+      toastMsg = data.promo_name ? 'Promo baru: ' + data.promo_name + '! Cek sekarang.' : 'Promo baru tersedia!';
+    } else if (eventName === 'updated' || eventName === 'status_changed') {
+      toastMsg = 'Promo ' + (data.promo_name || '') + ' telah diperbarui.';
+    } else if (eventName === 'deleted') {
+      toastMsg = 'Promo ' + (data.promo_name || '') + ' telah berakhir.';
+    }
+    if (toastMsg) {
+      showToast(toastMsg, eventName === 'deleted' ? 'info' : 'success');
+    }
+  }
+  
+  // 1. WebSocket listener (for authenticated users via notification consumer)
+  function promoEventHandler(eventName) {
+    return function(data) {
+      if (!storeId || (data.store_id && String(data.store_id) !== storeId)) return;
+      showPromoToast(eventName, data);
+      lastCheck = Date.now();
+    };
+  }
+  
+  // Try to subscribe via WarungioWS
+  setTimeout(function() {
+    if (window.WarungioWS && typeof window.WarungioWS.on === 'function') {
+      var unsub1 = WarungioWS.on('promo_created', promoEventHandler('created'));
+      var unsub2 = WarungioWS.on('promo_updated', promoEventHandler('updated'));
+      var unsub3 = WarungioWS.on('promo_deleted', promoEventHandler('deleted'));
+      var unsub4 = WarungioWS.on('promo_status_changed', promoEventHandler('status_changed'));
+      window.addEventListener('beforeunload', function() {
+        if (typeof unsub1 === 'function') unsub1();
+        if (typeof unsub2 === 'function') unsub2();
+        if (typeof unsub3 === 'function') unsub3();
+        if (typeof unsub4 === 'function') unsub4();
+      });
+    }
+  }, 1000);
+  
+  // 2. Polling fallback (every 30s — works for all users including guests)
+  if (storeId) {
+    checkInterval = setInterval(function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/products/promos/?store=' + storeId + '&_t=' + Date.now(), true);
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          try {
+            var resp = JSON.parse(xhr.responseText);
+            var activeCount = (resp.results || resp || []).length;
+            var promoSection = document.querySelector('.promo-section');
+            // If promo count changed from initial state → notify
+            if (activeCount > 0 && !promoSection) {
+              showToast('Promo baru tersedia! Segarkan halaman untuk melihat.', 'success');
+            }
+          } catch(e) {}
+        }
+      };
+      xhr.send();
+    }, 30000);
+    
+    // Clean up interval on page unload
+    window.addEventListener('beforeunload', function() {
+      if (checkInterval) clearInterval(checkInterval);
+    });
+  }
+})();
+
 function searchStoreProducts() {
     var q = document.getElementById('storeSearchInput').value.trim().toLowerCase();
     var cards = document.querySelectorAll('#productGrid .prod-card');
@@ -219,18 +459,6 @@ function searchStoreProducts() {
         var es = document.querySelector('.empty-search');
         if (es) es.remove();
     }
-}
-
-function filterByCategory(cat) {
-    document.getElementById('storeSearchInput').value = '';
-    var q = cat.toLowerCase();
-    var cards = document.querySelectorAll('#productGrid .prod-card');
-    cards.forEach(function(c) {
-        var catAttr = (c.dataset.category || '').toLowerCase();
-        c.style.display = catAttr.includes(q) ? '' : 'none';
-    });
-    var es = document.querySelector('.empty-search');
-    if (es) es.remove();
 }
 
 function showToast(msg, type) {

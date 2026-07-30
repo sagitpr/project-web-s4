@@ -8,6 +8,14 @@
 {% block page_subtitle %}Pemberitahuan terbaru seputar pesanan, promo, dan aktivitas akun kamu{% endblock %}
 {% block content %}
 
+                <!-- Skeleton Loading -->
+                <div class="buyer-skeleton-overlay" id="notifSkeleton">
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+                    <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div></div>
+                </div>
+
                 <!-- Filter Tabs + Mark All Read -->
                 <div class="notif-header-row">
                     <div class="notif-tabs" id="notifTabs">
@@ -35,5 +43,23 @@
                 </div>
 {% block extra_scripts %}
 <script>WarungioAuthUI?.init({ syncBalance: false, syncCart: false });</script>
+<script>
+(function() {
+    'use strict';
+    var skel = document.getElementById('notifSkeleton');
+    if (skel) skel.classList.add('show');
+    var checkLoaded = setInterval(function() {
+        if (!skel) { clearInterval(checkLoaded); return; }
+        var notifList = document.getElementById('notificationList');
+        if (notifList && notifList.children.length > 1) {
+            skel.classList.remove('show');
+            clearInterval(checkLoaded);
+        }
+    }, 300);
+    setTimeout(function() {
+        if (skel) { skel.classList.remove('show'); clearInterval(checkLoaded); }
+    }, 8000);
+})();
+</script>
 <script src="{% static 'js/pages/buyer/notifications/script.js' %}"></script>
 {% endblock %}

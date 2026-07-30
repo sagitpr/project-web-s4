@@ -107,9 +107,9 @@ class AboutScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.mail_outline),
                   title: const Text('Hubungi Kami'),
-                  subtitle: const Text('support@warungio.com'),
+                  subtitle: const Text('warungio.id@gmail.com'),
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                  onTap: () => _openUrl('mailto:support@warungio.com'),
+                  onTap: () => _openUrl('mailto:warungio.id@gmail.com'),
                 ),
               ],
             ),

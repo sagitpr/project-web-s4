@@ -569,7 +569,19 @@
 
     <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+    <script src="{% static 'js/utils/auth-guard.js' %}"></script>
     <script>
+    if (window.WarungioAuthGuard) {
+      WarungioAuthGuard.init({ protected: true, redirectUrl: '/' });
+    }
+    // ── Logout Success Toast ──
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('logout_success') === '1') {
+        try { window.history.replaceState(null, '', window.location.pathname); } catch(e) {}
+      }
+    })();
+
     function toggleSidebar() {
         document.getElementById('adminSidebar').classList.toggle('open');
         document.getElementById('sidebarOverlay').classList.toggle('open');

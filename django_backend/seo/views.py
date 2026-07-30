@@ -45,6 +45,8 @@ def robots_txt(request):
         "Disallow: /*/delete/",
         "Disallow: /assets/pwa/",
         "",
+        "Crawl-delay: 10",
+        "",
         "Allow: /$",
         "Allow: /info/",
         "Allow: /bantuan/",
@@ -55,6 +57,8 @@ def robots_txt(request):
         "Allow: /toko/",
         "Allow: /produk/",
         "Allow: /promo/",
+        "Allow: /store/",
+        "Allow: /order/",
         "",
         "User-agent: Googlebot",
         "Allow: /",
@@ -151,24 +155,24 @@ def sitemap_xml(request):
     except Exception:
         pass
 
-    # ── Dynamically add active stores ──
+    # ── Dynamically add active stores (up to 1000) ──
     try:
         from stores.models import Store
-        stores = Store.objects.filter(status='active').order_by('-total_sales')[:200]
+        stores = Store.objects.filter(status='active').order_by('-total_sales')[:1000]
         for store in stores:
             pages.append({
                 "loc": f"/toko/{store.slug}/",
-                "priority": "0.7",
+                "priority": "0.8",
                 "changefreq": "daily",
-                "lastmod": now,
+                "lastmod": store.updated_at.strftime("%Y-%m-%d") if store.updated_at else now,
             })
     except Exception:
         pass
 
-    # ── Dynamically add cities with active stores ──
+    # ── Dynamically add cities with active stores (up to 200) ──
     try:
         from stores.models import Store
-        cities = Store.objects.filter(status='active').values_list('city', flat=True).distinct()[:50]
+        cities = Store.objects.filter(status='active').exclude(city__isnull=True).exclude(city__exact='').values_list('city', flat=True).distinct()[:200]
         for city in cities:
             if city:
                 city_slug = slugify(city)
@@ -181,18 +185,65 @@ def sitemap_xml(request):
     except Exception:
         pass
 
-    # ── Dynamically add active products (top 500) ──
+    # ── Dynamically add districts with active stores ──
+    try:
+        from stores.models import Store
+        districts = Store.objects.filter(status='active').exclude(district__isnull=True).exclude(district__exact='').values_list('district', flat=True).distinct()[:500]
+        for dist in districts:
+            if dist:
+                dist_slug = slugify(dist)
+                pages.append({
+                    "loc": f"/kota/{dist_slug}/",
+                    "priority": "0.6",
+                    "changefreq": "weekly",
+                    "lastmod": now,
+                })
+    except Exception:
+        pass
+
+    # ── Dynamically add provinces with active stores ──
+    try:
+        from stores.models import Store
+        provinces = Store.objects.filter(status='active').exclude(province__isnull=True).exclude(province__exact='').values_list('province', flat=True).distinct()[:34]
+        for prov in provinces:
+            if prov:
+                prov_slug = slugify(prov)
+                pages.append({
+                    "loc": f"/kota/{prov_slug}/",
+                    "priority": "0.6",
+                    "changefreq": "monthly",
+                    "lastmod": now,
+                })
+    except Exception:
+        pass
+
+    # ── Dynamically add active products (top 2000) ──
     try:
         from products.models import Product
-        products = Product.objects.filter(is_active=True).order_by('-sold_count')[:500]
+        products = Product.objects.filter(is_active=True).order_by('-sold_count').select_related('store')[:2000]
         for product in products:
             if product.slug:
                 pages.append({
                     "loc": f"/produk/{product.slug}/",
-                    "priority": "0.6",
+                    "priority": "0.7",
                     "changefreq": "weekly",
                     "lastmod": product.updated_at.strftime("%Y-%m-%d") if hasattr(product, 'updated_at') and product.updated_at else now,
                 })
+    except Exception:
+        pass
+
+    # ── Dynamically add store product pages ──
+    try:
+        from stores.models import Store
+        from products.models import Product
+        store_list = Store.objects.filter(status='active').order_by('-total_sales')[:200]
+        for store in store_list:
+            pages.append({
+                "loc": f"/toko/{store.slug}/products/",
+                "priority": "0.6",
+                "changefreq": "daily",
+                "lastmod": now,
+            })
     except Exception:
         pass
 

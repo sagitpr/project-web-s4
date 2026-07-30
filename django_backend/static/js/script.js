@@ -138,6 +138,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ── Sync existing filter-row buttons with category cards ──
+  function syncFilterBtnToCategoryCards() {
+    const filterBtns = document.querySelectorAll('.filter-row .filter-btn');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const catId = btn.dataset.category;
+        const catCards = document.querySelectorAll('.category-tab-card');
+        catCards.forEach(c => {
+          c.classList.remove('active');
+          if (c.dataset.catId === catId || (catId === 'all' && c.dataset.catId === 'all')) {
+            c.classList.add('active');
+          }
+        });
+      });
+    });
+  }
+
   // ── Best Deals & Product Timer Countdowns ──
   function startCountdown() {
     if (!timerVal) return;
@@ -171,6 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     codOnly: false,
     nearOnly: false,
     ratingOnly: false,
+    promoOnly: false,
     sort: 'distance',
     page: 1,
     pageSize: 8,
@@ -246,39 +264,50 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       list.forEach(s => {
-        const banner = s.banner || `/static/images/promosi-toko.png`;
-        const category = s.category_name || (s.id === 1 ? 'Toko Sembako' : 'Warung Segar');
-        const city = s.city || (s.id === 1 ? 'Bandung' : 'Jakarta Pusat');
-        const rating = Number(s.rating_avg != null ? s.rating_avg : 4.5).toFixed(1);
+        const bannerUrl = s.store_banner_url || '/static/images/promosi-toko.png';
+        const logoUrl = s.store_logo_url || '';
+        const categoryName = s.category || 'Toko';
+        const cityName = s.city || 'Lokal';
+        const rating = Number(s.rating_avg != null ? s.rating_avg : 0).toFixed(1);
         const deliveryTime = s.is_open ? '10-20 min' : 'Tutup';
         const favClass = s.is_favorite ? 'is-fav' : '';
+        const openClass = s.is_open ? 'open' : 'closed';
+        const openText = s.is_open ? 'Buka' : 'Tutup';
 
         const card = document.createElement('div');
-        card.className = 'warung-card';
+        card.className = 'premium-warung-card';
         card.innerHTML = `
-          <div class="relative h-[120px] rounded-xl overflow-hidden mb-3 image-container" style="position: relative;">
-            <img src="${banner}" alt="${s.store_name} Banner" class="w-full h-full object-cover" onerror="this.src='/static/images/promosi-toko.png'" style="width: 100%; height: 100%; object-fit: cover;">
-            <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-red-500 transition-all btn-favorite-store ${favClass}" data-id="${s.id}" style="position: absolute; top: 8px; right: 8px; border: none; z-index: 10;">
+          <div class="pwc-banner">
+            <img src="${bannerUrl}" alt="${s.store_name}" onerror="this.src='/static/images/promosi-toko.png'">
+            <span class="pwc-status ${openClass}">
+              <span style="width:5px;height:5px;border-radius:50%;background:${s.is_open ? '#fff' : '#fff'};display:inline-block;${s.is_open ? 'animation:pulse-dot 1.5s infinite' : ''}"></span>
+              ${openText}
+            </span>
+            <button class="pwc-fav ${favClass}" data-id="${s.id}">
               <i class="fa-${favClass ? 'solid' : 'regular'} fa-heart"></i>
             </button>
           </div>
-          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px;">
-            <span class="inline-block self-start px-2 py-0.5 bg-slate-50 text-[10px] font-extrabold text-[#16A34A] rounded" style="align-self: flex-start; background: #DCFCE7; color: #16A34A; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">${category}</span>
-            <h4 class="font-extrabold text-slate-800 text-sm truncate" style="font-weight: 800; color: #0F172A; margin: 0; font-size: 14px;">${s.store_name}</h4>
-            <span class="text-xs text-slate-400 font-medium" style="font-size: 12px; color: #64748B; font-weight: 500;">${city}</span>
-            <div class="flex items-center gap-3 text-[11px] text-slate-500 mt-1" style="display: flex; align-items: center; gap: 12px; font-size: 11px; color: #64748B; font-weight: 600;">
-              <span class="flex items-center gap-1 text-amber-500"><i class="fa-solid fa-star"></i> ${rating}</span>
-              <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${deliveryTime}</span>
-              <span class="flex items-center gap-1 text-primary"><i class="fa-solid fa-truck-fast"></i> Gratis Ongkir</span>
+          <div class="pwc-body">
+            <div class="pwc-name-row">
+              <span class="pwc-name">${s.store_name} <i class="fa-solid fa-circle-check pwc-verified"></i></span>
             </div>
+            <span class="pwc-category">${categoryName}</span>
+            <span style="font-size:10px;color:#64748B;"><i class="fa-solid fa-location-dot" style="margin-right:2px;"></i>${cityName}</span>
+            <div class="pwc-meta">
+              <span><i class="fa-solid fa-star pwc-star"></i> ${rating}</span>
+              <span>|</span>
+              <span><i class="fa-regular fa-clock"></i> ${deliveryTime}</span>
+              ${s.has_active_promo ? `<span class="pwc-promo-badge"><i class="fa-solid fa-tag"></i> Diskon</span>` : ''}
+            </div>
+            <button class="pwc-cta">Kunjungi Warung</button>
           </div>
         `;
 
         card.addEventListener('click', () => {
-          window.location.href = `/stores/${s.id}/`;
+          window.location.href = '/toko/' + s.slug + '/';
         });
 
-        card.querySelector('.btn-favorite-store')?.addEventListener('click', (e) => {
+        card.querySelector('.pwc-fav')?.addEventListener('click', (e) => {
           e.stopPropagation();
           const btn = e.currentTarget;
           btn.classList.toggle('is-fav');
@@ -324,7 +353,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { id: 'storeCheckVerified', prop: 'verifiedOnly' },
       { id: 'storeCheckCod', prop: 'codOnly' },
       { id: 'storeCheckNear', prop: 'nearOnly' },
-      { id: 'storeCheckRating', prop: 'ratingOnly' }
+      { id: 'storeCheckRating', prop: 'ratingOnly' },
+      { id: 'storeCheckDiskon', prop: 'promoOnly' }
     ];
     binds.forEach(b => {
       const el = document.getElementById(b.id);
@@ -370,6 +400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         storeCatalogState.codOnly = false;
         storeCatalogState.nearOnly = false;
         storeCatalogState.ratingOnly = false;
+        storeCatalogState.promoOnly = false;
         storeCatalogState.sort = 'distance';
         storeCatalogState.page = 1;
         storeCatalogState.loadedAll = false;
@@ -462,6 +493,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (storeCatalogState.category && storeCatalogState.category !== 'all') {
         params.category = storeCatalogState.category;
       }
+      if (storeCatalogState.promoOnly) {
+        params.has_promo = 'true';
+      }
       if (storeCatalogState.coords) {
         params.latitude = storeCatalogState.coords.lat;
         params.longitude = storeCatalogState.coords.lon;
@@ -488,78 +522,93 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       list.forEach(s => {
-        const rating = Number(s.rating_avg != null ? s.rating_avg : 4.7).toFixed(1);
+        const rating = Number(s.rating_avg != null ? s.rating_avg : 0).toFixed(1);
         const distance = storeCatalogState.coords ? '0.8 km' : '0.5 km';
         const deliveryTime = s.is_open ? '10-20 min' : 'Tutup';
-        const logo = s.logo || `/static/images/store-icon-T.png`;
-        const banner = s.banner || `/static/images/promosi-toko.png`;
+        const logoUrl = s.store_logo_url || '';
+        const bannerUrl = s.store_banner_url || '/static/images/promosi-toko.png';
         const favClass = s.is_favorite ? 'is-fav' : '';
-        const openStatusClass = s.is_open ? 'bg-primary/10 text-primary' : 'bg-red-500/10 text-red-500';
-        const openStatusText = s.is_open ? 'Buka' : 'Tutup';
-        const category = s.category_name || (s.id === 1 ? 'Sembako' : 'Sayuran');
-        const totalProducts = s.product_count != null ? s.product_count : 150;
+        const openText = s.is_open ? 'Buka' : 'Tutup';
+        const categoryName = s.category || 'Toko';
+        const totalProducts = s.product_count != null ? s.product_count : 0;
+        const desc = s.description || '';
+        const shortDesc = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
+        const addressShort = s.address || s.city || 'Lokal';
+        const memberSince = s.created_at ? new Date(s.created_at).getFullYear() : new Date().getFullYear();
         
         const card = document.createElement('div');
-        card.className = 'store-card bg-white rounded-3xl overflow-hidden border border-slate-100 flex flex-col shadow-sm relative group cursor-pointer';
-        card.setAttribute('data-store-id', s.id);
+        card.className = 'mini-storefront-card';
+        card.setAttribute('data-store-slug', s.slug);
         card.innerHTML = `
-          <div class="relative h-48 overflow-hidden image-container">
-            <img src="${banner}" alt="${s.store_name} Banner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='/static/images/promosi-toko.png'">
-            <div class="absolute top-4 left-4 ${openStatusClass} px-3 py-1 rounded-full flex items-center space-x-1 backdrop-blur-md">
-              <div class="w-1.5 h-1.5 rounded-full ${s.is_open ? 'bg-primary animate-pulse' : 'bg-red-500'}"></div>
-              <span class="text-[10px] font-extrabold">${openStatusText}</span>
+          <div class="msf-banner">
+            <img src="${bannerUrl}" alt="${s.store_name}" onerror="this.src='/static/images/promosi-toko.png'">
+            <div class="msf-banner-overlay"></div>
+            <div class="msf-badges">
+              <span class="msf-badge ${s.is_open ? 'msf-badge-open' : 'msf-badge-closed'}">
+                ${s.is_open ? '<span class="msf-dot"></span>' : ''} ${openText}
+              </span>
+              <span class="msf-badge msf-badge-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>
+              <span class="msf-badge msf-badge-free-ship"><i class="fa-solid fa-truck-fast"></i> Gratis</span>
+              ${s.has_active_promo ? `<span class="msf-badge msf-badge-promo"><i class="fa-solid fa-fire"></i> Diskon</span>` : ''}
             </div>
-            <button class="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full text-slate-400 hover:text-red-500 transition-colors btn-favorite-store ${favClass}" data-id="${s.id}">
+            <button class="msf-fav-btn ${favClass}" data-id="${s.id}">
               <i class="fa-${favClass ? 'solid' : 'regular'} fa-heart"></i>
             </button>
-            <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-full bg-white border-2 border-white overflow-hidden shadow-md">
-              <img src="${logo}" alt="${s.store_name} Logo" class="w-full h-full object-cover">
+            <div class="msf-logo-wrapper">
+              ${logoUrl ? `<img src="${logoUrl}" alt="${s.store_name}">` : `<div class="msf-logo-placeholder">${s.store_name.charAt(0).toUpperCase()}</div>`}
             </div>
           </div>
-          <div class="pt-8 px-4 pb-4 flex flex-col flex-1">
-            <div class="flex items-center gap-1 mb-1">
-              <h3 class="font-bold text-slate-800 text-sm truncate flex-1">${s.store_name}</h3>
-              <i class="fa-solid fa-circle-check text-primary text-xs" title="Verified Store"></i>
+          <div class="msf-body">
+            <h3 class="msf-store-name">${s.store_name} <i class="fa-solid fa-circle-check msf-verified-icon"></i></h3>
+            <span class="msf-category-tag"><i class="fa-solid fa-tag" style="font-size:8px;margin-right:2px;"></i> ${categoryName}</span>
+            <div class="msf-stats">
+              <span><i class="fa-solid fa-star msf-star"></i> ${rating}</span>
+              <span class="msf-stat-divider">|</span>
+              <span>${s.follower_count || 0} pengikut</span>
+              <span class="msf-stat-divider">|</span>
+              <span>${totalProducts} produk</span>
             </div>
-            <span class="inline-block self-start px-2 py-0.5 bg-slate-50 text-[10px] font-bold text-[#16A34A] rounded mb-2">${category}</span>
-            <div class="flex items-center gap-2 text-[10px] text-slate-500 mb-4">
-              <div class="flex items-center text-amber-500 font-bold">
-                <i class="fa-solid fa-star mr-1"></i> ${rating} <span class="text-slate-400 font-normal ml-0.5">(128 ulasan)</span>
-              </div>
-              <span>•</span>
-              <span class="font-bold text-slate-700">${distance}</span>
+            ${shortDesc ? `<p class="msf-desc">${shortDesc}</p>` : ''}
+            <div class="msf-info-row">
+              <span class="msf-info-item"><i class="fa-solid fa-location-dot"></i> ${addressShort}</span>
+              <span class="msf-info-item"><i class="fa-regular fa-clock"></i> ${deliveryTime}</span>
+              <span class="msf-info-item"><i class="fa-regular fa-calendar"></i> Sejak ${memberSince}</span>
             </div>
-            <div class="space-y-2 mb-4 text-[11px] text-slate-500">
-              <div class="flex items-center justify-between">
-                <span class="flex items-center"><i class="fa-solid fa-truck-fast mr-2"></i> ${deliveryTime}</span>
-                <span class="text-primary font-bold">Gratis Ongkir</span>
-              </div>
-              <div class="flex items-center"><i class="fa-regular fa-clock mr-2"></i> ${s.open_time || '07:00'} - ${s.close_time || '21:00'} WIB</div>
-              <div class="flex items-center"><i class="fa-solid fa-location-dot mr-2"></i> <span class="truncate">${s.address || s.city || 'Jakarta, ID'}</span></div>
-              <div class="flex items-center"><i class="fa-solid fa-boxes-stacked mr-2"></i> ${totalProducts}+ Produk Tersedia</div>
+            ${s.featured_products && s.featured_products.length > 0 ? `
+            <div class="msf-featured-products">
+              ${s.featured_products.slice(0, 4).map(fp => `
+                <div class="msf-mini-product">
+                  <img src="${fp.product_photo_url || '/static/images/paket-sayur.png'}" alt="${fp.product_name}" loading="lazy" onerror="this.src='/static/images/paket-sayur.png'">
+                  <div class="msf-mini-product-info">
+                    <span class="msf-mini-product-name">${fp.product_name}</span>
+                    <span class="msf-mini-product-price">Rp ${Number(fp.price).toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+              `).join('')}
             </div>
-            <div class="mt-auto space-y-2">
-              <button class="w-full bg-primary text-white py-2 rounded-xl font-bold text-xs hover:bg-[#15803d] transition-all btn-visit-store-action">Kunjungi Warung</button>
-              <button class="w-full bg-white border border-slate-200 text-slate-500 py-2 rounded-xl font-bold text-xs hover:bg-slate-50 transition-colors btn-see-products-action">Lihat Produk</button>
+            ` : ''}
+            <div class="msf-actions">
+              <button class="msf-btn-primary"><i class="fa-solid fa-store"></i> Kunjungi Warung</button>
+              <button class="msf-btn-secondary"><i class="fa-solid fa-box"></i> Lihat Produk</button>
             </div>
           </div>
         `;
 
+        card.querySelector('.msf-btn-primary')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.location.href = '/toko/' + s.slug + '/';
+        });
+
+        card.querySelector('.msf-btn-secondary')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.location.href = '/toko/' + s.slug + '/products/';
+        });
+
         card.addEventListener('click', () => {
-          window.location.href = `/stores/${s.id}/`;
+          window.location.href = '/toko/' + s.slug + '/';
         });
 
-        card.querySelector('.btn-visit-store-action')?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          window.location.href = `/stores/${s.id}/`;
-        });
-
-        card.querySelector('.btn-see-products-action')?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          window.location.href = `/buyer/products/?store_id=${s.id}`;
-        });
-
-        card.querySelector('.btn-favorite-store')?.addEventListener('click', async (e) => {
+        card.querySelector('.msf-fav-btn')?.addEventListener('click', async (e) => {
           e.stopPropagation();
           const btn = e.currentTarget;
           btn.classList.toggle('is-fav');
@@ -623,6 +672,81 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else {
       fetchStoreCatalog({ append: false });
+    }
+  }
+
+  // ── Load Kategori Populer (Dynamic rectangular cards) ──
+  async function loadPopularCategories() {
+    const catGrid = document.getElementById('popularCategoriesGrid');
+    if (!catGrid) return;
+
+    try {
+      const data = await WarungioAPI.getCategories();
+      const cats = Array.isArray(data) ? data : (data.results || []);
+
+      if (cats.length === 0) {
+        catGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:16px;font-size:13px;">Belum ada kategori tersedia.</div>';
+        return;
+      }
+
+      catGrid.innerHTML = '';
+
+      // Add "Semua" as first card
+      const allCard = document.createElement('div');
+      allCard.className = 'category-tab-card active';
+      allCard.textContent = 'Semua';
+      allCard.dataset.catId = 'all';
+      allCard.addEventListener('click', () => {
+        handleCategoryCardClick(allCard, 'all');
+      });
+      catGrid.appendChild(allCard);
+
+      cats.forEach(cat => {
+        const card = document.createElement('div');
+        card.className = 'category-tab-card';
+        const catName = cat.name || cat.category_name || cat;
+        const catId = cat.id || cat.name || cat;
+        card.textContent = catName;
+        card.dataset.catId = catId;
+        card.addEventListener('click', () => {
+          handleCategoryCardClick(card, catId);
+        });
+        catGrid.appendChild(card);
+      });
+    } catch (err) {
+      console.warn('Failed to load categories:', err);
+      catGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:16px;font-size:13px;">Gagal memuat kategori.</div>';
+    }
+  }
+
+  function handleCategoryCardClick(card, catId) {
+    // Toggle active state on category cards
+    const allCards = document.querySelectorAll('.category-tab-card');
+    allCards.forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    // Also activate the corresponding filter-btn in the produk filter row
+    const filterBtns = document.querySelectorAll('.filter-row .filter-btn');
+    filterBtns.forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.category === String(catId)) {
+        btn.classList.add('active');
+      }
+    });
+    // If catId is 'all', activate the first filter-btn
+    if (catId === 'all' && filterBtns.length > 0) {
+      filterBtns[0].classList.add('active');
+    }
+
+    // Load fresh products filtered by this category
+    loadFreshProducts(catId === 'all' ? null : catId);
+
+    // Smooth scroll to the produk section
+    const produkSection = document.getElementById('produkGrid')?.closest('.home-section');
+    if (produkSection) {
+      setTimeout(() => {
+        produkSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   }
 
@@ -1235,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindDropdownMenu();
   bindWalletTopUp();
   setupCategoryChips();
+  syncFilterBtnToCategoryCards();
   setupButtonRipple();
 
   // ── SPA Routing for Store Catalog ──
@@ -1275,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkHashNav();
 
   // Load public components
-  await Promise.all([loadStores(), loadFreshProducts(), loadBestDeals()]);
+  await Promise.all([loadStores(), loadFreshProducts(), loadBestDeals(), loadPopularCategories()]);
 
   // Setup carousels
   setupCarouselDots('warungGrid', 'warungCarouselDots');

@@ -8,6 +8,13 @@
 {% block page_subtitle %}Periksa alamat, pesanan, dan pilih metode bayar{% endblock %}
 {% block content %}
 
+          <!-- Skeleton Loading -->
+          <div class="buyer-skeleton-overlay" id="checkoutSkeleton">
+            <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+            <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+            <div class="skeleton-row"><div class="skeleton-circle"></div><div class="skeleton-bar"></div><div class="skeleton-bar-sm"></div></div>
+          </div>
+
           <div class="checkout-layout">
             <!-- Left: Form Sections -->
             <div class="checkout-main">
@@ -21,7 +28,7 @@
                   <div class="address-display" id="addressDisplay">
                     <div class="address-info">
                       <p class="address-name" id="addressName">Nama Penerima</p>
-                      <p class="address-phone" id="addressPhone">0812-3456-7890</p>
+                      <p class="address-phone" id="addressPhone">-</p>
                       <p class="address-detail" id="addressDetail">Jl. Alamat Lengkap, No. 123, Kecamatan, Kota, Provinsi</p>
                     </div>
                     <button class="btn btn-ghost btn-sm" id="btnChangeAddress">Ubah</button>
@@ -104,7 +111,11 @@
         if (!str) return ''; var div = document.createElement('div'); div.textContent = str; return div.innerHTML;
     }
     document.addEventListener('DOMContentLoaded', async function() {
+        // Show skeleton
+        var skel = document.getElementById('checkoutSkeleton');
+        if (skel) skel.classList.add('show');
         await loadCheckoutData();
+        if (skel) skel.classList.remove('show');
     });
     async function loadCheckoutData() {
             try {

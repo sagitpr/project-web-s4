@@ -102,6 +102,12 @@
     <!-- Toast Notifications Container -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <script src="{% static 'js/utils/auth-guard.js' %}"></script>
+    <script>
+    if (window.WarungioAuthGuard) {
+      WarungioAuthGuard.init({ protected: true, redirectUrl: '/' });
+    }
+    </script>
     <script src="{% static 'js/utils/auth-ui.js' %}"></script>
     <script src="{% static 'js/device-detector.js' %}"></script>
     <script src="{% static 'js/auth.js' %}"></script>

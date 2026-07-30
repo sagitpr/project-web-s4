@@ -110,6 +110,33 @@ class RateLimitMiddleware:
         return response
 
 
+class CacheControlMiddleware:
+    """
+    Middleware that prevents browser back/forward cache (bfcache) from
+    restoring protected pages after logout.
+
+    Without this, pressing the Back button after logout can show cached
+    dashboard content even though the user is no longer authenticated.
+    The auth-guard.js client-side script also handles this via pageshow,
+    but server-side Cache-Control is the first line of defense — it works
+    even if JavaScript fails to load.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        path = request.path_info
+        # Only apply to protected paths (seller, buyer, admin)
+        if (path.startswith('/seller/') or path.startswith('/buyer/') or
+            path.startswith('/admin-panel/') or path.startswith('/admin/')):
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        return response
+
+
 # ── Role-based route patterns ──
 # These define which URL prefixes each role is allowed to access.
 # Used by RoleBasedRedirectMiddleware to enforce routing.

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/pages/buyer/home/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/buyer/store-cards.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'favicon-64x64.png' %}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon-180x180.png' %}" />
@@ -93,6 +94,10 @@
                                     <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="storeCheckRating">
                                     <span>Rating 4+</span>
                                 </label>
+                                <label class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full cursor-pointer hover:bg-slate-50 transition-colors text-xs font-semibold">
+                                    <input class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300" type="checkbox" id="storeCheckDiskon">
+                                    <span>Sedang Diskon</span>
+                                </label>
                             </div>
                             
                             <div class="flex items-center gap-2">
@@ -155,7 +160,31 @@
                     </div>
                 </div>
 
-                <!-- Section 2: Produk Segar Pilihan -->
+                <!-- Section 2: Kategori Populer -->
+                <section class="home-section" data-aos="fade-up" data-aos-duration="600">
+                    <div class="section-header-premium flex justify-between items-end">
+                        <div>
+                            <span class="section-tag">Kategori</span>
+                            <h2 class="section-title-premium">Kategori Populer</h2>
+                        </div>
+                        <a href="{% url 'page-products' %}" class="section-view-all">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Category Tabs Grid -->
+                    <div class="category-tabs-wrapper" id="popularCategoriesGrid">
+                        <!-- Skeleton Loading for Categories -->
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                        <div class="category-tab-skeleton shimmer"></div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Produk Segar Pilihan -->
                 <section class="home-section" data-aos="fade-up" data-aos-duration="600">
                     <div class="section-header-premium flex justify-between items-end">
                         <div>

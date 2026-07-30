@@ -59,7 +59,7 @@ spec:
         - name: EMAIL_PORT
           value: "587"
         - name: DEFAULT_FROM_EMAIL
-          value: "noreply@warungio.com"
+          value: "warungio.id@gmail.com"
         - name: EMAIL_HOST_USER
           value: "your-email@gmail.com"
         - name: EMAIL_HOST_PASSWORD

@@ -139,8 +139,8 @@ class Command(BaseCommand):
 
         # === Contact Info ===
         contacts = [
-            {'contact_type': 'whatsapp', 'label': 'Chat WhatsApp', 'value': '+6281234567890', 'operating_hours': '24 jam, 7 hari seminggu', 'sort_order': 1},
-            {'contact_type': 'email', 'label': 'Email Support', 'value': 'support@warungio.com', 'operating_hours': 'Senin - Jumat, 08:00 - 20:00', 'sort_order': 2},
+            {'contact_type': 'whatsapp', 'label': 'Chat WhatsApp', 'value': '+6287833847895', 'operating_hours': '24 jam, 7 hari seminggu', 'sort_order': 1},
+            {'contact_type': 'email', 'label': 'Email Support', 'value': 'warungio.id@gmail.com', 'operating_hours': 'Senin - Jumat, 08:00 - 20:00', 'sort_order': 2},
             {'contact_type': 'phone', 'label': 'Telepon', 'value': '+62211234567', 'operating_hours': 'Senin - Sabtu, 08:00 - 18:00', 'sort_order': 3},
             {'contact_type': 'instagram', 'label': 'Instagram', 'value': 'warungio', 'operating_hours': 'Media sosial', 'sort_order': 4},
         ]

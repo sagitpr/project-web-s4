@@ -66,6 +66,36 @@ def notify_product_update(store_id, product_id, product_name, action, store_user
         _log.warning('WebSocket broadcast error (product update): %s', str(e))
 
 
+def notify_promo_update(store_id, promo_id, promo_name, action, store_user_id=None):
+    """Broadcast promo/voucher change via WebSocket to store followers.
+    
+    Action is one of: 'promo_created', 'promo_updated', 'promo_deleted', 'promo_status_changed'
+    """
+    try:
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            event = {
+                'type': action,
+                'promo_id': promo_id,
+                'promo_name': promo_name,
+                'store_id': store_id,
+            }
+            # Broadcast to store followers (buyers viewing store page)
+            async_to_sync(channel_layer.group_send)(
+                f'store_{store_id}',
+                event
+            )
+            # Also notify the store owner/seller directly
+            if store_user_id:
+                async_to_sync(channel_layer.group_send)(
+                    f'notifications_{store_user_id}',
+                    event
+                )
+    except Exception as e:
+        _log = logging.getLogger('django_backend.products')
+        _log.warning('WebSocket broadcast error (promo update): %s', str(e))
+
+
 class CategoryListView(generics.ListAPIView):
 
     """List all product categories."""
@@ -91,9 +121,24 @@ class ProductListView(generics.ListAPIView):
     ordering_fields = ['price', 'sold_count', 'rating_avg', 'created_at', 'quality_score']
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True).select_related(
+        qs = Product.objects.filter(is_active=True).select_related(
             'store', 'category'
         )
+        
+        # Filter: products that currently have an active promo in their store
+        has_promo = self.request.query_params.get('has_promo')
+        if has_promo and has_promo.lower() in ('true', '1', 'yes'):
+            from django.utils import timezone
+            from .models import Promo
+            # Get store IDs that have active promos
+            store_ids_with_promo = Promo.objects.filter(
+                is_active=True,
+                start_date__lte=timezone.now().date(),
+                end_date__gte=timezone.now().date(),
+            ).values_list('store_id', flat=True).distinct()
+            qs = qs.filter(store_id__in=list(store_ids_with_promo))
+        
+        return qs
 
 
 class ProductFeaturedView(generics.ListAPIView):
@@ -368,12 +413,20 @@ class SellerStoreReviewListView(generics.ListAPIView):
 
 
 class PromoListView(generics.ListAPIView):
-    """List active promos."""
+    """List active promos.
+    
+    Optional query params:
+      ?store=X — Filter by store ID
+    """
     serializer_class = PromoSerializer
     permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
-        return Promo.objects.filter(is_active=True).select_related('store')
+        qs = Promo.objects.filter(is_active=True).select_related('store')
+        store_id = self.request.query_params.get('store')
+        if store_id and store_id.isdigit():
+            qs = qs.filter(store_id=int(store_id))
+        return qs
 
 
 @extend_schema(exclude=True)
@@ -401,6 +454,8 @@ class SellerPromoListCreateView(generics.ListCreateAPIView):
         except Exception as exc:
             _log = logging.getLogger('django_backend.products')
             _log.warning('notify_flash_sale_started failed: %s', exc)
+        # Broadcast promo update via WebSocket
+        notify_promo_update(store.id, promo.id, promo.promo_name, 'promo_created', store.user_id)
 
 
 class SellerPromoManageView(generics.RetrieveUpdateDestroyAPIView):
@@ -412,6 +467,23 @@ class SellerPromoManageView(generics.RetrieveUpdateDestroyAPIView):
         return Promo.objects.filter(store__user=self.request.user).select_related(
             'store'
         )
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        promo = serializer.save()
+        store = promo.store
+        action = 'promo_updated'
+        if 'is_active' in serializer.validated_data:
+            action = 'promo_status_changed'
+        notify_promo_update(store.id, promo.id, promo.promo_name, action, store.user_id)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        store = instance.store
+        promo_id = instance.id
+        promo_name = instance.promo_name
+        super().perform_destroy(instance)
+        notify_promo_update(store.id, promo_id, promo_name, 'promo_deleted', store.user_id)
 
 
 class QualityCheckListView(generics.ListCreateAPIView):

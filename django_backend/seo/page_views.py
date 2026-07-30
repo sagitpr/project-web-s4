@@ -231,6 +231,66 @@ def store_landing(request, slug):
         store=store, is_active=True, is_featured=True
     ).order_by('-sold_count')[:8]
 
+    # ── Promo Products (diskon / flash sale) ──
+    promo_products = []
+    active_promos = []
+    try:
+        from products.models import Promo
+        active_promos = Promo.objects.filter(
+            store=store,
+            is_active=True,
+            start_date__lte=timezone.now().date(),
+            end_date__gte=timezone.now().date(),
+        ).order_by('-discount_percent')
+        
+        # Get all active products in this store that could be on promo
+        if active_promos.exists():
+            all_store_products = Product.objects.filter(
+                store=store, is_active=True
+            ).order_by('-sold_count')[:20]
+            
+            for promo in active_promos:
+                for p in all_store_products:
+                    disc_pct = promo.discount_percent or 0
+                    disc_price = float(p.price) * (100 - disc_pct) / 100
+                    days_left = (promo.end_date - timezone.now().date()).days
+                    savings = float(p.price) - round(disc_price)
+                    promo_products.append({
+                        'product': p,
+                        'discount_percent': disc_pct,
+                        'discount_price': round(disc_price),
+                        'original_price': float(p.price),
+                        'savings': max(savings, 0),
+                        'promo_name': promo.promo_name,
+                        'promo_type': promo.promo_type,
+                        'days_left': max(days_left, 0),
+                        'end_date': promo.end_date,
+                    })
+                # Only take first promo's worth of products
+                if promo_products:
+                    break
+            
+            # Sort by discount percent descending, then by days_left ascending
+            promo_products.sort(key=lambda x: (-x['discount_percent'], x['days_left']))
+            promo_products = promo_products[:8]  # Max 8 promo products
+    except Exception:
+        pass
+
+    # ── Best selling & newest products ──
+    best_selling_products = Product.objects.filter(
+        store=store, is_active=True
+    ).order_by('-sold_count')[:8]
+    
+    new_products = Product.objects.filter(
+        store=store, is_active=True
+    ).order_by('-created_at')[:8]
+
+    # ── Store Reviews (recent reviews from all products) ──
+    store_reviews = Review.objects.filter(
+        product__store=store
+    ).select_related('user', 'product').order_by('-created_at')[:12]
+    store_review_count = Review.objects.filter(product__store=store).count()
+
     context = {
         'store': store,
         'products': products,
@@ -238,7 +298,13 @@ def store_landing(request, slug):
         'product_count': len(products),
         'store_status': store_status,
         'active_promos_count': active_promos_count,
+        'active_promos': active_promos,
+        'promo_products': promo_products,
         'featured_products': featured_products,
+        'best_selling_products': best_selling_products,
+        'new_products': new_products,
+        'store_reviews': store_reviews,
+        'store_review_count': store_review_count,
     }
     return render(request, 'store/home.html', context)
 

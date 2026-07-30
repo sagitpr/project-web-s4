@@ -160,6 +160,46 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'action': 'deleted',
         }))
 
+    async def promo_created(self, event):
+        """Send promo created notification to store followers."""
+        await self.send(text_data=json.dumps({
+            'type': 'promo_created',
+            'promo_id': event.get('promo_id'),
+            'promo_name': event.get('promo_name'),
+            'store_id': event.get('store_id'),
+            'action': 'promo_created',
+        }))
+
+    async def promo_updated(self, event):
+        """Send promo updated notification."""
+        await self.send(text_data=json.dumps({
+            'type': 'promo_updated',
+            'promo_id': event.get('promo_id'),
+            'promo_name': event.get('promo_name'),
+            'store_id': event.get('store_id'),
+            'action': 'promo_updated',
+        }))
+
+    async def promo_deleted(self, event):
+        """Send promo deleted notification."""
+        await self.send(text_data=json.dumps({
+            'type': 'promo_deleted',
+            'promo_id': event.get('promo_id'),
+            'promo_name': event.get('promo_name'),
+            'store_id': event.get('store_id'),
+            'action': 'promo_deleted',
+        }))
+
+    async def promo_status_changed(self, event):
+        """Send promo status changed notification."""
+        await self.send(text_data=json.dumps({
+            'type': 'promo_status_changed',
+            'promo_id': event.get('promo_id'),
+            'promo_name': event.get('promo_name'),
+            'store_id': event.get('store_id'),
+            'action': 'promo_status_changed',
+        }))
+
     async def stock_update(self, event):
         """Send real-time stock change notification."""
         await self.send(text_data=json.dumps({

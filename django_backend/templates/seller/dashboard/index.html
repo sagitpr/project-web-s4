@@ -327,10 +327,14 @@
             </div>
         </footer>
     </main>
-</div>
-
-<script src="{% static 'js/device-detector.js' %}"></script>
-<script src="{% static 'js/auth.js' %}"></script>
+</div>    <script src="{% static 'js/utils/auth-guard.js' %}"></script>
+    <script>
+    if (window.WarungioAuthGuard) {
+      WarungioAuthGuard.init({ protected: true, redirectUrl: '/' });
+    }
+    </script>
+    <script src="{% static 'js/device-detector.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/api.js' %}"></script>
 <script src="{% static 'js/utils/toast.js' %}"></script>
 <script src="{% static 'js/utils/format.js' %}"></script>

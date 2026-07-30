@@ -8,7 +8,7 @@
 {% block page_subtitle %}Ajukan dan lacak permintaan refund Anda{% endblock %}
 {% block content %}
 <div class="refund-page-wrapper">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+  <div class="flex-row" style="justify-content:flex-end;margin-bottom:16px;">
     <a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary refund-btn-primary"><i class="fa-solid fa-plus"></i> Ajukan Refund</a>
   </div>
 
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const data = await WarungioAPI.getMyRefunds();
     const refunds = data.results || [];
     if (refunds.length === 0) {
-      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-tertiary);"><i class="fa-solid fa-receipt fa-2x" style="color:var(--color-gray-300);margin-bottom:12px;"></i><p>Belum ada pengajuan refund.</p><a href="{% url 'page-buyer-refund-create' %}" class="btn btn-primary btn-sm" style="margin-top:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-plus"></i> Ajukan Refund</a></div>';
+      list.innerHTML = '<div class="buyer-empty-state"><div class="empty-icon-wrap"><i class="fa-solid fa-receipt"></i></div><h3>Belum Ada Pengajuan Refund</h3><p>Belum ada pengajuan refund.</p><a href="{% url 'page-buyer-refund-create' %}" class="btn-empty-cta"><i class="fa-solid fa-plus"></i> Ajukan Refund</a></div>';
       return;
     }
     list.innerHTML = refunds.map(function(r) {

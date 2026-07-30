@@ -293,6 +293,7 @@ function showToast(message, type) {
 
 <script src="{% static 'js/utils/toast.js' %}"></script>
 <script src="{% static 'js/utils/asset-loader.js' %}"></script>
+<script src="{% static 'js/utils/auth-guard.js' %}"></script>
 <script src="{% static 'js/utils/auth-ui.js' %}"></script>
 <script src="{% static 'js/utils/ads.js' %}"></script>
 <script src="{% static 'js/utils/loader.js' %}"></script>
@@ -306,25 +307,27 @@ function showToast(message, type) {
   }
 </script>
 <script>
-// ── BFCACHE / PAGE BACK GUARD ──
-// When a page is restored from bfcache (e.g., pressing Back after logout),
-// DOMContentLoaded does NOT fire again. We must catch it here.
-// This runs on EVERY pageshow event, not just bfcache restores, which is fine.
-window.addEventListener('pageshow', function(event) {
-  if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated() && window.location.pathname !== '/') {
-    // Use replace() so the stale protected page is removed from history entirely
-    // Skip guard on the landing page (/) — never auto-redirect from a public page.
-    window.location.replace('/');
+// ── Auth Guard ──
+if (window.WarungioAuthGuard) {
+  WarungioAuthGuard.init({ protected: false });
+}
+
+// ── Logout Success Toast ──
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('logout_success') === '1') {
+    // Clean URL params to prevent toast on refresh
+    try { window.history.replaceState(null, '', window.location.pathname); } catch(e) {}
+    // Show toast after a brief delay so DOM is ready
+    setTimeout(function() {
+      if (window.WarungioAuthUI && typeof window.WarungioAuthUI.showToast === 'function') {
+        WarungioAuthUI.showToast('Berhasil keluar dari akun', 'success');
+      }
+    }, 500);
   }
-});
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ── BFCACHE / PAGE BACK GUARD (supplement — catches non-bfcache cases) ──
-    // Skip guard on the landing page (/) — never auto-redirect from a public page.
-    if (window.WarungioAuth && !window.WarungioAuth.isAuthenticated() && window.location.pathname !== '/') {
-      window.location.replace('/');
-      return;
-    }
 
     // Profile dropdown
     var profileBox = document.getElementById('profileBox');

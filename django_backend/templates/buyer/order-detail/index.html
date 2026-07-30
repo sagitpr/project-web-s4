@@ -10,15 +10,23 @@
 {% block page_title %}Detail Pesanan{% endblock %}
 {% block page_subtitle %}Informasi lengkap pesanan Anda{% endblock %}
 {% block main_content_class %}style="padding:24px 0;"{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<style>
+.buyer-main-padding { padding:24px 0; }
+</style>
+{% endblock %}
 {% block content %}
         <!-- Loading State -->
-        <div class="loading-overlay" id="loadingOverlay" style="display:flex;">
+        <div class="loading-overlay show-flex" id="loadingOverlay">
           <div class="spinner"></div>
           <p>Memuat detail pesanan...</p>
         </div>
 
+
+
         <!-- Error State -->
-        <div class="error-state" id="errorState" style="display:none;">
+        <div class="error-state hide" id="errorState">
           <div class="error-icon">!</div>
           <h2>Pesanan Tidak Ditemukan</h2>
           <p id="errorMessage">Pesanan tidak ditemukan.</p>
@@ -26,7 +34,7 @@
         </div>
 
         <!-- Order Content -->
-        <div id="orderContent" style="display:none;">
+        <div id="orderContent" class="hide">
           <!-- Page Header -->
           <section class="detail-header">
             <div class="header-top">
@@ -59,7 +67,7 @@
           </section>
 
           <!-- Tracking Card -->
-          <section class="card" id="trackingCard" style="display:none;">
+          <section class="card hide" id="trackingCard">
             <h3 class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg> Lacak Pengiriman</h3>
             <div class="tracking-meta">
               <div><span class="label">Kurir</span><span id="trackingCourier">-</span></div>
@@ -68,16 +76,16 @@
             <div class="tracking-timeline" id="trackingTimeline">
               <div class="tracking-loading"><span class="tracking-pulse"></span><span>Memuat status pengiriman...</span></div>
             </div>
-            <div class="tracking-driver" id="trackingDriver" style="display:none;">
+            <div class="tracking-driver hide" id="trackingDriver">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <div><span class="label">Driver</span><span id="trackingDriverName">-</span></div>
               <a id="trackingDriverPhone" href="tel:" class="tracking-link">Hubungi</a>
             </div>
-            <div class="tracking-pickup" id="trackingPickup" style="display:none;">
+            <div class="tracking-pickup hide" id="trackingPickup">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <div><span class="label">Kode Pickup</span><strong id="trackingPickupCode">-</strong></div>
             </div>
-            <div id="map" style="height:300px; border-radius:12px; margin-top:16px; display:none; z-index:5; border:1px solid #e5e7eb;"></div>
+            <div id="map" class="map-container hide"></div>
           </section>
 
           <!-- Order Grid -->
@@ -99,7 +107,7 @@
               </section>
 
               <!-- Notes -->
-              <section class="card" id="notesSection" style="display:none;">
+              <section class="card hide" id="notesSection">
                 <h3 class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Catatan</h3>
                 <p class="notes-text" id="orderNotes"></p>
               </section>
@@ -113,8 +121,8 @@
                   <div class="info-row"><span class="info-label">Alamat</span><span class="info-value" id="deliveryAddress">-</span></div>
                   <div class="info-row"><span class="info-label">Penerima</span><span class="info-value" id="recipientName">-</span></div>
                   <div class="info-row"><span class="info-label">No. HP</span><span class="info-value" id="recipientPhone">-</span></div>
-                  <div class="info-row" id="courierRow" style="display:none;"><span class="info-label">Kurir</span><span class="info-value" id="courierName">-</span></div>
-                  <div class="info-row" id="trackingRow" style="display:none;"><span class="info-label">Resi</span><span class="info-value"><a href="#" id="trackingNumber" target="_blank" class="tracking-link">-</a></span></div>
+                  <div class="info-row hide" id="courierRow"><span class="info-label">Kurir</span><span class="info-value" id="courierName">-</span></div>
+                  <div class="info-row hide" id="trackingRow"><span class="info-label">Resi</span><span class="info-value"><a href="#" id="trackingNumber" target="_blank" class="tracking-link">-</a></span></div>
                 </div>
               </section>
 
@@ -133,34 +141,34 @@
                 <div class="summary-lines">
                   <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal">Rp 0</span></div>
                   <div class="summary-row"><span>Ongkir</span><span id="summaryShipping">Rp 0</span></div>
-                  <div class="summary-row" id="summaryDiscountRow" style="display:none;"><span>Diskon</span><span id="summaryDiscount" style="color:#16a34a;">-Rp 0</span></div>
+                  <div class="summary-row hide" id="summaryDiscountRow"><span>Diskon</span><span id="summaryDiscount" class="text-green-600">-Rp 0</span></div>
                   <div class="summary-divider"></div>
                   <div class="summary-row total-row"><span>Total</span><span id="summaryTotal">Rp 0</span></div>
                 </div>
               </section>
 
               <!-- QR Delivery Verification -->
-              <section class="card" id="qrSection" style="display:none;">
+              <section class="card hide" id="qrSection">
                 <h3 class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/></svg> Verifikasi Pengiriman</h3>
-                <div class="card-body" style="text-align:center;">
-                  <div id="qrDisplay" style="display:inline-block;background:white;padding:12px;border-radius:12px;border:1px solid #e5e7eb;margin-bottom:12px;"></div>
-                  <p id="qrInstruction" style="font-size:13px;color:#64748b;">Tunjukkan QR Code ini ke driver untuk verifikasi.</p>
-                  <p id="qrTypeLabel" style="font-size:12px;font-weight:600;color:#16a34a;margin-top:4px;"></p>
+                <div class="card-body text-center">
+                  <div id="qrDisplay" class="qr-display"></div>
+                  <p id="qrInstruction" class="fs-13 text-slate-500">Tunjukkan QR Code ini ke driver untuk verifikasi.</p>
+                  <p id="qrTypeLabel" class="fs-12 fw-600 text-green-600 mt-4"></p>
                 </div>
               </section>
 
               <!-- Actions -->
               <section class="card action-buttons">
-                <button class="btn btn-primary" id="reviewBtn" style="display:none;"><i class="fa-solid fa-star"></i> Beri Ulasan</button>
-                <button class="btn btn-secondary" id="reorderBtn" style="display:none;"><i class="fa-solid fa-rotate"></i> Pesan Lagi</button>
-                <button class="btn btn-danger" id="cancelOrderBtn" style="display:none;"><i class="fa-solid fa-xmark"></i> Batalkan Pesanan</button>
+                <button class="btn btn-primary hide" id="reviewBtn"><i class="fa-solid fa-star"></i> Beri Ulasan</button>
+                <button class="btn btn-secondary hide" id="reorderBtn"><i class="fa-solid fa-rotate"></i> Pesan Lagi</button>
+                <button class="btn btn-danger hide" id="cancelOrderBtn"><i class="fa-solid fa-xmark"></i> Batalkan Pesanan</button>
               </section>
             </div>
           </div>
         </div>
 
     <!-- Cancel Modal -->
-    <div class="modal-overlay" id="cancelModal" style="display:none;">
+    <div class="modal-overlay hide" id="cancelModal">
       <div class="modal-dialog">
         <div class="modal-header">
           <h3>Batalkan Pesanan</h3>

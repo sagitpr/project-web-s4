@@ -1,0 +1,587 @@
+/* ═══════════════════════════════════════════════════════════════
+   Premium Mini-Storefront Cards — Buyer Store Catalog
+   Warungio Design System v2
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Premium Mini-Storefront Card ── */
+.mini-storefront-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.mini-storefront-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+  border-color: rgba(22, 163, 74, 0.25);
+}
+
+/* ── Banner Section ── */
+.msf-banner {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #F0FDF4;
+}
+
+.msf-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.mini-storefront-card:hover .msf-banner img {
+  transform: scale(1.08);
+}
+
+.msf-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+}
+
+/* ── Badge Row on Banner ── */
+.msf-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  z-index: 5;
+}
+
+.msf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  backdrop-filter: blur(4px);
+}
+
+.msf-badge-open {
+  background: rgba(22, 163, 74, 0.9);
+  color: #fff;
+}
+
+.msf-badge-open .msf-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.msf-badge-closed {
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+}
+
+.msf-badge-verified {
+  background: rgba(59, 130, 246, 0.85);
+  color: #fff;
+}
+
+.msf-badge-free-ship {
+  background: rgba(22, 163, 74, 0.85);
+  color: #fff;
+}
+
+.msf-badge-cod {
+  background: rgba(245, 158, 11, 0.85);
+  color: #fff;
+}
+
+.msf-badge-promo {
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  animation: pulse-promo 2s ease-in-out infinite;
+}
+
+@keyframes pulse-promo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Promo badge on premium warung card meta row */
+.pwc-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: #FEE2E2;
+  color: #DC2626;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 4px;
+  animation: pulse-promo 2s ease-in-out infinite;
+}
+
+.msf-badge-rating {
+  background: rgba(245, 158, 11, 0.9);
+  color: #fff;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Favorite Button ── */
+.msf-fav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 5;
+  font-size: 14px;
+}
+
+.msf-fav-btn:hover {
+  color: #EF4444;
+  background: #FEE2E2;
+  transform: scale(1.1);
+}
+
+.msf-fav-btn.is-fav {
+  color: #EF4444;
+  background: #FEE2E2;
+}
+
+/* ── Store Logo Overlay ── */
+.msf-logo-wrapper {
+  position: absolute;
+  bottom: -20px;
+  left: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fff;
+  border: 2.5px solid #fff;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  z-index: 6;
+}
+
+.msf-logo-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.msf-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #16A34A, #15803D);
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* ── Card Body ── */
+.msf-body {
+  padding: 28px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 6px;
+}
+
+.msf-store-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.3;
+}
+
+.msf-store-name .msf-verified-icon {
+  color: #3B82F6;
+  font-size: 12px;
+}
+
+.msf-category-tag {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 2px 8px;
+  background: #DCFCE7;
+  color: #16A34A;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Stats Row ── */
+.msf-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.msf-stats .msf-star {
+  color: #FBBF24;
+}
+
+.msf-stats .msf-stat-divider {
+  color: #E2E8F0;
+  font-size: 10px;
+}
+
+/* ── Description ── */
+.msf-desc {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+/* ── Info Row ── */
+.msf-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #64748B;
+  font-weight: 500;
+  flex-wrap: wrap;
+  border-top: 1px dashed #F1F5F9;
+  padding-top: 8px;
+  margin-top: auto;
+}
+
+.msf-info-row i {
+  width: 12px;
+  font-size: 10px;
+  color: #94A3B8;
+}
+
+.msf-info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── Featured Products (mini) ── */
+.msf-featured-products {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 8px;
+}
+
+.msf-mini-product {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #FAFAFA;
+  border-radius: 8px;
+  border: 1px solid #F1F5F9;
+}
+
+.msf-mini-product img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.msf-mini-product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.msf-mini-product-name {
+  font-size: 9px;
+  font-weight: 600;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.msf-mini-product-price {
+  font-size: 9px;
+  font-weight: 700;
+  color: #16A34A;
+  display: block;
+}
+
+.msf-mini-product-old-price {
+  font-size: 8px;
+  color: #94A3B8;
+  text-decoration: line-through;
+  margin-left: 2px;
+}
+
+/* ── Actions Row ── */
+.msf-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.msf-btn-primary {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: #16A34A;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.msf-btn-primary:hover {
+  background: #15803D;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22,163,74,0.2);
+}
+
+.msf-btn-secondary {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.msf-btn-secondary:hover {
+  border-color: #16A34A;
+  color: #16A34A;
+  background: #F0FDF4;
+}
+
+.msf-btn-secondary:active,
+.msf-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* ── Premium Carousel Card ── */
+.premium-warung-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.premium-warung-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.05);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+.pwc-banner {
+  position: relative;
+  height: 100px;
+  overflow: hidden;
+  background: #F0FDF4;
+}
+
+.pwc-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.premium-warung-card:hover .pwc-banner img {
+  transform: scale(1.06);
+}
+
+.pwc-status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+
+.pwc-status.open {
+  background: rgba(22,163,74,0.9);
+  color: #fff;
+}
+
+.pwc-status.closed {
+  background: rgba(239,68,68,0.85);
+  color: #fff;
+}
+
+.pwc-fav {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  border: none;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 3;
+  font-size: 12px;
+}
+
+.pwc-fav:hover,
+.pwc-fav.is-fav {
+  color: #EF4444;
+  background: #FEE2E2;
+}
+
+.pwc-body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pwc-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pwc-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pwc-verified {
+  color: #3B82F6;
+  font-size: 11px;
+}
+
+.pwc-category {
+  font-size: 9px;
+  font-weight: 700;
+  color: #16A34A;
+  background: #DCFCE7;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pwc-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.pwc-meta i {
+  margin-right: 2px;
+}
+
+.pwc-meta .pwc-star {
+  color: #FBBF24;
+}
+
+.pwc-cta {
+  margin-top: 6px;
+  padding: 7px;
+  border-radius: 10px;
+  background: #F1F5F9;
+  border: none;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  width: 100%;
+}
+
+.pwc-cta:hover {
+  background: #16A34A;
+  color: #fff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .msf-featured-products {
+    grid-template-columns: 1fr;
+  }
+  
+  .msf-actions {
+    flex-direction: column;
+  }
+}

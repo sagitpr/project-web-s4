@@ -25,13 +25,40 @@ class StoreCategoryListView(generics.ListAPIView):
 
 class StoreListView(generics.ListAPIView):
     """List all active stores with search and filter."""
-    queryset = Store.objects.filter(status='active').select_related('user')
     serializer_class = StoreListSerializer
     permission_classes = (permissions.AllowAny,)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['city', 'province', 'category']
     search_fields = ['store_name', 'description', 'city']
     ordering_fields = ['rating_avg', 'follower_count', 'total_sales', 'created_at']
+
+    def get_queryset(self):
+        from django.db.models import Prefetch, Exists, OuterRef, Count, Q
+        from django.utils import timezone
+        from products.models import Product, Promo
+        
+        # Subquery: does this store have any active promo right now?
+        active_promo_qs = Promo.objects.filter(
+            store=OuterRef('pk'),
+            is_active=True,
+            start_date__lte=timezone.now().date(),
+            end_date__gte=timezone.now().date(),
+        )
+        
+        return Store.objects.filter(status='active').select_related('user').annotate(
+            has_active_promo=Exists(active_promo_qs),
+            active_promo_count=Count('promos', filter=Q(
+                promos__is_active=True,
+                promos__start_date__lte=timezone.now().date(),
+                promos__end_date__gte=timezone.now().date(),
+            )),
+        ).prefetch_related(
+            Prefetch(
+                'products',
+                queryset=Product.objects.filter(is_active=True, is_featured=True).order_by('-sold_count')[:4],
+                to_attr='_featured_products'
+            )
+        )
 
 
 class StoreDetailView(generics.RetrieveAPIView):
