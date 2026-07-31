@@ -12,6 +12,7 @@ This processor is registered in settings.TEMPLATES[].OPTIONS.context_processors.
 
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 
 # Import JSON for breadcrumb parsing
 import json
@@ -640,7 +641,7 @@ def seo_metadata(request):
         "contact_email": CONTACT_EMAIL,
         "contact_phone": CONTACT_PHONE,
         "social_links": SOCIAL_LINKS,
-        "current_year": 2026,
+        "current_year": timezone.now().year,
     }
 
     return {"seo": seo}

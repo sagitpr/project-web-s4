@@ -148,11 +148,31 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle registration response: redirect to OTP page using backend-provided URL.
    * The backend returns { requires_otp: true, redirect_url: "/auth/otp/?email=..." }
    * The frontend MUST use the backend-provided redirect_url, NEVER construct its own.
+   *
+   * UX GAP FIX: Check otp_channels from backend response. If channels is empty
+   * or doesn't include 'email', append in_app_fallback=1 so the OTP page shows
+   * the in-app notification banner on initial load (no need to click "Kirim Ulang").
    */
   function handleRegisterResponse(data, email) {
     // If backend provides a redirect_url, use it directly
     if (data.redirect_url) {
-      window.location.href = data.redirect_url;
+      var redirectUrl = data.redirect_url;
+      
+      // ── UX GAP FIX: Detect email delivery failure ──
+      // If otp_channels is empty or doesn't include 'email', the email delivery
+      // may have failed. Tell the OTP page to show the in-app banner immediately.
+      var channels = data.otp_channels || [];
+      if (channels.length === 0 || channels.indexOf('email') === -1) {
+        var separator = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+        redirectUrl += separator + 'in_app_fallback=1';
+        
+        // Also pass the OTP code if available (debug mode or in-app fallback)
+        if (data.otp_code) {
+          redirectUrl += '&otp=' + encodeURIComponent(data.otp_code);
+        }
+      }
+      
+      window.location.href = redirectUrl;
       return;
     }
     

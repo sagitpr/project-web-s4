@@ -174,14 +174,6 @@
                     <h3><i class="fa-solid fa-robot scan-icon"></i>Smart Scan AI</h3>
                 </div>
                 <div class="card-body scan-body">
-                    <select id="scan-product-select" class="form-select scan-select">
-                        <option value="">-- Pilih Produk --</option>
-                    </select>
-                    <select id="scan-mode-select" class="form-select scan-select">
-                        <option value="computer_vision">Freshness CV (Produk Segar)</option>
-                        <option value="barcode">Barcode Scanner</option>
-                        <option value="ocr">OCR Scanner</option>
-                    </select>
                     <div class="camera-feed-wrap">
                         <video id="video-feed" autoplay playsinline class="camera-feed"></video>
                         <div id="camera-placeholder" class="camera-placeholder">
@@ -211,9 +203,6 @@
                 <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
                     Scan produk, buat keranjang, dan proses transaksi offline langsung dari sini.
                 </p>
-                <select id="pos-product-select" class="form-select scan-select">
-                    <option value="">-- Cari & Pilih Produk --</option>
-                </select>
                 <div class="pos-cart" id="posCart" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0;min-height:80px;">
                     <div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">
                         <i class="fa-solid fa-cart-shopping" style="font-size:24px;display:block;margin-bottom:8px;"></i>
@@ -295,7 +284,7 @@
                 <div class="footer-brand">
                     <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
                     <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.<br>Belanja mudah, harga bersahabat!</p>
-                    <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                    <p class="copyright">&copy; {% now "Y" %} Warungio. All rights reserved.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Layanan</h4>

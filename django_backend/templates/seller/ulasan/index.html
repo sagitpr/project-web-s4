@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/seller/ulasan/style.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
@@ -25,10 +26,10 @@
                         <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
                         <div class="shop-status-block">
                             <div class="shop-name-row">
-                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
-                                <span class="badge-active">Aktif</span>
-                            </div>
-                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                            <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
+                            <span class="badge-active">Aktif</span>
+                        </div>
+                        <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                         </div>
                     </div>
                     <div class="header-right">
@@ -39,7 +40,7 @@
                                 <div class="status-online"></div>
                             </div>
                             <div class="profile-info">
-                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                                 <span class="profile-role">Seller</span>
                             </div>
                             <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -190,7 +191,7 @@
                     <div class="footer-brand">
                         <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
                         <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.</p>
-                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                        <p class="copyright">&copy; {% now "Y" %} Warungio. All rights reserved.</p>
                     </div>
                     <div class="footer-links">
                         <h4>Layanan</h4>

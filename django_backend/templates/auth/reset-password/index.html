@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    {# ── Shared Auth CSS (page-shell, login-card, hero-panel, form-panel, input-shell, login-button) ── #}
+    <link rel="stylesheet" href="{% static 'css/pages/auth/login/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/auth/reset-password/style.css' %}">
 </head>
 <body>
@@ -78,13 +80,13 @@
 
                     <div class="input-group password-group">
                         <label>Kode OTP</label>
-                        <div class="otp-input-row" style="display:flex; gap:8px; justify-content:center;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
-                            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" style="width:46px; height:52px; text-align:center; font-size:1.4rem; font-weight:800; border:1px solid #cdd4e1; border-radius:9px;">
+                        <div class="otp-row">
+                            <input type="text" inputmode="numeric" maxlength="1" required>
+                            <input type="text" inputmode="numeric" maxlength="1" required>
+                            <input type="text" inputmode="numeric" maxlength="1" required>
+                            <input type="text" inputmode="numeric" maxlength="1" required>
+                            <input type="text" inputmode="numeric" maxlength="1" required>
+                            <input type="text" inputmode="numeric" maxlength="1" required>
                         </div>
                     </div>
 

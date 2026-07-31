@@ -211,6 +211,9 @@ class OrderItem(models.Model):
         db_table = 'order_items'
         verbose_name = 'Item Pesanan'
         verbose_name_plural = 'Item Pesanan'
+        indexes = [
+            models.Index(fields=['order', 'product']),
+        ]
 
     def __str__(self):
         return f'{self.product_name} x{self.qty}'

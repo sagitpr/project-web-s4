@@ -3,98 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kode Verifikasi Warungio</title>
+  <title>Kode Verifikasi — Warungio</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:48px 16px;">
+<body style="margin:0;padding:0;background-color:#0f172a;font-family:'Inter','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a;padding:32px 16px;">
     <tr>
       <td align="center">
-        <!-- Main Card -->
-        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.03);">
+        <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
 
-          <!-- Header -->
+          <!-- HEADER -->
           <tr>
-            <td style="background:linear-gradient(135deg,#108d35 0%,#08752b 100%);padding:44px 32px 36px;text-align:center;">
-              <img src="https://warungio-96622149770.asia-southeast2.run.app/static/images/Warungio-L.png"
-                   alt="Warungio"
-                   width="64"
-                   height="64"
-                   style="display:block;margin:0 auto 14px;border-radius:14px;background-color:#ffffff;padding:4px;box-shadow:0 4px 10px rgba(0,0,0,0.15);" />
-              <h1 style="margin:0;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                Warung<span style="color:#dcfce7;font-weight:300;">io</span>
-              </h1>
-              <p style="margin:6px 0 0;font-size:13px;color:#dcfce7;font-weight:500;opacity:0.9;letter-spacing:0.3px;">
-                Belanja kebutuhan harian lebih mudah
-              </p>
+            <td style="background:linear-gradient(135deg,#064e3b 0%,#065f46 40%,#047857 100%);padding:36px 40px 32px;text-align:center;">
+              <h1 style="margin:0;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">Pemberitahuan Verifikasi</h1>
+              <p style="margin:8px 0 0;font-size:13px;color:#a7f3d0;font-weight:400;letter-spacing:0.2px;">Kode OTP — {{ site_name }}</p>
             </td>
           </tr>
 
-          <!-- Body -->
+          <!-- BODY -->
           <tr>
-            <td style="padding:40px 36px 32px;">
-              <p style="margin:0 0 10px;font-size:16px;color:#0f172a;line-height:1.5;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                Halo <strong>{{ greeting }}</strong>,
-              </p>
-              <p style="margin:0 0 28px;font-size:14px;color:#334155;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
+            <td style="padding:40px 40px 32px;">
+              <p style="margin:0 0 6px;font-size:15px;color:#1e293b;font-weight:500;line-height:1.5;">Yth. <strong style="color:#0f172a;">{{ greeting }}</strong>,</p>
+              <p style="margin:0 0 20px;font-size:14px;color:#475569;line-height:1.7;">
                 Kami menerima permintaan
-                {% if purpose == 'registration' %}
-                  verifikasi akun
-                {% elif purpose == 'login' %}
-                  masuk akun
-                {% elif purpose == 'password_reset' %}
-                  reset password
-                {% elif purpose == 'email_change' %}
-                  perubahan email
-                {% elif purpose == 'phone_change' %}
-                  perubahan nomor HP
-                {% elif purpose == 'payment' %}
-                  verifikasi pembayaran
-                {% else %}
-                  verifikasi
-                {% endif %}
-                untuk akun Warungio Anda.
+                {% if purpose == 'registration' %}pendaftaran akun baru
+                {% elif purpose == 'login' %}masuk ke akun
+                {% elif purpose == 'password_reset' %}pengaturan ulang kata sandi
+                {% elif purpose == 'email_change' %}perubahan alamat email
+                {% elif purpose == 'phone_change' %}perubahan nomor telepon
+                {% elif purpose == 'payment' %}verifikasi pembayaran
+                {% else %}verifikasi akun{% endif %}
+                untuk akun Warungio yang terdaftar dengan alamat email <strong style="color:#1e293b;">{{ email }}</strong>.
               </p>
 
-              <!-- OTP Code Box -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,#f0fdf4 0%,#dcfce7 100%);border:1.5px dashed #86efac;border-radius:12px;padding:26px 20px;margin-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-bottom:1px solid #e2e8f0;"></td></tr></table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
                 <tr>
-                  <td align="center">
-                    <p style="margin:0 0 10px;font-size:12px;color:#15803d;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                      Kode Verifikasi Anda
-                    </p>
-                    <p style="margin:0;font-size:38px;font-weight:800;color:#108d35;letter-spacing:8px;font-family:'Courier New',monospace;text-shadow:0 1px 2px rgba(16,141,53,0.1);">
-                      {{ otp_code }}
-                    </p>
-                    <p style="margin:12px 0 0;font-size:13px;color:#166534;font-weight:500;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                      Berlaku selama <strong>{{ expiry_minutes }} menit</strong>
-                    </p>
+                  <td align="center" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:28px 24px;">
+                    <p style="margin:0 0 12px;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Kode Verifikasi Satu Kali (OTP)</p>
+                    <p style="margin:0;font-size:40px;font-weight:800;color:#064e3b;letter-spacing:10px;font-family:'SF Mono','Courier New',monospace;">{{ otp_code }}</p>
+                    <p style="margin:16px 0 0;font-size:13px;color:#64748b;font-weight:400;">Kode ini berlaku selama <strong style="color:#0f172a;">{{ expiry_minutes }} menit</strong> sejak permintaan ini dikirimkan.</p>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 24px;font-size:13px;color:#64748b;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                Jika Anda tidak merasa melakukan permintaan ini, silakan abaikan email ini. Demi keamanan akun Anda, jangan bagikan kode OTP ini kepada siapa pun, termasuk pihak yang mengaku sebagai Warungio.
-              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 6px;font-size:12px;color:#991b1b;font-weight:700;letter-spacing:0.3px;">INFORMASI PENTING — KEAMANAN AKUN</p>
+                    <p style="margin:0;font-size:13px;color:#7f1d1d;line-height:1.6;">Kode OTP ini bersifat rahasia dan hanya diketahui oleh Anda. Jangan memberikan kode ini kepada siapa pun, termasuk kepada pihak yang mengaku sebagai perwakilan Warungio. Warungio tidak akan pernah meminta kode OTP Anda melalui telepon, pesan teks, atau email.</p>
+                  </td>
+                </tr>
+              </table>
 
-              <!-- Divider -->
-              <hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0;" />
+              <p style="margin:0 0 4px;font-size:13px;color:#475569;font-weight:600;">Langkah Selanjutnya:</p>
+              <table cellpadding="0" cellspacing="0" style="margin:8px 0 24px;">
+                <tr>
+                  <td style="padding:4px 0;color:#475569;font-size:13px;line-height:1.5;">
+                    1. Buka halaman verifikasi di aplikasi atau website Warungio<br />
+                    2. Masukkan 6 digit kode OTP di atas pada kolom yang tersedia<br />
+                    3. Klik tombol "Verifikasi" untuk menyelesaikan proses
+                  </td>
+                </tr>
+              </table>
 
-              <!-- Footer -->
-              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;line-height:1.5;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                &copy; 2026 Warungio. Hak cipta dilindungi undang-undang.
-              </p>
-              <p style="margin:0;font-size:12px;color:#94a3b8;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-                Butuh bantuan? Hubungi kami di
-                <a href="mailto:{{ support_email }}" style="color:#108d35;text-decoration:none;font-weight:600;">{{ support_email }}</a>
-              </p>
+              <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-bottom:1px solid #e2e8f0;"></td></tr></table>
+
+              <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;line-height:1.6;">Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini. Akun Anda tetap aman.</p>
+              <p style="margin:12px 0 0;font-size:12px;color:#94a3b8;line-height:1.6;">Butuh bantuan? Hubungi <a href="mailto:{{ support_email }}" style="color:#064e3b;text-decoration:underline;font-weight:600;">{{ support_email }}</a></p>
             </td>
           </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background-color:#f8fafc;padding:24px 40px;border-top:1px solid #e2e8f0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;font-size:12px;color:#94a3b8;font-weight:500;">{{ site_name }} — Ekosistem Marketplace & Manajemen Bisnis UMKM Indonesia</p>
+                    <p style="margin:8px 0 0;font-size:11px;color:#cbd5e1;line-height:1.5;">Email ini dikirim secara otomatis. Mohon tidak membalas email ini secara langsung.</p>
+                    <p style="margin:12px 0 0;font-size:11px;color:#94a3b8;">&copy; 2026 {{ site_name }}. Seluruh hak cipta dilindungi undang-undang.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
         </table>
 
-        <!-- Footer Disclaimer -->
-        <p style="margin:20px 0 0;font-size:11px;color:#94a3b8;text-align:center;max-width:480px;line-height:1.6;font-family:'Plus Jakarta Sans','Segoe UI',Helvetica,Arial,sans-serif;">
-          Email ini dikirim secara otomatis oleh sistem Warungio.<br />
-          Mohon tidak membalas email ini secara langsung.
+        <p style="margin:24px 0 0;font-size:11px;color:#64748b;text-align:center;max-width:520px;line-height:1.5;">
+          Email ini merupakan pesan otomatis yang dikirimkan oleh sistem {{ site_name }}.<br />
+          Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi {{ support_email }}
         </p>
       </td>
     </tr>

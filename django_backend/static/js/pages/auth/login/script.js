@@ -201,13 +201,34 @@
             loginBtn.textContent = loginEntry === 'seller' ? 'Masuk sebagai Mitra' : 'Masuk Sekarang';
           }
           
+          // ── UX GAP FIX: Check otp_channels from login response ──
+          // If channels is empty or doesn't include 'email', the email delivery
+          // may have failed. Tell the OTP page to show the in-app banner immediately.
+          var otpChannels = err.otp_channels || [];
+          var hasInAppFallback = (otpChannels.length === 0 || otpChannels.indexOf('email') === -1);
+          
           // CRITICAL: Use backend-provided redirect_url when available.
           // The backend ensures the correct OTP page with proper parameters.
           if (err.redirect_url) {
-            window.location.href = err.redirect_url;
+            var redirectUrl = err.redirect_url;
+            if (hasInAppFallback) {
+              var separator = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+              redirectUrl += separator + 'in_app_fallback=1';
+              if (err.otp_code) {
+                redirectUrl += '&otp=' + encodeURIComponent(err.otp_code);
+              }
+            }
+            window.location.href = redirectUrl;
           } else {
             // Fallback: construct redirect manually
-            window.location.href = '/auth/otp/?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
+            var manualUrl = '/auth/otp/?email=' + encodeURIComponent(verificationEmail) + '&purpose=registration';
+            if (hasInAppFallback) {
+              manualUrl += '&in_app_fallback=1';
+              if (err.otp_code) {
+                manualUrl += '&otp=' + encodeURIComponent(err.otp_code);
+              }
+            }
+            window.location.href = manualUrl;
           }
           return;
         }

@@ -345,7 +345,9 @@ class MyFavoritesView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Favorite.objects.filter(user=self.request.user).select_related('product')
+        return Favorite.objects.filter(user=self.request.user).select_related(
+            'product__store', 'product__category'
+        )
 
 
 @extend_schema(exclude=True)
@@ -426,7 +428,7 @@ class PromoListView(generics.ListAPIView):
         store_id = self.request.query_params.get('store')
         if store_id and store_id.isdigit():
             qs = qs.filter(store_id=int(store_id))
-        return qs
+        return qs.order_by('-created_at')
 
 
 @extend_schema(exclude=True)
@@ -830,11 +832,15 @@ class LowStockProductsView(views.APIView):
 
         # Auto-create notifications for seller — use bulk_create for efficiency
         combined = low_stock + out_of_stock
-        existing_titles = set(Notification.objects.filter(
-            user=request.user,
-            notification_type__in=['stok_habis', 'stok_rendah'],
-            title__in=[f"{item['product_name']} — {'Stok Habis' if item['stock'] <= 0 else 'Stok Rendah'}" for item in combined]
-        ).values_list('title', flat=True))
+        # Build title list only if there are items to avoid empty IN clause
+        title_list = [f"{item['product_name']} — {'Stok Habis' if item['stock'] <= 0 else 'Stok Rendah'}" for item in combined]
+        existing_titles = set()
+        if title_list:
+            existing_titles = set(Notification.objects.filter(
+                user=request.user,
+                notification_type__in=['stok_habis', 'stok_rendah'],
+                title__in=title_list
+            ).values_list('title', flat=True))
         
         new_notifications = []
         for item in combined:

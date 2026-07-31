@@ -1,6 +1,89 @@
 /* Warungio Buyer — Chat Page */
 /* Premium design system matching home/style.css */
 
+/* ── Pinned Conversations: AI + Admin Support ── */
+.pinned-conversations {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 4px;
+}
+.pinned-conversations .conversation-item.pinned {
+  background: #f9fafb;
+  border-left-color: #16a34a;
+}
+.pinned-conversations .conversation-item.pinned:hover {
+  background: #f0fdf4;
+}
+.conversation-item.pinned .conversation-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+  border: none;
+}
+.ai-avatar {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+.admin-avatar {
+  background: linear-gradient(135deg, #16a34a, #059669);
+}
+.pinned-badge {
+  font-size: 10px;
+  color: #16a34a;
+  margin-left: 4px;
+}
+.pinned-divider {
+  padding: 8px 20px 4px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pinned-divider span {
+  white-space: nowrap;
+}
+.pinned-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* AI / Admin message labels */
+.ai-label, .admin-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+.ai-label { color: #2563eb; }
+.admin-label { color: #059669; }
+
+.ai-message-bubble {
+  background: linear-gradient(135deg, #eef2ff, #f0fdf4) !important;
+  border-color: #c7d2fe !important;
+}
+.admin-message-bubble {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5) !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* ── Chat Content Area ── */
+.chat-content-area {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+.chat-content-area.show-flex {
+  display: flex;
+}
+
 /* ── Layout ── */
 .chat-layout {
   display: grid;

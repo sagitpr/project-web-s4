@@ -52,7 +52,7 @@ class StoreListView(generics.ListAPIView):
                 promos__start_date__lte=timezone.now().date(),
                 promos__end_date__gte=timezone.now().date(),
             )),
-        ).prefetch_related(
+        ).order_by('store_name').prefetch_related(
             Prefetch(
                 'products',
                 queryset=Product.objects.filter(is_active=True, is_featured=True).order_by('-sold_count')[:4],

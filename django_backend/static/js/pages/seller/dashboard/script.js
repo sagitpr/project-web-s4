@@ -407,8 +407,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Capture image & run Smart Scan
   btnCapture?.addEventListener('click', async () => {
     const selectedProductId = scanProductSelect?.value;
-    if (!selectedProductId) {
-      alert('Silakan pilih produk terlebih dahulu sebelum melakukan scanning.');
+    if (!scanProductSelect || !selectedProductId) {
+      window.WarungioToast?.show('Gunakan halaman AI Product Registration untuk scan produk lengkap.', 'info');
+      window.open('/seller/smart-scan/', '_blank');
       return;
     }
 

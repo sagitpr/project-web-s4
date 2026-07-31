@@ -15,17 +15,19 @@ def _email_configured() -> bool:
     return bool(settings.EMAIL_HOST_USER) and bool(settings.EMAIL_HOST_PASSWORD)
 
 
-def _subject_for_purpose(purpose: str, otp_code: str) -> str:
+def _subject_for_purpose(purpose: str, otp_code: str = '') -> str:
     labels = {
-        'registration': 'Kode Verifikasi Akun Warungio',
-        'login':        'Kode OTP Masuk Warungio',
-        'password_reset': 'Kode OTP Reset Password Warungio',
-        'email_change': 'Kode Verifikasi Email Baru',
-        'phone_change': 'Kode Verifikasi Nomor HP',
-        'payment':      'Kode Verifikasi Pembayaran',
+        'registration': 'Pemberitahuan Verifikasi Akun — Warungio',
+        'login':        'Pemberitahuan Verifikasi Masuk — Warungio',
+        'password_reset': 'Pemberitahuan Reset Kata Sandi — Warungio',
+        'email_change': 'Pemberitahuan Ubah Email — Warungio',
+        'phone_change': 'Pemberitahuan Ubah Nomor HP — Warungio',
+        'payment':      'Pemberitahuan Verifikasi Pembayaran — Warungio',
     }
-    base = labels.get(purpose, 'Kode Verifikasi Warungio')
-    return f'{base} — {otp_code}'
+    base = labels.get(purpose, 'Pemberitahuan Verifikasi — Warungio')
+    if otp_code:
+        return f'[{otp_code}] {base}'
+    return base
 
 
 def validate_email_settings() -> dict:
@@ -182,6 +184,7 @@ def send_otp_email(
         'purpose_label': purpose_labels.get(purpose, 'verifikasi'),
         'user_full_name': user_full_name or '',
         'greeting': greeting,
+        'email': email,
         'site_name': 'Warungio',
         'support_email': settings.DEFAULT_FROM_EMAIL,
     }

@@ -203,6 +203,9 @@ class ProductGallery(models.Model):
         verbose_name = 'Galeri Produk'
         verbose_name_plural = 'Galeri Produk'
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['product', 'order']),
+        ]
 
     def __str__(self):
         return f'Gallery image for {self.product.product_name}'
@@ -237,6 +240,10 @@ class Review(models.Model):
         unique_together = ['user', 'product']
         indexes = [
             models.Index(fields=['product', 'rating']),
+            models.Index(fields=['created_at'],
+                         name='review_created_at_idx'),
+            models.Index(fields=['user', 'product'],
+                         name='review_user_product_idx'),
         ]
 
     def __str__(self):
@@ -269,6 +276,9 @@ class Favorite(models.Model):
         verbose_name_plural = 'Favorit'
         ordering = ['-created_at']
         unique_together = ['user', 'product']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
 
     def __str__(self):
         return f'{self.user.email} ♥ {self.product.product_name}'
@@ -332,6 +342,12 @@ class Promo(models.Model):
                 fields=['store', 'promo_code'],
                 name='unique_store_promo_code'
             )
+        ]
+        indexes = [
+            models.Index(fields=['store', 'is_active', 'start_date', 'end_date'],
+                         name='promo_store_active_date_idx'),
+            models.Index(fields=['start_date', 'end_date'],
+                         name='promo_date_range_idx'),
         ]
 
     def __str__(self):
@@ -480,6 +496,9 @@ class Voucher(models.Model):
         db_table = 'vouchers'
         verbose_name = 'Voucher'
         verbose_name_plural = 'Voucher'
+        indexes = [
+            models.Index(fields=['is_active', 'expired_date']),
+        ]
 
     def __str__(self):
         return self.voucher_code

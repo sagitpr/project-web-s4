@@ -70,22 +70,22 @@ def category_landing(request, slug):
     if not category:
         raise Http404("Kategori tidak ditemukan")
 
-    # Get products in this category
-    products = Product.objects.filter(
+    # Get products in this category — load enough for top_products without extra query
+    products = list(Product.objects.filter(
         category=category, is_active=True
-    ).select_related('store').order_by('-is_featured', '-sold_count')[:40]
+    ).select_related('store').order_by('-is_featured', '-sold_count')[:40])
+
+    # Top products by rating — derived in Python (0 extra DB queries)
+    top_products = sorted(products, key=lambda p: p.rating_avg or 0, reverse=True)[:5]
 
     # Get stores that sell products in this category
-    stores = Store.objects.filter(
+    stores = list(Store.objects.filter(
         products__category=category,
         products__is_active=True,
         status='active'
     ).distinct().annotate(
         prod_count=Count('products', filter=Q(products__is_active=True, products__category=category))
-    ).order_by('-rating_avg')[:20]
-
-    # Get top products by rating
-    top_products = products.order_by('-rating_avg')[:5]
+    ).order_by('-rating_avg')[:20])
 
     context = {
         'category': category,
@@ -197,9 +197,17 @@ def store_landing(request, slug):
 
     store = get_object_or_404(Store.objects.select_related('user'), slug=slug, status='active')
 
-    products = Product.objects.filter(
+    # ── Single product query, then filter/map in Python ──
+    # Load more products (200) to cover featured + best_selling + new + promo
+    all_products = list(Product.objects.filter(
         store=store, is_active=True
-    ).select_related('category').order_by('-is_featured', '-sold_count')[:50]
+    ).select_related('category').order_by('-is_featured', '-sold_count')[:200])
+    
+    # Derive subsets in Python (0 extra DB queries)
+    featured_products = [p for p in all_products if p.is_featured][:8]
+    best_selling_products = sorted(all_products, key=lambda p: p.sold_count, reverse=True)[:8]
+    new_products = sorted(all_products, key=lambda p: p.created_at, reverse=True)[:8]
+    products = all_products[:50]  # Keep original slice for 'all products' grid
 
     # Get categories for this store
     categories = Category.objects.filter(
@@ -208,49 +216,30 @@ def store_landing(request, slug):
         is_active=True
     ).distinct()
 
-    # Get store operating hours, featured products, banners
     # Get store status
     store_status = 'buka' if store.is_open else 'tutup'
     
-    # Get promo counts
+    # ── Single Promo query, reused for count + promo products ──
     from django.utils import timezone
+    promo_products = []
+    active_promos = []
     active_promos_count = 0
     try:
         from products.models import Promo
-        active_promos_count = Promo.objects.filter(
+        active_promos = list(Promo.objects.filter(
             store=store,
             is_active=True,
             start_date__lte=timezone.now().date(),
             end_date__gte=timezone.now().date(),
-        ).count()
-    except Exception:
-        pass
-
-    # Featured products — separate query (products is already sliced)
-    featured_products = Product.objects.filter(
-        store=store, is_active=True, is_featured=True
-    ).order_by('-sold_count')[:8]
-
-    # ── Promo Products (diskon / flash sale) ──
-    promo_products = []
-    active_promos = []
-    try:
-        from products.models import Promo
-        active_promos = Promo.objects.filter(
-            store=store,
-            is_active=True,
-            start_date__lte=timezone.now().date(),
-            end_date__gte=timezone.now().date(),
-        ).order_by('-discount_percent')
+        ).order_by('-discount_percent'))
         
-        # Get all active products in this store that could be on promo
-        if active_promos.exists():
-            all_store_products = Product.objects.filter(
-                store=store, is_active=True
-            ).order_by('-sold_count')[:20]
-            
+        active_promos_count = len(active_promos)
+        
+        if active_promos:
+            # Use all_products (already loaded) instead of a fresh query
+            promo_pool = all_products[:20]
             for promo in active_promos:
-                for p in all_store_products:
+                for p in promo_pool:
                     disc_pct = promo.discount_percent or 0
                     disc_price = float(p.price) * (100 - disc_pct) / 100
                     days_left = (promo.end_date - timezone.now().date()).days
@@ -266,30 +255,19 @@ def store_landing(request, slug):
                         'days_left': max(days_left, 0),
                         'end_date': promo.end_date,
                     })
-                # Only take first promo's worth of products
                 if promo_products:
                     break
             
-            # Sort by discount percent descending, then by days_left ascending
             promo_products.sort(key=lambda x: (-x['discount_percent'], x['days_left']))
-            promo_products = promo_products[:8]  # Max 8 promo products
+            promo_products = promo_products[:8]
     except Exception:
         pass
 
-    # ── Best selling & newest products ──
-    best_selling_products = Product.objects.filter(
-        store=store, is_active=True
-    ).order_by('-sold_count')[:8]
-    
-    new_products = Product.objects.filter(
-        store=store, is_active=True
-    ).order_by('-created_at')[:8]
-
-    # ── Store Reviews (recent reviews from all products) ──
-    store_reviews = Review.objects.filter(
+    # ── Store Reviews (single query, len() for count) ──
+    store_reviews = list(Review.objects.filter(
         product__store=store
-    ).select_related('user', 'product').order_by('-created_at')[:12]
-    store_review_count = Review.objects.filter(product__store=store).count()
+    ).select_related('user', 'product').order_by('-created_at')[:12])
+    store_review_count = len(store_reviews)
 
     context = {
         'store': store,

@@ -56,7 +56,7 @@ class EmailServiceUnitTests(TestCase):
     def test_subject_for_password_reset(self):
         """Test subject for password reset purpose."""
         subject = _subject_for_purpose('password_reset', '654321')
-        self.assertIn('Reset Password', subject)
+        self.assertIn('Kata Sandi', subject)
         self.assertIn('654321', subject)
 
     def test_subject_for_unknown_purpose(self):
@@ -191,7 +191,7 @@ class EmailServiceUnitTests(TestCase):
         for purpose, keyword in [
             ('registration', 'Verifikasi Akun'),
             ('login', 'Masuk'),
-            ('password_reset', 'Reset Password'),
+            ('password_reset', 'Kata Sandi'),
         ]:
             mail.outbox.clear()
             result = send_otp_email(

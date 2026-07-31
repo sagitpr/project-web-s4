@@ -308,3 +308,17 @@ if settings.DEBUG:
     urlpatterns += static('/buyer/', document_root=settings.BASE_DIR)
     urlpatterns += static('/seller/', document_root=settings.BASE_DIR)
     urlpatterns += [path('api-auth/', include('rest_framework.urls'))]
+    
+    # Django Debug Toolbar (only in DEBUG mode)
+    try:
+        import debug_toolbar
+        urlpatterns.insert(0, path('__debug__/', include(debug_toolbar.urls)))
+    except ImportError:
+        pass
+
+# Django Silk — Production Profiling (always available if installed)
+try:
+    import silk
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+except ImportError:
+    pass

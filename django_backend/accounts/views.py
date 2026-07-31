@@ -84,7 +84,32 @@ def get_client_ip(request):
 def _dispatch_otp_async(email, phone, otp_code, purpose, user_full_name=None):
 
     if send_otp_task is None:
-        logger.warning('OTP delivery skipped — Celery tasks not available (import failed at module load)')
+        logger.warning(
+            'OTP delivery — Celery tasks not available (import failed at module load). '
+            'Attempting sync fallback directly.'
+        )
+        # Even when Celery is unavailable, we must still attempt sync delivery.
+        # The old code returned [] here, which caused the caller (RegisterView, LoginView)
+        # to think OTP delivery failed entirely — even though SMTP was configured.
+        # This is the PRIMARY reason OTP was never sent on VPS/containers where
+        # CELERY_ENABLED=false or Celery/Redis was unreachable at import time.
+        if email:
+            sync_result = send_otp_email(
+                email=email,
+                otp_code=otp_code,
+                purpose=purpose,
+                user_full_name=user_full_name,
+            )
+            if sync_result.get('success'):
+                logger.info(
+                    'OTP sync fallback SUCCEEDED for %s (purpose=%s)',
+                    email, purpose,
+                )
+                return ['email']
+            logger.warning(
+                'OTP sync fallback FAILED for %s: %s',
+                email, sync_result.get('error', 'unknown'),
+            )
         return []
 
     channels = []
@@ -529,9 +554,17 @@ class LoginView(views.APIView):
                 user_full_name=user_full_name,
             )
             if not channels:
-                logger.warning(
-                    'LOGIN AUTO-OTP — All delivery channels failed for %s',
+                logger.error(
+                    'LOGIN AUTO-OTP — All delivery channels FAILED for %s. '
+                    'User will NOT receive OTP. Returning error.',
                     email,
+                )
+                return error_response(
+                    message='Gagal mengirim kode OTP. Silakan coba lagi nanti.',
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    code='otp_delivery_failed',
+                    requires_otp=True,
+                    email=email,
                 )
 
             # Build redirect URL for OTP page

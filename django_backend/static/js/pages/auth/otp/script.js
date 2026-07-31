@@ -78,6 +78,34 @@ document.addEventListener('DOMContentLoaded', function() {
     showMsg('Mode development — Kode OTP: ' + testOtp, 'success');
   }
 
+  // ── UX GAP FIX: Check for in_app_fallback on initial page load ──
+  // When the register/login page detects that email delivery failed (otp_channels empty),
+  // it appends ?in_app_fallback=1 to the redirect URL. The OTP page then shows the
+  // in-app OTP banner immediately, so the user doesn't need to click "Kirim Ulang"
+  // to see their OTP code. This fixes the UX gap where email fails silently.
+  (function checkInAppFallbackOnLoad() {
+    var hasFallback = params.get('in_app_fallback') === '1';
+    if (!hasFallback) return;
+    
+    // Found in_app_fallback=1 in URL — email delivery failed or wasn't available.
+    // Show the in-app notification banner with the OTP code (if provided) or
+    // with guidance to check spam folder and use the resend button.
+    var otpCodeFromUrl = params.get('otp') || '';
+    
+    showMsg(
+      'Pengiriman email terkendala. Kode OTP tersedia di notifikasi aplikasi di bawah ini.',
+      'warning'
+    );
+    
+    // Call showInAppBanner with the OTP code if available from URL
+    showInAppBanner(otpCodeFromUrl);
+    
+    // Automatically enable the resend button since the initial delivery failed
+    if (resendBtn) {
+      resendBtn.disabled = false;
+    }
+  })();
+
   // ── Auto-focus first input ──
   if (otpInputs.length > 0) {
     otpInputs[0].focus();

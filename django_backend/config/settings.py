@@ -75,6 +75,20 @@ THIRD_PARTY_APPS = [
     'drf_spectacular_sidecar',
 ]
 
+if DEBUG:
+    try:
+        import debug_toolbar
+        THIRD_PARTY_APPS.append('debug_toolbar')
+    except ImportError:
+        pass
+
+# Django Silk — Production Profiling (always available, auth-restricted)
+try:
+    import silk
+    THIRD_PARTY_APPS.append('silk')
+except ImportError:
+    pass
+
 DJANGO_APPS.append('django.contrib.humanize')
 
 LOCAL_APPS = [
@@ -122,6 +136,22 @@ MIDDLEWARE = [
     'accounts.middleware.RateLimitMiddleware',
     'accounts.middleware.RoleBasedRedirectMiddleware',
 ]
+
+if DEBUG and 'debug_toolbar' in INSTALLED_APPS:
+    MIDDLEWARE.insert(1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    # Required for debug toolbar to show (allows any internal IP)
+    INTERNAL_IPS = ['127.0.0.1', 'localhost', '0.0.0.0']
+
+# Django Silk middleware — add after security, before everything else
+if 'silk' in INSTALLED_APPS:
+    MIDDLEWARE.insert(1, 'silk.middleware.SilkyMiddleware')
+    # Only capture profiles for API requests (skip static/media)
+    SILKY_META = True
+    SILKY_PYTHON_PROFILER = False  # Disable Python profiler (too heavy for 1GB RAM)
+    SILKY_MAX_REQUEST_BODY_SIZE = 0   # Don't log request bodies (saves DB space on 1GB VPS)
+    SILKY_MAX_RESPONSE_BODY_SIZE = 0   # Don't log response bodies
+    SILKY_AUTHENTICATION = True  # Require staff login to view profiles
+    SILKY_AUTHORISATION = True   # Only staff can view profiles
 
 ROOT_URLCONF = 'config.urls'
 

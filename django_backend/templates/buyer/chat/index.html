@@ -19,6 +19,34 @@
                     <input type="text" id="contactSearch" placeholder="Cari percakapan...">
                 </div>
             </div>
+            <!-- Pinned: AI Assistant + Admin Support -->
+            <div class="pinned-conversations" id="pinnedConversations">
+                <div class="conversation-item pinned" data-chat="ai" id="pinnedAiChat">
+                    <div class="conversation-avatar ai-avatar"><i class="fa-solid fa-robot"></i></div>
+                    <div class="conversation-info">
+                        <div class="conversation-name-row">
+                            <span class="conversation-name">AI Warungio</span>
+                            <span class="pinned-badge"><i class="fa-solid fa-thumbtack"></i></span>
+                        </div>
+                        <div class="conversation-preview-row">
+                            <span class="conversation-preview">Tanya resep, penyimpanan, saran produk...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="conversation-item pinned" data-chat="admin" id="pinnedAdminChat">
+                    <div class="conversation-avatar admin-avatar"><i class="fa-solid fa-headset"></i></div>
+                    <div class="conversation-info">
+                        <div class="conversation-name-row">
+                            <span class="conversation-name">Support Warungio</span>
+                            <span class="pinned-badge"><i class="fa-solid fa-thumbtack"></i></span>
+                        </div>
+                        <div class="conversation-preview-row">
+                            <span class="conversation-preview">Keluhan, pembayaran, bantuan aplikasi...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="pinned-divider"><span>Percakapan Lainnya</span></div>
+            </div>
             <div class="conversation-list" id="conversationsContainer">
                 <div class="p-16 text-center text-secondary">Memuat percakapan...</div>
             </div>
@@ -283,36 +311,201 @@
                 return div.innerHTML;
             }
 
-            // Send message
-            async function sendMessage() {
-                const input = document.getElementById('chatInput');
-                if (!input) return;
-
-                const text = input.value.trim();
-                if (!text) return;
-
-                input.value = '';
-
-                // Render locally
-                addLocalBubble(text, true);
-
-                try {
-                    await WarungioAPI.sendMessage({
-                        conversation_id: currentConversationId || 1,
-                        receiver_id: activeParticipantId || 1,
-                        content: text
-                    });
-                    resetActivityTimer();
-                    
-                    if (window.MOCK_API) {
-                        setTimeout(async () => {
-                            await fetchMessages();
-                        }, 1200);
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
+    // Store original send for restoration — capture BEFORE any overrides
+    var originalSendMessage = sendMessage;
+    
+    // Update addLocalBubble to support AI/admin styling (replaces the original)
+    addLocalBubble = function(text, isUser, source) {
+        var container = document.getElementById('chatMessages');
+        if (!container) return;
+        var timeStr = new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        var div = document.createElement('div');
+        var className = 'message-bubble ' + (isUser ? 'outgoing' : 'incoming');
+        if (!isUser && source === 'ai') className += ' ai-message-bubble';
+        if (!isUser && source === 'admin') className += ' admin-message-bubble';
+        div.className = className;
+        var labelHtml = '';
+        if (!isUser && source === 'ai') labelHtml = '<span class="ai-label"><i class="fa-solid fa-robot"></i> AI Warungio</span>';
+        if (!isUser && source === 'admin') labelHtml = '<span class="admin-label"><i class="fa-solid fa-headset"></i> Support</span>';
+        div.innerHTML = labelHtml + '<p style="margin:0;white-space:pre-line;">' + escapeHtml(text) + '</p><span class="message-time">' + timeStr + '</span>';
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    };
+    
+    // ── Pinned Chat: AI Assistant ──
+    document.getElementById('pinnedAiChat')?.addEventListener('click', function() {
+        document.querySelectorAll('.conversation-item').forEach(function(el) { el.classList.remove('active'); });
+        this.classList.add('active');
+        
+        document.getElementById('chatEmptyState').style.display = 'none';
+        document.getElementById('chatContentArea').classList.add('show-flex');
+        document.getElementById('activeChatName').textContent = 'AI Warungio';
+        var avatarEl = document.getElementById('activeChatAvatar');
+        avatarEl.src = '';
+        avatarEl.className = 'chat-header-avatar ai-avatar';
+        avatarEl.innerHTML = '<i class="fa-solid fa-robot"></i>';
+        document.getElementById('activeChatStatus').textContent = 'Online — AI Assistant';
+        document.getElementById('activeChatStatus').className = 'online';
+        
+        var container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+        addLocalBubble('Halo! Saya AI Warungio. Saya bisa membantu:\n\n🥗 Rekomendasi resep masakan\n🧊 Tips penyimpanan sayur & buah\n🍳 Saran pengolahan produk\n📦 Informasi produk\n\nAda yang bisa saya bantu?', false, 'ai');
+        
+        window.sendMessage = async function() {
+            var inp = document.getElementById('chatInput');
+            if (!inp) return;
+            var text = inp.value.trim();
+            if (!text) return;
+            inp.value = '';
+            addLocalBubble(text, true);
+            addLocalBubble('Sedang memproses pertanyaan Anda...', false, 'ai');
+            try {
+                var resp = await WarungioAuth.api('/api/support/ai-chat/', {
+                    method: 'POST',
+                    body: JSON.stringify({ message: text })
+                });
+                var msgs = container.querySelectorAll('.message-bubble');
+                if (msgs.length > 0) msgs[msgs.length - 1].remove();
+                addLocalBubble(resp.response || 'Maaf, saya tidak bisa menjawab pertanyaan itu.', false, 'ai');
+            } catch(e) {
+                var msgs = container.querySelectorAll('.message-bubble');
+                if (msgs.length > 0) msgs[msgs.length - 1].remove();
+                addLocalBubble('Maaf, terjadi kesalahan. Silakan coba lagi nanti.', false, 'ai');
             }
+        };
+    });
+    
+    // ── Pinned Chat: Admin Support ──
+    document.getElementById('pinnedAdminChat')?.addEventListener('click', function() {
+        document.querySelectorAll('.conversation-item').forEach(function(el) { el.classList.remove('active'); });
+        this.classList.add('active');
+        
+        document.getElementById('chatEmptyState').style.display = 'none';
+        document.getElementById('chatContentArea').classList.add('show-flex');
+        document.getElementById('activeChatName').textContent = 'Support Warungio';
+        var avatarEl = document.getElementById('activeChatAvatar');
+        avatarEl.src = '';
+        avatarEl.className = 'chat-header-avatar admin-avatar';
+        avatarEl.innerHTML = '<i class="fa-solid fa-headset"></i>';
+        document.getElementById('activeChatStatus').textContent = 'Online — Biasanya membalas dalam 1 jam';
+        document.getElementById('activeChatStatus').className = 'online';
+        
+        var container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+        addLocalBubble('Halo! Selamat datang di Support Warungio.\n\nSilakan sampaikan keluhan atau pertanyaan Anda:\n\n🔧 Kendala sistem / teknis\n💳 Masalah pembayaran / Midtrans\n📋 Bantuan pengaturan akun\n❓ Pertanyaan lainnya\n\nKami akan merespon secepatnya.', false, 'admin');
+        
+        window.sendMessage = async function() {
+            var inp = document.getElementById('chatInput');
+            if (!inp) return;
+            var text = inp.value.trim();
+            if (!text) return;
+            inp.value = '';
+            addLocalBubble(text, true);
+            addLocalBubble('Terima kasih! Pesan Anda telah diterima oleh tim Support Warungio. Kami akan merespon dalam 1x24 jam.\n\nNomor tiket: SUP-' + Date.now().toString(36).toUpperCase(), false, 'admin');
+        };
+    });
+    
+    // Override event listeners to use window.sendMessage (singleton pattern)
+    // Remove any existing listeners by cloning + replacing, then bind once
+    window.sendMessage = sendMessage;
+    
+    var btnSend = document.getElementById('btnSend');
+    var chatInput = document.getElementById('chatInput');
+    
+    function handleSend() { window.sendMessage(); }
+    function handleKeydown(e) { if (e.key === 'Enter') window.sendMessage(); }
+    
+    // Remove ALL existing listeners by replacing with clone
+    var oldBtn = btnSend;
+    if (oldBtn) {
+        var newBtn = oldBtn.cloneNode(true);
+        oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+        newBtn.addEventListener('click', handleSend);
+    }
+    
+    var oldInput = chatInput;
+    if (oldInput) {
+        var newInput = oldInput.cloneNode(true);
+        oldInput.parentNode.replaceChild(newInput, oldInput);
+        newInput.addEventListener('keydown', handleKeydown);
+    }
+    
+    // Update selectConversation to restore original send
+    selectConversation = async function(id) {
+        currentConversationId = id;
+        document.getElementById('chatEmptyState').style.display = 'none';
+        document.getElementById('chatContentArea').classList.add('show-flex');
+        
+        // Reset avatar
+        var avatarEl = document.getElementById('activeChatAvatar');
+        avatarEl.src = '/static/images/store-icon-T.png';
+        avatarEl.className = 'chat-header-avatar';
+        avatarEl.innerHTML = '';
+        
+        // Restore original send function
+        if (originalSendMessage) window.sendMessage = originalSendMessage;
+        
+        var conv = conversationsList.find(function(c) { return c.id === id; });
+        if (!conv) return;
+        activeParticipantId = conv.other_participant?.id || 1;
+        document.getElementById('activeChatName').textContent = conv.other_participant?.full_name || 'Warungio Assistant';
+        document.getElementById('activeChatStatus').textContent = conv.is_assistant ? 'AI Customer Service' : 'Online';
+        document.getElementById('activeChatStatus').className = 'online';
+        
+        // Update active state
+        document.querySelectorAll('.conversation-item').forEach(function(el) { el.classList.remove('active'); });
+        var convEl = document.querySelector('[data-conv-id="' + id + '"]');
+        if (convEl) convEl.classList.add('active');
+        
+        await fetchMessages();
+        resetActivityTimer();
+    };
+
+    // Update renderConversations to add data-conv-id
+    renderConversations = function() {
+        var container = document.getElementById('conversationsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        if (conversationsList.length === 0) {
+            container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted); font-size:12px;">Belum ada percakapan.</div>';
+            return;
+        }
+        conversationsList.forEach(function(c) {
+            var name = c.other_participant?.full_name || 'Toko Mitra';
+            var avatar = c.other_participant?.photo || '/static/images/store-icon-T.png';
+            var preview = c.last_message_preview || 'Kirim pesan...';
+            var time = c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) : '';
+            var badge = c.unread_count > 0 ? '<span class="conversation-badge">' + c.unread_count + '</span>' : '';
+            var activeClass = c.id === currentConversationId ? 'active' : '';
+            
+            var div = document.createElement('div');
+            div.className = 'conversation-item ' + activeClass;
+            div.setAttribute('data-conv-id', c.id);
+            div.innerHTML = '<img src="' + avatar + '" alt="' + name + '" class="conversation-avatar">' +
+                '<div class="conversation-info">' +
+                    '<div class="conversation-name-row">' +
+                        '<span class="conversation-name">' + name + '</span>' +
+                        '<span class="conversation-time">' + time + '</span>' +
+                    '</div>' +
+                    '<div class="conversation-preview-row">' +
+                        '<span class="conversation-preview">' + preview + '</span>' +
+                        badge +
+                    '</div>' +
+                '</div>';
+            
+            div.addEventListener('click', function() {
+                selectConversation(c.id);
+                if (window.innerWidth <= 768) {
+                    document.getElementById('chatSidebar').classList.add('hidden-mobile');
+                    document.getElementById('chatMain').classList.add('show-mobile');
+                    document.getElementById('btnBackToSidebar').style.display = 'inline-flex';
+                }
+            });
+            container.appendChild(div);
+        });
+    };
+
+    // Send message function (original)
 
             function addLocalBubble(text, isUser) {
                 const container = document.getElementById('chatMessages');

@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}" />
     <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/pages/seller/shared.css' %}" />
     <link rel="stylesheet" href="{% static 'css/pages/seller/pengaturan/style.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -32,21 +33,21 @@
                         <div class="shop-status-block">
                             <div class="shop-name-row">
                                 <img id="headerStoreLogo" src="{% static 'images/store-placeholder.png' %}" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:cover;display:none;" onerror="this.style.display='none'">
-                                <span class="shop-name" id="shopName">Warung Bu Sari</span>
+                                <span class="shop-name" id="shopName"><span class="skeleton" style="display:inline-block;width:120px;height:14px;"></span></span>
                                 <span class="badge-active">Aktif</span>
                             </div>
-                            <span class="shop-id" id="shopId">ID Warung: WRG12345</span>
+                            <span class="shop-id" id="shopId"><span class="skeleton" style="display:inline-block;width:80px;height:10px;"></span></span>
                         </div>
                     </div>
                     <div class="header-right">
                         <div id="notif-container" class="notif-wrap"></div>
                         <div class="profile-block">
                             <div class="avatar-wrap">
-                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img">
+                                <img src="{% static 'images/av-siti.png' %}" alt="user" class="avatar-img" id="profileAvatar">
                                 <div class="status-online"></div>
                             </div>
                             <div class="profile-info">
-                                <span class="profile-name">Bu Sari</span>
+                                <span class="profile-name" id="profileName"><span class="skeleton" style="display:inline-block;width:80px;height:14px;"></span></span>
                                 <span class="profile-role">Seller</span>
                             </div>
                             <i class="fa-solid fa-chevron-down profile-chevron"></i>
@@ -249,7 +250,7 @@
                     <div class="footer-brand">
                         <div class="footer-logo"><img src="{% static 'images/Warungio L.png' %}" alt="Warungio"><span>Warungio</span></div>
                         <p>Platform belanja kebutuhan sehari-hari langsung dari warung terdekat.<br>Belanja mudah, harga bersahabat!</p>
-                        <p class="copyright">&copy; 2025 Warungio. All rights reserved.</p>
+                        <p class="copyright">&copy; {% now "Y" %} Warungio. All rights reserved.</p>
                     </div>
                     <div class="footer-links">
                         <h4>Layanan</h4>

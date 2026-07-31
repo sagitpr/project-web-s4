@@ -562,6 +562,12 @@ body {
   border: 1px solid #bbf7d0;
 }
 
+.otp-message.warning {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+}
+
 /* Site Footer */
 .site-footer {
   margin-top: 60px;

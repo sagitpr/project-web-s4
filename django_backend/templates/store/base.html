@@ -120,7 +120,7 @@
                 {% if store.user.phone %}<p><i class="fa-solid fa-phone"></i> {{ store.user.phone }}</p>{% endif %}
                 {% if store.city %}<p><i class="fa-solid fa-location-dot"></i> {{ store.city }}{% if store.district %}, {{ store.district }}{% endif %}</p>{% endif %}
                 <div class="store-footer-social">
-                    <p class="store-footer-copy">&copy; 2026 Warungio. All rights reserved.</p>
+                    <p class="store-footer-copy">&copy; {{ seo.current_year|default:2026 }} Warungio. All rights reserved.</p>
                 </div>
             </div>
         </div>

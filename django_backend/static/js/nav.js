@@ -1,75 +1,118 @@
 /**
- * Warungio Navigation — mobile menu + bottom tab bar + seller profile loader
+ * Warungio Navigation — mobile menu + bottom tab bar + profile loader (Seller + Buyer)
  */
 (function () {
   'use strict';
 
-  // ── Seller Profile Loader (runs on seller pages only) ──
-  function loadSellerProfile() {
-    if (!window.WarungioAPI || !window.WarungioAuth) return;
-    // Don't run on guest / non-authenticated pages
+  // ── Profile Loader (runs on ALL authenticated pages) ──
+  function loadProfile() {
+    if (!window.WarungioAPI || !window.WarungioAuth) {
+      // Retry if auth not loaded yet
+      setTimeout(loadProfile, 500);
+      return;
+    }
     if (typeof WarungioAuth.isAuthenticated === 'function' && !WarungioAuth.isAuthenticated()) return;
 
-    // Load user info from auth module (sync, already loaded)
+    console.debug('[nav.js] Loading profile...');
+
+    // Load user info from auth module (sync from localStorage)
     var user = null;
     if (typeof WarungioAuth.getUser === 'function') {
-      try { user = WarungioAuth.getUser(); } catch(e) { /* not available */ }
+      try { user = WarungioAuth.getUser(); } catch(e) { console.warn('[nav.js] getUser failed:', e); }
     }
 
-    if (user) {
+    function updateNameAvatar(u) {
+      if (!u) return;
       var nameEl = document.getElementById('profileName');
-      if (nameEl && user.full_name) nameEl.textContent = user.full_name;
-
-      var avatarEl = document.getElementById('profileAvatar');
-      if (avatarEl && user.profile_photo) avatarEl.src = user.profile_photo;
+      if (nameEl) {
+        var skeleton = nameEl.querySelector('.skeleton');
+        if (skeleton) skeleton.remove();
+        if (u.full_name) nameEl.textContent = u.full_name;
+      }
 
       var sellerNameEl = document.getElementById('sellerName');
-      if (sellerNameEl && user.full_name) sellerNameEl.textContent = user.full_name;
+      if (sellerNameEl) sellerNameEl.textContent = u.full_name || '';
+
+      var avatarEl = document.getElementById('profileAvatar');
+      if (avatarEl) {
+        if (u.profile_photo && typeof u.profile_photo === 'string' && (u.profile_photo.startsWith('http') || u.profile_photo.startsWith('/'))) {
+          avatarEl.src = u.profile_photo;
+        } else {
+          // Fallback: use initial
+          avatarEl.src = '/static/images/av-siti.png';
+        }
+      }
     }
 
-    // Load store info from API (async)
-    if (typeof WarungioAPI.getMyStore === 'function') {
-      WarungioAPI.getMyStore().then(function (res) {
-        var store = res && res.data ? res.data : res;
-        if (!store) return;
+    // First pass: from cached user (sync, instant)
+    if (user) updateNameAvatar(user);
 
-        var shopNameEl = document.getElementById('shopName');
-        if (shopNameEl) {
-          // Remove skeleton span if present
-          var skeleton = shopNameEl.querySelector('.skeleton');
-          if (skeleton) skeleton.remove();
-          shopNameEl.textContent = store.store_name || 'Warung';
+    // Second pass: refresh from API (async, gets latest data)
+    function refreshFromAPI() {
+      var retries = 0;
+      var maxRetries = 3;
+
+      function tryRefresh() {
+        if (typeof WarungioAuth.api !== 'function') {
+          if (retries < maxRetries) {
+            retries++;
+            setTimeout(tryRefresh, 1000);
+          }
+          return;
         }
 
-        var shopIdEl = document.getElementById('shopId');
-        if (shopIdEl) {
-          var sid = store.slug ? store.slug.toUpperCase() : (store.id ? 'WRG' + store.id : '---');
-          var skeleton2 = shopIdEl.querySelector('.skeleton');
-          if (skeleton2) skeleton2.remove();
-          shopIdEl.textContent = 'ID Warung: ' + sid;
-        }
+        WarungioAuth.api('/auth/check-auth/')
+          .then(function(resp) {
+            if (resp && resp.user) {
+              // Update localStorage with fresh data
+              localStorage.setItem('warungio_user', JSON.stringify(resp.user));
+              updateNameAvatar(resp.user);
+              console.debug('[nav.js] Profile refreshed from API:', resp.user.full_name);
+            }
+          })
+          .catch(function(err) {
+            console.warn('[nav.js] API refresh failed:', err);
+            if (retries < maxRetries) {
+              retries++;
+              setTimeout(tryRefresh, 2000);
+            }
+          });
+      }
 
-        var headerLogo = document.getElementById('headerStoreLogo');
-        if (headerLogo && store.store_logo) {
-          headerLogo.src = store.store_logo;
-          headerLogo.style.display = 'inline-block';
-        }
+      // Try store info too (for seller pages)
+      if (typeof WarungioAPI.getMyStore === 'function') {
+        WarungioAPI.getMyStore().then(function(res) {
+          var store = res && res.data ? res.data : res;
+          if (!store) return;
+          console.debug('[nav.js] Store loaded:', store.store_name);
 
-        var headerShopName = document.getElementById('headerShopName');
-        if (headerShopName) headerShopName.textContent = store.store_name || 'Warung';
-      }).catch(function (err) { console.warn('Store profile load failed:', err); });
+          var shopNameEl = document.getElementById('shopName');
+          if (shopNameEl) {
+            var skel = shopNameEl.querySelector('.skeleton');
+            if (skel) skel.remove();
+            shopNameEl.textContent = store.store_name || 'Warung';
+          }
+
+          var shopIdEl = document.getElementById('shopId');
+          if (shopIdEl) {
+            var sid = store.slug ? store.slug.toUpperCase() : (store.id ? 'WRG' + store.id : '---');
+            var skel2 = shopIdEl.querySelector('.skeleton');
+            if (skel2) skel2.remove();
+            shopIdEl.textContent = 'ID Warung: ' + sid;
+          }
+
+          var headerLogo = document.getElementById('headerStoreLogo');
+          if (headerLogo && store.store_logo) {
+            headerLogo.src = store.store_logo;
+            headerLogo.style.display = 'inline-block';
+          }
+        }).catch(function(err) { console.warn('[nav.js] Store load failed:', err); });
+      }
+
+      tryRefresh();
     }
 
-    // Load user profile photo from auth if available
-    if (typeof WarungioAuth.refreshUser === 'function') {
-      WarungioAuth.refreshUser().then(function (u) {
-        if (!u) return;
-        var avatarEl = document.getElementById('profileAvatar');
-        if (avatarEl && u.profile_photo) avatarEl.src = u.profile_photo;
-        var nameEl = document.getElementById('profileName');
-        if (nameEl && u.full_name) nameEl.textContent = u.full_name;
-      }).catch(function (err) { console.warn('User profile refresh failed:', err); });
-    }
+    refreshFromAPI();
   }
 
   // ── Sidebar Badge Loader (order count + loyalty points) ──
@@ -182,7 +225,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    loadSellerProfile();
+    loadProfile();
     loadSidebarBadges();
     initRealtimeSidebarBadges();
     initMobileMenu();
@@ -195,6 +238,10 @@
 
   // Also call on auth_ready event for pages loaded before auth initialized
   document.addEventListener('warungio:auth_ready', function () {
-    loadSellerProfile();
+    loadProfile();
+  });
+  // Also listen for login event
+  document.addEventListener('warungio:login', function () {
+    loadProfile();
   });
 })();

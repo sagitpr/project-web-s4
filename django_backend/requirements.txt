@@ -26,3 +26,5 @@ uvicorn[standard]>=0.24  # ASGI server (Gunicorn worker — REQUIRED for product
 requests>=2.32.0
 hiredis>=3.0  # C-based Redis parser (optional but recommended for performance)
 openpyxl>=3.1.5  # Excel (.xlsx) export for Admin Management
+django-debug-toolbar>=4.3.0,<5.0.0  # Debug toolbar for development profiling (only active in DEBUG mode)
+django-silk>=5.1.0,<6.0.0  # Production profiling — SQL queries, HTTP requests, performance
